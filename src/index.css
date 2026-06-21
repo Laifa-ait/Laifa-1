@@ -1,0 +1,113 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700&family=Cairo:wght@400;600;700&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Space Grotesk", "Tajawal", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Cairo", sans-serif;
+  --font-mono:
+    "JetBrains Mono", "Tajawal", ui-monospace, SFMono-Regular, monospace;
+
+  /* Premium soft shadow definitions to create elevated, modern depth */
+  --shadow-sm: 0 2px 8px rgba(30, 67, 86, 0.04);
+  --shadow-md: 0 8px 24px rgba(30, 67, 86, 0.08);
+  --shadow-lg: 0 16px 40px rgba(30, 67, 86, 0.12);
+  --shadow-xl: 0 24px 60px rgba(30, 67, 86, 0.16);
+  --shadow-2xl: 0 32px 80px rgba(30, 67, 86, 0.2);
+}
+
+body {
+  background-color: #faf8f5 !important;
+  color: #121315 !important;
+}
+
+@layer utilities {
+  .no-scroll {
+    overflow: hidden;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+
+  .desktop-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge max-md */
+    scrollbar-width: none; /* Firefox max-md */
+  }
+  .desktop-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome max-md */
+  }
+}
+
+@media (min-width: 768px) {
+  .desktop-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none; /* IE and Edge max-md */
+  }
+  .desktop-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Hide scrollbars globally but allow scrolling */
+::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+* {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@layer components {
+  /* Les Boutons Call-to-Action (Action principale) */
+  .btn-premium-orange {
+    @apply bg-orange-600 text-white px-8 py-4 rounded-[2rem] font-black uppercase tracking-widest text-sm shadow-[0_10px_30px_-10px_rgba(234,88,12,0.5)] hover:-translate-y-1 hover:shadow-[0_15px_40px_-10px_rgba(234,88,12,0.6)] active:translate-y-0 transition-all duration-300;
+  }
+
+  /* Les Boutons Secondaires (Annulation, Retour) */
+  .btn-ghost-teal {
+    @apply border-2 border-zinc-900/10 text-zinc-900 px-8 py-4 rounded-[2rem] font-bold text-sm hover:bg-zinc-900/5 active:bg-zinc-900/10 transition-colors;
+  }
+  /* Les Cartes Surfaces (Produits, Blocs de Checkout) */
+  .surface-card {
+    @apply bg-white rounded-[2rem] border border-zinc-100/60 shadow-md hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 overflow-hidden;
+  }
+}
+
+@layer utilities {
+  .transition-luxe {
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.25, 1, 0.5, 1);
+    transition-duration: 400ms;
+  }
+
+  .fade-in-luxe {
+    animation: fadeInLuxe 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  }
+
+  @keyframes fadeInLuxe {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

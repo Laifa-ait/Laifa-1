@@ -1,0 +1,150 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // -------------------------------------------------------------------------
+    // GLOBAL HELPERS
+    // -------------------------------------------------------------------------
+    function isSignedIn() { return request.auth != null; }
+    function isEmailVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function getUserData(uid) { return get(/databases/$(database)/documents/users/$(uid)).data; }
+    function isAdmin() { 
+      return isSignedIn() && (
+        getUserData(request.auth.uid).role == 'admin' || 
+        request.auth.token.email == 'laifa.ait@gmail.com'
+      ); 
+    }
+    function isSeller() { return isSignedIn() && getUserData(request.auth.uid).role == 'seller'; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+
+    // -------------------------------------------------------------------------
+    // DEFAULT DENY
+    // -------------------------------------------------------------------------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // USERS COLLECTION
+    // -------------------------------------------------------------------------
+    match /users/{uid} {
+      allow get: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow list: if isAdmin();
+      
+      function isValidUser(data) {
+        return data.uid == request.auth.uid 
+            && data.email is string && data.email.size() <= 100
+            && (data.role in ['buyer', 'seller', 'admin'])
+            && (data.status in ['pending', 'active', 'rejected', 'suspended']);
+      }
+
+      allow create: if isSignedIn() && isValidUser(incoming()) && incoming().role != 'admin'; 
+      allow update: if isSignedIn() && (
+        isAdmin() || (
+          request.auth.uid == uid 
+          && isValidUser(incoming())
+          && incoming().role == existing().role // Cannot change own role
+          && (incoming().status == existing().status || existing().status == 'pending') // Limit self-status changes
+          && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'shopName', 'shopDescription', 'rcNumber', 'nifNumber', 'rib', 'documents', 'updatedAt', 'lastSimulation', 'status'])
+        )
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // PRODUCTS COLLECTION
+    // -------------------------------------------------------------------------
+    match /products/{productId} {
+      allow read: if incoming() == null || existing().status == 'active' || isAdmin() || (isSignedIn() && existing().sellerId == request.auth.uid);
+      allow list: if true; // Public listings filtered by app logic
+
+      function isValidProduct(data) {
+        return data.sellerId == request.auth.uid
+            && data.name is string && data.name.size() <= 200
+            && data.price is number && data.price >= 0
+            && (data.status in ['pending', 'active', 'rejected']);
+      }
+
+      allow create: if isSeller() && isValidProduct(incoming()) && incoming().status == 'pending';
+      allow update: if isSignedIn() && (
+        isAdmin() || (
+          isSeller() && existing().sellerId == request.auth.uid
+          && isValidProduct(incoming())
+          && (incoming().status == existing().status || (existing().status == 'rejected' && incoming().status == 'pending'))
+          && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'description', 'price', 'category', 'images', 'stock', 'status', 'updatedAt', 'hasOutOfStockVariants'])
+        )
+      );
+      allow delete: if isAdmin() || (isSeller() && existing().sellerId == request.auth.uid);
+    }
+
+    // -------------------------------------------------------------------------
+    // ORDERS COLLECTION
+    // -------------------------------------------------------------------------
+    match /orders/{orderId} {
+      allow get: if isSignedIn() && (
+        resource.data.buyerId == request.auth.uid || 
+        isAdmin() || 
+        (isSeller() && request.auth.uid in resource.data.sellerIds)
+      );
+      allow list: if isSignedIn() && (
+        resource.data.buyerId == request.auth.uid || 
+        isAdmin() || 
+        (isSeller() && request.auth.uid in resource.data.sellerIds)
+      );
+
+      allow create: if isSignedIn() && incoming().buyerId == request.auth.uid;
+      allow update: if isSignedIn() && (
+        isAdmin() || (
+          (request.auth.uid == existing().buyerId || (isSeller() && request.auth.uid in existing().sellerIds))
+          && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt', 'returnDetails', 'adminActions'])
+        )
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // INTERNAL NOTIFICATIONS (Admin Only)
+    // -------------------------------------------------------------------------
+    match /internal_notifications/{notifId} {
+      allow read, write: if isAdmin();
+      // Exception: Sellers can push notifications during verification
+      allow create: if isSeller() && incoming().type == 'DOCUMENT_SUBMISSION' && incoming().sellerId == request.auth.uid;
+    }
+
+    // -------------------------------------------------------------------------
+    // WITHDRAWALS
+    // -------------------------------------------------------------------------
+    match /withdrawals/{id} {
+      allow read: if isSignedIn() && (resource.data.sellerId == request.auth.uid || isAdmin());
+      allow create: if isSeller() && incoming().sellerId == request.auth.uid;
+      allow update: if isAdmin();
+    }
+
+    // -------------------------------------------------------------------------
+    // SUPPORT TICKETS
+    // -------------------------------------------------------------------------
+    match /supportTickets/{id} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
+      allow update: if isAdmin() || (isSignedIn() && existing().userId == request.auth.uid);
+    }
+
+    match /supportMessages/{id} {
+      allow read: if isSignedIn(); // Filtered by app queries
+      allow create: if isSignedIn() && incoming().senderId == request.auth.uid;
+    }
+
+    // -------------------------------------------------------------------------
+    // PUBLIC / CONFIG / SETTINGS (Public Read, Admin Write)
+    // -------------------------------------------------------------------------
+    match /banners/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /tags/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /coupons/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /homepage_categories_v2/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /homepage_sections/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /settings/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /public/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /audit_logs/{id} { allow read: if isAdmin(); allow create: if isSignedIn(); }
+
+  }
+}

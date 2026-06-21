@@ -1,0 +1,143 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User account and profile data",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["buyer", "seller", "admin"] },
+        "status": { "type": "string", "enum": ["pending", "active", "rejected", "suspended"] },
+        "displayName": { "type": "string" },
+        "shopName": { "type": "string" },
+        "shopDescription": { "type": "string" },
+        "rcNumber": { "type": "string" },
+        "nifNumber": { "type": "string" },
+        "rib": { "type": "string" },
+        "documents": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Seller product listing",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "sellerId": { "type": "string" },
+        "sellerName": { "type": "string" },
+        "category": { "type": "string" },
+        "images": { "type": "array" },
+        "status": { "type": "string", "enum": ["pending", "active", "rejected"] },
+        "stock": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer purchase transaction",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "buyerId": { "type": "string" },
+        "sellerIds": { "type": "array" },
+        "items": { "type": "array" },
+        "total": { "type": "number" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Notification": {
+      "title": "Internal Notification",
+      "description": "Admin system notification",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string" },
+        "message": { "type": "string" },
+        "sellerId": { "type": "string" },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "UserNotification": {
+      "title": "User Notification",
+      "description": "Internal buyer-seller direct notification in FR, EN, and AR",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string" },
+        "recipientId": { "type": "string" },
+        "title": { "type": "object" },
+        "message": { "type": "object" },
+        "type": { "type": "string" },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "orderId": { "type": "string" },
+        "productId": { "type": "string" },
+        "conversationId": { "type": "string" }
+      },
+      "required": ["senderId", "recipientId", "title", "message", "type", "read"]
+    },
+    "Coupon": {
+      "title": "Discount Coupon",
+      "description": "Store discount codes",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string", "description": "Uppercase, ex: WELCOME26" },
+        "type": { "type": "string", "enum": ["percentage", "fixed_amount"] },
+        "value": { "type": "number", "description": "Discount value" },
+        "minPurchase": { "type": "number", "description": "Minimum order amount in DA" },
+        "expiryDate": { "type": "string", "format": "date-time" },
+        "isActive": { "type": "boolean", "description": "Kill-switch" },
+        "usageLimit": { "type": "integer", "description": "Optional maximum uses" },
+        "currentUsages": { "type": "integer", "description": "Usage counter" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["code", "type", "value", "minPurchase", "expiryDate", "isActive", "currentUsages", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/coupons/{couponId}": {
+      "schema": "Coupon",
+      "description": "Coupon codes"
+    },
+    "/user_notifications/{notifId}": {
+      "schema": "UserNotification",
+      "description": "Internal marketplace notices with premium translations"
+    },
+    "/users/{uid}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Product directory"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Order records"
+    },
+    "/internal_notifications/{notifId}": {
+      "schema": "Notification",
+      "description": "Admin alerts"
+    },
+    "/withdrawals/{withdrawalId}": {
+      "schema": { "$ref": "Withdrawal" },
+      "description": "Paiement requests"
+    },
+    "/supportTickets/{ticketId}": {
+      "schema": { "$ref": "Ticket" },
+      "description": "Customer support tickets"
+    },
+    "/supportMessages/{msgId}": {
+      "schema": { "$ref": "Message" },
+      "description": "Ticket conversation logs"
+    }
+  }
+}

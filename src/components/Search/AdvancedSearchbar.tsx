@@ -1,0 +1,487 @@
+import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
+import { Search, X, Loader2, ArrowRight, Clock, Star, TrendingUp, History } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import { useShop } from "../../context/ShopContext";
+import { collection, query, limit, getDocs } from "firebase/firestore";
+import { db } from "../../lib/firebase";
+import { Product } from "../../types";
+import { formatPrice } from "../../utils/format";
+import { useTrendingSearches } from "../../hooks/useTrendingSearches";
+import { getOptimizedImageUrl } from "../../utils/imageUtils";
+
+interface AdvancedSearchbarProps {
+  className?: string;
+  isMobile?: boolean;
+  variant?: "default" | "glass";
+}
+
+// Custom hook for debouncing
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
+}
+
+export const AdvancedSearchbar: React.FC<AdvancedSearchbarProps> = ({ className = "", isMobile = false, variant = "default" }) => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const trendingSearches = useTrendingSearches();
+  const { setSearchQuery, searchQuery: globalSearchQuery } = useShop();
+
+  const [localQuery, setLocalQuery] = useState("");
+  const debouncedQuery = useDebounce(localQuery, 300);
+  const [results, setResults] = useState<Product[]>([]);
+  const [matchedStores, setMatchedStores] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  
+  const isOverlayActive = isFocused || showDropdown;
+  
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [fallbackProducts, setFallbackProducts] = useState<Product[]>([]);
+  
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    let resizeTimer: any;
+    const handleResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        setIsMobileView(window.innerWidth < 768);
+      }, 100);
+    };
+    window.addEventListener("resize", handleResize, { passive: true });
+    return () => {
+      clearTimeout(resizeTimer);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  // Load recent searches and fallback recommendations on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("olma_recent_searches");
+    if (saved) {
+      try {
+        setRecentSearches(JSON.parse(saved));
+      } catch (e) {
+        setRecentSearches([]);
+      }
+    }
+
+    // Pre-fetch a few popular/fallback products for zero results or empty state recommendations
+    const fetchFallbacks = async () => {
+      try {
+        const q = query(collection(db, "products"), limit(4));
+        const snap = await getDocs(q);
+        const prods = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as unknown as Product));
+        setFallbackProducts(prods);
+      } catch (e) {
+        console.warn("Error loading fallback products for search-bar:", e);
+      }
+    };
+    fetchFallbacks();
+  }, []);
+
+  // Sync with global query if cleared externally
+  useEffect(() => {
+    if (!globalSearchQuery) {
+      setLocalQuery("");
+    }
+  }, [globalSearchQuery]);
+
+  // Click away listener to close search
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsFocused(false);
+        setShowDropdown(false);
+        inputRef.current?.blur();
+      }
+    };
+
+    if (isOverlayActive) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOverlayActive]);
+
+  // Execute Search
+  useEffect(() => {
+    const performSearch = async () => {
+      if (!debouncedQuery.trim()) {
+        setResults([]);
+        return;
+      }
+
+      setIsSearching(true);
+      
+      try {
+        const response = await fetch(`/api/search?q=${encodeURIComponent(debouncedQuery)}`);
+        if (!response.ok) {
+          throw new Error("HTTP search error");
+        }
+        const data = await response.json();
+        const found = data.products || [];
+        setResults(found.slice(0, 5)); // Show up to 5 visual results
+        setMatchedStores(data.stores || []);
+      } catch (error) {
+        console.error("Search error:", error);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    performSearch();
+  }, [debouncedQuery]);
+
+  const saveSearchTerm = (term: string) => {
+    const trimmed = term.trim();
+    if (!trimmed) return;
+    const updated = [trimmed, ...recentSearches.filter(s => s !== trimmed)].slice(0, 5);
+    setRecentSearches(updated);
+    localStorage.setItem("olma_recent_searches", JSON.stringify(updated));
+  };
+
+  const handleSearchSubmit = () => {
+    if (localQuery.trim()) {
+      saveSearchTerm(localQuery);
+      setSearchQuery(localQuery);
+      setShowDropdown(false);
+      setIsFocused(false);
+      navigate("/shop");
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSearchSubmit();
+    }
+  };
+
+  const clearSearch = () => {
+    setLocalQuery("");
+    setSearchQuery("");
+    setResults([]);
+  };
+
+  const navigateToProduct = (id: string, name: string) => {
+    saveSearchTerm(name);
+    setShowDropdown(false);
+    setIsFocused(false);
+    navigate(`/product/${id}`);
+  };
+
+  const selectTrendingOrRecent = (term: string) => {
+    setLocalQuery(term);
+    saveSearchTerm(term);
+    setSearchQuery(term);
+    setShowDropdown(false);
+    setIsFocused(false);
+    navigate("/shop");
+  };
+
+  const deleteRecentSearch = (term: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const updated = recentSearches.filter(s => s !== term);
+    setRecentSearches(updated);
+    localStorage.setItem("olma_recent_searches", JSON.stringify(updated));
+  };
+
+  const highlightMatch = (text: string, query: string) => {
+    if (!query) return text;
+    const parts = text.split(new RegExp(`(${query})`, 'gi'));
+    return (
+      <span>
+        {parts.map((part, i) => 
+          part.toLowerCase() === query.toLowerCase() 
+            ? <strong key={i} className="text-[#F37021] bg-[#F37021]/5 font-black px-1 rounded">{part}</strong> 
+            : <span key={i}>{part}</span>
+        )}
+      </span>
+    );
+  };
+
+  return (
+    <>
+      {/* Mega-Search Dark Glass Backdrop */}
+      {isOverlayActive && createPortal(
+        <div 
+          onClick={() => {
+            setIsFocused(false);
+            setShowDropdown(false);
+            inputRef.current?.blur();
+          }}
+          className="fixed inset-0 bg-[#121315]/40 backdrop-blur-md z-[90] transition-opacity duration-300"
+        />,
+        document.body
+      )}
+
+      <div 
+        ref={containerRef} 
+        className={`relative w-full transition-all duration-500 ease-out ${isOverlayActive ? "z-[50] sm:scale-[1.02]" : "z-[10]"} ${className}`}
+      >
+        <div className={`flex items-center w-full transition-all duration-300 ease-out group h-10 sm:h-12 border-b ${
+            isOverlayActive 
+              ? "bg-white/50 border-[#F37021]" 
+              : variant === "glass"
+                ? "bg-transparent border-[#EBE5DF] hover:border-[#F37021]/50"
+                : "bg-transparent border-[#EBE5DF]"
+        }`}>
+          <button 
+             onClick={handleSearchSubmit}
+             className={`ps-2 pe-3 flex items-center justify-center shrink-0 cursor-pointer bg-transparent border-none transition-colors duration-300 ${isOverlayActive ? "text-[#F37021]" : "text-[#121315]/40 hover:text-[#F37021]"}`}>
+             <Search className="w-4 h-4 sm:w-5 sm:h-5 stroke-[1.5]" />
+          </button>
+          
+          <input
+            ref={inputRef}
+            type="text"
+            value={localQuery}
+            onChange={(e) => {
+               setLocalQuery(e.target.value);
+               setShowDropdown(true);
+            }}
+            onFocus={() => {
+              setIsFocused(true);
+              setShowDropdown(true);
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder={isMobileView ? (t("search") || "Recherche") : (t("search_placeholder") || "Recherche...")}
+            className={`bg-transparent border-none text-[15px] focus:outline-none w-full h-full px-2 font-medium shadow-none text-[#121315] placeholder:text-[#121315]/40 text-ellipsis whitespace-nowrap`}
+          />
+          
+          {localQuery && (
+            <button
+              onClick={clearSearch}
+              className="p-1 hover:text-[#F37021] text-[#121315]/30 transition-colors bg-transparent border-none flex items-center justify-center cursor-pointer me-2"
+            >
+              <X className="w-4 h-4 stroke-[1.5]" />
+            </button>
+          )}
+        </div>
+
+        {/* Predictive & Interactive Mega Search Dropdown Overlay */}
+        {isOverlayActive && (
+          <div className="fixed inset-x-0 top-[57px] sm:top-[73px] md:absolute md:inset-auto md:top-[calc(100%+0.5rem)] md:left-1/2 md:-translate-x-1/2 md:w-[850px] lg:w-[950px] bg-[#FAF8F5] border-b border-[#EBE5DF]/80 shadow-[0_30px_60px_-15px_rgba(44,30,22,0.15)] z-[150] rounded-b-[1.5rem] rounded-t-none md:rounded-[2rem] overflow-hidden md:backdrop-blur-xl max-h-[85vh] overflow-y-auto">
+            <div className="p-4 md:p-8 space-y-4 md:space-y-8">
+              {/* Overlay Header for Mobile/Quick Exit */}
+              <div className="flex items-center justify-end pb-2 md:hidden">
+                <button 
+                  onClick={() => {
+                    setIsFocused(false);
+                    setShowDropdown(false);
+                    inputRef.current?.blur();
+                  }}
+                  className="p-1.5 h-8 w-8 hover:bg-[#EBE5DF]/50 rounded-full flex items-center justify-center text-[#121315] bg-transparent border-none cursor-pointer transition-colors"
+                >
+                  <X className="w-5 h-5 stroke-[2]" />
+                </button>
+              </div>
+
+              {/* Case A: Search bar is Empty -> Show History and Trending Categories */}
+              {!localQuery.trim() ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+                  
+                  {/* 1. Recents searches */}
+                  <div className="space-y-3">
+                    <h4 className="text-[11px] md:text-xs rtl:text-sm font-semibold uppercase text-[#121315]/50 tracking-[0.1em] rtl:tracking-normal flex items-center gap-2 pb-2 border-b border-[#EBE5DF]/60">
+                      <History className="w-3.5 h-3.5 text-[#F37021]" />
+                      {t("recent_searches") || "Vos Recherches Récentes"}
+                    </h4>
+                    {recentSearches.length > 0 ? (
+                      <ul className="space-y-0.5">
+                        {recentSearches.map((term, i) => (
+                          <li 
+                            key={i}
+                            onClick={() => selectTrendingOrRecent(term)}
+                            className="flex items-center justify-between py-2 px-2.5 rounded-lg border border-transparent hover:bg-white hover:border-[#EBE5DF]/60 text-[13.5px] font-medium text-[#121315]/80 hover:text-[#F37021] hover:shadow-sm transition-all cursor-pointer group"
+                          >
+                            <span className="truncate">{term}</span>
+                            <button 
+                              onClick={(e) => deleteRecentSearch(term, e)}
+                              className="text-[#121315]/30 hover:text-[#F37021] p-1 bg-transparent border-none cursor-pointer transition-colors opacity-0 group-hover:opacity-100"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-[#121315]/40 text-xs px-2 py-3">{t("no_search_history") || "Aucun historique récent."}</p>
+                    )}
+                  </div>
+
+                  {/* 2. Trending Searches (Viral of the day) */}
+                  <div className="space-y-3">
+                    <h4 className="text-[11px] md:text-xs rtl:text-sm font-semibold uppercase text-[#121315]/50 tracking-[0.1em] rtl:tracking-normal flex items-center gap-2 pb-2 border-b border-[#EBE5DF]/60">
+                      <TrendingUp className="w-3.5 h-3.5 text-[#F37021]" />
+                      {t("trending_searches") || "Tendances du moment"}
+                    </h4>
+                    <div className="flex flex-wrap gap-2 pt-1 md:pt-2">
+                      {trendingSearches.map((tag, i) => (
+                        <button
+                          key={i}
+                          onClick={() => selectTrendingOrRecent(tag)}
+                          className="px-3.5 py-1.5 md:px-4 md:py-2 text-[12px] md:text-[13px] font-semibold border border-[#EBE5DF]/80 bg-white shadow-sm hover:border-[#F37021]/50 text-[#121315]/80 hover:text-[#F37021] hover:shadow-md rounded-full transition-all cursor-pointer"
+                        >
+                          {t(`trending_tag_${i}`) || tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+              ) : (
+                // Case B: Search bar has typing -> Show completion results or fallback recommendations
+                <div className="space-y-6">
+                  {isSearching ? (
+                    <div className="p-12 flex justify-center items-center">
+                      <Loader2 className="w-8 h-8 animate-spin text-[#F37021]" />
+                    </div>
+                  ) : results.length > 0 || matchedStores.length > 0 ? (
+                    <div className="space-y-6">
+                      
+                      {/* Stores Section */}
+                      {matchedStores.length > 0 && (
+                          <div className="space-y-4">
+                            <h4 className="text-sm font-semibold text-[#121315]">{t("matching_stores") || "Boutiques correspondantes"}</h4>
+                            <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              {matchedStores.map((store) => (
+                                <li key={store.id || store.uid}>
+                                  <button
+                                    onClick={() => {
+                                      navigate(`/store/${store.id || store.uid}`);
+                                      setShowDropdown(false);
+                                    }}
+                                    className="w-full text-left p-3 hover:bg-orange-50/50 flex items-center gap-4 group transition-colors rounded-2xl outline-none border border-transparent hover:border-[#F37021]/30 hover:shadow-sm cursor-pointer"
+                                  >
+                                    <div className="w-12 h-12 rounded-xl bg-white overflow-hidden flex-shrink-0 border border-[#EBE5DF]">
+                                      {store.logoUrl ? (
+                                        <img loading="lazy" src={store.logoUrl} alt={store.shopName || store.displayName} className="w-full h-full object-cover" />
+                                      ) : (
+                                        <div className="w-full h-full bg-slate-100 flex items-center justify-center">
+                                           <span className="text-slate-400 font-black text-xl uppercase">{(store.shopName || store.displayName || 'B').charAt(0)}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className="flex flex-col flex-1 overflow-hidden">
+                                      <span className="font-semibold text-[14px] text-[#121315] group-hover:text-[#F37021] truncate transition-colors">
+                                        {store.shopName || store.displayName}
+                                      </span>
+                                      <span className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider mt-1 truncate">
+                                        {t("Wilaya")} {store.wilaya ? store.wilaya : "58"}
+                                      </span>
+                                    </div>
+                                    <ArrowRight className="w-4 h-4 text-zinc-300 group-hover:text-[#F37021] group-hover:translate-x-1 transition-all" />
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                      )}
+
+                      {/* Products Section */}
+                      {results.length > 0 && (
+                          <div className="space-y-4">
+                            <h4 className="text-sm font-semibold text-[#121315]">{t("matching_creations") || "Créations correspondantes"}</h4>
+                            <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                              {results.map((product) => {
+                          
+                          return (
+                                                  <li key={product.id}>
+                                                    <button 
+                                                      onClick={() => navigateToProduct(product.id, product.name)}
+                                                      className="w-full text-left p-3 hover:bg-white flex items-center gap-4 group transition-colors rounded-2xl outline-none border border-transparent hover:border-[#EBE5DF]/80 hover:shadow-sm bg-transparent cursor-pointer"
+                                                    >
+                                                    <div className="w-14 h-14 rounded-xl bg-white overflow-hidden flex-shrink-0 border border-[#EBE5DF] group-hover:border-[#F37021]/30">
+                                                      <img loading="lazy" src={getOptimizedImageUrl(product.image, 200)} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                                                    </div>
+                                                    <div className="flex flex-col text-left overflow-hidden min-w-0">
+                                                      <span className="font-semibold text-[15px] text-[#121315] group-hover:text-[#F37021] transition-colors truncate">
+                                                        {highlightMatch(product.name, localQuery)}
+                                                      </span>
+                                                      <span className="text-[11px] font-medium text-[#121315]/50 uppercase tracking-wider rtl:tracking-normal mt-1 truncate">
+                                                        {product.category} {t("• Wilaya")}{product.wilaya ? product.wilaya : "58"}
+                                                      </span>
+                                                    </div>
+                                                    <div className="ml-auto flex items-center gap-4 pl-2 shrink-0">
+                                                      <span className="text-sm font-bold text-[#121315]">{formatPrice(product.price)}</span>
+                                                      <ArrowRight className="w-4 h-4 text-[#121315]/20 group-hover:text-[#F37021] group-hover:translate-x-1 transition-all" />
+                                                    </div>
+                                                  </button>
+                                                </li>
+                                              );
+                        })}
+                    </ul>
+                    </div>
+                    )}
+                    
+                    <div className="pt-2 flex justify-end">
+                      <button
+                        onClick={handleSearchSubmit}
+                        className="px-6 py-2.5 text-xs rtl:text-sm font-bold uppercase tracking-wider rtl:tracking-normal text-white bg-[#121315] hover:bg-[#F37021] rounded-full transition-colors cursor-pointer border-none"
+                      >
+                        {t("see_all_results") || "Voir tous les résultats"}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  // Case C: Absolute Zero Results -> Show orange alert warning AND fallback beautiful creations!
+                  <div className="space-y-8">
+                    <div className="bg-[#FAF8F5] border border-[#F37021]/30 rounded-2xl p-6 flex flex-col items-center justify-center text-center space-y-3">
+                       <Search className="w-6 h-6 text-[#F37021]/60" />
+                       <span className="text-lg font-semibold text-[#121315]">
+                        {t("no_results_for") || "Aucun résultat pour"} "{localQuery}"
+                       </span>
+                       <p className="text-[13px] text-[#121315]/60 max-w-lg mx-auto">
+                         {t("no_exact_match_fallback") || "Nous n'avons pas trouvé de correspondance exacte, mais voici quelques créations qui pourraient vous plaire."}
+                       </p>
+                    </div>
+                    
+                    {fallbackProducts.length > 0 && (
+                      <div className="space-y-4">
+                        <h4 className="text-sm font-semibold text-[#121315] mb-4">{t("recommended_creations") || "Créations recommandées"}</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                          {fallbackProducts.map((p) => (
+                            <div 
+                              key={p.id}
+                              onClick={() => navigateToProduct(p.id, p.name)}
+                              className="p-3 border border-transparent hover:border-[#EBE5DF] hover:bg-white rounded-2xl transition-all cursor-pointer flex gap-4 text-left group hover:shadow-sm"
+                            >
+                              <div className="w-16 h-16 rounded-xl overflow-hidden bg-white shrink-0 border border-[#EBE5DF] group-hover:border-[#F37021]/30">
+                                <img loading="lazy" src={getOptimizedImageUrl(p.image, 200)} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                              </div>
+                              <div className="flex flex-col min-w-0 justify-center">
+                                <span className="font-semibold text-[15px] text-[#121315] group-hover:text-[#F37021] truncate transition-colors">{p.name}</span>
+                                <span className="text-[13px] font-medium text-[#121315]/60 mt-1">{formatPrice(p.price)}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+            </div>
+          </div>
+        )}
+      </div>
+    </>
+  );
+};
+

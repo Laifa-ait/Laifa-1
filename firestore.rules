@@ -1,0 +1,461 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // -------------------------------------------------------------------------
+    // 1. GLOBAL DEFAULT DENY (The 1st rule block - Safety Net)
+    // -------------------------------------------------------------------------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // GLOBAL INTEGRITY HELPERS
+    // -------------------------------------------------------------------------
+    function isSignedIn() { return request.auth != null; }
+    function isEmailVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function getUserData(uid) { 
+      return exists(/databases/$(database)/documents/users/$(uid)) ? get(/databases/$(database)/documents/users/$(uid)).data : null; 
+    }
+    function isAdmin() { 
+      return isSignedIn() && (
+        (request.auth.token != null && request.auth.token.email == 'laifa.ait@gmail.com') ||
+        (getUserData(request.auth.uid) != null && getUserData(request.auth.uid).role == 'admin')
+      ); 
+    }
+    function isSeller() { 
+      return isSignedIn() && (
+        (request.auth.token != null && request.auth.token.role == 'seller') ||
+        (getUserData(request.auth.uid) != null && getUserData(request.auth.uid).role == 'seller')
+      ); 
+    }
+    function isVerifiedSeller() { 
+      return isSeller() && getUserData(request.auth.uid) != null && getUserData(request.auth.uid).isVerified == true; 
+    }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+
+    // -------------------------------------------------------------------------
+    // PUBLIC / CONFIG / SETTINGS (Public Read, Admin Write)
+    // -------------------------------------------------------------------------
+    match /ui_elements/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /public_configs/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /publicProfiles/{id} { allow read, list: if true; allow write: if isAdmin() || (isAuthenticated() && request.auth.uid == id); }
+    match /public_profiles/{id} { allow read, list: if true; allow write: if isAdmin() || (isAuthenticated() && request.auth.uid == id); }
+    match /banners/{id} { allow read, list: if true; allow write: if isAdmin(); }
+    match /tags/{id} { allow read, list: if true; allow write: if isAdmin(); }
+    // -------------------------------------------------------------------------
+    // COUPONS COLLECTION
+    // -------------------------------------------------------------------------
+    function isValidCoupon(data) {
+      return data.code is string && data.code.size() <= 50 // Uppercase strictness handled by backend func if needed, but we check type here
+          && data.type in ['percentage', 'fixed_amount']
+          && data.value is number && data.value >= 0
+          && data.minPurchase is number && data.minPurchase >= 0
+          && data.expiryDate is timestamp
+          && data.isActive is bool
+          && (!('usageLimit' in data) || (data.usageLimit is number && data.usageLimit >= 0))
+          && data.currentUsages is number && data.currentUsages >= 0;
+    }
+
+    match /coupons/{id} { 
+      allow read: if true; 
+      allow create, update: if isAdmin() && isValidCoupon(incoming());
+      allow delete: if isAdmin();
+    }
+    match /homepage_categories_v2/{id} { allow read, list: if true; allow write: if isAdmin(); }
+    match /homepage_sections/{id} { allow read, list: if true; allow write: if isAdmin(); }
+    match /settings/{id} { allow read, list: if true; allow write: if isAdmin(); }
+    match /public/{id} { allow read, list: if true; allow write: if isAdmin(); }
+    match /metadata/{id} { allow read, list: if true; allow write: if isAdmin(); }
+    match /site_content_monthly/{id} { allow read, list: if true; allow write: if isAdmin(); }
+    match /platform_stats/{id} { allow read, list: if true; allow write: if isAdmin(); }
+    match /seasonal_themes/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /global_settings/{id} { allow read: if true; allow write: if isAdmin(); }
+
+    // -------------------------------------------------------------------------
+    // USERS COLLECTION
+    // -------------------------------------------------------------------------
+    match /users/{uid} {
+      allow get: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow list: if isAdmin();
+      
+      function isValidUser(data) {
+        return data.uid == request.auth.uid 
+            && data.email is string && data.email.size() <= 100
+            && (data.role in ['buyer', 'seller', 'admin'])
+            && (!('status' in data) || data.status in ['pending', 'pending_verification', 'active', 'rejected', 'suspended']);
+      }
+
+      allow create: if isSignedIn() && isEmailVerified() && isValidUser(incoming()) && (
+        (request.auth.token.email == 'laifa.ait@gmail.com') ||
+        (
+          incoming().role in ['buyer', 'seller'] &&
+          (incoming().role == 'seller' ? (incoming().get('status', 'pending_verification') == 'pending_verification' || incoming().get('status', 'pending') == 'pending') : incoming().get('status', 'active') == 'active') &&
+          (!('walletBalance' in incoming()) || incoming().walletBalance == 0) &&
+          (!('lockedBalance' in incoming()) || incoming().lockedBalance == 0) &&
+          !('commissionRate' in incoming()) &&
+          (!('isVerified' in incoming()) || incoming().isVerified == false) &&
+          (!('trustScore' in incoming()) || incoming().trustScore == 50) &&
+          (!('sellerTrustScore' in incoming()) || incoming().sellerTrustScore == 0 || incoming().sellerTrustScore == 50)
+        )
+      ); 
+      allow update: if isSignedIn() && isEmailVerified() && (
+        isAdmin() || (
+          request.auth.uid == uid 
+          && isValidUser(incoming())
+          && (
+            incoming().role == existing().role || 
+            (existing().role == 'buyer' && incoming().role == 'seller' && (incoming().get('status', 'pending') == 'pending_verification' || incoming().get('status', 'pending') == 'pending'))
+          )
+          && (
+            !('status' in incoming()) || 
+            incoming().status == existing().get('status', 'active') || 
+            (existing().get('status', 'pending_verification') == 'rejected' && (incoming().status == 'pending_verification' || incoming().status == 'pending')) ||
+            (existing().get('status', 'active') == 'rejected' && (incoming().status == 'pending_verification' || incoming().status == 'pending')) ||
+            (existing().get('status', 'active') == 'active' && (incoming().status == 'pending_verification' || incoming().status == 'pending'))
+          )
+          && (
+            !('walletBalance' in incoming()) || incoming().walletBalance == existing().get('walletBalance', 0)
+          )
+          && (
+            !('lockedBalance' in incoming()) || existing().get('lockedBalance', 0) == incoming().lockedBalance
+          )
+          && (
+            !('commissionRate' in incoming()) || existing().get('commissionRate', 10) == incoming().commissionRate
+          )
+          && (
+            !('isVerified' in incoming()) || existing().get('isVerified', false) == incoming().isVerified
+          )
+          && (
+            !('trustScore' in incoming()) || existing().get('trustScore', 50) == incoming().trustScore
+          )
+          && (
+            !('sellerTrustScore' in incoming()) || existing().get('sellerTrustScore', 50) == incoming().sellerTrustScore
+          )
+        )
+      );
+
+      match /cart/{id} {
+        allow read, write: if isSignedIn() && request.auth.uid == uid;
+      }
+      match /wishlist/{id} {
+        allow read, write: if isSignedIn() && request.auth.uid == uid;
+      }
+      match /following/{id} {
+        allow get, list, create, update, delete: if isSignedIn() && request.auth.uid == uid;
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // ANALYTICS COLLECTION
+    // -------------------------------------------------------------------------
+    match /analytics/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    // -------------------------------------------------------------------------
+    // PRODUCTS COLLECTION
+    // -------------------------------------------------------------------------
+    match /products/{productId} {
+      allow read, list: if true;
+
+      function isValidProduct(data) {
+        return data.sellerId == request.auth.uid
+            && data.name is string && data.name.size() <= 200
+            && data.price is number && data.price >= 0
+            && (data.status in ['pending', 'active', 'rejected', 'deleted', 'draft', 'pending_deletion']);
+      }
+
+      allow create: if isSignedIn() && (
+        isAdmin() || (
+          isSeller() && isValidProduct(incoming()) && 
+          incoming().get('status', 'pending') == 'pending' &&
+          !('rating' in incoming()) &&
+          !('reviewsCount' in incoming()) &&
+          !('salesCount' in incoming()) &&
+          !('sellerTrustScore' in incoming()) &&
+          !('averageRating' in incoming()) && !('reviewCount' in incoming())
+        )
+      );
+      allow update: if isSignedIn() && (
+        isAdmin() || (
+          isSeller() && existing().sellerId == request.auth.uid
+          && isValidProduct(incoming())
+          && (incoming().status == existing().status || incoming().status in ['draft', 'pending', 'pending_deletion'])
+          && (!incoming().diff(existing()).affectedKeys().hasAny(['images', 'image', 'name', 'description', 'variants']) || incoming().status == 'pending')
+          && !incoming().diff(existing()).affectedKeys().hasAny(['rating', 'reviewsCount', 'salesCount', 'sellerTrustScore', 'averageRating', 'reviewCount', 'isSponsored', 'sponsoredSince'])
+        )
+      );
+      allow delete: if isAdmin() || (isSeller() && existing().sellerId == request.auth.uid);
+    }
+
+    // -------------------------------------------------------------------------
+    // ORDERS COLLECTION
+    // -------------------------------------------------------------------------
+    match /order_masters/{masterId} {
+      allow get, list: if isSignedIn() && resource.data.userId == request.auth.uid || isAdmin();
+      // 🔴 SÉCURITÉ CRITIQUE : Création uniquement via Cloud Functions / API (processCheckout)
+      allow create: if false;
+      allow update, delete: if isAdmin();
+    }
+    match /wallet_transactions/{txId} {
+      allow get, list: if isSignedIn() && resource.data.userId == request.auth.uid || isAdmin();
+      // 🔴 SÉCURITÉ CRITIQUE : Création uniquement via Cloud Functions / API (processCheckout / Cancel)
+      allow create: if false;
+      allow update, delete: if isAdmin();
+    }
+    match /orders/{orderId} {
+      allow get, list: if isSignedIn() && (
+        resource.data.buyerId == request.auth.uid || 
+        resource.data.userId == request.auth.uid ||
+        isAdmin() || 
+        (isSeller() && request.auth.uid in resource.data.sellerIds)
+      );
+
+      // 🔴 SÉCURITÉ CRITIQUE : Seul le backend peut créer des commandes pour garantir l'intégrité des prix.
+      allow create: if false;
+      
+      function isValidDisputeRequest(disp) {
+        return disp == null 
+            || (disp.status in ['open', 'resolved', 'closed']
+            && disp.reason is string && disp.reason.size() <= 200
+            && disp.details is string && disp.details.size() <= 2000
+            && disp.photos is list);
+      }
+      
+      function isValidReturnRequest(ret) {
+        return ret == null 
+            || (ret.status in ['pending', 'approved', 'rejected']
+            && ret.reason is string && ret.reason.size() <= 200
+            && ret.details is string && ret.details.size() <= 2000);
+      }
+
+      allow update: if isSignedIn() && (
+        isAdmin() || 
+        (
+          request.auth.uid == existing().get('userId', existing().get('buyerId', ''))
+          && isValidDisputeRequest(incoming().get('disputeRequest', null))
+          && isValidReturnRequest(incoming().get('returnRequest', null))
+          && (
+            (
+              incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])
+              && incoming().status == 'cancelled_by_client'
+            ) ||
+            (
+              incoming().diff(existing()).affectedKeys().hasOnly(['status', 'returnRequest', 'updatedAt'])
+              && incoming().status == 'RETURN_REQUESTED'
+            ) ||
+            (
+              incoming().diff(existing()).affectedKeys().hasOnly(['returnRequest'])
+            ) ||
+            (
+              incoming().diff(existing()).affectedKeys().hasOnly(['status', 'disputeRequest', 'updatedAt'])
+              && incoming().status == 'dispute_open'
+            ) ||
+            (
+              incoming().diff(existing()).affectedKeys().hasOnly(['disputeRequest', 'updatedAt'])
+            ) ||
+            (
+              incoming().diff(existing()).affectedKeys().hasOnly(['disputeRequest'])
+            )
+          )
+        ) ||
+        (
+          isSeller() && request.auth.uid in existing().sellerIds
+          && incoming().diff(existing()).affectedKeys().hasOnly(['updatedAt', 'trackingNumber', 'trackingId', 'labelUrl', 'shippingLabelUrl', 'returnRequest', 'returnDetails'])
+        )
+      );
+
+      match /order_logs/{logId} {
+        allow read: if isSignedIn() && (
+          get(/databases/$(database)/documents/orders/$(orderId)).data.buyerId == request.auth.uid ||
+          get(/databases/$(database)/documents/orders/$(orderId)).data.userId == request.auth.uid ||
+          isAdmin() ||
+          (isSeller() && request.auth.uid in get(/databases/$(database)/documents/orders/$(orderId)).data.sellerIds)
+        );
+        allow write: if false;
+      }
+
+      match /messages/{messageId} {
+        allow read: if isSignedIn() && (
+          get(/databases/$(database)/documents/orders/$(orderId)).data.buyerId == request.auth.uid ||
+          get(/databases/$(database)/documents/orders/$(orderId)).data.userId == request.auth.uid ||
+          isAdmin() ||
+          (isSeller() && request.auth.uid in get(/databases/$(database)/documents/orders/$(orderId)).data.sellerIds)
+        );
+        allow write: if false;
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // INTERNAL NOTIFICATIONS (Admin Only)
+    // -------------------------------------------------------------------------
+    match /internal_notifications/{notifId} {
+      allow read, write: if isAdmin();
+      // Exception: Sellers can push notifications during verification or deletion requests
+      allow create: if isSeller() && (
+        (incoming().type == 'DOCUMENT_SUBMISSION' && incoming().sellerId == request.auth.uid) ||
+        (incoming().type == 'PRODUCT_DELETION_REQUEST' && incoming().sellerId == request.auth.uid)
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // USER NOTIFICATIONS (Internal Buyer/Seller Alerts with Premium Translations)
+    // -------------------------------------------------------------------------
+    match /user_notifications/{notifId} {
+      allow read: if isSignedIn() && resource.data.recipientId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.recipientId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow delete: if isSignedIn() && resource.data.recipientId == request.auth.uid;
+    }
+
+    // -------------------------------------------------------------------------
+    // SUPPORT
+    // -------------------------------------------------------------------------
+    match /seller_support/{supportId} {
+      allow read, write: if isSignedIn() && resource.data.sellerId == request.auth.uid || isAdmin();
+      allow create: if isSignedIn() && request.resource.data.sellerId == request.auth.uid;
+    }
+
+    match /buyer_support/{supportId} {
+      allow read, write: if isSignedIn() && resource.data.buyerId == request.auth.uid || isAdmin();
+      allow create: if isSignedIn() && request.resource.data.buyerId == request.auth.uid;
+    }
+
+    // -------------------------------------------------------------------------
+    // WITHDRAWALS
+    // -------------------------------------------------------------------------
+    match /withdrawals/{id} {
+      allow read: if isSignedIn() && (resource.data.sellerId == request.auth.uid || isAdmin());
+      // 🔴 SÉCURITÉ CRITIQUE : Seul le BACKEND peut valider la création de retrait pour éviter les contournements financiers.
+      allow create: if false;
+      allow update: if isAdmin();
+    }
+
+    // -------------------------------------------------------------------------
+    // ERROR REPORTS
+    // -------------------------------------------------------------------------
+    match /site_errors/{id} {
+      allow read, update, delete: if isAdmin();
+      allow create: if true; // Allow public submission
+    }
+
+    // -------------------------------------------------------------------------
+    // SUPPORT TICKETS & MESSAGES
+    // -------------------------------------------------------------------------
+    match /support_tickets/{id} {
+      allow read, update, delete: if isAdmin();
+      allow create: if true; // Allow public submission
+    }
+    
+    function isValidTicket(data) {
+      return data.userId == request.auth.uid
+          && data.userEmail is string && data.userEmail.size() <= 100
+          && data.subject is string && data.subject.size() <= 200
+          && data.message is string && data.message.size() <= 2000
+          && data.status in ['new', 'open', 'resolved', 'closed']
+          && data.category is string && data.category.size() <= 50
+          && data.role in ['buyer', 'seller', 'admin']
+          && data.createdAt == request.time;
+    }
+
+    function isValidSupportMessage(data) {
+      return data.senderId == request.auth.uid
+          && data.ticketId is string && data.ticketId.size() <= 128
+          && data.text is string && data.text.size() <= 2000
+          && data.createdAt == request.time;
+    }
+
+    match /supportTickets/{id} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidTicket(incoming());
+      allow update: if isAdmin() || (isSignedIn() && existing().userId == request.auth.uid);
+    }
+
+    match /supportMessages/{id} {
+      allow read: if isSignedIn(); // Filtered by app queries
+      allow create: if isSignedIn() && isValidSupportMessage(incoming());
+    }
+
+    // -------------------------------------------------------------------------
+    // USER HABITS & PERSONALIZATION
+    // -------------------------------------------------------------------------
+    match /user_habits/{userId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // -------------------------------------------------------------------------
+    // NEWSLETTER & MARKETING (Admin Only)
+    // -------------------------------------------------------------------------
+    match /newsletter_campaigns/{id} { allow read, write: if isAdmin(); }
+    match /newsletter_subscribers/{id} { 
+      allow read: if isAdmin(); 
+      allow create: if true; // Public subscription
+      allow update, delete: if isAdmin(); 
+    }
+    match /newsletterEmails/{id} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+
+    // -------------------------------------------------------------------------
+    // SPONSORSHIP REQUESTS
+    // -------------------------------------------------------------------------
+    match /sponsorship_requests/{id} {
+      allow read: if isAdmin() || (isSeller() && resource.data.sellerId == request.auth.uid);
+      allow create: if isSeller() && incoming().sellerId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // -------------------------------------------------------------------------
+    // ALERTS & COMMUNICATION
+    // -------------------------------------------------------------------------
+    match /admin_alerts/{id} {
+      allow read: if isAdmin();
+      allow create: if isAdmin() || (isSeller() && incoming().type == 'PRODUCT_DELETION_REQUEST' && incoming().sellerId == request.auth.uid);
+      allow update, delete: if isAdmin();
+    }
+    
+    match /orderMessages/{id} {
+      allow read: if isSignedIn(); // Filtered by messaging queries
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    // -------------------------------------------------------------------------
+    // AUDIT LOGS
+    // -------------------------------------------------------------------------
+    match /audit_logs/{id} { 
+      allow read: if isAdmin(); 
+      allow create: if isSignedIn(); 
+    }
+
+    // -------------------------------------------------------------------------
+    // REVIEWS COLLECTION
+    // -------------------------------------------------------------------------
+    function isValidReview(data) {
+      return data.userId == request.auth.uid
+          && data.rating is number 
+          && data.rating >= 1 
+          && data.rating <= 5
+          && data.text is string 
+          && data.text.size() <= 1000;
+    }
+
+    match /reviews/{id} {
+      allow read: if true;
+      // 🔴 SÉCURITÉ CRITIQUE : Seul le backend (Admin SDK) peut créer et uploader des reviews 
+      // pour garantir la vérification de la commande livrée. 
+      allow create, update, delete: if isAdmin();
+    }
+
+  }
+}
