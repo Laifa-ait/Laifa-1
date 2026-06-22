@@ -11,14 +11,8 @@ interface SideDrawerProps {
   children: ReactNode;
 }
 
-export const SideDrawer: React.FC<SideDrawerProps> = ({
-  isOpen,
-  onClose,
-  title,
-  icon,
-  children,
-}) => {
-    const { t } = useTranslation();
+export const SideDrawer: React.FC<SideDrawerProps> = ({ isOpen, onClose, title, icon, children }) => {
+  const { t } = useTranslation();
   useEffect(() => {
     if (isOpen) {
       document.body.classList.add("no-scroll");
@@ -47,7 +41,7 @@ export const SideDrawer: React.FC<SideDrawerProps> = ({
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 32, stiffness: 320 }}
             className="fixed right-0 top-0 h-full w-full max-w-md bg-[#FAF8F5]/98 md:backdrop-blur-xl z-[110] shadow-[0_20px_50px_rgba(44,30,22,0.10)] flex flex-col overscroll-contain border-l border-[#EBE5DF]/40"
-            style={{ maxHeight: '100dvh', overflowY: 'auto' }}
+            style={{ maxHeight: "100dvh", overflowY: "auto" }}
           >
             <div className="p-6 border-b border-[#EBE5DF]/40 flex items-center justify-between shrink-0 bg-[#FAF8F5]">
               <h3 className="text-lg font-bold flex items-center gap-2 tracking-tight rtl:tracking-normal text-zinc-900">
@@ -61,9 +55,7 @@ export const SideDrawer: React.FC<SideDrawerProps> = ({
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="flex-1 flex flex-col">
-              {children}
-            </div>
+            <div className="flex-1 flex flex-col">{children}</div>
           </motion.div>
         </>
       )}

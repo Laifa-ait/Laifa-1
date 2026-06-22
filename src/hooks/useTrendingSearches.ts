@@ -1,17 +1,10 @@
-import { useState, useEffect } from 'react';
-import { db } from '../lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { useState, useEffect } from "react";
+import { db } from "../lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
-const FALLBACK_TRENDS = [
-  "Tapis Berbère",
-  "Robe Kabyle",
-  "Poterie",
-  "Bijoux en Argent",
-  "Burnous",
-  "Tajine Algérien"
-];
+const FALLBACK_TRENDS = ["Tapis Berbère", "Robe Kabyle", "Poterie", "Bijoux en Argent", "Burnous", "Tajine Algérien"];
 
-const CACHE_KEY = 'olma_trending_searches';
+const CACHE_KEY = "olma_trending_searches";
 const CACHE_EXPIRATION_MS = 24 * 60 * 60 * 1000; // 24 heures
 
 export const useTrendingSearches = () => {
@@ -31,23 +24,29 @@ export const useTrendingSearches = () => {
         }
 
         // Sinon, on fait UNE SEULE lecture serveur
-        const docRef = doc(db, 'platform_stats', 'trending_searches');
+        const docRef = doc(db, "platform_stats", "trending_searches");
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists() && docSnap.data().terms && Array.isArray(docSnap.data().terms)) {
           const fetchedTrends = docSnap.data().terms.slice(0, 8);
           setTrends(fetchedTrends);
           // On sauvegarde en cache avec l'heure exacte
-          localStorage.setItem(CACHE_KEY, JSON.stringify({
-            data: fetchedTrends,
-            timestamp: Date.now()
-          }));
+          localStorage.setItem(
+            CACHE_KEY,
+            JSON.stringify({
+              data: fetchedTrends,
+              timestamp: Date.now(),
+            })
+          );
         } else {
           // Si pas de document, on cache les valeurs de secours pour éviter d'autres lectures inutiles
-          localStorage.setItem(CACHE_KEY, JSON.stringify({
-            data: FALLBACK_TRENDS,
-            timestamp: Date.now()
-          }));
+          localStorage.setItem(
+            CACHE_KEY,
+            JSON.stringify({
+              data: FALLBACK_TRENDS,
+              timestamp: Date.now(),
+            })
+          );
         }
       } catch (error) {
         console.error("Error fetching trending searches:", error);

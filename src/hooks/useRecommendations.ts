@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
-import { Recommendation } from '../types';
+import { useState, useEffect } from "react";
+import { db, handleFirestoreError, OperationType } from "../lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { Recommendation } from "../types";
 
 interface UseRecommendationsResult {
   data: Recommendation[];
@@ -31,7 +31,7 @@ export function useRecommendations(userId: string | null | undefined): UseRecomm
 
         // PART 1: Try Authenticated User Recommendation
         if (userId) {
-          const userRecRef = doc(db, 'user_recommendations', userId);
+          const userRecRef = doc(db, "user_recommendations", userId);
           const userRecSnap = await getDoc(userRecRef);
 
           if (userRecSnap.exists()) {
@@ -41,7 +41,7 @@ export function useRecommendations(userId: string | null | undefined): UseRecomm
 
         // PART 2: Fallback to Global Trending (or directly for Guests)
         if (recommendations.length === 0) {
-          const globalRecRef = doc(db, 'ui_elements', 'global_trending');
+          const globalRecRef = doc(db, "ui_elements", "global_trending");
           const globalRecSnap = await getDoc(globalRecRef);
 
           if (globalRecSnap.exists()) {
@@ -51,8 +51,12 @@ export function useRecommendations(userId: string | null | undefined): UseRecomm
 
         setData(recommendations);
       } catch (err: any) {
-        handleFirestoreError(err, OperationType.GET, userId ? `user_recommendations/${userId}` : 'ui_elements/global_trending');
-        setError(err.message || 'Error loading recommendations');
+        handleFirestoreError(
+          err,
+          OperationType.GET,
+          userId ? `user_recommendations/${userId}` : "ui_elements/global_trending"
+        );
+        setError(err.message || "Error loading recommendations");
       } finally {
         setIsLoading(false);
       }

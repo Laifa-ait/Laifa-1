@@ -1,10 +1,13 @@
+import { Request, Response } from 'express';
+export interface AuthenticatedRequest extends Request { user?: any; file?: any; files?: any; }
+
 import { Router } from "express";
 import { authenticateToken } from "../middlewares/auth";
 import { admin, db } from "../config/firebase-admin";
 
 const router = Router();
 
-router.post("/sync-user-claims", authenticateToken, async (req: any, res: any) => {
+router.post("/sync-user-claims", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   const uid = req.user.uid;
   try {
     const userDoc = await db.collection('users').doc(uid).get();

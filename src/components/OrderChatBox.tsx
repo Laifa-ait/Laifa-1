@@ -1,114 +1,165 @@
-import React, { useEffect, useState } from 'react';
-import { db } from '../lib/firebase';
-import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
-import { Send, AlertTriangle } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import React, { useEffect, useState } from "react";
+import { db } from "../lib/firebase";
+import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
+import { Send, AlertTriangle } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
-import { maskSensitiveData } from '../utils/masking';
+import { maskSensitiveData, hasExternalChannel } from "../utils/masking";
 
 interface Message {
   id: string;
   senderId: string;
-  senderRole?: 'buyer' | 'seller';
+  senderRole?: "buyer" | "seller";
   text: string;
   createdAt: any;
 }
 
-export const OrderChatBox: React.FC<{ orderId: string, buyerId: string }> = ({ orderId, buyerId }) => {
-    const { t } = useTranslation();
+export const OrderChatBox: React.FC<{ orderId: string; buyerId: string }> = ({ orderId, buyerId }) => {
+  const { t } = useTranslation();
   const { currentUser } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [error, setError] = useState('');
+  const [newMessage, setNewMessage] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!orderId) return;
-    const q = query(
-      collection(db, "orders", orderId, "messages"),
-      orderBy("createdAt", "asc")
-    );
+    const q = query(collection(db, "orders", orderId, "messages"), orderBy("createdAt", "asc"));
     const unsub = onSnapshot(q, (snap) => {
-      setMessages(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message)));
+      setMessages(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as Message));
     });
     return () => unsub();
   }, [orderId]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    
+    setError("");
+
     if (!currentUser || !newMessage.trim()) return;
 
+    // 1. Sanitize text: Eliminate HTML/Script elements to guard against XSS injection
+    const rawText = newMessage.trim();
+    const sanitizedText = rawText.replace(/<\/?[^>]+(>|$)/g, "").trim();
+
+    if (!sanitizedText) {
+      setError(
+        t("Le message ne doit pas être vide ou contenir que du code HTML.") ||
+          "Le message ne doit pas être vide ou contenir du HTML."
+      );
+      return;
+    }
+
+    // 2. Validate maximum length (1000 characters)
+    if (sanitizedText.length > 1000) {
+      setError(
+        t("Le message est trop long. La taille maximale autorisée est de 1000 caractères.") ||
+          "Le message est trop long. Maximum 1000 caractères."
+      );
+      return;
+    }
+
+    // 3. Prevent external communication channels entirely (OLMART compliance rule)
+    if (hasExternalChannel(sanitizedText)) {
+      setError(
+        t(
+          "Sécurité : Le partage de numéros de téléphone, comptes de réseaux sociaux, e-mails ou liens est strictement interdit. Tout échange doit rester sur OLMART."
+        ) || "Sécurité OLMART : Coordonnées interdites."
+      );
+      return;
+    }
+
+    // Double-defense redundant masking
+    const compliantText = maskSensitiveData(sanitizedText);
+
     try {
-      const text = newMessage.trim();
-      setNewMessage('');
+      setNewMessage("");
 
       const idToken = await currentUser.getIdToken();
       const res = await fetch("/api/messages/send", {
-         method: "POST",
-         headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${idToken}`
-         },
-         body: JSON.stringify({
-            orderId: orderId,
-            text: text
-         })
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          orderId: orderId,
+          text: compliantText,
+        }),
       });
-      
+
       if (!res.ok) {
-         const data = await res.json();
-         throw new Error(data.error || "Failed to send message");
+        const data = await res.json();
+        throw new Error(data.error || "Failed to send message");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError(t("Erreur de l'envoi") || "Erreur lors de l'envoi du message.");
+      setError(err.message || t("Erreur de l'envoi") || "Erreur lors de l'envoi du message.");
     }
   };
 
   return (
     <div className="flex flex-col h-[400px] bg-zinc-50 rounded-2xl border border-zinc-100 overflow-hidden">
       <div className="bg-zinc-950 p-4 shrink-0 flex items-center justify-between">
-         <h4 className="text-white font-bold text-sm">{t("Messagerie Sécurisée")}</h4>
-         <div className="flex items-center gap-2 text-zinc-400 text-[10px] rtl:text-[12px] uppercase font-black tracking-widest rtl:tracking-normal">
-            <AlertTriangle className="w-3 h-3 text-orange-500" />
-            {t("Vendeur ↔ Acheteur")}</div>
+        <h4 className="text-white font-bold text-sm">{t("Messagerie Sécurisée")}</h4>
+        <div className="flex items-center gap-2 text-zinc-400 text-[10px] rtl:text-[12px] uppercase font-black tracking-widest rtl:tracking-normal">
+          <AlertTriangle className="w-3 h-3 text-orange-500" />
+          {t("Vendeur ↔ Acheteur")}
+        </div>
       </div>
-      
+
       <div className="flex-1 p-4 overflow-y-auto space-y-4">
         {messages.length === 0 ? (
-           <p className="text-center text-zinc-400 text-xs rtl:text-sm font-medium mt-10">{t("Aucun message pour cette commande.")}</p>
+          <p className="text-center text-zinc-400 text-xs rtl:text-sm font-medium mt-10">
+            {t("Aucun message pour cette commande.")}
+          </p>
         ) : (
-          messages.map(m => {
+          messages.map((m) => {
             const isMe = m.senderId === currentUser?.uid;
             return (
-              <div key={m.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${isMe ? 'bg-zinc-900 text-white rounded-br-sm' : 'bg-white border border-zinc-200 text-zinc-800 rounded-bl-sm shadow-sm'}`}>
+              <div key={m.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                <div
+                  className={`max-w-[80%] p-3 rounded-2xl text-sm ${isMe ? "bg-zinc-900 text-white rounded-br-sm" : "bg-white border border-zinc-200 text-zinc-800 rounded-bl-sm shadow-sm"}`}
+                >
                   <p>{m.text}</p>
-                  <span className={`text-[9px] rtl:text-[11px] mt-1 block font-black uppercase ${isMe ? 'text-zinc-500' : 'text-zinc-400'}`}>
-                    {m.createdAt?.toDate ? m.createdAt.toDate().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''}
+                  <span
+                    className={`text-[9px] rtl:text-[11px] mt-1 block font-black uppercase ${isMe ? "text-zinc-500" : "text-zinc-400"}`}
+                  >
+                    {m.createdAt?.toDate
+                      ? m.createdAt.toDate().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
+                      : ""}
                   </span>
                 </div>
               </div>
-            )
+            );
           })
         )}
       </div>
 
       <div className="p-3 bg-white border-t border-zinc-200 shrink-0">
-         {error && <p className="text-[10px] rtl:text-[12px] text-red-500 font-bold mb-2 flex items-center gap-1"><AlertTriangle className="w-3 h-3"/>{error}</p>}
-         <form onSubmit={handleSend} className="flex items-center gap-2">
-            <input 
-              type="text" 
-              value={newMessage}
-              onChange={e => { setNewMessage(e.target.value); setError(''); }}
-              placeholder={t("Écrivez à l'acheteur...") || "Écrivez à l'acheteur..."}
-              className="flex-1 bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 outline-none text-sm focus:border-zinc-400"
-            />
-            <button type="submit" disabled={!newMessage.trim()} className="p-3 bg-orange-500 text-white rounded-xl disabled:opacity-50">
-               <Send className="w-4 h-4" />
-            </button>
-         </form>
+        {error && (
+          <p className="text-[10px] rtl:text-[12px] text-red-500 font-bold mb-2 flex items-center gap-1">
+            <AlertTriangle className="w-3 h-3" />
+            {error}
+          </p>
+        )}
+        <form onSubmit={handleSend} className="flex items-center gap-2">
+          <input
+            type="text"
+            value={newMessage}
+            onChange={(e) => {
+              setNewMessage(e.target.value);
+              setError("");
+            }}
+            placeholder={t("Écrivez à l'acheteur...") || "Écrivez à l'acheteur..."}
+            className="flex-1 bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 outline-none text-sm focus:border-zinc-400"
+          />
+          <button
+            type="submit"
+            disabled={!newMessage.trim()}
+            className="p-3 bg-orange-500 text-white rounded-xl disabled:opacity-50"
+          >
+            <Send className="w-4 h-4" />
+          </button>
+        </form>
       </div>
     </div>
   );

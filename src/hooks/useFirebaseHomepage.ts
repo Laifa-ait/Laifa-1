@@ -1,6 +1,17 @@
 import { useState, useCallback } from "react";
 import { db, storage } from "../lib/firebase";
-import { collection, doc, getDocs, updateDoc, deleteDoc, addDoc, query, orderBy, serverTimestamp } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  addDoc,
+  query,
+  orderBy,
+  serverTimestamp,
+  writeBatch,
+} from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import toast from "react-hot-toast";
 
@@ -24,26 +35,28 @@ export const useFirebaseHomepage = () => {
   const saveItem = useCallback(async (collectionName: string, id: string | null, payload: any) => {
     setIsLoading(true);
     try {
+      const batch = writeBatch(db);
+      let isUpdate = false;
+
       if (id) {
-        await updateDoc(doc(db, collectionName, id), {
+        isUpdate = true;
+        batch.update(doc(db, collectionName, id), {
           ...payload,
           updatedAt: serverTimestamp(),
         });
-        toast.success("Élément mis à jour !");
       } else {
-        await addDoc(collection(db, collectionName), {
+        const newRef = doc(collection(db, collectionName));
+        batch.set(newRef, {
           ...payload,
           createdAt: serverTimestamp(),
         });
-        toast.success("Élément ajouté !");
       }
 
-      // Clear homepage compile cache so storefront picks up live edits instantly
-      try {
-        await deleteDoc(doc(db, "public", "homepage_cache"));
-      } catch (cacheErr) {
-        console.warn("Could not clear homepage cache:", cacheErr);
-      }
+      // Clear homepage compile cache in the same batch
+      batch.delete(doc(db, "public", "homepage_cache"));
+
+      await batch.commit();
+      toast.success(isUpdate ? "Élément mis à jour !" : "Élément ajouté !");
     } catch (err) {
       toast.error("Erreur de sauvegarde");
       throw err;

@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { X, Send, Bot, User, Loader2 } from 'lucide-react';
+import React, { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { X, Send, Bot, User, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 interface AiChatDrawerProps {
@@ -9,54 +9,68 @@ interface AiChatDrawerProps {
 }
 
 interface Message {
-  role: 'user' | 'model';
+  role: "user" | "model";
   parts: { text: string }[];
 }
 
 export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ isOpen, onClose }) => {
-    const { t } = useTranslation();
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'model', parts: [{ text: "Bonjour ! Je suis Olma, votre assistant IA personnel. Comment puis-je vous aider aujourd'hui ?" }] }
+    {
+      role: "model",
+      parts: [
+        { text: "Bonjour ! Je suis Olma, votre assistant IA personnel. Comment puis-je vous aider aujourd'hui ?" },
+      ],
+    },
   ]);
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen) {
-      endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
+      endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, isOpen]);
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
 
-    const newUserMsg: Message = { role: 'user', parts: [{ text: inputValue }] };
+    const newUserMsg: Message = { role: "user", parts: [{ text: inputValue }] };
     const conversationHistory = [...messages, newUserMsg];
     setMessages(conversationHistory);
-    setInputValue('');
+    setInputValue("");
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: newUserMsg.parts[0].text,
-          history: messages.slice(1).map(m => ({ // Don't send initial offline greeting
-              role: m.role,
-              parts: [{ text: m.parts[0].text }]
-          }))
-        })
+          history: messages.slice(1).map((m) => ({
+            // Don't send initial offline greeting
+            role: m.role,
+            parts: [{ text: m.parts[0].text }],
+          })),
+        }),
       });
       const data = await response.json();
-      
-      if (!response.ok) throw new Error(data.error || 'Erreur API');
 
-      setMessages([...conversationHistory, { role: 'model', parts: [{ text: data.reply }] }]);
+      if (!response.ok) throw new Error(data.error || "Erreur API");
+
+      setMessages([...conversationHistory, { role: "model", parts: [{ text: data.reply }] }]);
     } catch (error) {
       console.error(error);
-      setMessages([...conversationHistory, { role: 'model', parts: [{ text: "Désolé, je rencontre des difficultés techniques actuellement. Veuillez réessayer plus tard." }] }]);
+      setMessages([
+        ...conversationHistory,
+        {
+          role: "model",
+          parts: [
+            { text: "Désolé, je rencontre des difficultés techniques actuellement. Veuillez réessayer plus tard." },
+          ],
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -74,9 +88,9 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ isOpen, onClose }) =
             className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 transition-all"
           />
           <motion.div
-            initial={{ x: '100%', borderTopLeftRadius: '2rem', borderBottomLeftRadius: '2rem' }}
-            animate={{ x: 0, borderTopLeftRadius: '1.5rem', borderBottomLeftRadius: '1.5rem' }}
-            exit={{ x: '100%', borderTopLeftRadius: '2rem', borderBottomLeftRadius: '2rem' }}
+            initial={{ x: "100%", borderTopLeftRadius: "2rem", borderBottomLeftRadius: "2rem" }}
+            animate={{ x: 0, borderTopLeftRadius: "1.5rem", borderBottomLeftRadius: "1.5rem" }}
+            exit={{ x: "100%", borderTopLeftRadius: "2rem", borderBottomLeftRadius: "2rem" }}
             transition={{ type: "spring", bounce: 0, duration: 0.4 }}
             className="fixed inset-y-0 right-0 w-full md:w-[400px] bg-white shadow-2xl z-50 flex flex-col border-l border-zinc-100 overflow-hidden"
           >
@@ -89,7 +103,8 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ isOpen, onClose }) =
                 <div>
                   <h3 className="text-zinc-900 font-bold text-sm tracking-wide">{t("Assistant Olma Gemini")}</h3>
                   <span className="text-green-600 font-semibold text-[10px] rtl:text-[12px] tracking-widest rtl:tracking-normal uppercase flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> {t("En ligne")}</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> {t("En ligne")}
+                  </span>
                 </div>
               </div>
               <button
@@ -103,11 +118,15 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ isOpen, onClose }) =
             {/* Chat Area */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-zinc-50/30">
               {messages.map((msg, idx) => (
-                <div key={idx} className={`flex gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'user' ? 'bg-zinc-900 text-white' : 'bg-orange-600 text-white'}`}>
-                    {msg.role === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+                <div key={idx} className={`flex gap-4 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === "user" ? "bg-zinc-900 text-white" : "bg-orange-600 text-white"}`}
+                  >
+                    {msg.role === "user" ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
                   </div>
-                  <div className={`p-4 rounded-2xl max-w-[80%] text-sm leading-relaxed ${msg.role === 'user' ? 'bg-zinc-900 text-white rounded-tr-sm' : 'bg-white border border-zinc-100 shadow-sm text-zinc-700 rounded-tl-sm'}`}>
+                  <div
+                    className={`p-4 rounded-2xl max-w-[80%] text-sm leading-relaxed ${msg.role === "user" ? "bg-zinc-900 text-white rounded-tr-sm" : "bg-white border border-zinc-100 shadow-sm text-zinc-700 rounded-tl-sm"}`}
+                  >
                     {msg.parts[0].text}
                   </div>
                 </div>
@@ -129,8 +148,11 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ isOpen, onClose }) =
 
             {/* Input Area */}
             <div className="p-4 border-t border-zinc-100 bg-white">
-              <form 
-                onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSendMessage();
+                }}
                 className="flex items-center gap-2"
               >
                 <input

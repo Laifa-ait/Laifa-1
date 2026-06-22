@@ -8,12 +8,17 @@
 export async function withExponentialBackoff<T>(
   fn: () => Promise<T>,
   maxRetries: number = 3,
-  baseDelay: number = 1000
+  baseDelay: number = 1000,
+  timeoutMs: number = 15000 // 15 seconds default timeout
 ): Promise<T> {
   let attempt = 0;
   while (attempt < maxRetries) {
     try {
-      return await fn();
+      // Execute the function with a timeout
+      return await Promise.race([
+        fn(),
+        new Promise<T>((_, reject) => setTimeout(() => reject(new Error('timeout')), timeoutMs))
+      ]);
     } catch (error: any) {
       attempt++;
       if (attempt >= maxRetries) {
@@ -29,6 +34,7 @@ export async function withExponentialBackoff<T>(
         error.code === 'deadline-exceeded' ||
         error.status === 429 ||
         error.status === 503 ||
+        error.message === 'timeout' ||
         error.message?.toLowerCase().includes('network');
         
       if (!isRetryable) {

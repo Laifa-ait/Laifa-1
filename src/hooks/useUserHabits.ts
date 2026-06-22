@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { db, auth } from '../lib/firebase';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
-import { onAuthStateChanged } from 'firebase/auth';
+import { useState, useEffect } from "react";
+import { db, auth } from "../lib/firebase";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 
 // Interface définissant la structure de nos données d'habitudes
 export interface UserHabits {
@@ -12,16 +12,16 @@ export interface UserHabits {
 export function useUserHabits() {
   // 1. État pour vérifier si l'utilisateur a déjà répondu à la bannière de consentement
   const [aReponduConsentement, setAReponduConsentement] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('olma_consentement') !== null;
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("olma_consentement") !== null;
     }
     return false;
   });
 
   // 2. État pour le consentement actif (RGPD)
   const [consentementAccepte, setConsentementAccepte] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('olma_consentement') === 'true';
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("olma_consentement") === "true";
     }
     return false;
   });
@@ -29,9 +29,9 @@ export function useUserHabits() {
   // 3. État des habitudes de l'utilisateur
   const [habitudes, setHabitudes] = useState<UserHabits>(() => {
     // Sécurité : On vérifie que window existe (pour éviter le crash SSR)
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       try {
-        const stored = localStorage.getItem('olma_habitudes');
+        const stored = localStorage.getItem("olma_habitudes");
         if (stored) {
           return JSON.parse(stored);
         }
@@ -47,20 +47,23 @@ export function useUserHabits() {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (user && consentementAccepte) {
         try {
-          const userRef = doc(db, 'user_habits', user.uid);
+          const userRef = doc(db, "user_habits", user.uid);
           const snap = await getDoc(userRef);
-          
+
           if (snap.exists()) {
             const data = snap.data() as UserHabits;
             // Merge local and remote
-            setHabitudes(prev => {
+            setHabitudes((prev) => {
               const mergedHabits: UserHabits = {
-                historique_recherches: Array.from(new Set([...prev.historique_recherches, ...(data.historique_recherches || [])])).slice(0, 10),
-                categories_visitees: { ...data.categories_visitees }
+                historique_recherches: Array.from(
+                  new Set([...prev.historique_recherches, ...(data.historique_recherches || [])])
+                ).slice(0, 10),
+                categories_visitees: { ...data.categories_visitees },
               };
               // Add counts from local to remote if they differ
               Object.entries(prev.categories_visitees).forEach(([cat, count]) => {
-                mergedHabits.categories_visitees[cat] = (mergedHabits.categories_visitees[cat] || 0) + (count as number);
+                mergedHabits.categories_visitees[cat] =
+                  (mergedHabits.categories_visitees[cat] || 0) + (count as number);
               });
               return mergedHabits;
             });
@@ -79,13 +82,15 @@ export function useUserHabits() {
 
   // Synchronisation des habitudes avec le localStorage à chaque modification (si consentement donné)
   useEffect(() => {
-    if (consentementAccepte && typeof window !== 'undefined') {
-      localStorage.setItem('olma_habitudes', JSON.stringify(habitudes));
-      
+    if (consentementAccepte && typeof window !== "undefined") {
+      localStorage.setItem("olma_habitudes", JSON.stringify(habitudes));
+
       // Also update Firestore if logged in (debounced ideally, but here direct for simplicity)
       if (auth.currentUser) {
-        const userRef = doc(db, 'user_habits', auth.currentUser.uid);
-        setDoc(userRef, habitudes, { merge: true }).catch(err => console.log("Habits up error", err));
+        const userRef = doc(db, "user_habits", auth.currentUser.uid);
+        setDoc(userRef, habitudes, { merge: true }).catch((err) =>
+          (process.env.NODE_ENV === "debug" ? console.log : function () {})("Habits up error", err)
+        );
       }
     }
   }, [habitudes, consentementAccepte]);
@@ -94,18 +99,18 @@ export function useUserHabits() {
   const accepterConsentement = () => {
     setConsentementAccepte(true);
     setAReponduConsentement(true);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('olma_consentement', 'true');
+    if (typeof window !== "undefined") {
+      localStorage.setItem("olma_consentement", "true");
     }
   };
 
   const refuserConsentement = () => {
     setConsentementAccepte(false);
     setAReponduConsentement(true);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('olma_consentement', 'false');
+    if (typeof window !== "undefined") {
+      localStorage.setItem("olma_consentement", "false");
       // On peut aussi nettoyer les anciennes données si l'utilisateur refuse.
-      localStorage.removeItem('olma_habitudes');
+      localStorage.removeItem("olma_habitudes");
       setHabitudes({ historique_recherches: [], categories_visitees: {} });
     }
   };
@@ -113,7 +118,7 @@ export function useUserHabits() {
   // Fonction de tracking : Clic sur une catégorie
   const trackCategorie = (categorieId: string) => {
     if (!consentementAccepte) return; // Pas de tracking sans consentement
-    
+
     setHabitudes((prev) => {
       const currentCount = prev.categories_visitees[categorieId] || 0;
       return {
@@ -130,12 +135,12 @@ export function useUserHabits() {
   const trackRecherche = (motCle: string) => {
     const terme = motCle.trim();
     if (!consentementAccepte || !terme) return;
-    
+
     setHabitudes((prev) => {
       // Ajoute le nouveau terme au début, en supprimant les doublons, max 5 éléments
-      const historiquePropre = prev.historique_recherches.filter(k => k.toLowerCase() !== terme.toLowerCase());
+      const historiquePropre = prev.historique_recherches.filter((k) => k.toLowerCase() !== terme.toLowerCase());
       const nvxHistorique = [terme, ...historiquePropre].slice(0, 5);
-      
+
       return {
         ...prev,
         historique_recherches: nvxHistorique,
@@ -146,7 +151,7 @@ export function useUserHabits() {
   // Algorithme d'extraction de la catégorie favorite avec tolérance au bruit
   const getCategorieFavorite = (): string | null => {
     // Check if there is a simulated/forced category in session storage for presentation review
-    const forced = typeof window !== 'undefined' ? sessionStorage.getItem('olma_simulated_category') : null;
+    const forced = typeof window !== "undefined" ? sessionStorage.getItem("olma_simulated_category") : null;
     if (forced) return forced;
 
     const categories = Object.entries(habitudes.categories_visitees);
@@ -163,33 +168,33 @@ export function useUserHabits() {
     if (!favorite) return defaultCategories;
 
     // Placer la favorite en premier, puis les autres
-    const filtered = defaultCategories.filter(cat => cat !== favorite);
+    const filtered = defaultCategories.filter((cat) => cat !== favorite);
     return [favorite, ...filtered];
   };
 
   // Permet de simuler/forcer instantanément une catégorie pour tester la personnalisation sans clic répété
   const forceCategorieFavorite = (category: string | null) => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       if (category) {
-        sessionStorage.setItem('olma_simulated_category', category);
+        sessionStorage.setItem("olma_simulated_category", category);
         // Also feed habits state to keep them aligned
-        setHabitudes(prev => ({
+        setHabitudes((prev) => ({
           ...prev,
           categories_visitees: {
             ...prev.categories_visitees,
-            [category]: (prev.categories_visitees[category] || 0) + 10
-          }
+            [category]: (prev.categories_visitees[category] || 0) + 10,
+          },
         }));
       } else {
-        sessionStorage.removeItem('olma_simulated_category');
+        sessionStorage.removeItem("olma_simulated_category");
       }
     }
   };
 
   const clearHabits = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('olma_habitudes');
-      sessionStorage.removeItem('olma_simulated_category');
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("olma_habitudes");
+      sessionStorage.removeItem("olma_simulated_category");
       setHabitudes({ historique_recherches: [], categories_visitees: {} });
     }
   };
@@ -206,6 +211,6 @@ export function useUserHabits() {
     forceCategorieFavorite,
     clearHabits,
     categoriesVisiteesCount: habitudes.categories_visitees,
-    historiqueRecherches: habitudes.historique_recherches
+    historiqueRecherches: habitudes.historique_recherches,
   };
 }

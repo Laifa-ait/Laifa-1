@@ -1,3 +1,6 @@
+import { Request, Response } from 'express';
+export interface AuthenticatedRequest extends Request { user?: any; file?: any; files?: any; }
+
 import { Router } from "express";
 import {
   admin,
@@ -23,10 +26,9 @@ import path from "path";
 import nodeCache from "node-cache";
 import Fuse from "fuse.js";
 import express from "express";
-import { checkSellerVelocityLimit } from "./orders";
-import { translate } from "@vitalets/google-translate-api";
+import { checkSellerVelocityLimit } from "../utils/velocity";
 
-const cache = new nodeCache({ stdTTL: 900 });
+const cache = new nodeCache({ stdTTL: 900, maxKeys: 200, useClones: false });
 
 const dualWrite = (lang: string, content: any) => {
   const p1 = path.join(process.cwd(), "public/locales", `${lang}.json`);
@@ -49,81 +51,12 @@ const dualWrite = (lang: string, content: any) => {
 
 const router = Router();
 
-router.get("/api/debug/user", async (req, res) => {
-  try {
-    const snap = await db
-      .collection("users")
-      .where("email", "==", "laifa.aitouferoukh90@gmail.com")
-      .get();
-    if (snap.empty) {
-      res.json({ found: false });
-    } else {
-      res.json({ found: true, doc: snap.docs[0].data(), id: snap.docs[0].id });
-    }
-  } catch (e: any) {
-    res.json({ error: e.message });
-  }
-});
-
-router.get("/api/debug/firestore", async (req, res) => {
-  const diagnosticResults: any = {
-    projectId: firebaseConfig.projectId,
-    databaseId: firebaseConfig.firestoreDatabaseId,
-    envProjectId: process.env.FIREBASE_PROJECT_ID,
-    hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
-    apps: admin.apps.length,
-    results: [],
-  };
-
-  try {
-    // Test 1: Accessing current db instance
-    try {
-      const snap = await db.collection("products").limit(1).get();
-      diagnosticResults.results.push({
-        test: "current_db",
-        success: true,
-        count: snap.size,
-      });
-    } catch (e: any) {
-      diagnosticResults.results.push({
-        test: "current_db",
-        success: false,
-        error: e.message,
-      });
-    }
-
-    // Test 2: Accessing (default) database
-    try {
-      const defaultDb = admin.app().firestore();
-      const snap = await defaultDb.collection("products").limit(1).get();
-      diagnosticResults.results.push({
-        test: "default_db",
-        success: true,
-        count: snap.size,
-      });
-    } catch (e: any) {
-      diagnosticResults.results.push({
-        test: "default_db",
-        success: false,
-        error: e.message,
-      });
-    }
-
-    // Test 3: Re-initializing with ambient credentials only
-    /* Removed getFirestore re-init test from diagnostics payload since we modularized init */
-
-    res.json(diagnosticResults);
-  } catch (err: any) {
-    res.status(500).json({ error: err.message, stack: err.stack });
-  }
-});
-
 // --- Checkout & Order Processing ---
 
 router.post(
   "/api/validate-coupon",
   authenticateToken,
-  async (req: any, res: any) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     const { code, subtotal } = req.body;
 
     if (!code) {
@@ -143,7 +76,7 @@ router.post(
       }
 
       const couponDoc = q.docs[0];
-      const couponData = { id: couponDoc.id, ...couponDoc.data() };
+      const couponData = { id: couponDoc.id, ...couponDoc.data() } as any;
 
       if (!couponData.isActive) {
         return res
@@ -183,429 +116,6 @@ router.post(
     }
   },
 );
-
-router.post("/api/auth/sync", async (req: any, res: any) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-    const idToken = authHeader.split("Bearer ")[1];
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-
-    try {
-      if (db) {
-        console.log("Auth sync: processing user", decodedToken.uid);
-
-        try {
-          const userRef = db.collection("users").doc(decodedToken.uid);
-          const userDoc = await userRef.get();
-
-          if (!userDoc.exists) {
-            await userRef.set({
-              uid: decodedToken.uid,
-              displayName: decodedToken.name || req.body.name || "Client",
-              email: decodedToken.email,
-              role:
-                decodedToken.email === "laifa.ait@gmail.com"
-                  ? "admin"
-                  : req.body.role || "buyer",
-              onboardingCompleted: true,
-              createdAt: admin.firestore.FieldValue.serverTimestamp(),
-              lastAuthMethod: "sync",
-            });
-          }
-          return res.json({ success: true });
-        } catch (dbErr: any) {
-          // We expect some permission issues in sandboxes, but client-side write already occurred.
-          // Be silent to avoid flagging errors in the build logs.
-          return res.json({ success: true, mode: "client_fallback" });
-        }
-      }
-    } catch (outerErr: any) {
-      console.warn("Auth sync outer block fail:", outerErr.message);
-      return res.json({ success: true, warning: "auth_sync_bypass" });
-    }
-  } catch (err: any) {
-    console.error("Critical Auth sync error:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.post("/api/auth/onboard", async (req: any, res: any) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-    const idToken = authHeader.split("Bearer ")[1];
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-
-    // Zod Schema Validation
-    const validationResult = onboardingSchema.safeParse(req.body);
-    if (!validationResult.success) {
-      const formattedErrors = validationResult.error.issues.map((err) => ({
-        path: err.path.join("."),
-        message: err.message,
-      }));
-      return res.status(400).json({
-        error: "Données de formulaire invalides.",
-        details: formattedErrors,
-      });
-    }
-
-    const { name, phone, wilaya, address, role, interests } =
-      validationResult.data;
-
-    // Reject any external communication channels (phone number, WhatsApp, social networks, links) in text fields
-    if (hasExternalChannel(name) || hasExternalChannel(address)) {
-      return res.status(400).json({
-        error: "Les coordonnées externes (téléphone, liens réseaux sociaux, WhatsApp, etc.) ne sont pas autorisées dans le nom ou l'adresse.",
-      });
-    }
-
-    // STRICT SECURITY GUARD on role: Only 'buyer' or 'seller' are accepted from onboarding!
-    let finalRole = "buyer";
-    if (role === "seller") {
-      finalRole = "seller";
-    }
-
-    const userRef = db.collection("users").doc(decodedToken.uid);
-    const updateObj: any = {
-      uid: decodedToken.uid,
-      email: decodedToken.email,
-      name: name || decodedToken.name || "Client",
-      phone: phone || "",
-      wilaya: wilaya || "Alger",
-      address: address || "",
-      role: finalRole,
-      preferences: {
-        interests: Array.isArray(interests) ? interests : [],
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      },
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    };
-
-    if (finalRole === "seller") {
-      updateObj.isVerified = false;
-      updateObj.trustScore = 50;
-      updateObj.status = "pending_verification";
-
-      // Hydrate default regulated shipping tariffs
-      const defaultTariffs: Record<string, number> = {};
-      ALGERIA_WILAYAS.forEach((w) => {
-        const cleanName = w.replace(/^\d+\s+/, "").trim();
-        const known = ALGERIA_SHIPPING_DATA[cleanName] || ALGERIA_SHIPPING_DATA.Default;
-        defaultTariffs[w] = known.price;
-      });
-      updateObj.shippingTariffs = defaultTariffs;
-
-      try {
-        await db.collection("internal_notifications").add({
-          type: "NEW_SELLER_REGISTRATION",
-          title: "Nouvelle Inscription Vendeur",
-          message: `Le vendeur "${name || "Un Vendeur"}" s'est inscrit et attend la validation de son profil.`,
-          sellerId: decodedToken.uid,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          read: false
-        });
-      } catch (notiErr) {
-        console.warn("Server: Failed to add internal notification for new seller", notiErr);
-      }
-    }
-
-    try {
-      await userRef.set(updateObj, { merge: true });
-      res.json({ success: true });
-    } catch (dbErr: any) {
-      // If server write fails, we assume client-side success was enough
-      // Returning 200 to avoid blocking the client-side flow
-      res.json({ success: true, mode: "client_only", warning: dbErr.message });
-    }
-  } catch (err: any) {
-    console.error("Critical onboarding sync error:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.post("/api/place-order", authenticateToken, async (req: any, res: any) => {
-  const { cart, shippingAddress, deliveryMethod, billingAddress, couponCode, useCashbackPoints, useWallet } = req.body;
-  const buyerId = req.user.uid;
-
-  if (!cart || cart.length === 0) {
-    return res.status(400).json({ error: "Le panier est vide." });
-  }
-
-  // Anti-fraud / Rate Limiting Logistics Sabotage
-  const now = new Date();
-  const fifteenMinsAgo = new Date(now.getTime() - 15 * 60 * 1000);
-  const recentOrdersSnap = await db.collection("orders")
-    .where("userId", "==", buyerId)
-    .where("createdAt", ">", fifteenMinsAgo)
-    .get();
-
-  if (recentOrdersSnap.size >= 3) {
-    return res.status(429).json({ error: "Rate limit dépassé. Veuillez patienter avant de repasser une commande." });
-  }
-
-  // ANTI-FRAUD / FIX Sabotage Logistique: Validate and sanitize phone number format strictly
-  if (!shippingAddress || !shippingAddress.wilaya || !shippingAddress.commune || !shippingAddress.address || !shippingAddress.name || !shippingAddress.phone) {
-    return res.status(400).json({ error: "L'adresse de livraison est incomplète." });
-  }
-
-  const phoneValid = !!shippingAddress.phone.replace(/\s+/g, '').match(/^(05|06|07|02|03|04|09)\d{8}$/);
-  if (!phoneValid) {
-    return res.status(400).json({ error: "Numéro de téléphone invalide. Obligatoire pour valider le COD." });
-  }
-
-  // 1. Charger la configuration de livraison et les commissions (outside transaction for speed)
-  const [shippingSnap, globalSettingsSnap] = await Promise.all([
-    db.collection("settings").doc("shipping").get(),
-    db.collection("settings").doc("global").get()
-  ]);
-  const shippingConfig = shippingSnap.exists ? shippingSnap.data() : {};
-  const globalSettings = globalSettingsSnap.exists ? globalSettingsSnap.data() : {};
-  const globalCommissionRate = globalSettings?.commissionRate || 10;
-  const matrix = shippingConfig?.matrixFees || {};
-
-  try {
-    let orderId = "";
-    let grandTotalFinal = 0;
-
-    await db.runTransaction(async (t: any) => {
-      // 2. Fetch all products and seller profiles to verify prices, stocks, and calculate delivery.
-      const productIds = cart.map((item: any) => item.id);
-      const sellerIdsSet = new Set(cart.map((item: any) => item.sellerId).filter(Boolean));
-      const sellerIds = Array.from(sellerIdsSet) as string[];
-
-      // Transaction reads must happen before writes
-      const productsPromise = Promise.all(productIds.map((id: string) => t.get(db.collection("products").doc(id))));
-      const sellersPromise = Promise.all(sellerIds.map((id: string) => t.get(db.collection("users").doc(id))));
-      const buyerPromise = t.get(db.collection("users").doc(buyerId));
-      
-      let couponPromise = Promise.resolve(null);
-      if (couponCode) {
-        // Query the new "coupons" collection by code
-        const couponQuery = db.collection("coupons").where("code", "==", couponCode.toUpperCase()).limit(1);
-        couponPromise = t.get(couponQuery).then((snap: any) => snap.empty ? null : snap.docs[0]);
-      }
-
-      const [productsSnaps, sellersSnaps, buyerSnap, couponSnap] = await Promise.all([productsPromise, sellersPromise, buyerPromise, couponPromise]);
-
-      const productsData: Record<string, any> = {};
-      productsSnaps.forEach(snap => {
-        if (snap.exists) productsData[snap.id] = snap.data();
-      });
-
-      const sellersData: Record<string, any> = {};
-      sellersSnaps.forEach(snap => {
-        if (snap.exists) sellersData[snap.id] = snap.data();
-      });
-
-      const buyerData = buyerSnap.exists ? buyerSnap.data() : {};
-
-      // 3. Calculs et Validation (anti-fraude)
-      let subtotal = 0;
-      let totalShipping = 0;
-      const cleanWilaya = shippingAddress.wilaya.replace(/^\d+\s+/, "").trim();
-
-      // Vérifier les stocks et calculer le sous-total
-      for (const item of cart) {
-        if (!item.quantity || item.quantity <= 0 || item.quantity > 10) {
-            throw new Error(`Quantité invalide pour l'article ${item.id}. La limite est de 10 unités par client.`);
-        }
-        
-        const prod = productsData[item.id];
-        if (!prod) throw new Error(`Produit ${item.id} introuvable.`);
-        if (prod.status !== "active") throw new Error(`Produit ${prod.name} n'est plus disponible.`);
-
-        const price = prod.promoPrice && prod.promoPrice > 0 ? prod.promoPrice : prod.price;
-        // Verify price
-        if (item.priceSeen !== price) {
-          // Warning: price changed since added to cart, but we use the db price
-        }
-
-        // Verify stock
-        let availableStock = prod.stock || 0;
-        let isVariantStock = false;
-        
-        if (item.selectedVariant) {
-          const variants = prod.variants || [];
-          const v = variants.find((v: any) => v.name === item.selectedVariant);
-          if (v) {
-            availableStock = v.stock || 0;
-            isVariantStock = true;
-          }
-        }
-
-        if (availableStock < item.quantity) {
-          throw new Error(`Stock insuffisant pour ${prod.name}. Quantité disponible: ${availableStock}`);
-        }
-
-        subtotal += price * item.quantity;
-      }
-
-      // Calculate Shipping
-      for (const sid of sellerIds) {
-        const seller = sellersData[sid];
-        if (!seller) continue;
-
-        let wFee: number | undefined = undefined;
-        // Check seller custom tariff
-        if (seller.shippingTariffs && typeof seller.shippingTariffs[shippingAddress.wilaya] === "number") {
-          wFee = seller.shippingTariffs[shippingAddress.wilaya];
-        } else {
-          const sellerWilaya = (seller.address && seller.address.wilaya) ? seller.address.wilaya : "DEFAULT_ORIGIN";
-          if (matrix[sellerWilaya] && matrix[sellerWilaya][shippingAddress.wilaya] !== undefined) {
-            wFee = matrix[sellerWilaya][shippingAddress.wilaya];
-          } else if (matrix[sellerWilaya] && matrix[sellerWilaya][cleanWilaya] !== undefined) {
-             wFee = matrix[sellerWilaya][cleanWilaya];
-          } else if (matrix["DEFAULT_ORIGIN"] && matrix["DEFAULT_ORIGIN"][shippingAddress.wilaya] !== undefined) {
-             wFee = matrix["DEFAULT_ORIGIN"][shippingAddress.wilaya];
-          } else if (matrix["DEFAULT_ORIGIN"] && matrix["DEFAULT_ORIGIN"][cleanWilaya] !== undefined) {
-             wFee = matrix["DEFAULT_ORIGIN"][cleanWilaya];
-          } else if (shippingConfig?.wilayaFees?.[shippingAddress.wilaya] !== undefined) {
-             wFee = shippingConfig.wilayaFees[shippingAddress.wilaya];
-          } else if (shippingConfig?.wilayaFees?.[cleanWilaya] !== undefined) {
-             wFee = shippingConfig.wilayaFees[cleanWilaya];
-          }
-        }
-
-        let rawMethodPrice = wFee !== undefined ? wFee : (shippingConfig?.globalBaseFee ?? 600);
-        
-        let methodPrice = deliveryMethod === 'domicile' ? rawMethodPrice : (Math.max(400, rawMethodPrice - 200));
-        totalShipping += Math.round(methodPrice / 10) * 10;
-      }
-
-      // 4. Coupons & Wallet & Cashback
-      let couponDiscount = 0;
-      if (couponCode) {
-        if (!couponSnap || !couponSnap.exists) {
-          throw new Error("Ce code promo est introuvable ou invalide.");
-        }
-        
-        const coupon = couponSnap.data();
-        
-        if (coupon.isActive === false) {
-          throw new Error("Ce code promo n'est plus actif.");
-        }
-        
-        if (coupon.expiresAt && coupon.expiresAt.toDate() <= new Date()) {
-          throw new Error("Ce code promo est expiré.");
-        }
-        
-        if (coupon.minOrderValue && subtotal < coupon.minOrderValue) {
-          throw new Error(`Un minimum de commande de ${coupon.minOrderValue} DA est requis pour ce coupon.`);
-        }
-        
-        if (coupon.usageLimit && (coupon.usedCount || 0) >= coupon.usageLimit) {
-          throw new Error("Ce code promo a atteint sa limite d'utilisation.");
-        }
-        
-        if (coupon.discountType === 'percentage') {
-           couponDiscount = (subtotal * coupon.discountValue) / 100;
-        } else {
-           couponDiscount = Math.min(coupon.discountValue, subtotal);
-        }
-        
-        // Update coupon usage
-        t.update(couponSnap.ref, {
-           usedCount: admin.firestore.FieldValue.increment(1)
-        });
-      }
-
-      const availableCashback = buyerData.cashbackBalance || 0;
-      let cashbackApplied = 0;
-      if (useCashbackPoints && availableCashback > 0) {
-        cashbackApplied = Math.min(availableCashback, Math.max(0, subtotal - couponDiscount));
-      }
-
-      const grandTotalBeforeWallet = Math.max(0, subtotal - couponDiscount - cashbackApplied + totalShipping);
-      const availableWallet = buyerData.walletBalance || 0;
-      let walletAmountUsed = 0;
-      if (useWallet && availableWallet > 0) {
-        walletAmountUsed = Math.min(availableWallet, grandTotalBeforeWallet);
-      }
-
-      grandTotalFinal = grandTotalBeforeWallet - walletAmountUsed;
-
-      // 5. Decrement Stock
-      cart.forEach((item: any) => {
-        const prod = productsData[item.id];
-        const prodRef = db.collection("products").doc(item.id);
-        
-        if (item.selectedVariant) {
-          const newVariants = prod.variants.map((v: any) => {
-            if (v.name === item.selectedVariant) {
-               return { ...v, stock: Math.max(0, v.stock - item.quantity) };
-            }
-            return v;
-          });
-          t.update(prodRef, {
-             variants: newVariants,
-             stock: Math.max(0, prod.stock - item.quantity),
-             salesCount: admin.firestore.FieldValue.increment(item.quantity)
-          });
-        } else {
-          t.update(prodRef, {
-             stock: Math.max(0, prod.stock - item.quantity),
-             salesCount: admin.firestore.FieldValue.increment(item.quantity)
-          });
-        }
-      });
-
-      // Update buyer wallet/cashback if used
-      if (cashbackApplied > 0 || walletAmountUsed > 0) {
-         t.update(db.collection("users").doc(buyerId), {
-            ...(cashbackApplied > 0 ? { cashbackBalance: admin.firestore.FieldValue.increment(-cashbackApplied) } : {}),
-            ...(walletAmountUsed > 0 ? { walletBalance: admin.firestore.FieldValue.increment(-walletAmountUsed) } : {})
-         });
-      }
-
-      // 6. Create Order Document
-      const newOrderRef = db.collection("orders").doc();
-      orderId = newOrderRef.id;
-
-      // Ensure we format the items properly with current prices
-      const finalizedItems = cart.map((item: any) => {
-         const p = productsData[item.id];
-         return {
-            ...item,
-            name: p.name,
-            image: p.image || (p.images && p.images.length > 0 ? p.images[0] : null),
-            price: p.promoPrice && p.promoPrice > 0 ? p.promoPrice : p.price
-         };
-      });
-
-      t.set(newOrderRef, {
-        userId: buyerId,
-        sellerIds, // support multi-seller orders visually if necessary, or just store the first
-        items: finalizedItems,
-        subtotal,
-        totalShipping,
-        couponDiscount,
-        cashbackApplied,
-        walletAmountUsed,
-        total: grandTotalFinal,
-        shippingAddress,
-        deliveryMethod,
-        billingAddress,
-        status: "new",
-        paymentStatus: "pending",
-        commissionRateApplied: globalCommissionRate,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
-      
-    }); // End Transaction
-
-    res.json({ success: true, orderId, grandTotal: grandTotalFinal });
-
-  } catch (err: any) {
-    console.error("Place order err:", err);
-    res.status(500).json({ error: err.message || "Erreur inconnue lors du placement de commande." });
-  }
-});
 
 router.post(
   "/api/admin/danger-zone-wipe",
@@ -651,7 +161,7 @@ router.post(
   "/api/seller/orders/status",
   authenticateToken,
   authorizeSeller,
-  async (req: any, res: any) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     const { orderIds, status } = req.body;
     const sellerId = req.user.uid;
 
@@ -917,15 +427,10 @@ router.post(
 );
 
 // Cancel Order Securely for Buyer (Module 3 - Data Tampering Prevention)
-router.post(
-  "/api/buyer/orders/cancel",
-  authenticateToken,
-  async (req: any, res: any) => {
-    // ... logic is further down
-});
+// Logic further down
 
 // OPEN DISPUTE (Module 4 - Sécurisation des Litiges et Gel des Fonds)
-router.post("/api/buyer/orders/dispute", authenticateToken, async (req: any, res: any) => {
+router.post("/api/buyer/orders/dispute", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   const { orderId, disputeReason, disputeDetails, disputePhotos } = req.body;
   const buyerId = req.user.uid;
 
@@ -1029,7 +534,7 @@ router.post("/api/buyer/orders/dispute", authenticateToken, async (req: any, res
 router.post(
   "/api/buyer/orders/cancel",
   authenticateToken,
-  async (req: any, res: any) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     const { orderId } = req.body;
     const userId = req.user.uid;
 
@@ -1072,17 +577,17 @@ router.post(
                 if (v.name === item.selectedVariant) {
                   return {
                     ...v,
-                    stock: (parseInt(v.stock) + item.quantity).toString(),
+                    stock: (Number(v.stock || 0) + item.quantity).toString(),
                   };
                 }
                 return v;
               });
               pData.stock = pData.variants.reduce(
-                (acc: number, curr: any) => acc + (parseInt(curr.stock) || 0),
+                (acc: number, curr: any) => acc + Math.max(0, Number(curr.stock) || 0),
                 0,
               );
               pData.hasOutOfStockVariants = pData.variants.some(
-                (v: any) => parseInt(v.stock) <= 0,
+                (v: any) => Math.max(0, Number(v.stock) || 0) <= 0,
               );
             } else {
               pData.stock = (pData.stock || 0) + item.quantity;
@@ -1145,7 +650,7 @@ router.post(
   "/api/admin/translate-text",
   authenticateToken,
   authorizeAdmin,
-  async (req: any, res: any) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     const { text, targetLangs } = req.body;
     if (!text || !targetLangs || !Array.isArray(targetLangs)) {
       return res
@@ -1159,7 +664,7 @@ router.post(
 
       if (langsToTranslate.length > 0) {
         const response = await ai.models.generateContent({
-          model: "gemini-3.5-flash",
+          model: "gemini-1.5-flash",
           contents: `Translate the following text from French to the following languages: ${langsToTranslate.join(", ")}. Return ONLY a pure JSON object. Format strictly as: { "langCode": "translated text", ... }\n\nText: "${text}"`,
           config: { responseMimeType: "application/json" }
         });
@@ -1188,7 +693,7 @@ router.post(
   "/api/admin/translate-single-key",
   authenticateToken,
   authorizeAdmin,
-  async (req: any, res: any) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     const { key, fr } = req.body;
     if (!fr) {
       return res.status(400).json({ error: "fr requis" });
@@ -1196,7 +701,7 @@ router.post(
 
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: "gemini-1.5-flash",
         contents: `Translate the following text from French to Arabic and English. Return ONLY a pure JSON object. Format strictly as: { "ar": "...", "en": "..." }\n\nText: "${fr}"`,
         config: { responseMimeType: "application/json" }
       });
@@ -1226,7 +731,7 @@ router.post(
   "/api/admin/translate-fictive",
   authenticateToken,
   authorizeAdmin,
-  async (req: any, res: any) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     try {
       const frPath = path.join(process.cwd(), "public/locales/fr.json");
       const arPath = path.join(process.cwd(), "public/locales/ar.json");
@@ -1288,7 +793,7 @@ router.post(
 
           if (Object.keys(objToTranslate).length > 0) {
             const response = await ai.models.generateContent({
-              model: "gemini-3.5-flash",
+              model: "gemini-1.5-flash",
               contents: `Translate the following JSON object values from French to Arabic and English. Return ONLY a pure JSON object mapping the same keys to an object with "ar" and "en" properties. JSON format: { "key1": {"ar": "...", "en": "..."}, "key2": ... }.\n\n${JSON.stringify(objToTranslate)}`,
               config: { responseMimeType: "application/json" }
             });
@@ -1334,7 +839,7 @@ router.post(
   "/api/admin/translate-ui",
   authenticateToken,
   authorizeAdmin,
-  async (req: any, res: any) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     try {
       const frPath = path.join(process.cwd(), "public/locales/fr.json");
       const arPath = path.join(process.cwd(), "public/locales/ar.json");
@@ -1430,7 +935,7 @@ router.post(
 
           if (Object.keys(objToTranslate).length > 0) {
             const response = await ai.models.generateContent({
-              model: "gemini-3.5-flash",
+              model: "gemini-1.5-flash",
               contents: `Translate the following JSON object values from French to Arabic and English. Return ONLY a pure JSON object mapping the same keys to an object with "ar" and "en" properties. JSON format: { "key1": {"ar": "...", "en": "..."}, "key2": ... }.\n\n${JSON.stringify(objToTranslate)}`,
               config: { responseMimeType: "application/json" }
             });
@@ -1522,7 +1027,7 @@ router.post(
   "/api/seller/analyze-image",
   authenticateToken,
   authorizeSeller,
-  async (req: any, res: any) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     const { imageUrl } = req.body;
     if (!imageUrl) return res.status(400).json({ error: "imageUrl requis" });
 
@@ -1547,7 +1052,7 @@ router.post(
     }`;
 
       const result = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: "gemini-1.5-flash",
         contents: [
           { inlineData: { data: base64Data, mimeType } },
           { text: prompt },
@@ -1573,7 +1078,7 @@ router.post(
   "/api/admin/send-newsletter",
   authenticateToken,
   authorizeAdmin,
-  async (req: any, res: any) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     const { subject, blocks, settings } = req.body;
     if (!subject) return res.status(400).json({ error: "Sujet requis" });
 
@@ -1608,7 +1113,7 @@ router.get(
   "/api/admin/newsletter/stats",
   authenticateToken,
   authorizeAdmin,
-  async (req: any, res: any) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     try {
       const subsCheck = await db.collection("newsletter_subscribers").limit(1).get();
 
@@ -1702,7 +1207,7 @@ router.get(
   "/api/admin/newsletter/subscribers",
   authenticateToken,
   authorizeAdmin,
-  async (req: any, res: any) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     try {
       const subsSnap = await db.collection("newsletter_subscribers").orderBy("createdAt", "desc").limit(500).get();
       const subscribers = subsSnap.docs.map((doc: any) => ({
@@ -1720,7 +1225,7 @@ router.get(
   "/api/admin/newsletter/campaigns",
   authenticateToken,
   authorizeAdmin,
-  async (req: any, res: any) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     try {
       const campSnap = await db.collection("newsletter_campaigns").orderBy("createdAt", "desc").limit(100).get();
       const campaigns = campSnap.docs.map((doc: any) => ({
@@ -1772,7 +1277,7 @@ router.post(
   "/api/admin/newsletter/campaigns",
   authenticateToken,
   authorizeAdmin,
-  async (req: any, res: any) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     const { id, title, subject, targeting, blocks } = req.body;
 
     try {
@@ -1808,7 +1313,7 @@ router.get(
   "/api/admin/newsletter/settings",
   authenticateToken,
   authorizeAdmin,
-  async (req: any, res: any) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     try {
       const docRef = await db
         .collection("global_settings")
@@ -1836,7 +1341,7 @@ router.post(
   "/api/admin/newsletter/settings",
   authenticateToken,
   authorizeAdmin,
-  async (req: any, res: any) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     try {
       const settings = req.body;
       await db
@@ -1850,55 +1355,11 @@ router.post(
   },
 );
 
-router.post("/api/chat", async (req: any, res: any) => {
-  const { message, history = [] } = req.body;
-  if (!message) return res.status(400).json({ error: "Message requis" });
-
-  try {
-    const contents = [
-      ...history.map((msg: any) => ({
-        role: msg.role === "user" ? "user" : "model",
-        parts: [{ text: msg.content }],
-      })),
-      { role: "user", parts: [{ text: message }] },
-    ];
-
-    const stream = await ai.models.generateContentStream({
-      model: "gemini-3.5-flash",
-      contents: contents,
-      config: {
-        systemInstruction:
-          "Vous êtes l'Assistant Shopping de Olma Marketplace, ciblant l'Algérie (58 wilayas). Répondez de manière élégante et professionnelle en français (FR), anglais (EN) ou arabe (AR) selon la langue de l'utilisateur. Olma d'Algérie desservant les 58 wilayas d'Algérie.",
-      },
-    });
-
-    res.setHeader("Content-Type", "text/plain; charset=utf-8");
-    for await (const chunk of stream) {
-      res.write(chunk.text || "");
-    }
-    res.end();
-  } catch (error: any) {
-    if (
-      error.message?.includes("RESOURCE_EXHAUSTED") ||
-      error.status === "RESOURCE_EXHAUSTED" ||
-      error.status === 429
-    ) {
-      return res
-        .status(200)
-        .send(
-          "L'assistant est temporairement indisponible (quota dépassé). Veuillez réessayer dans un moment.",
-        );
-    }
-    console.error("Gemini Error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
 // --- Internal Messaging & DLP (Data Loss Prevention) ---
 router.post(
   "/api/messages/send",
   authenticateToken,
-  async (req: any, res: any) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     const { orderId, text } = req.body;
     const senderId = req.user.uid;
 
@@ -2008,7 +1469,7 @@ router.post(
 
 // --- Dispute Actions & Wallet ---
 // --- Review Submissions (Cloud Function alternative) ---
-router.post("/api/reviews", authenticateToken, async (req: any, res: any) => {
+router.post("/api/reviews", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   const { productId, orderId, rating, comment } = req.body;
   const userId = req.user.uid;
 
@@ -2106,7 +1567,7 @@ router.post("/api/reviews", authenticateToken, async (req: any, res: any) => {
 router.post(
   "/api/auth/2fa/send-code",
   authenticateToken,
-  async (req: any, res: any) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.user.uid;
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -2120,7 +1581,7 @@ router.post(
             Date.now() + 10 * 60 * 1000,
           ),
         });
-      console.log(`[SIMULATION] Sending code ${code} to user ${userId}`);
+      (process.env.NODE_ENV === 'debug' ? console.log : function(){})(`[SIMULATION] Sending code ${code} to user ${userId}`);
       res.json({ success: true, method: "email" });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -2131,7 +1592,7 @@ router.post(
 router.post(
   "/api/auth/2fa/verify",
   authenticateToken,
-  async (req: any, res: any) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     const { code } = req.body;
     const userId = req.user.uid;
 
@@ -2176,7 +1637,7 @@ router.post(
   "/api/admin/orders/:orderId/resolve-dispute",
   authenticateToken,
   authorizeAdmin,
-  async (req: any, res: any) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     const { orderId } = req.params;
     const { resolution, refundAmount = 0 } = req.body; // resolution = 'refund_to_wallet' | 'close'
 
@@ -2317,25 +1778,6 @@ router.post(
 );
 
 // --- Banner & Tag Market System Endpoints ---
-
-// PUBLIC: Get all banners
-router.get("/api/banners", async (req, res) => {
-  try {
-    const activeOnly = req.query.activeOnly === "true";
-    let queryRef = db.collection("banners").orderBy("sort_order", "asc");
-    if (activeOnly) {
-      queryRef = queryRef.where("is_active", "==", true);
-    }
-    const snap = await queryRef.get();
-    const banners = snap.docs.map((doc: any) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    res.json({ banners });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
 
 // PUBLIC: Get specific banner details
 
@@ -2527,87 +1969,6 @@ router.get("/api/campaigns/:bannerId/products", async (req, res) => {
   }
 });
 
-// PUBLIC: Get all tags
-router.get("/api/tags", async (req, res) => {
-  try {
-    const snap = await db.collection("tags").orderBy("name", "asc").limit(300).get();
-    const tags = snap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
-    res.json({ tags });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// ADMIN ONLY: Create a tag
-router.post(
-  "/api/tags",
-  authenticateToken,
-  authorizeAdmin,
-  async (req: any, res) => {
-    try {
-      const { name, slug } = req.body;
-      if (!name || !slug) {
-        return res
-          .status(400)
-          .json({ error: "Champs requis manquants: name, slug" });
-      }
-
-      const cleanSlug = slug
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9_-]/g, "");
-
-      // Check if tag with slug exists
-      const checkSnap = await db
-        .collection("tags")
-        .where("slug", "==", cleanSlug)
-        .get();
-      if (!checkSnap.empty) {
-        return res
-          .status(400)
-          .json({ error: "Ce tag existe déjà (le slug doit être unique)" });
-      }
-
-      const docData = {
-        name: name.trim(),
-        slug: cleanSlug,
-        created_at: admin.firestore.FieldValue.serverTimestamp(),
-      };
-
-      const docRef = await db.collection("tags").add(docData);
-      res
-        .status(200)
-        .json({
-          success: true,
-          id: docRef.id,
-          tag: { id: docRef.id, ...docData },
-        });
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-  },
-);
-
-// ADMIN ONLY: Delete a tag
-router.delete(
-  "/api/tags/:id",
-  authenticateToken,
-  authorizeAdmin,
-  async (req: any, res) => {
-    try {
-      const docRef = db.collection("tags").doc(req.params.id);
-      const docSnap = await docRef.get();
-      if (!docSnap.exists) {
-        return res.status(404).json({ error: "Tag non trouvé" });
-      }
-      await docRef.delete();
-      res.json({ success: true });
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-  },
-);
-
 // PUBLIC: Filter products by tag (supports both tag_id field and tags array check)
 router.get("/api/products-by-tag", async (req, res) => {
   try {
@@ -2619,7 +1980,7 @@ router.get("/api/products-by-tag", async (req, res) => {
     const cacheKey = `products_tag_obj_${tag}`;
     const cachedData = cache.get(cacheKey);
     if (cachedData) {
-      console.log(`[Cache Hit] Serving ${cacheKey} from memory`);
+      (process.env.NODE_ENV === 'debug' ? console.log : function(){})(`[Cache Hit] Serving ${cacheKey} from memory`);
       return res.json(cachedData);
     }
 
@@ -2676,7 +2037,7 @@ router.get("/api/products", async (req, res, next) => {
   // Check if we have a cached response (simulating Redis)
   const cachedData = cache.get(cacheKey);
   if (cachedData) {
-    console.log(`[Cache Hit] Serving ${cacheKey} from memory`);
+    (process.env.NODE_ENV === 'debug' ? console.log : function(){})(`[Cache Hit] Serving ${cacheKey} from memory`);
     return res.json(cachedData);
   }
 
@@ -2758,7 +2119,7 @@ router.get("/api/search", async (req, res, next) => {
     let allProducts = cache.get<any>(CACHE_KEY);
 
     if (!allProducts) {
-      console.log(
+      (process.env.NODE_ENV === 'debug' ? console.log : function(){})(
         `[Search Engine] Fetching all products to build search index...`,
       );
       try {
@@ -2794,7 +2155,7 @@ router.get("/api/search", async (req, res, next) => {
     const STORES_CACHE_KEY = `stores_all`;
     let allStores = cache.get<any>(STORES_CACHE_KEY);
     if (!allStores) {
-       console.log(`[Search Engine] Fetching all sellers for store indexing...`);
+       (process.env.NODE_ENV === 'debug' ? console.log : function(){})(`[Search Engine] Fetching all sellers for store indexing...`);
        try {
          let stores = [];
          if (clientDb) {
@@ -3021,125 +2382,6 @@ router.get("/api/search", async (req, res, next) => {
 
 // --- HOMEPAGE BUILDER API (PHASE 1) ---
 
-router.get("/api/homepage/sections", async (req, res) => {
-  try {
-    const snap = await db
-      .collection("homepage_sections")
-      .orderBy("orderIndex", "asc")
-      .get();
-    res.json({
-      sections: snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-router.post(
-  "/api/homepage/sections",
-  authenticateToken,
-  authorizeAdmin,
-  async (req, res) => {
-    try {
-      const data = req.body;
-      data.createdAt = admin.firestore.FieldValue.serverTimestamp();
-      const docRef = await db.collection("homepage_sections").add(data);
-      res.json({ success: true, id: docRef.id });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  },
-);
-
-router.put(
-  "/api/homepage/sections/:id",
-  authenticateToken,
-  authorizeAdmin,
-  async (req, res) => {
-    try {
-      const data = req.body;
-      data.updatedAt = admin.firestore.FieldValue.serverTimestamp();
-      await db.collection("homepage_sections").doc(req.params.id).update(data);
-      res.json({ success: true });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  },
-);
-
-router.delete(
-  "/api/homepage/sections/:id",
-  authenticateToken,
-  authorizeAdmin,
-  async (req, res) => {
-    try {
-      await db.collection("homepage_sections").doc(req.params.id).delete();
-      res.json({ success: true });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  },
-);
-
-router.get("/api/homepage/banners", async (req, res) => {
-  try {
-    const snap = await db
-      .collection("banners")
-      .orderBy("orderIndex", "asc")
-      .get();
-    res.json({
-      banners: snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-router.post(
-  "/api/homepage/banners",
-  authenticateToken,
-  authorizeAdmin,
-  async (req, res) => {
-    try {
-      const data = req.body;
-      data.createdAt = admin.firestore.FieldValue.serverTimestamp();
-      const docRef = await db.collection("banners").add(data);
-      res.json({ success: true, id: docRef.id });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  },
-);
-
-router.put(
-  "/api/homepage/banners/:id",
-  authenticateToken,
-  authorizeAdmin,
-  async (req, res) => {
-    try {
-      const data = req.body;
-      await db.collection("banners").doc(req.params.id).update(data);
-      res.json({ success: true });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  },
-);
-
-router.delete(
-  "/api/homepage/banners/:id",
-  authenticateToken,
-  authorizeAdmin,
-  async (req, res) => {
-    try {
-      await db.collection("banners").doc(req.params.id).delete();
-      res.json({ success: true });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  },
-);
-
 const isBot = (userAgent: string) => {
   const bots = [
     "googlebot",
@@ -3168,7 +2410,7 @@ const isBot = (userAgent: string) => {
 router.post(
   "/api/notifications/send",
   authenticateToken,
-  async (req: any, res: any) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     const {
       recipientId,
       title,
@@ -3223,7 +2465,7 @@ Format de retour JSON STRICT (sans markdown, uniquement le JSON):
 Répondez uniquement avec le JSON.`;
 
         const response = await ai.models.generateContent({
-          model: "gemini-3.5-flash",
+          model: "gemini-1.5-flash",
           contents: prompt,
           config: { responseMimeType: "application/json" }
         });

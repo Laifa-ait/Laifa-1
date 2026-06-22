@@ -18,6 +18,12 @@ build/
 .idea
 .DS_Store
 *.suo
+
+# Environment and Secrets
+firebase-applet-config.json
+.env
+.env.production
+.env.development
 *.ntvs*
 *.njsproj
 *.sln

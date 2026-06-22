@@ -6,9 +6,9 @@ export const processCheckout = async (payload: any) => {
     if (!user) throw new Error("Veuillez vous connecter pour passer commande.");
     
     // Refresh token to ensure we have the latest claims and valid session
-    const token = await user.getIdToken();
+    let token = await user.getIdToken();
     
-    const response = await fetch('/api/place-order', {
+    let response = await fetch('/api/place-order', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -16,6 +16,18 @@ export const processCheckout = async (payload: any) => {
       },
       body: JSON.stringify(payload)
     });
+
+    if (response.status === 401 || response.status === 403) {
+      token = await user.getIdToken(true); // force refresh
+      response = await fetch('/api/place-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // Use the new token
+        },
+        body: JSON.stringify(payload)
+      });
+    }
     
     const data = await response.json();
     if (!response.ok) {

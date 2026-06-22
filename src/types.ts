@@ -1,3 +1,9 @@
+export interface GuestUser {
+  uid: string;
+  isGuest: true;
+  role: "guest";
+}
+
 export interface CartItem {
   id: string; // usually same as productId
   sellerId: string;

@@ -55,7 +55,7 @@ export const Verification: React.FC = () => {
      setLoading(true);
      try {
        toast.loading(isArabic ? "جاري تشغيل المحاكاة..." : "Simulation en cours...", { id: "sim" });
-       console.log("Simulating for UID:", uid);
+       (process.env.NODE_ENV === 'debug' ? console.log : function(){})("Simulating for UID:", uid);
        
        // Simulate Update directly in 'users/uid'
        await setDoc(doc(db, "users", uid), {
@@ -129,7 +129,7 @@ export const Verification: React.FC = () => {
       const finalStatus = shouldReverify ? 'pending_verification' : status;
 
       // Primary Write: User Profile
-      console.log("Writing to users/", uid, { documents: { fileRC: !!finalFileRC, fileId: !!finalFileId, fileRib: !!finalFileRib } });
+      (process.env.NODE_ENV === 'debug' ? console.log : function(){})("Writing to users/", uid, { documents: { fileRC: !!finalFileRC, fileId: !!finalFileId, fileRib: !!finalFileRib } });
       await setDoc(doc(db, "users", uid), {
         brandName: formData.brandName,
         designStyle: formData.designStyle,
@@ -186,6 +186,11 @@ export const Verification: React.FC = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'RC' | 'Id' | 'Rib') => {
     const file = e.target.files?.[0];
     if (file) {
+      const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
+      if (!allowedTypes.includes(file.type.toLowerCase())) {
+         toast.error(isArabic ? "صيغة الملف غير مدعومة. يرجى تحميل ملف PDF أو صورة PNG/JPEG." : "Format de fichier non supporté. Veuillez uploader un fichier PDF ou une image PNG/JPEG.");
+         return;
+      }
       if (file.size > 10 * 1024 * 1024) {
          toast.error(isArabic ? "الملف كبير جداً (الأقصى 10 ميجابايت)." : "Le fichier est trop lourd (Max 10Mo).");
          return;

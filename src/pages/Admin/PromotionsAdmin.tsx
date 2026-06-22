@@ -1,15 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { Tag, Plus, Search, Percent, Edit2, Trash2, X, Check, AlertCircle, Power, PowerOff } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { Tag, Plus, Search, Percent, Edit2, Trash2, X, Check, AlertCircle, Power, PowerOff } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
-import { format } from 'date-fns';
-import { fr, arDZ } from 'date-fns/locale';
+import {
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  Timestamp,
+} from "firebase/firestore";
+import { db } from "../../lib/firebase";
+import { format } from "date-fns";
+import { fr, arDZ } from "date-fns/locale";
 
 interface Coupon {
   id: string;
   code: string;
-  discountType: 'percentage' | 'fixed';
+  discountType: "percentage" | "fixed";
   discountValue: number;
   minOrderValue: number;
   expiresAt: any;
@@ -24,30 +34,34 @@ export const PromotionsAdmin: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   // Form State
-  const [code, setCode] = useState('');
-  const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
-  const [discountValue, setDiscountValue] = useState('');
-  const [minOrderValue, setMinOrderValue] = useState('');
-  const [expiresAt, setExpiresAt] = useState('');
-  const [usageLimit, setUsageLimit] = useState('');
+  const [code, setCode] = useState("");
+  const [discountType, setDiscountType] = useState<"percentage" | "fixed">("percentage");
+  const [discountValue, setDiscountValue] = useState("");
+  const [minOrderValue, setMinOrderValue] = useState("");
+  const [expiresAt, setExpiresAt] = useState("");
+  const [usageLimit, setUsageLimit] = useState("");
 
   useEffect(() => {
-    const q = query(collection(db, 'coupons'), orderBy('expiresAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const couponsData: Coupon[] = [];
-      snapshot.forEach((doc) => {
-        couponsData.push({ id: doc.id, ...doc.data() } as Coupon);
-      });
-      setCoupons(couponsData);
-      setLoading(false);
-    }, (err) => {
-      console.error("Error fetching coupons:", err);
-      setError(t("Erreur de chargement des coupons"));
-      setLoading(false);
-    });
+    const q = query(collection(db, "coupons"), orderBy("expiresAt", "desc"));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const couponsData: Coupon[] = [];
+        snapshot.forEach((doc) => {
+          couponsData.push({ id: doc.id, ...doc.data() } as Coupon);
+        });
+        setCoupons(couponsData);
+        setLoading(false);
+      },
+      (err) => {
+        console.error("Error fetching coupons:", err);
+        setError(t("Erreur de chargement des coupons"));
+        setLoading(false);
+      }
+    );
 
     return () => unsubscribe();
   }, [t]);
@@ -55,7 +69,7 @@ export const PromotionsAdmin: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    setError('');
+    setError("");
 
     try {
       const parsedValue = parseFloat(discountValue);
@@ -67,11 +81,11 @@ export const PromotionsAdmin: React.FC = () => {
         throw new Error(t("Veuillez remplir tous les champs obligatoires correctement."));
       }
 
-      if (discountType === 'percentage' && (parsedValue <= 0 || parsedValue > 100)) {
+      if (discountType === "percentage" && (parsedValue <= 0 || parsedValue > 100)) {
         throw new Error(t("Le pourcentage doit être compris entre 1 et 100."));
       }
 
-      await addDoc(collection(db, 'coupons'), {
+      await addDoc(collection(db, "coupons"), {
         code: code.trim().toUpperCase(),
         discountType,
         discountValue: parsedValue,
@@ -80,7 +94,7 @@ export const PromotionsAdmin: React.FC = () => {
         isActive: true,
         usedCount: 0,
         createdAt: Timestamp.now(),
-        ...(parsedUsageLimit !== null ? { usageLimit: parsedUsageLimit } : {})
+        ...(parsedUsageLimit !== null ? { usageLimit: parsedUsageLimit } : {}),
       });
 
       setIsModalOpen(false);
@@ -93,18 +107,18 @@ export const PromotionsAdmin: React.FC = () => {
   };
 
   const resetForm = () => {
-    setCode('');
-    setDiscountType('percentage');
-    setDiscountValue('');
-    setMinOrderValue('');
-    setExpiresAt('');
-    setUsageLimit('');
+    setCode("");
+    setDiscountType("percentage");
+    setDiscountValue("");
+    setMinOrderValue("");
+    setExpiresAt("");
+    setUsageLimit("");
   };
 
   const toggleStatus = async (coupon: Coupon) => {
     try {
-      await updateDoc(doc(db, 'coupons', coupon.id), {
-        isActive: !coupon.isActive
+      await updateDoc(doc(db, "coupons", coupon.id), {
+        isActive: !coupon.isActive,
       });
     } catch (err) {
       console.error("Error updating status:", err);
@@ -115,7 +129,7 @@ export const PromotionsAdmin: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm(t("Êtes-vous sûr de vouloir supprimer ce coupon ?"))) {
       try {
-        await deleteDoc(doc(db, 'coupons', id));
+        await deleteDoc(doc(db, "coupons", id));
       } catch (err) {
         console.error("Error deleting coupon:", err);
         alert(t("Erreur lors de la suppression."));
@@ -123,16 +137,20 @@ export const PromotionsAdmin: React.FC = () => {
     }
   };
 
-  const dateLocale = i18n.language === 'ar' ? arDZ : fr;
+  const dateLocale = i18n.language === "ar" ? arDZ : fr;
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-3xl font-black tracking-tight rtl:tracking-normal text-zinc-950 uppercase">{t("Codes Promo & Campagnes")}</h2>
-          <p className="text-zinc-500 font-medium">{t("Gérez les réductions globales, les coupons vendeurs et les offres spéciales.")}</p>
+          <h2 className="text-3xl font-black tracking-tight rtl:tracking-normal text-zinc-950 uppercase">
+            {t("Codes Promo & Campagnes")}
+          </h2>
+          <p className="text-zinc-500 font-medium">
+            {t("Gérez les réductions globales, les coupons vendeurs et les offres spéciales.")}
+          </p>
         </div>
-        <button 
+        <button
           onClick={() => setIsModalOpen(true)}
           className="px-6 py-3 bg-zinc-950 text-white rounded-2xl font-black text-xs uppercase tracking-widest rtl:tracking-normal flex items-center gap-2 hover:bg-zinc-800 transition-colors shadow-lg"
         >
@@ -146,40 +164,49 @@ export const PromotionsAdmin: React.FC = () => {
         </div>
       ) : coupons.length === 0 ? (
         <div className="bg-white rounded-[2rem] border border-zinc-100 shadow-sm overflow-hidden p-12 text-center text-zinc-500">
-           <Tag className="w-12 h-12 text-zinc-300 mx-auto mb-4" />
-           <h3 className="text-lg font-black text-zinc-900 mb-2">{t("Aucun code promo créé")}</h3>
-           <p className="text-sm">{t("Créez votre première campagne promotionnelle pour stimuler les ventes.")}</p>
+          <Tag className="w-12 h-12 text-zinc-300 mx-auto mb-4" />
+          <h3 className="text-lg font-black text-zinc-900 mb-2">{t("Aucun code promo créé")}</h3>
+          <p className="text-sm">{t("Créez votre première campagne promotionnelle pour stimuler les ventes.")}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {coupons.map((coupon) => (
-            <div key={coupon.id} className="bg-white rounded-3xl p-6 border border-zinc-200 shadow-sm relative overflow-hidden group">
+            <div
+              key={coupon.id}
+              className="bg-white rounded-3xl p-6 border border-zinc-200 shadow-sm relative overflow-hidden group"
+            >
               {/* Status Indicator Indicator */}
-              <div className={`absolute top-0 start-0 w-1.5 h-full ${coupon.isActive ? 'bg-green-500' : 'bg-red-500'}`}></div>
-              
+              <div
+                className={`absolute top-0 start-0 w-1.5 h-full ${coupon.isActive ? "bg-green-500" : "bg-red-500"}`}
+              ></div>
+
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <div className="bg-zinc-100 px-3 py-1 rounded-lg text-lg font-black text-zinc-900 tracking-widest rtl:tracking-normal mb-2 inline-block">
                     {coupon.code}
                   </div>
                   <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-wider rtl:tracking-normal">
-                    {coupon.discountType === 'percentage' ? (
-                      <span className="flex items-center gap-1 text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md"><Percent className="w-3 h-3" /> {t("Pourcentage")}</span>
+                    {coupon.discountType === "percentage" ? (
+                      <span className="flex items-center gap-1 text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">
+                        <Percent className="w-3 h-3" /> {t("Pourcentage")}
+                      </span>
                     ) : (
-                      <span className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md"><Tag className="w-3 h-3" /> {t("Montant Fixe")}</span>
+                      <span className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
+                        <Tag className="w-3 h-3" /> {t("Montant Fixe")}
+                      </span>
                     )}
                   </div>
                 </div>
-                
+
                 <div className="flex gap-2">
-                  <button 
+                  <button
                     onClick={() => toggleStatus(coupon)}
-                    className={`p-2 rounded-full transition-colors ${coupon.isActive ? 'text-zinc-400 hover:bg-zinc-100 hover:text-red-600' : 'text-red-500 bg-red-50 hover:bg-red-100'}`}
+                    className={`p-2 rounded-full transition-colors ${coupon.isActive ? "text-zinc-400 hover:bg-zinc-100 hover:text-red-600" : "text-red-500 bg-red-50 hover:bg-red-100"}`}
                     title={coupon.isActive ? t("Désactiver") : t("Activer")}
                   >
                     {coupon.isActive ? <PowerOff className="w-4 h-4" /> : <Power className="w-4 h-4" />}
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleDelete(coupon.id)}
                     className="p-2 text-zinc-400 hover:bg-red-50 hover:text-red-600 rounded-full transition-colors"
                   >
@@ -192,36 +219,42 @@ export const PromotionsAdmin: React.FC = () => {
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-zinc-500 font-medium">{t("Valeur")}</span>
                   <span className="font-black text-zinc-900 text-lg">
-                    {coupon.discountType === 'percentage' ? `${coupon.discountValue}%` : `${coupon.discountValue} ${t("DA")}`}
+                    {coupon.discountType === "percentage"
+                      ? `${coupon.discountValue}%`
+                      : `${coupon.discountValue} ${t("DA")}`}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-sm border-t border-zinc-100 pt-3">
                   <span className="text-zinc-500 font-medium">{t("Min. d'achat")}</span>
-                  <span className="font-bold text-zinc-800">{coupon.minOrderValue} {t("DA")}</span>
+                  <span className="font-bold text-zinc-800">
+                    {coupon.minOrderValue} {t("DA")}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center text-sm border-t border-zinc-100 pt-3">
                   <span className="text-zinc-500 font-medium">{t("Expiration")}</span>
                   <span className="font-bold text-zinc-800">
-                    {coupon.expiresAt ? format(coupon.expiresAt.toDate(), 'dd MMM yyyy, HH:mm', { locale: dateLocale }) : t("N/A")}
+                    {coupon.expiresAt
+                      ? format(coupon.expiresAt.toDate(), "dd MMM yyyy, HH:mm", { locale: dateLocale })
+                      : t("N/A")}
                   </span>
                 </div>
               </div>
 
               <div className="bg-zinc-50 rounded-2xl p-4 flex justify-between items-center text-sm">
-                 <div>
-                   <p className="text-zinc-500 font-medium text-xs mb-1">{t("Utilisations")}</p>
-                   <p className="font-black text-zinc-900">
-                     {coupon.usedCount} / {coupon.usageLimit || '∞'}
-                   </p>
-                 </div>
-                 {coupon.usageLimit && <span className="bg-zinc-100 text-zinc-700 text-xs font-bold px-2 py-1 rounded-lg">
-                     {coupon.usageLimit}
-                   </span>}
-                   {coupon.usageLimit && coupon.usedCount >= coupon.usageLimit && (
-                   <span className="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-lg">
-                     {t("Épuisé")}
-                   </span>
-                 )}
+                <div>
+                  <p className="text-zinc-500 font-medium text-xs mb-1">{t("Utilisations")}</p>
+                  <p className="font-black text-zinc-900">
+                    {coupon.usedCount} / {coupon.usageLimit || "∞"}
+                  </p>
+                </div>
+                {coupon.usageLimit && (
+                  <span className="bg-zinc-100 text-zinc-700 text-xs font-bold px-2 py-1 rounded-lg">
+                    {coupon.usageLimit}
+                  </span>
+                )}
+                {coupon.usageLimit && coupon.usedCount >= coupon.usageLimit && (
+                  <span className="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-lg">{t("Épuisé")}</span>
+                )}
               </div>
             </div>
           ))}
@@ -234,8 +267,11 @@ export const PromotionsAdmin: React.FC = () => {
           <div className="bg-white rounded-3xl w-full max-w-xl overflow-hidden shadow-2xl">
             <div className="p-6 border-b border-zinc-100 flex justify-between items-center">
               <h3 className="font-black text-xl text-zinc-900 uppercase">{t("Nouveau Coupon")}</h3>
-              <button 
-                onClick={() => { setIsModalOpen(false); resetForm(); }}
+              <button
+                onClick={() => {
+                  setIsModalOpen(false);
+                  resetForm();
+                }}
                 className="p-2 text-zinc-400 hover:bg-zinc-100 rounded-full transition-colors"
               >
                 <X className="w-5 h-5" />
@@ -284,7 +320,7 @@ export const PromotionsAdmin: React.FC = () => {
                       min={0}
                       value={discountValue}
                       onChange={(e) => setDiscountValue(e.target.value)}
-                      placeholder={discountType === 'percentage' ? t("Ex: 15") : t("Ex: 1000")}
+                      placeholder={discountType === "percentage" ? t("Ex: 15") : t("Ex: 1000")}
                       className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-transparent outline-none transition-all"
                     />
                   </div>
@@ -292,7 +328,9 @@ export const PromotionsAdmin: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-bold text-zinc-700 mb-2">{t("Min. d'achat")} ({t("DA")})</label>
+                    <label className="block text-sm font-bold text-zinc-700 mb-2">
+                      {t("Min. d'achat")} ({t("DA")})
+                    </label>
                     <input
                       type="number"
                       required
@@ -332,7 +370,10 @@ export const PromotionsAdmin: React.FC = () => {
               <div className="pt-4 flex justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => { setIsModalOpen(false); resetForm(); }}
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    resetForm();
+                  }}
                   className="px-6 py-3 font-bold text-zinc-600 hover:bg-zinc-100 rounded-xl transition-colors"
                 >
                   {t("Annuler")}
@@ -345,7 +386,9 @@ export const PromotionsAdmin: React.FC = () => {
                   {submitting ? (
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   ) : (
-                    <><Check className="w-4 h-4" /> {t("Créer")}</>
+                    <>
+                      <Check className="w-4 h-4" /> {t("Créer")}
+                    </>
                   )}
                 </button>
               </div>
@@ -356,4 +399,3 @@ export const PromotionsAdmin: React.FC = () => {
     </div>
   );
 };
-

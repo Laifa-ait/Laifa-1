@@ -37,7 +37,7 @@ export const DYNAMIC_CATEGORIES: Record<string, CategoryStructure> = {
         label: "Saison",
         type: "select",
         options: ["Printemps-Été", "Automne-Hiver", "Mi-saison", "Toutes saisons"],
-      }
+      },
     ],
   },
   "Bébé & Puériculture": {
@@ -57,10 +57,10 @@ export const DYNAMIC_CATEGORIES: Record<string, CategoryStructure> = {
         label: "Saison",
         type: "select",
         options: ["Printemps-Été", "Automne-Hiver", "Mi-saison", "Toutes saisons"],
-      }
+      },
     ],
   },
-  "Électronique": {
+  Électronique: {
     id: "electronics",
     name: "Électronique",
     hasColor: true,
@@ -89,7 +89,7 @@ export const DYNAMIC_CATEGORIES: Record<string, CategoryStructure> = {
       },
     ],
   },
-  "Électroménager": {
+  Électroménager: {
     id: "home_appliances",
     name: "Électroménager",
     hasColor: true,
@@ -144,8 +144,8 @@ export const DYNAMIC_CATEGORIES: Record<string, CategoryStructure> = {
         id: "weight",
         label: "Poids (kg)",
         type: "number",
-      }
-    ]
+      },
+    ],
   },
   "Beauté & Santé": {
     id: "beauty",
@@ -177,8 +177,8 @@ export const DYNAMIC_CATEGORIES: Record<string, CategoryStructure> = {
         id: "expiration",
         label: "Date de péremption",
         type: "text", // Could be just simple text or date
-      }
-    ]
+      },
+    ],
   },
   "Auto & Moto - Accessoires": {
     id: "auto",
@@ -213,8 +213,8 @@ export const DYNAMIC_CATEGORIES: Record<string, CategoryStructure> = {
         id: "dimensions",
         label: "Dimensions (L × l × H cm)",
         type: "text",
-      }
-    ]
+      },
+    ],
   },
   "Sport & Loisirs": {
     id: "sport",
@@ -237,8 +237,8 @@ export const DYNAMIC_CATEGORIES: Record<string, CategoryStructure> = {
         id: "weight",
         label: "Poids du produit (kg)",
         type: "number",
-      }
-    ]
+      },
+    ],
   },
   "Bricolage & Outillage": {
     id: "diy",
@@ -265,8 +265,8 @@ export const DYNAMIC_CATEGORIES: Record<string, CategoryStructure> = {
         id: "warranty",
         label: "Garantie (en mois)",
         type: "number",
-      }
-    ]
+      },
+    ],
   },
   "Jeux & Jouets": {
     id: "toys",
@@ -305,10 +305,10 @@ export const DYNAMIC_CATEGORIES: Record<string, CategoryStructure> = {
         id: "battery_type",
         label: "Type de piles (si oui)",
         type: "text",
-      }
-    ]
+      },
+    ],
   },
-  "Supermarché": {
+  Supermarché: {
     id: "supermarket",
     name: "Supermarché",
     hasColor: false,
@@ -329,7 +329,7 @@ export const DYNAMIC_CATEGORIES: Record<string, CategoryStructure> = {
         label: "Conditionnement",
         type: "select",
         options: ["Bouteille", "Boîte", "Sachet", "Lot", "Vrac"],
-      }
-    ]
-  }
+      },
+    ],
+  },
 };

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import { useTranslation } from "react-i18next";
 
 interface NavItem {
@@ -13,10 +13,12 @@ interface NavigationSectionProps {
 }
 
 export const NavigationSection: React.FC<NavigationSectionProps> = ({ items, handleNav }) => {
-    const { t } = useTranslation();
+  const { t } = useTranslation();
   return (
     <div className="space-y-2">
-      <p className="text-[10px] rtl:text-[12px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal ml-1 mb-4">{t("Navigation")}</p>
+      <p className="text-[10px] rtl:text-[12px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal ml-1 mb-4">
+        {t("Navigation")}
+      </p>
       {items.map((item, i) => (
         <button
           key={i}

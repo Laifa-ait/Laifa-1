@@ -42,9 +42,9 @@ export const InstallPrompt: React.FC = () => {
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
-      console.log('User accepted the install prompt');
+      (process.env.NODE_ENV === 'debug' ? console.log : function(){})('User accepted the install prompt');
     } else {
-      console.log('User dismissed the install prompt');
+      (process.env.NODE_ENV === 'debug' ? console.log : function(){})('User dismissed the install prompt');
     }
     setDeferredPrompt(null);
   };

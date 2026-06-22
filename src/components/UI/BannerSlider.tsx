@@ -1,6 +1,6 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { ChevronRight, ChevronLeft } from 'lucide-react';
+import React, { useRef, useState, useEffect } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 
 interface Banner {
   id: string;
@@ -68,12 +68,10 @@ export const BannerSlider: React.FC<BannerSliderProps> = ({ banners, onAction })
               <div className="absolute inset-0">
                 <picture className="w-full h-full">
                   {banner.image.includes("w=2000") && (
-                    <source
-                      srcSet={banner.image.replace("w=2000", "w=800")}
-                      media="(max-width: 768px)"
-                    />
+                    <source srcSet={banner.image.replace("w=2000", "w=800")} media="(max-width: 768px)" />
                   )}
-                  <img loading="lazy"
+                  <img
+                    loading="lazy"
                     src={banner.image}
                     className="w-full h-full object-cover object-center select-none"
                     alt={banner.title}

@@ -1,7 +1,22 @@
 import React, { useRef, useState } from "react";
-import { 
-  Printer, ArrowLeft, Building2, User, MapPin, Phone, CheckCircle, 
-  Info, Sparkles, QrCode, Barcode, Check, Settings, Copy, RefreshCw, Send, HelpCircle
+import {
+  Printer,
+  ArrowLeft,
+  Building2,
+  User,
+  MapPin,
+  Phone,
+  CheckCircle,
+  Info,
+  Sparkles,
+  QrCode,
+  Barcode,
+  Check,
+  Settings,
+  Copy,
+  RefreshCw,
+  Send,
+  HelpCircle,
 } from "lucide-react";
 import { formatPrice } from "../../utils/format";
 import { toast } from "react-hot-toast";
@@ -14,7 +29,7 @@ interface ShippingLabelPrinterProps {
 }
 
 export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ order, onClose }) => {
-    const { t } = useTranslation();
+  const { t } = useTranslation();
   const printAreaRef = useRef<HTMLDivElement>(null);
   const [carrierTemplate, setCarrierTemplate] = useState<"yalidine" | "mayestro" | "kazitour" | "olma">("yalidine");
   const [labelSize, setLabelSize] = useState<"a6" | "receipt">("a6");
@@ -24,7 +39,9 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
   // Simulate API activation logs
   const [isSyncingWithCarrier, setIsSyncingWithCarrier] = useState(false);
   const [apiSynced, setApiSynced] = useState(!!order.trackingId);
-  const [generatedTracking, setGeneratedTracking] = useState(order.trackingId || `DZ-${Math.random().toString(36).substring(2, 11).toUpperCase()}`);
+  const [generatedTracking, setGeneratedTracking] = useState(
+    order.trackingId || `DZ-${Math.random().toString(36).substring(2, 11).toUpperCase()}`
+  );
 
   const handlePrint = () => {
     const printContent = printAreaRef.current?.innerHTML;
@@ -185,23 +202,25 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
       const idToken = await auth.currentUser.getIdToken();
       const response = await fetch("/api/prepare-shipment", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${idToken}`
+          Authorization: `Bearer ${idToken}`,
         },
-        body: JSON.stringify({ orderId: order.id, provider: carrierTemplate.toUpperCase() })
+        body: JSON.stringify({ orderId: order.id, provider: carrierTemplate.toUpperCase() }),
       });
-      
+
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
         throw new Error(errData.error || t("Échec de la synchronisation de l'expédition"));
       }
-      
+
       const data = await response.json();
       if (data.tracking_id) {
         setGeneratedTracking(data.tracking_id);
         setApiSynced(true);
-        toast.success(`${t("Bordereau enregistré avec succès !")} (Tracking: ${data.tracking_id})`, { id: loadingToast });
+        toast.success(`${t("Bordereau enregistré avec succès !")} (Tracking: ${data.tracking_id})`, {
+          id: loadingToast,
+        });
       } else {
         throw new Error(t("Aucun numéro de suivi généré par le serveur."));
       }
@@ -226,9 +245,11 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
           </button>
           <div>
             <h2 className="text-xl font-black text-[#121315] uppercase tracking-tight rtl:tracking-normal">
-              {t("Bordereaux de Transport National")}</h2>
+              {t("Bordereaux de Transport National")}
+            </h2>
             <p className="text-xs rtl:text-sm text-zinc-400 font-bold">
-              {t("Configurez et imprimez des tickets de vente compatibles Yalidine ou Mayestro.")}</p>
+              {t("Configurez et imprimez des tickets de vente compatibles Yalidine ou Mayestro.")}
+            </p>
           </div>
         </div>
 
@@ -237,7 +258,8 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
           className="px-6 py-3 bg-[#ea580c] hover:bg-[#c2410c] text-white font-black text-xs rtl:text-sm uppercase tracking-widest rtl:tracking-normal rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer border-none shadow-md hover:shadow-lg"
         >
           <Printer className="w-4 h-4" />
-          {t("Lancer l'impression")}</button>
+          {t("Lancer l'impression")}
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -246,18 +268,20 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
           <div className="bg-white rounded-3xl p-6 border border-zinc-100 shadow-sm space-y-5">
             <h3 className="text-xs rtl:text-sm font-black text-[#121315] uppercase tracking-widest rtl:tracking-normal flex items-center gap-1">
               <Settings className="w-4 h-4 text-[#F37021]" />
-              {t("Format & Paramètres")}</h3>
+              {t("Format & Paramètres")}
+            </h3>
 
             {/* Carrier style selection list */}
             <div className="space-y-2">
               <label className="block text-[10px] rtl:text-[12px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
-                {t("Modèle de transporteur partenaire")}</label>
+                {t("Modèle de transporteur partenaire")}
+              </label>
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { id: "yalidine", label: "Yalidine Format" },
                   { id: "mayestro", label: "Mayestro Format" },
                   { id: "kazitour", label: "Kazitour Format" },
-                  { id: "olma", label: "Olma Standard" }
+                  { id: "olma", label: "Olma Standard" },
                 ].map((c) => (
                   <button
                     key={c.id}
@@ -276,11 +300,12 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
             {/* Label paper size */}
             <div className="space-y-2">
               <label className="block text-[10px] rtl:text-[12px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
-                {t("Gabarit Papier")}</label>
+                {t("Gabarit Papier")}
+              </label>
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { id: "a6", label: "Autocollant Thermique A6" },
-                  { id: "receipt", label: "Ticket Caisse (80mm)" }
+                  { id: "receipt", label: "Ticket Caisse (80mm)" },
                 ].map((sz) => (
                   <button
                     key={sz.id}
@@ -296,7 +321,8 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
             {/* Custom Remarks for courier */}
             <div className="space-y-2">
               <label className="block text-[10px] rtl:text-[12px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
-                {t("Instructions de livraison (Bordereau)")}</label>
+                {t("Instructions de livraison (Bordereau)")}
+              </label>
               <textarea
                 value={remarks}
                 onChange={(e) => setRemarks(e.target.value)}
@@ -313,7 +339,9 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
                 onClick={() => setIncludeBarcodes(!includeBarcodes)}
                 className={`w-11 h-6 rounded-full transition-all relative ${includeBarcodes ? "bg-[#ea580c]" : "bg-zinc-200"}`}
               >
-                <div className={`w-4.5 h-4.5 rounded-full bg-white absolute top-0.75 transition-all ${includeBarcodes ? "right-1" : "left-1"}`} />
+                <div
+                  className={`w-4.5 h-4.5 rounded-full bg-white absolute top-0.75 transition-all ${includeBarcodes ? "right-1" : "left-1"}`}
+                />
               </button>
             </div>
           </div>
@@ -322,17 +350,26 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
           <div className="bg-[#121315] text-white rounded-3xl p-6 shadow-md space-y-4">
             <div className="flex items-center gap-2">
               <RefreshCw className={`w-4 h-4 text-orange-400 ${isSyncingWithCarrier ? "animate-spin" : ""}`} />
-              <h4 className="text-xs rtl:text-sm font-black uppercase tracking-widest rtl:tracking-normal text-[#FAF8F5]">{t("Passerelle API Transport")}</h4>
+              <h4 className="text-xs rtl:text-sm font-black uppercase tracking-widest rtl:tracking-normal text-[#FAF8F5]">
+                {t("Passerelle API Transport")}
+              </h4>
             </div>
             <p className="text-[11px] text-zinc-300 leading-relaxed font-semibold">
-              {t("Connectez cette vente à votre compte transporteur pour transmettre automatiquement le colis à l'agence la plus proche et avertir le client par SMS.")}</p>
+              {t(
+                "Connectez cette vente à votre compte transporteur pour transmettre automatiquement le colis à l'agence la plus proche et avertir le client par SMS."
+              )}
+            </p>
 
             <div className="bg-white/10 p-3.5 rounded-2xl flex items-center justify-between">
               <div>
                 <span className="block text-[8px] font-black uppercase text-zinc-300">{t("Statut de couplage")}</span>
-                <span className="text-xs rtl:text-sm font-bold">{apiSynced ? `Pris en charge (${carrierTemplate.toUpperCase()})` : "En attente d'enregistrement"}</span>
+                <span className="text-xs rtl:text-sm font-bold">
+                  {apiSynced ? `Pris en charge (${carrierTemplate.toUpperCase()})` : "En attente d'enregistrement"}
+                </span>
               </div>
-              <span className={`px-2.5 py-1 text-[9px] rtl:text-[11px] font-black uppercase tracking-widest rtl:tracking-normal rounded-lg ${apiSynced ? "bg-emerald-500 text-white" : "bg-amber-500 text-white"}`}>
+              <span
+                className={`px-2.5 py-1 text-[9px] rtl:text-[11px] font-black uppercase tracking-widest rtl:tracking-normal rounded-lg ${apiSynced ? "bg-emerald-500 text-white" : "bg-amber-500 text-white"}`}
+              >
                 {apiSynced ? "CONNECTÉ" : "HORS-LIGNE"}
               </span>
             </div>
@@ -342,7 +379,11 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
               disabled={isSyncingWithCarrier || apiSynced}
               className="w-full text-center py-3.5 bg-[#F37021] hover:bg-[#b04f30] disabled:bg-zinc-600 disabled:opacity-50 text-white font-black text-xs rtl:text-sm uppercase tracking-widest rtl:tracking-normal rounded-xl transition-all border-none cursor-pointer flex items-center justify-center gap-2"
             >
-              {isSyncingWithCarrier ? "Synchronisation API..." : (apiSynced ? "Déjà Appairé avec succès !" : "Synchroniser & Obtenir de la cabine")}
+              {isSyncingWithCarrier
+                ? "Synchronisation API..."
+                : apiSynced
+                  ? "Déjà Appairé avec succès !"
+                  : "Synchroniser & Obtenir de la cabine"}
             </button>
           </div>
         </div>
@@ -350,10 +391,11 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
         {/* Right Label Print Live Preview container */}
         <div className="lg:col-span-7 flex flex-col items-center">
           <span className="text-[10px] rtl:text-[12px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-3 select-none">
-            {t("Aperçu conforme du ticket d'expédition (Standard Algérie)")}</span>
+            {t("Aperçu conforme du ticket d'expédition (Standard Algérie)")}
+          </span>
 
           {/* The print isolated paper border */}
-          <div 
+          <div
             className="bg-white shadow-2xl p-6 border-2 border-dashed border-zinc-300 rounded-[1.5rem] w-full max-w-[380px]"
             id="print-label-container"
           >
@@ -366,7 +408,9 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
                     <h3 className="text-sm font-black uppercase tracking-tighter rtl:tracking-normal leading-none">
                       {carrierTemplate === "yalidine" ? "⚡ Yalidine Express" : "📦 MAYESTRO DELIVERY"}
                     </h3>
-                    <p className="text-[9px] rtl:text-[11px] font-bold text-zinc-500">{t("Bordereau Algérie 58 Wilayas")}</p>
+                    <p className="text-[9px] rtl:text-[11px] font-bold text-zinc-500">
+                      {t("Bordereau Algérie 58 Wilayas")}
+                    </p>
                   </div>
                   {includeBarcodes && (
                     <div className="w-10 h-10 border border-zinc-950 flex items-center justify-center rounded">
@@ -378,12 +422,16 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
                 {/* Sender vs Recipient */}
                 <div className="grid grid-cols-2 gap-4 text-[10px] rtl:text-[12px] border-b border-zinc-950 pb-3">
                   <div className="space-y-1">
-                    <span className="block text-[8px] font-black text-zinc-500 uppercase tracking-wide">{t("EXPÉDITEUR :")}</span>
+                    <span className="block text-[8px] font-black text-zinc-500 uppercase tracking-wide">
+                      {t("EXPÉDITEUR :")}
+                    </span>
                     <strong className="block text-zinc-900 leading-tight">{t("OLMART DIRECT")}</strong>
                     <span className="block text-zinc-500 font-bold">+213 23 00 00</span>
                   </div>
                   <div className="space-y-1 border-l border-zinc-200 pl-3">
-                    <span className="block text-[8px] font-black text-zinc-500 uppercase tracking-wide">{t("DESTINATAIRE :")}</span>
+                    <span className="block text-[8px] font-black text-zinc-500 uppercase tracking-wide">
+                      {t("DESTINATAIRE :")}
+                    </span>
                     <strong className="block text-zinc-900 leading-tight">
                       {order.shippingAddress?.name || "Client Olmart"}
                     </strong>
@@ -393,7 +441,9 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
 
                 {/* Shipping Location Address */}
                 <div className="space-y-1 border-b border-zinc-950 pb-3">
-                  <span className="block text-[8px] font-black text-zinc-500 uppercase tracking-wide">{t("ADRESSE DE LIVRAISON")}</span>
+                  <span className="block text-[8px] font-black text-zinc-500 uppercase tracking-wide">
+                    {t("ADRESSE DE LIVRAISON")}
+                  </span>
                   <p className="text-[11px] font-black text-zinc-950 leading-tight">
                     {order.shippingAddress?.street || "Non spécifiée"}
                   </p>
@@ -404,11 +454,16 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
 
                 {/* Package content details */}
                 <div className="space-y-2 text-[10px] rtl:text-[12px] border-b border-zinc-950 pb-3">
-                  <span className="block text-[8px] font-black text-zinc-500 uppercase tracking-wide">{t("CONTENU COLIS / ARTICLES")}</span>
+                  <span className="block text-[8px] font-black text-zinc-500 uppercase tracking-wide">
+                    {t("CONTENU COLIS / ARTICLES")}
+                  </span>
                   <div className="space-y-1 font-sans">
                     {order.items?.map((it: any, k: number) => (
                       <p key={k} className="text-xs rtl:text-sm text-zinc-900 font-bold leading-tight">
-                        • {it.name} <span className="text-zinc-500 font-normal">{t("store_profile.qty_x", "x ")} {it.quantity || 1}</span>
+                        • {it.name}{" "}
+                        <span className="text-zinc-500 font-normal">
+                          {t("store_profile.qty_x", "x ")} {it.quantity || 1}
+                        </span>
                       </p>
                     ))}
                   </div>
@@ -416,9 +471,13 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
 
                 {/* COD amount to collect - Very highlighted for the delivery guy */}
                 <div className="border-[3px] border-zinc-950 p-2 text-center rounded-lg bg-zinc-950 text-white">
-                  <span className="block text-[8px] font-black tracking-widest rtl:tracking-normal text-[#FAF8F5]/70 uppercase">{t("MONTANT A ENCAISSER DU CLIENT (COD)")}</span>
+                  <span className="block text-[8px] font-black tracking-widest rtl:tracking-normal text-[#FAF8F5]/70 uppercase">
+                    {t("MONTANT A ENCAISSER DU CLIENT (COD)")}
+                  </span>
                   <h4 className="text-xl font-black">{formatPrice(order.total)}</h4>
-                  <p className="text-[8px] tracking-wide text-zinc-300 uppercase leading-none mt-1">{t("Cash on Delivery - Espèces d'Algérie uniquement")}</p>
+                  <p className="text-[8px] tracking-wide text-zinc-300 uppercase leading-none mt-1">
+                    {t("Cash on Delivery - Espèces d'Algérie uniquement")}
+                  </p>
                 </div>
 
                 {/* Bottom barcode tracking visual simulated */}
@@ -426,11 +485,14 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
                   <div className="pt-2 text-center space-y-1 select-none">
                     <div className="h-14 bg-white border-2 border-black w-full flex items-center justify-center rounded overflow-hidden py-1">
                       <div className="flex gap-0 items-stretch h-full w-full px-6">
-                        {[4, 1, 3, 2, 4, 1, 2, 3, 4, 1, 2, 4, 3, 2, 4, 1, 3, 2, 4, 1, 4, 3, 2, 1, 4, 2, 3, 1, 4, 2, 3, 4, 1, 2, 3, 4].map((w, idx) => (
-                          <div 
-                            key={idx} 
-                            style={{ flexGrow: w }} 
-                            className={`h-full ${idx % 2 === 0 ? "bg-black" : "bg-white"}`} 
+                        {[
+                          4, 1, 3, 2, 4, 1, 2, 3, 4, 1, 2, 4, 3, 2, 4, 1, 3, 2, 4, 1, 4, 3, 2, 1, 4, 2, 3, 1, 4, 2, 3,
+                          4, 1, 2, 3, 4,
+                        ].map((w, idx) => (
+                          <div
+                            key={idx}
+                            style={{ flexGrow: w }}
+                            className={`h-full ${idx % 2 === 0 ? "bg-black" : "bg-white"}`}
                           />
                         ))}
                       </div>

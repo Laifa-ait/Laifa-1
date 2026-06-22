@@ -1,10 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Search,
-  ShoppingBag,
-  Eye,
-  ArrowUp,
-} from "lucide-react";
+import { Search, ShoppingBag, Eye, ArrowUp } from "lucide-react";
 import { useUI } from "../../context/UIContext";
 import { useCart } from "../../context/CartContext";
 import { useNavigate } from "react-router-dom";

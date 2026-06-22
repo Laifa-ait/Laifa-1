@@ -4,7 +4,7 @@ import { MapPin, Phone, ArrowRight, User, Tag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../lib/firebase';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import { ALGERIA_WILAYAS, ALGERIA_SHIPPING_DATA } from '../../constants';
 import { useTranslation } from 'react-i18next';
@@ -37,7 +37,7 @@ export const Onboarding: React.FC = () => {
 
   useEffect(() => {
     if (!currentUser) {
-      navigate('/auth');
+      navigate('/auth', { replace: true });
       return;
     }
     if (userProfile?.onboardingCompleted) {
@@ -78,6 +78,7 @@ export const Onboarding: React.FC = () => {
     setLoading(true);
     try {
       // 1. Client-side write (Highly reliable because rules are 'allow write: if true')
+      const batch = writeBatch(db);
       const userRef = doc(db, "users", currentUser.uid);
       
       const updateObj: any = {
@@ -112,8 +113,9 @@ export const Onboarding: React.FC = () => {
         }
       }
 
-      await setDoc(userRef, updateObj, { merge: true });
-      console.log("Onboarding: Success via Client SDK");
+      batch.set(userRef, updateObj, { merge: true });
+      await batch.commit();
+      (process.env.NODE_ENV === 'debug' ? console.log : function(){})("Onboarding: Success via Client SDK");
 
       // 2. Server-side notification (Fully optional / non-blocking)
       try {

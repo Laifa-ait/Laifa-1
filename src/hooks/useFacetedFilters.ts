@@ -1,5 +1,5 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
-import { Product } from '../types';
+import { useState, useMemo, useCallback, useEffect } from "react";
+import { Product } from "../types";
 
 // Types representing the active selection of each facet filter
 export interface SelectedFacets {
@@ -29,16 +29,13 @@ export interface AvailableFacets {
 
 const DEFAULT_PRICE_LIMIT: [number, number] = [0, 150000];
 
-export function useFacetedFilters(
-  products: Product[],
-  activeCategory: string = "Tous"
-) {
+export function useFacetedFilters(products: Product[], activeCategory: string = "Tous") {
   // 1. Filter products belonging only to the currently active category (pre-filter)
   const categoryProducts = useMemo(() => {
     if (!activeCategory || activeCategory === "Tous") {
       return products;
     }
-    return products.filter(p => p.category === activeCategory);
+    return products.filter((p) => p.category === activeCategory);
   }, [products, activeCategory]);
 
   // State for active chosen faceted filters
@@ -48,7 +45,7 @@ export function useFacetedFilters(
     materials: [],
     brands: [],
     wilayas: [],
-    priceRange: [0, 150000] // Initial placeholder, will sync with category prices
+    priceRange: [0, 150000], // Initial placeholder, will sync with category prices
   });
 
   // Track if pricing has been manually modified by the user
@@ -97,7 +94,14 @@ export function useFacetedFilters(
 
       return true;
     });
-  }, [categoryProducts, selectedFacets.sizes, selectedFacets.colors, selectedFacets.materials, selectedFacets.brands, selectedFacets.wilayas]);
+  }, [
+    categoryProducts,
+    selectedFacets.sizes,
+    selectedFacets.colors,
+    selectedFacets.materials,
+    selectedFacets.brands,
+    selectedFacets.wilayas,
+  ]);
 
   // Determine the dynamic range of prices for the active category and current sub-filtration (excluding the price range filter itself)
   const dynamicPriceLimits = useMemo((): [number, number] => {
@@ -107,7 +111,7 @@ export function useFacetedFilters(
     }
     let min = Infinity;
     let max = -Infinity;
-    listToAnalyze.forEach(p => {
+    listToAnalyze.forEach((p) => {
       const price = p.promoPrice || p.price;
       if (price < min) min = price;
       if (price > max) max = price;
@@ -131,16 +135,16 @@ export function useFacetedFilters(
     if (activeCategory !== prevCategory) {
       setPrevCategory(activeCategory);
       setIsPriceModified(false);
-      setSelectedFacets(prev => ({
+      setSelectedFacets((prev) => ({
         ...prev,
-        priceRange: [dynamicPriceLimits[0], dynamicPriceLimits[1]]
+        priceRange: [dynamicPriceLimits[0], dynamicPriceLimits[1]],
       }));
     }
   }, [activeCategory, prevCategory, dynamicPriceLimits]);
 
   // Synchronize price bounds and clamp existing user selection to new dynamic range boundaries
   useEffect(() => {
-    setSelectedFacets(prev => {
+    setSelectedFacets((prev) => {
       const [limitMin, limitMax] = dynamicPriceLimits;
       const currentMin = prev.priceRange[0];
       const currentMax = prev.priceRange[1];
@@ -148,31 +152,31 @@ export function useFacetedFilters(
       if (isPriceModified) {
         const clampedMin = Math.max(limitMin, Math.min(limitMax, currentMin));
         const clampedMax = Math.max(limitMin, Math.min(limitMax, currentMax));
+        if (currentMin === clampedMin && currentMax === clampedMax) return prev;
         return {
           ...prev,
-          priceRange: [clampedMin, clampedMax]
+          priceRange: [clampedMin, clampedMax],
         };
       } else {
+        if (currentMin === limitMin && currentMax === limitMax) return prev;
         return {
           ...prev,
-          priceRange: [limitMin, limitMax]
+          priceRange: [limitMin, limitMax],
         };
       }
     });
   }, [dynamicPriceLimits, isPriceModified]);
 
   // Helper selectors to add or remove options from array facets
-  const toggleFacet = useCallback((facetKey: keyof Omit<SelectedFacets, 'priceRange'>, value: string) => {
+  const toggleFacet = useCallback((facetKey: keyof Omit<SelectedFacets, "priceRange">, value: string) => {
     setSelectedFacets((prev) => {
       const currentValues = prev[facetKey] as string[];
       const exists = currentValues.includes(value);
-      const updatedValues = exists
-        ? currentValues.filter((v) => v !== value)
-        : [...currentValues, value];
+      const updatedValues = exists ? currentValues.filter((v) => v !== value) : [...currentValues, value];
 
       return {
         ...prev,
-        [facetKey]: updatedValues
+        [facetKey]: updatedValues,
       };
     });
   }, []);
@@ -180,7 +184,7 @@ export function useFacetedFilters(
   const setPriceRange = useCallback((range: [number, number]) => {
     setSelectedFacets((prev) => ({
       ...prev,
-      priceRange: range
+      priceRange: range,
     }));
     setIsPriceModified(true);
   }, []);
@@ -193,7 +197,7 @@ export function useFacetedFilters(
       materials: [],
       brands: [],
       wilayas: [],
-      priceRange: [dynamicPriceLimits[0], dynamicPriceLimits[1]]
+      priceRange: [dynamicPriceLimits[0], dynamicPriceLimits[1]],
     });
     setIsPriceModified(false);
   }, [dynamicPriceLimits]);
@@ -208,12 +212,12 @@ export function useFacetedFilters(
 
     categoryProducts.forEach((prod) => {
       if (Array.isArray(prod.sizes)) {
-        prod.sizes.forEach(s => {
+        prod.sizes.forEach((s) => {
           sizesMap[s] = (sizesMap[s] || 0) + 1;
         });
       }
       if (Array.isArray(prod.colors)) {
-        prod.colors.forEach(c => {
+        prod.colors.forEach((c) => {
           colorsMap[c] = (colorsMap[c] || 0) + 1;
         });
       }
@@ -221,7 +225,7 @@ export function useFacetedFilters(
         materialsMap[prod.material] = (materialsMap[prod.material] || 0) + 1;
       }
       if (Array.isArray(prod.materials)) {
-        prod.materials.forEach(m => {
+        prod.materials.forEach((m) => {
           materialsMap[m] = (materialsMap[m] || 0) + 1;
         });
       }
@@ -236,11 +240,21 @@ export function useFacetedFilters(
     const sortFn = (a: FacetOption, b: FacetOption) => b.count - a.count;
 
     return {
-      sizes: Object.entries(sizesMap).map(([value, count]) => ({ value, count })).sort(sortFn),
-      colors: Object.entries(colorsMap).map(([value, count]) => ({ value, count })).sort(sortFn),
-      materials: Object.entries(materialsMap).map(([value, count]) => ({ value, count })).sort(sortFn),
-      brands: Object.entries(brandsMap).map(([value, count]) => ({ value, count })).sort(sortFn),
-      wilayas: Object.entries(wilayasMap).map(([value, count]) => ({ value, count })).sort(sortFn),
+      sizes: Object.entries(sizesMap)
+        .map(([value, count]) => ({ value, count }))
+        .sort(sortFn),
+      colors: Object.entries(colorsMap)
+        .map(([value, count]) => ({ value, count }))
+        .sort(sortFn),
+      materials: Object.entries(materialsMap)
+        .map(([value, count]) => ({ value, count }))
+        .sort(sortFn),
+      brands: Object.entries(brandsMap)
+        .map(([value, count]) => ({ value, count }))
+        .sort(sortFn),
+      wilayas: Object.entries(wilayasMap)
+        .map(([value, count]) => ({ value, count }))
+        .sort(sortFn),
       minPrice: dynamicPriceLimits[0],
       maxPrice: dynamicPriceLimits[1],
     };
@@ -306,13 +320,12 @@ export function useFacetedFilters(
     setPriceRange,
     resetFilters,
     totalCount: filteredProducts.length,
-    isFiltered: (
+    isFiltered:
       selectedFacets.sizes.length > 0 ||
       selectedFacets.colors.length > 0 ||
       selectedFacets.materials.length > 0 ||
       selectedFacets.brands.length > 0 ||
       selectedFacets.wilayas.length > 0 ||
-      isPriceModified
-    )
+      isPriceModified,
   };
 }

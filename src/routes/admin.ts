@@ -1,3 +1,6 @@
+import { Request, Response } from 'express';
+export interface AuthenticatedRequest extends Request { user?: any; file?: any; files?: any; }
+
 import { Router } from "express";
 import { admin, db } from "../config/firebase-admin";
 import { authenticateToken, authorizeAdmin, authorizeSeller } from "../middlewares/auth";
@@ -9,10 +12,11 @@ router.post("/admin/danger-zone-wipe", authenticateToken, authorizeAdmin, async 
     const { confirmWipe, adminEmail } = req.body;
     
     // Hardened verification barrier (Anti-XSS/Token hijacking defense)
-    if (confirmWipe !== "WIPE_OLMART_PLATFORM_62") {
-      return res.status(403).json({ error: "Code de confirmation incorrect. Autorisation refusée." });
+    const WIPE_CODE = process.env.DANGER_ZONE_WIPE_CODE;
+    if (!WIPE_CODE || confirmWipe !== WIPE_CODE) {
+      return res.status(403).json({ error: "Code de confirmation incorrect ou non configuré. Autorisation refusée." });
     }
-    if (!adminEmail || adminEmail !== req.user.email || req.user.email !== "laifa.ait@gmail.com") {
+    if (!adminEmail || adminEmail !== req.user.email || req.user.email !== process.env.ADMIN_EMAIL) {
       return res.status(403).json({ error: "Seul l'administrateur principal autorisé peut mener à bien un nettoyage complet." });
     }
 
@@ -144,7 +148,8 @@ router.post("/seller/withdraw", authenticateToken, authorizeSeller, async (req: 
     const sellerId = req.user.uid;
     const { amount, method, bankInfo } = req.body;
     
-    if (typeof amount !== 'number' || !Number.isFinite(amount) || amount < 2000) throw new Error("Le montant minimum est de 2000 DA.");
+    // Validate amount type. Real boundary will be checked against global config if applicable or we can just require positive.
+    if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) throw new Error("Montant invalide.");
 
     await db.runTransaction(async (transaction: any) => {
        const userRef = db.collection('users').doc(sellerId);
@@ -663,8 +668,13 @@ router.delete('/homepage/banners/:id', authenticateToken, authorizeAdmin, async 
 router.post('/admin/save-translation', authenticateToken, authorizeAdmin, async (req: any, res) => {
   try {
     const { key, fr, ar, en } = req.body;
-    if (!key) {
-      return res.status(400).json({ error: "Champs requis manquants: key" });
+    if (typeof key !== 'string' || !/^[A-Za-z0-9_.-]+$/.test(key)) {
+      return res.status(400).json({ error: "Invalid key format" });
+    }
+    if ((fr !== undefined && typeof fr !== 'string') || 
+        (ar !== undefined && typeof ar !== 'string') || 
+        (en !== undefined && typeof en !== 'string')) {
+      return res.status(400).json({ error: "Invalid content format. Must be string." });
     }
 
     const fs = await import("fs");
@@ -715,7 +725,7 @@ router.post('/admin/save-translation', authenticateToken, authorizeAdmin, async 
 
 // API: Product Moderation (Admin)
 
-router.post('/admin/products/recalculate-scores', authenticateToken, authorizeAdmin, async (req: any, res: any) => {
+router.post('/admin/products/recalculate-scores', authenticateToken, authorizeAdmin, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const snap = await db.collection('products').where('status', '==', 'active').get();
     const batch = db.batch();
@@ -744,7 +754,7 @@ router.post('/admin/products/recalculate-scores', authenticateToken, authorizeAd
   }
 });
 
-router.post('/admin/products/:id/approve', authenticateToken, authorizeAdmin, async (req: any, res: any) => {
+router.post('/admin/products/:id/approve', authenticateToken, authorizeAdmin, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const productId = req.params.id;
     const productRef = db.collection('products').doc(productId);
@@ -805,7 +815,7 @@ router.post('/admin/products/:id/approve', authenticateToken, authorizeAdmin, as
   }
 });
 
-router.post('/admin/products/:id/reject', authenticateToken, authorizeAdmin, async (req: any, res: any) => {
+router.post('/admin/products/:id/reject', authenticateToken, authorizeAdmin, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const productId = req.params.id;
     const { reason } = req.body;

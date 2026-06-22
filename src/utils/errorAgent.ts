@@ -11,6 +11,25 @@ interface ErrorInfo {
   timestamp: any;
 }
 
+const sanitizeErrorInfo = (info: Omit<ErrorInfo, 'timestamp' | 'url' | 'userAgent'>) => {
+  const scrubText = (text: string | undefined): string | undefined => {
+    if (!text) return undefined;
+    // Scrub workspace root structures, node_modules, complex paths, and sensitive files
+    return text
+      .replace(/(?:\/[^\/\s]+)*\/src\/[^\s\)]+/g, '[internal_code]')
+      .replace(/(?:http|https):\/\/[^\s\)]+/gi, '[origin_source]')
+      .replace(/at\s+([a-zA-Z0-9_$]+)\s+\([^\)]+\)/g, 'at $1([internal])')
+      .trim();
+  };
+
+  return {
+    ...info,
+    message: info.message ? info.message.replace(/(?:\/[^\/\s]+)*\/src\/[^\s]+/g, '[path]') : '',
+    stack: scrubText(info.stack),
+    componentStack: scrubText(info.componentStack),
+  };
+};
+
 const sendErrorToAgent = async (errorInfo: Omit<ErrorInfo, 'timestamp' | 'url' | 'userAgent'>) => {
   try {
     const isDevOrPreview = 
@@ -23,18 +42,20 @@ const sendErrorToAgent = async (errorInfo: Omit<ErrorInfo, 'timestamp' | 'url' |
 
     // Optional: Avoid spamming database with dev errors
     // if (isDevOrPreview) {
-    //   console.log('[ErrorAgent Detached in Dev/Preview]:', errorInfo);
+    //   (process.env.NODE_ENV === 'debug' ? console.log : function(){})('[ErrorAgent Detached in Dev/Preview]:', errorInfo);
     //   return;
     // }
 
+    const sanitized = sanitizeErrorInfo(errorInfo);
+
     await addDoc(collection(db, 'site_errors'), {
-      ...errorInfo,
+      ...sanitized,
       url: window.location.href,
       userAgent: navigator.userAgent,
       timestamp: serverTimestamp(),
       resolved: false,
     });
-    console.log('[ErrorAgent] Erreur reportée avec succès.');
+    (process.env.NODE_ENV === 'debug' ? console.log : function(){})('[ErrorAgent] Erreur reportée avec succès.');
   } catch (err) {
     console.error('[ErrorAgent] Impossible de reporter l\'erreur :', err);
   }

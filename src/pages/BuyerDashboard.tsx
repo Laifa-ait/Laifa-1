@@ -35,7 +35,7 @@ export const BuyerDashboard: React.FC = () => {
 
   useEffect(() => {
     if (!currentUser) {
-      navigate('/auth');
+      navigate('/auth', { replace: true });
       return;
     }
 

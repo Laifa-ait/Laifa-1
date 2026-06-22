@@ -1,22 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { RotateCw, ZoomIn, Move, Check, X, Sliders } from 'lucide-react';
+import React, { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { RotateCw, ZoomIn, Move, Check, X, Sliders } from "lucide-react";
 
 interface ImageAdjusterModalProps {
   src: string;
-  type: 'logo' | 'banner';
+  type: "logo" | "banner";
   isRTL: boolean;
   onClose: () => void;
   onConfirm: (blob: Blob) => void;
 }
 
-export const ImageAdjusterModal: React.FC<ImageAdjusterModalProps> = ({
-  src,
-  type,
-  isRTL,
-  onClose,
-  onConfirm,
-}) => {
+export const ImageAdjusterModal: React.FC<ImageAdjusterModalProps> = ({ src, type, isRTL, onClose, onConfirm }) => {
   const [zoom, setZoom] = useState<number>(1);
 
   const [rotation, setRotation] = useState<number>(0);
@@ -61,17 +55,17 @@ export const ImageAdjusterModal: React.FC<ImageAdjusterModalProps> = ({
       cancel: "إلغاء",
       save: "تطبيق وحفظ",
       loading: "جاري معالجة الصورة...",
-    }
+    },
   };
 
-  const t = (key: keyof typeof localDict['fr']) => {
-    const lang = isRTL ? 'ar' : 'fr'; // Defaults to FR
-    return localDict[lang]?.[key] || localDict['fr'][key];
+  const t = (key: keyof (typeof localDict)["fr"]) => {
+    const lang = isRTL ? "ar" : "fr"; // Defaults to FR
+    return localDict[lang]?.[key] || localDict["fr"][key];
   };
 
   // Dimensions of viewport
   const viewWidth = 320;
-  const viewHeight = type === 'logo' ? 320 : 120; // banner aspect ratio is wider
+  const viewHeight = type === "logo" ? 320 : 120; // banner aspect ratio is wider
 
   // Pointer event handlers for panners
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -116,15 +110,15 @@ export const ImageAdjusterModal: React.FC<ImageAdjusterModalProps> = ({
 
   const handleSave = () => {
     if (!imageRef.current) return;
-    
+
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.src = src;
     img.onload = () => {
-      const canvas = document.createElement('canvas');
-      
+      const canvas = document.createElement("canvas");
+
       // Determine canvas final target result quality dimensions
-      if (type === 'logo') {
+      if (type === "logo") {
         canvas.width = 512;
         canvas.height = 512;
       } else {
@@ -132,29 +126,29 @@ export const ImageAdjusterModal: React.FC<ImageAdjusterModalProps> = ({
         canvas.height = 450;
       }
 
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
       // Fill with clean canvas white background backplate
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Translate center coordinate pivot space
       ctx.translate(canvas.width / 2, canvas.height / 2);
-      
+
       const displayToCanvasScale = canvas.width / viewWidth;
       const finalPanX = pan.x * displayToCanvasScale;
       const finalPanY = pan.y * displayToCanvasScale;
 
       // Apply screen-space panning BEFORE rotation
       ctx.translate(finalPanX, finalPanY);
-      
+
       // Now apply rotation
       ctx.rotate((rotation * Math.PI) / 180);
 
       const imgRatio = img.naturalWidth / img.naturalHeight;
       const viewRatio = viewWidth / viewHeight;
-      
+
       let startWidth = viewWidth;
       let startHeight = viewHeight;
 
@@ -170,13 +164,7 @@ export const ImageAdjusterModal: React.FC<ImageAdjusterModalProps> = ({
       const finalHeight = startHeight * zoom * displayToCanvasScale;
 
       // Draw compiled image
-      ctx.drawImage(
-        img,
-        -finalWidth / 2,
-        -finalHeight / 2,
-        finalWidth,
-        finalHeight
-      );
+      ctx.drawImage(img, -finalWidth / 2, -finalHeight / 2, finalWidth, finalHeight);
 
       // Convert to high-grade compressed raw image blob
       canvas.toBlob(
@@ -185,7 +173,7 @@ export const ImageAdjusterModal: React.FC<ImageAdjusterModalProps> = ({
             onConfirm(blob);
           }
         },
-        'image/jpeg',
+        "image/jpeg",
         0.92
       );
     };
@@ -207,17 +195,15 @@ export const ImageAdjusterModal: React.FC<ImageAdjusterModalProps> = ({
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
-        transition={{ type: 'spring', duration: 0.4 }}
+        transition={{ type: "spring", duration: 0.4 }}
         className="bg-white dark:bg-zinc-900 rounded-[2.5rem] w-full max-w-md border border-zinc-150 shadow-2xl relative overflow-hidden z-10 flex flex-col"
       >
         {/* Header */}
         <div className="p-6 border-b border-zinc-100 flex items-center justify-between">
-          <div className={`${isRTL ? 'text-right' : 'text-left'}`}>
-            <h3 className="text-lg font-black text-zinc-950 tracking-tight">
-              {t('title')}
-            </h3>
+          <div className={`${isRTL ? "text-right" : "text-left"}`}>
+            <h3 className="text-lg font-black text-zinc-950 tracking-tight">{t("title")}</h3>
             <p className="text-xs text-zinc-500 font-medium">
-              {type === 'logo' ? 'Format Carré / Cercle' : 'Format Large (Couverture)'}
+              {type === "logo" ? "Format Carré / Cercle" : "Format Large (Couverture)"}
             </p>
           </div>
           <button
@@ -240,14 +226,15 @@ export const ImageAdjusterModal: React.FC<ImageAdjusterModalProps> = ({
             style={{
               width: `${viewWidth}px`,
               height: `${viewHeight}px`,
-              touchAction: 'none',
+              touchAction: "none",
             }}
             className={`relative cursor-grab select-none transition-shadow duration-150 ${
-              isDragging ? 'cursor-grabbing' : ''
+              isDragging ? "cursor-grabbing" : ""
             }`}
           >
             {/* The image (can overflow) */}
-            <img loading="lazy"
+            <img
+              loading="lazy"
               ref={imageRef}
               src={src}
               alt="Adjustment Preview"
@@ -255,7 +242,7 @@ export const ImageAdjusterModal: React.FC<ImageAdjusterModalProps> = ({
                 const { naturalWidth, naturalHeight } = e.currentTarget;
                 const imgRatio = naturalWidth / naturalHeight;
                 const viewRatio = viewWidth / viewHeight;
-                
+
                 let startWidth = viewWidth;
                 let startHeight = viewHeight;
 
@@ -266,19 +253,19 @@ export const ImageAdjusterModal: React.FC<ImageAdjusterModalProps> = ({
                   startWidth = viewWidth;
                   startHeight = viewWidth / imgRatio;
                 }
-                
+
                 setImgSize({ width: startWidth, height: startHeight });
                 setImageLoaded(true);
               }}
               style={{
-                width: imgSize.width ? `${imgSize.width}px` : '100%',
-                height: imgSize.height ? `${imgSize.height}px` : '100%',
+                width: imgSize.width ? `${imgSize.width}px` : "100%",
+                height: imgSize.height ? `${imgSize.height}px` : "100%",
                 transform: `translate(calc(-50% + ${pan.x}px), calc(-50% + ${pan.y}px)) scale(${zoom}) rotate(${rotation}deg)`,
-                transformOrigin: 'center center',
-                position: 'absolute',
-                left: '50%',
-                top: '50%',
-                maxWidth: 'none',
+                transformOrigin: "center center",
+                position: "absolute",
+                left: "50%",
+                top: "50%",
+                maxWidth: "none",
               }}
               draggable={false}
               className="pointer-events-none select-none transition-opacity duration-200"
@@ -287,21 +274,21 @@ export const ImageAdjusterModal: React.FC<ImageAdjusterModalProps> = ({
             {/* The crop bounding box dimming mask using massive ring */}
             <div
               className={`absolute inset-0 pointer-events-none ring-[9999px] ring-zinc-950/70 border-2 border-white ${
-                type === 'logo' ? 'rounded-full' : 'rounded-xl'
+                type === "logo" ? "rounded-full" : "rounded-xl"
               }`}
             />
 
             {/* Visual Indicator lines/masks */}
-            {type === 'logo' && (
+            {type === "logo" && (
               <div className="absolute inset-0 border-[3px] border-dashed border-white/30 rounded-full pointer-events-none" />
             )}
             <div className="absolute inset-0 bg-transparent flex items-center justify-center pointer-events-none">
               <Move className="w-6 h-6 text-white/50 drop-shadow animate-pulse" />
             </div>
           </div>
-          
+
           <p className="text-[11px] text-zinc-400 font-semibold absolute bottom-4 text-center z-10 w-full left-0 drop-shadow-md">
-            {t('desc')}
+            {t("desc")}
           </p>
         </div>
 
@@ -310,7 +297,7 @@ export const ImageAdjusterModal: React.FC<ImageAdjusterModalProps> = ({
           {/* Zoom Slider */}
           <div className="space-y-2">
             <div className="flex justify-between items-center text-xs font-bold text-zinc-700">
-              <span>{t('zoom')}</span>
+              <span>{t("zoom")}</span>
               <span className="font-mono text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full text-[10px]">
                 {Math.round(zoom * 100)}%
               </span>
@@ -337,7 +324,7 @@ export const ImageAdjusterModal: React.FC<ImageAdjusterModalProps> = ({
               className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-zinc-200/80 rounded-2xl text-[11px] font-black text-zinc-700 hover:bg-zinc-50 active:scale-95 transition-all uppercase tracking-wider"
             >
               <RotateCw className="w-4 h-4 text-zinc-500" />
-              <span>{t('rotate')}</span>
+              <span>{t("rotate")}</span>
             </button>
             <button
               onClick={handleReset}
@@ -354,14 +341,14 @@ export const ImageAdjusterModal: React.FC<ImageAdjusterModalProps> = ({
             onClick={onClose}
             className="flex-1 py-4 px-5 rounded-2xl border border-zinc-200 text-zinc-600 hover:bg-zinc-100/50 hover:text-zinc-800 font-extrabold text-xs transition-colors active:scale-95 uppercase tracking-wider"
           >
-            {t('cancel')}
+            {t("cancel")}
           </button>
           <button
             onClick={handleSave}
             className="flex-1 py-4 px-5 rounded-2xl bg-zinc-950 hover:bg-zinc-900 text-white font-extrabold text-xs shadow-lg shadow-zinc-900/15 transition-all hover:scale-[1.01] active:scale-95 uppercase tracking-wider flex items-center justify-center gap-2"
           >
             <Check className="w-4 h-4" />
-            <span>{t('save')}</span>
+            <span>{t("save")}</span>
           </button>
         </div>
       </motion.div>

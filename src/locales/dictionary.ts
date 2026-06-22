@@ -37,8 +37,7 @@ export const DICTIONARY = {
     search_matching: "produits trouvés pour",
     intelligent_search: "Recherche intelligente active",
     no_results: "Aucun résultat trouvé",
-    try_other_keywords:
-      "Essayez d'autres mots-clés ou explorez nos catégories.",
+    try_other_keywords: "Essayez d'autres mots-clés ou explorez nos catégories.",
     back_to_shop: "Retour à la boutique",
     shop: "Boutique",
     trust_delivery: "Livraison 58 Wilayas",
@@ -89,13 +88,15 @@ export const DICTIONARY = {
     auth_error_email_already_in_use: "Cet e-mail est déjà utilisé par un autre compte.",
     auth_error_weak_password: "Le mot de passe est trop faible (6 caractères minimum).",
     auth_error_invalid_email: "L'adresse e-mail saisie est de format incorrect.",
-    auth_error_too_many_requests: "Trop de tentatives échouées. Par sécurité, votre accès est temporairement bloqué. Réessayez plus tard.",
+    auth_error_too_many_requests:
+      "Trop de tentatives échouées. Par sécurité, votre accès est temporairement bloqué. Réessayez plus tard.",
     auth_error_user_disabled: "Ce compte a été suspendu. Veuillez contacter le support technique d'OLMART.",
     auth_error_network_request_failed: "Erreur réseau. Veuillez vérifier votre connexion internet et réessayer.",
     auth_error_internal: "Une erreur interne s'est produite lors de la connexion.",
     auth_error_popup_closed: "La fenêtre d'authentification a été fermée.",
     auth_error_generic: "Erreur d'authentification. Veuillez réessayer.",
-    external_channel_blocked: "Les coordonnees de communication exterieure (messages, liens ou reseaux) ne sont pas autorisees dans ce champ de texte. Tout contact doit s'effectuer exclusivement via la plateforme OLMART.",
+    external_channel_blocked:
+      "Les coordonnees de communication exterieure (messages, liens ou reseaux) ne sont pas autorisees dans ce champ de texte. Tout contact doit s'effectuer exclusivement via la plateforme OLMART.",
     menu_home: "Accueil",
     menu_collections: "Collections",
     menu_about: "À Propos",
@@ -150,8 +151,7 @@ export const DICTIONARY = {
     vendor: "Vendeur",
     order_info: "Informations de commande",
     shipping_calculator: "Calculateur de Livraison",
-    shipping_desc:
-      "Sélectionnez votre Wilaya pour connaître les tarifs et délais d'expédition de ce vendeur.",
+    shipping_desc: "Sélectionnez votre Wilaya pour connaître les tarifs et délais d'expédition de ce vendeur.",
     choose_wilaya: "Choisir la Wilaya de destination",
     delivered_in: "Livré sous",
     free_shipping: "Gratuite",
@@ -193,8 +193,7 @@ export const DICTIONARY = {
     my_orders: "Mes Commandes",
     track_purchases: "Suivez l'historique de vos achats.",
     no_orders_placed: "Vous n'avez pas encore passé de commande",
-    discover_products_orders:
-      "Découvrez nos produits sur la boutique et passez votre première commande.",
+    discover_products_orders: "Découvrez nos produits sur la boutique et passez votre première commande.",
     discover_shop: "Découvrir la boutique",
     status_pending: "En attente",
     status_processing: "En cours",
@@ -221,15 +220,13 @@ export const DICTIONARY = {
     flat_rate_da: "Tarif unique (DA)",
     flat_time: "Délai unique",
     apply_all_wilayas: "Appliquer à toutes les Wilayas",
-    make_delivery_free_prompt:
-      "Rendre la livraison gratuite pour toutes les wilayas ?",
+    make_delivery_free_prompt: "Rendre la livraison gratuite pour toutes les wilayas ?",
     free_shipping_everywhere: "Livraison {t.free_shipping} partout",
     available: "Disponible",
     fees_da: "Frais (DA)",
     estimated_time: "Temps Estimé",
     shop_settings: "Paramètres de la Boutique",
-    customize_shop_appearance:
-      "Personnalisez l'apparence de votre boutique publique.",
+    customize_shop_appearance: "Personnalisez l'apparence de votre boutique publique.",
     shop_name: "Nom de la boutique",
     describe_what_you_sell: "Décrivez ce que vous vendez...",
     shop_logo: "Logo de la boutique",
@@ -245,14 +242,11 @@ export const DICTIONARY = {
     documents_submitted_review:
       "Vos documents ont été soumis et sont actuellement en cours de vérification par notre équipe. Ce processus prend généralement 24 à 48 heures.",
     file_rejected: "Dossier refusé",
-    request_rejected_reason:
-      "Votre demande a été rejetée pour le motif suivant :",
+    request_rejected_reason: "Votre demande a été rejetée pour le motif suivant :",
     incomplete_info_reason: "Informations incomplètes ou documents illisibles.",
-    please_correct_resubmit:
-      "Veuillez corriger vos informations et soumettre à nouveau le formulaire.",
+    please_correct_resubmit: "Veuillez corriger vos informations et soumettre à nouveau le formulaire.",
     account_validated: "Compte Validé",
-    profile_verified_active:
-      "Votre profil vendeur est vérifié et actif. Vous pouvez vendre sur Olma.",
+    profile_verified_active: "Votre profil vendeur est vérifié et actif. Vous pouvez vendre sur Olma.",
     legal_information: "Informations Légales",
     legal_status_star: "Statut Juridique *",
     rc_number_star: "N° Registre du Commerce (RC) *",
@@ -270,8 +264,7 @@ export const DICTIONARY = {
     scan_id: "Scan Pièce d'Identité *",
     edit_document: "Modifier le document",
     import_image: "Importer l'image",
-    fill_all_fields_docs:
-      "Veuillez remplir tous les champs obligatoires et fournir les liens de documents.",
+    fill_all_fields_docs: "Veuillez remplir tous les champs obligatoires et fournir les liens de documents.",
     sending: "Envoi en cours...",
     submit_validation: "Soumettre pour validation",
     sending_error: "Erreur lors de l'envoi",
@@ -280,8 +273,7 @@ export const DICTIONARY = {
     name: "Nom",
     price: "Prix",
     stock: "Stock",
-    no_products_found_add_new:
-      'Aucun produit trouvé. Cliquez sur "Nouveau Produit" pour commencer.',
+    no_products_found_add_new: 'Aucun produit trouvé. Cliquez sur "Nouveau Produit" pour commencer.',
     all_your_orders: "Toutes vos commandes",
     client: "Client",
     status: "Statut",
@@ -437,13 +429,15 @@ export const DICTIONARY = {
     auth_error_email_already_in_use: "هذا البريد الإلكتروني مستخدم بالفعل من قبل حساب آخر.",
     auth_error_weak_password: "كلمة المرور ضعيفة جداً (يجب أن تتكون من 6 أحرف على الأقل).",
     auth_error_invalid_email: "صيغة البريد الإلكتروني المدخلة غير صحيحة.",
-    auth_error_too_many_requests: "محاولات تسجيل الدخول كثيرة جداً وفاشلة. تم حظر محاولة تسجيل الدخول مؤقتًا لأسباب أمنية. يرجى المحاولة لاحقاً.",
+    auth_error_too_many_requests:
+      "محاولات تسجيل الدخول كثيرة جداً وفاشلة. تم حظر محاولة تسجيل الدخول مؤقتًا لأسباب أمنية. يرجى المحاولة لاحقاً.",
     auth_error_user_disabled: "تم تعليق هذا الحساب. يرجى الاتصال بالدعم الفني لـ OLMART.",
     auth_error_network_request_failed: "خطأ في الشبكة. يرجى التحقق من اتصالك بالإنترنت وإعادة المحاولة.",
     auth_error_internal: "حدث خطأ داخلي في نظام المصادقة Firebase. يرجى إعادة المحاولة.",
     auth_error_popup_closed: "تم إغلاق نافذة المصادقة.",
     auth_error_generic: "حدث خطأ أثناء المصادقة والتسجيل. يرجى المحاولة مجدداً.",
-    external_channel_blocked: "معلومات الاتصال الخارجية (روابط شبكات التواصل أو التطبيقات أو الهاتف) غير مسموح بها في هذا الحقل النصي. يجب إتمام جميع الاتصالات حصرياً عبر منصة OLMART.",
+    external_channel_blocked:
+      "معلومات الاتصال الخارجية (روابط شبكات التواصل أو التطبيقات أو الهاتف) غير مسموح بها في هذا الحقل النصي. يجب إتمام جميع الاتصالات حصرياً عبر منصة OLMART.",
     menu_home: "الرئيسية",
     menu_collections: "مجموعات",
     menu_about: "حول",
@@ -457,8 +451,7 @@ export const DICTIONARY = {
     welcome_back: "مرحباً بعودتك",
     login_prompt: "سجل الدخول للاستمتاع بتجربة أولما.",
     login_btn: "تسجيل الدخول / إنشاء حساب",
-    footer_desc:
-      "منسق للأشياء الاستثنائية للديكورات الداخلية الحديثة. مهمتنا هي إعادة تعريف الحرفية للمساحات الخالدة.",
+    footer_desc: "منسق للأشياء الاستثنائية للديكورات الداخلية الحديثة. مهمتنا هي إعادة تعريف الحرفية للمساحات الخالدة.",
     all_products: "كل المنتجات",
     support: "الدعم",
     shipping: "الشحن",
@@ -508,8 +501,7 @@ export const DICTIONARY = {
     confirm_btn: "تأكيد",
     empty_cart: "عربة التسوق الخاصة بك فارغة",
     thank_you: "نحن نقدر ثقتكم بنا.",
-    order_success:
-      "لقد تم تسجيل طلبك بنجاح. ستتلقى مكالمة أو رسالة تأكيد قريباً جداً.",
+    order_success: "لقد تم تسجيل طلبك بنجاح. ستتلقى مكالمة أو رسالة تأكيد قريباً جداً.",
     back_to_home: "العودة إلى الرئيسية",
     my_account: "حسابي",
     admin_dashboard: "لوحة تحكم المسؤول",
@@ -590,8 +582,7 @@ export const DICTIONARY = {
     incomplete_info_reason: "معلومات غير مكتملة أو مستندات غير مقروءة.",
     please_correct_resubmit: "يرجى تصحيح معلوماتك وإرسال النموذج مرة أخرى.",
     account_validated: "تم التحقق من الحساب",
-    profile_verified_active:
-      "ملف البائع الخاص بك موثق ونشط. يمكنك الآن البيع على أولما.",
+    profile_verified_active: "ملف البائع الخاص بك موثق ونشط. يمكنك الآن البيع على أولما.",
     legal_information: "المعلومات القانونية",
     legal_status_star: "الوضع القانوني *",
     rc_number_star: "رقم السجل التجاري (RC) *",
@@ -609,8 +600,7 @@ export const DICTIONARY = {
     scan_id: "نسخة من بطاقة الهوية *",
     edit_document: "تعديل المستند",
     import_image: "استيراد الصورة",
-    fill_all_fields_docs:
-      "يرجى ملء كافة الحقول المطلوبة وتقديم المستندات اللازمة.",
+    fill_all_fields_docs: "يرجى ملء كافة الحقول المطلوبة وتقديم المستندات اللازمة.",
     sending: "جاري الإرسال...",
     submit_validation: "إرسال للتحقق",
     sending_error: "خطأ أثناء الإرسال",
@@ -619,8 +609,7 @@ export const DICTIONARY = {
     name: "الاسم",
     price: "السعر",
     stock: "المخزون",
-    no_products_found_add_new:
-      'لم يتم العثور على أي منتجات. انقر على "منتج جديد" للبدء.',
+    no_products_found_add_new: 'لم يتم العثور على أي منتجات. انقر على "منتج جديد" للبدء.',
     all_your_orders: "جميع طلباتك",
     client: "العميل",
     status: "الحالة",
@@ -775,13 +764,15 @@ export const DICTIONARY = {
     auth_error_email_already_in_use: "This email is already in use by another account.",
     auth_error_weak_password: "The password is too weak (minimum 6 characters).",
     auth_error_invalid_email: "The email address entered has an incorrect format.",
-    auth_error_too_many_requests: "Too many failed login attempts. For security reasons, your login has been temporarily blocked. Try again later.",
+    auth_error_too_many_requests:
+      "Too many failed login attempts. For security reasons, your login has been temporarily blocked. Try again later.",
     auth_error_user_disabled: "This account has been disabled. Please contact OLMART technical support.",
     auth_error_network_request_failed: "Network error. Please check your internet connection and try again.",
     auth_error_internal: "An internal Firebase error occurred. Please refresh the page or try again.",
     auth_error_popup_closed: "The authentication window was closed.",
     auth_error_generic: "An authentication error occurred. Please try again.",
-    external_channel_blocked: "External contact details (such as phone numbers, profiles, social links, or applications) are not allowed in this text field. All communication must occur exclusively through the OLMART platform.",
+    external_channel_blocked:
+      "External contact details (such as phone numbers, profiles, social links, or applications) are not allowed in this text field. All communication must occur exclusively through the OLMART platform.",
     menu_home: "Home",
     menu_collections: "Collections",
     menu_about: "About",
@@ -833,8 +824,7 @@ export const DICTIONARY = {
     vendor: "Vendor",
     order_info: "Order Information",
     shipping_calculator: "Shipping Calculator",
-    shipping_desc:
-      "Select your Wilaya to see the shipping rates and delivery times for this seller.",
+    shipping_desc: "Select your Wilaya to see the shipping rates and delivery times for this seller.",
     choose_wilaya: "Choose Destination Wilaya",
     delivered_in: "Delivered in",
     free_shipping: "Free",
@@ -876,8 +866,7 @@ export const DICTIONARY = {
     my_orders: "My Orders",
     track_purchases: "Track your purchase history.",
     no_orders_placed: "You haven't placed an order yet",
-    discover_products_orders:
-      "Discover our products in the shop and place your first order.",
+    discover_products_orders: "Discover our products in the shop and place your first order.",
     discover_shop: "Discover the shop",
     status_pending: "Pending",
     status_processing: "Processing",
@@ -926,14 +915,11 @@ export const DICTIONARY = {
     documents_submitted_review:
       "Your documents have been submitted and are currently being verified by our team. This process usually takes 24 to 48 hours.",
     file_rejected: "File rejected",
-    request_rejected_reason:
-      "Your request has been rejected for the following reason:",
+    request_rejected_reason: "Your request has been rejected for the following reason:",
     incomplete_info_reason: "Incomplete information or illegible documents.",
-    please_correct_resubmit:
-      "Please correct your information and resubmit the form.",
+    please_correct_resubmit: "Please correct your information and resubmit the form.",
     account_validated: "Account Validated",
-    profile_verified_active:
-      "Your seller profile is verified and active. You can now sell on Olma.",
+    profile_verified_active: "Your seller profile is verified and active. You can now sell on Olma.",
     legal_information: "Legal Information",
     legal_status_star: "Legal Status *",
     rc_number_star: "Commercial Register (RC) No. *",
@@ -951,8 +937,7 @@ export const DICTIONARY = {
     scan_id: "ID Scan *",
     edit_document: "Edit document",
     import_image: "Import image",
-    fill_all_fields_docs:
-      "Please fill all required fields and provide the document files.",
+    fill_all_fields_docs: "Please fill all required fields and provide the document files.",
     sending: "Sending...",
     submit_validation: "Submit for validation",
     sending_error: "Error during submission",
@@ -961,8 +946,7 @@ export const DICTIONARY = {
     name: "Name",
     price: "Price",
     stock: "Stock",
-    no_products_found_add_new:
-      'No products found. Click on "New Product" to start.',
+    no_products_found_add_new: 'No products found. Click on "New Product" to start.',
     all_your_orders: "All your orders",
     client: "Client",
     status: "Status",
@@ -1035,14 +1019,12 @@ export const getTranslation = (key: string, lang: "fr" | "ar" | "en") => {
     fr: {
       change_avatar_title: "Photo de profil & Avatars",
       custom_photo: "Importer ma propre photo",
-      custom_photo_desc:
-        "Glissez-déposez ou cliquez pour sélectionner un fichier (PNG, JPG)",
+      custom_photo_desc: "Glissez-déposez ou cliquez pour sélectionner un fichier (PNG, JPG)",
       or_choose_preset: "Sélectionnez un avatar créé par Olma",
       saving_avatar: "Mise à jour...",
       save_avatar_btn: "Enregistrer la photo",
       avatar_label: "Avatar personnalisé",
-      avatar_hint:
-        "Cliquez sur votre photo de profil pour la changer ou choisir un de nos avatars exclusifs !",
+      avatar_hint: "Cliquez sur votre photo de profil pour la changer ou choisir un de nos avatars exclusifs !",
       close_btn: "Fermer",
       edit_order_btn: "Modifier la commande",
       edit_order_title: "Modifier la Commande",
@@ -1063,8 +1045,7 @@ export const getTranslation = (key: string, lang: "fr" | "ar" | "en") => {
       saving_avatar: "Saving...",
       save_avatar_btn: "Save Avatar",
       avatar_label: "Custom Avatar",
-      avatar_hint:
-        "Click on your profile picture to change it or choose one of our exclusive avatars!",
+      avatar_hint: "Click on your profile picture to change it or choose one of our exclusive avatars!",
       close_btn: "Close",
       edit_order_btn: "Edit Order",
       edit_order_title: "Edit Order Specifications",
@@ -1085,8 +1066,7 @@ export const getTranslation = (key: string, lang: "fr" | "ar" | "en") => {
       saving_avatar: "جاري الحفظ...",
       save_avatar_btn: "حفظ الصورة",
       avatar_label: "صورة مخصصة",
-      avatar_hint:
-        "انقر على صورتك الشخصية لتغييرها أو لاختيار أحد رموزنا الحصريّة!",
+      avatar_hint: "انقر على صورتك الشخصية لتغييرها أو لاختيار أحد رموزنا الحصريّة!",
       close_btn: "إغلاق",
       edit_order_btn: "تعديل الطلبية",
       edit_order_title: "تعديل معلومات الطلبية",

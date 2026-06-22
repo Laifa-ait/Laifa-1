@@ -260,6 +260,41 @@ export const Home: React.FC = () => {
     });
   }, [featuredProducts, getCategorieFavorite, activeCategoriesConfig]);
 
+  // Premium High-Value Selection: Sorted by sales count, devalued proportionally if seller trust drops
+  const premiumProducts = useMemo(() => {
+    if (!featuredProducts || featuredProducts.length === 0) return [];
+    
+    return [...featuredProducts]
+      .map((product) => {
+        // Look up seller profile in dbSellers to verify up-to-date trustScore
+        const sellerProfile = dbSellers?.find((s) => s.id === product.sellerId);
+        
+        let sellerTrust = 100;
+        if (sellerProfile && typeof sellerProfile.trustScore === "number") {
+          sellerTrust = sellerProfile.trustScore;
+        } else if (typeof (product as any).sellerTrustScore === "number") {
+          sellerTrust = (product as any).sellerTrustScore;
+        } else if (typeof (product as any).trustScore === "number") {
+          sellerTrust = (product as any).trustScore;
+        }
+
+        const sales = product.salesCount || 0;
+        const discountPenalty = product.promoPrice && product.promoPrice < product.price ? 1.1 : 1.0;
+        
+        // Value Score Formulation:
+        // Reflects real customer sales, but drops value exponentially/linearly if seller has lost/compromised points in the trust Score system.
+        const trustMultiplier = sellerTrust / 100;
+        const valueScore = (sales * trustMultiplier * discountPenalty) + (product.rating || 0) * 2;
+
+        return {
+          ...product,
+          sellerTrust,
+          valueScore,
+        };
+      })
+      .sort((a, b) => b.valueScore - a.valueScore);
+  }, [featuredProducts, dbSellers]);
+
   const getPrecedingSectionBgColor = () => {
     const activeSections = homepageSections.filter((s) => s.isActive);
     if (activeSections.length > 0) {
@@ -602,40 +637,188 @@ export const Home: React.FC = () => {
          </div>
       </section>
 
-      {/* Admin Selection / Featured */}
-      <section className="pt-16 md:pt-24 lg:pt-36 pb-16 bg-zinc-50 border-t border-zinc-200 relative overflow-hidden">
+      {/* Admin Selection / Featured - RE-BRANDED INSPIRED BY HIGH-JEWELRY & FINE COUTURING SITES */}
+      <section className="pt-24 pb-28 bg-[#FAF7F2] relative overflow-hidden border-t-2 border-b-2 border-[#EBE5DF]/80">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(163,141,111,0.04),transparent_60%)] pointer-events-none" />
+        {/* Fine gold border highlight embellishment */}
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#C9A26A]/30 to-transparent" />
+        
         <div className="w-full max-w-[90rem] mx-auto px-4 sm:px-6 md:px-8 relative z-10">
-          <div className="text-center max-w-2xl mx-auto mb-10 px-4 sm:px-0">
-            <h2 className="text-3xl md:text-5xl font-black tracking-tight rtl:tracking-normal mb-4 drop-shadow-sm text-zinc-950">
-              {t("home.featured.title") || "Sélection d'Exception"}
-            </h2>
-            <p className="text-zinc-600 font-medium text-lg italic tracking-wide rtl:tracking-normal max-w-xl mx-auto">
-              {t("home.featured.subtitle") ||
-                "Le luxe n'est pas un surplus, c'est une exigence de chaque instant."}
-            </p>
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6 px-4 sm:px-0">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FCFAF5] border border-[#E1D8C5] text-[#9E8155] font-mono text-[10px] uppercase font-bold tracking-[0.2em] mb-4">
+                <Sparkles className="w-3 h-3 text-[#A88C5C] animate-pulse" />
+                {t("exploration_premium") || "Exploration Premium"}
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#1F1D19] tracking-tight mb-2">
+                {t("product.premium_selection") || "Sélection Premium"}
+              </h2>
+              <div className="w-16 h-[1.5px] bg-[#9E8155] mb-4" />
+              <p className="text-[#645F56] font-serif text-base md:text-lg italic max-w-xl leading-relaxed">
+                {t("home.featured.subtitle") ||
+                  "Le luxe n'est pas un surplus, c'est une exigence de chaque instant."}
+              </p>
+            </div>
+            
+            {/* CTA Option inspired by high-end boutiques - Underlined, light serif or sans, wide-tracking */}
+            <div className="flex shrink-0">
+              <button
+                onClick={() => navigate("/premium-collection")}
+                className="group flex items-center gap-3 border-b border-[#1F1D19] hover:border-[#9E8155] text-[#1F1D19] hover:text-[#9E8155] font-sans font-black text-xs uppercase tracking-[0.2em] pb-1.5 transition-all duration-300 cursor-pointer"
+              >
+                <span>{t("Voir la Collection") || "Découvrir la Sélection"}</span>
+                <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1.5 rtl:group-hover:-translate-x-1.5" />
+              </button>
+            </div>
           </div>
 
-          <div className="flex gap-4 overflow-x-auto pb-8 desktop-scrollbar snap-x snap-mandatory px-4 sm:px-0">
+          <div className="flex gap-6 overflow-x-auto pb-10 desktop-scrollbar snap-x snap-mandatory px-4 sm:px-0 select-none scroll-smooth">
             {isLoadingProducts ? (
-              Array(6).fill(0).map((_, i) => (
-                <div key={i} className="min-w-[48%] sm:min-w-[320px]">
-                  <div className="aspect-[4/5] rounded-xl bg-zinc-400/10 backdrop-blur-md animate-pulse border border-[#EBE5DF]/40" />
-                </div>
+              Array(4).fill(0).map((_, i) => (
+                <div key={i} className="w-[280px] sm:w-[325px] shrink-0 snap-start snap-always h-[450px] rounded-2xl bg-white/60 border border-[#E9E1CE]/50 animate-pulse" />
               ))
+            ) : premiumProducts.length === 0 ? (
+              <div className="w-full flex flex-col items-center justify-center py-12 text-center bg-white rounded-2xl border border-[#E9E1CE]/60">
+                <Sparkles className="w-8 h-8 text-[#9E8155] mb-2 opacity-60" />
+                <p className="font-serif text-stone-600 italic">{t("Prochain arrivage de prestige imminent") || "Aucune pièce premium actuellement disponible."}</p>
+              </div>
             ) : (
-              sortedFeaturedProducts.slice(0, 8).map((product, i) => (
-                <div key={`${product.id}-${i}`} className="min-w-[48%] sm:min-w-[320px] snap-start snap-always">
-                  <ProductCard 
-                    product={product as any} 
-                    index={i} 
-                    isFeatured={true}
-                  />
-                </div>
-              )))}
+              premiumProducts.slice(0, 8).map((product, i) => {
+                const isPromo = product.promoPrice && product.promoPrice < product.price;
+                const isItemWishlisted = wishlist.includes(product.id);
+                return (
+                  <div 
+                    key={`${product.id}-${i}`} 
+                    onClick={() => navigate(`/product/${product.id}`)}
+                    className="w-[280px] sm:w-[325px] shrink-0 snap-start snap-always h-[440px] rounded-2xl border border-[#E9E1CE]/80 bg-white overflow-hidden shadow-[0_12px_28px_rgba(44,30,22,0.03)] hover:shadow-[0_22px_45px_rgba(44,30,22,0.07)] group transition-all duration-500 relative flex flex-col cursor-pointer"
+                  >
+                    {/* Upper: High-Density Image Frame */}
+                    <div className="relative h-[250px] bg-stone-100 overflow-hidden shrink-0">
+                      <img
+                        loading="lazy"
+                        src={product.image || "https://images.unsplash.com/photo-1555529771-835f59fc5efe?auto=format&fit=crop&q=80&w=800"}
+                        alt={getTranslatedField(product, "name", lang)}
+                        className="w-full h-full object-cover transition-transform duration-750 ease-out group-hover:scale-105"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src =
+                            "https://images.unsplash.com/photo-1555529771-835f59fc5efe?auto=format&fit=crop&q=80&w=800";
+                        }}
+                      />
+                      
+                      {/* Premium Subtle White-Lit vignette */}
+                      <div className="absolute inset-0 bg-stone-900/[0.01] pointer-events-none" />
+
+                      {/* Overlap Badges: 100% Client trust validated system */}
+                      <div className="absolute top-4 left-4 z-10 flex flex-col gap-1.5 pointer-events-none">
+                        <div className="px-2.5 py-1.5 rounded-lg bg-white/95 border border-[#EAE3D2] shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex items-center gap-1.5">
+                          <div className={`w-2 h-2 rounded-full ${
+                            (product as any).sellerTrust >= 90 
+                              ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" 
+                              : (product as any).sellerTrust >= 75 
+                              ? "bg-amber-400" 
+                              : "bg-rose-500"
+                          }`} />
+                          <span className="font-mono text-[10px] uppercase font-extrabold text-[#1F1D19] tracking-wider">
+                            {t("Fiabilité Vendeur") || "TRUST"} : {(product as any).sellerTrust}%
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Item Wishlist Trigger */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleWishlist(product.id);
+                          toast.success(
+                            isItemWishlisted
+                              ? t("Retiré des favoris")
+                              : t("Ajouté aux favoris"),
+                            {
+                              icon: "✨",
+                              style: {
+                                borderRadius: "12px",
+                                background: "#2C2A25",
+                                color: "#FAF7F2",
+                                fontSize: "12px",
+                              }
+                            }
+                          );
+                        }}
+                        className="absolute top-4 right-4 z-10 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/95 border border-[#E9E1CE]/80 hover:border-orange-500/30 text-stone-900 transition-all shadow-sm hover:scale-110 active:scale-95 flex items-center justify-center cursor-pointer"
+                        aria-label="Wishlist"
+                      >
+                        <Heart
+                          className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${isItemWishlisted ? "fill-orange-500 text-orange-500 stroke-orange-500" : "text-[#4A443A] stroke-[2]"}`}
+                        />
+                      </button>
+
+                      {/* Luxury Elite Label overlay when trust is pristine */}
+                      {(product as any).sellerTrust >= 90 && (
+                        <div className="absolute bottom-3 left-4 px-2 py-0.5 rounded-md bg-[#FAF7F2]/90 border border-[#C9A26A]/30 text-[#8E7755] font-sans text-[9px] font-black uppercase tracking-widest pointer-events-none">
+                          🏆 {t("COMMERÇANT ÉLITE") || "Élite"}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Bottom Data Section - Absolute Elegance Card Content */}
+                    <div className="flex-1 p-5 flex flex-col justify-between bg-stone-50/20">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-mono text-[9px] uppercase tracking-widest text-[#9C8B76] truncate max-w-[130px]">
+                            {product.sellerName || "Olma Boutique"}
+                          </p>
+                          <span className="w-1 h-1 rounded-full bg-[#C9A26A]/40" />
+                          <p className="font-mono text-[9px] uppercase tracking-widest text-[#9C8B76] truncate">
+                            {product.category || "Mode"}
+                          </p>
+                        </div>
+                        
+                        <h3 className="font-serif font-bold text-[#1F1D19] text-base group-hover:text-[#9E8155] transition-colors duration-300 line-clamp-1">
+                          {getTranslatedField(product, "name", lang)}
+                        </h3>
+                        <div className="w-6 h-[1px] bg-[#E1D8C5] my-2" />
+                      </div>
+
+                      <div className="flex items-end justify-between mt-auto pt-4 border-t border-[#F1ECE2]">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-mono text-[10px] uppercase text-[#9C8B76] tracking-wider text-[9px]">
+                            {t("Tarif Prestige") || "PRESTIGE"}
+                          </span>
+                          <div className="flex items-baseline gap-2">
+                            <span className="font-mono font-black text-[#1F1D19] text-base">
+                              {formatPrice(product.promoPrice || product.price)}
+                            </span>
+                            {isPromo && (
+                              <span className="font-mono text-xs text-stone-400 line-through">
+                                {formatPrice(product.price)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Top Selling Indicator (Product Value Score Metric) */}
+                        <div className="flex flex-col items-end gap-1 font-mono text-right">
+                          <div className="flex items-center gap-1 text-xs font-bold text-[#1F1D19]">
+                            <ShoppingBag className="w-3.5 h-3.5 text-[#9E8155]" />
+                            <span>{product.salesCount || 0} {t("ventes")}</span>
+                          </div>
+                          <span className="text-[8px] text-[#A89884] uppercase tracking-wider">
+                            {t("Performances réelles") || "VALEUR CERTIFIÉE"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
-          <MobileSwipeIndicator className="-mt-4 mb-2 md:hidden block" />
+          
+          <MobileSwipeIndicator className="-mt-4 mb-2 md:hidden block opacity-80 text-[#8C7A63]" />
         </div>
       </section>
     </div>
   );
 };
+

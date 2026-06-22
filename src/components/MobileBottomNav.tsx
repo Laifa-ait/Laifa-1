@@ -22,9 +22,9 @@ export const MobileBottomNav: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div 
+    <div
       className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-2xl border-t border-stone-200 z-50 shadow-[0_-8px_32px_rgba(0,0,0,0.08)] overflow-hidden"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <div className="flex items-center justify-around h-[4.5rem] w-full px-2">
         {/* Home */}
@@ -32,8 +32,11 @@ export const MobileBottomNav: React.FC = () => {
           onClick={() => navigate("/")}
           className="flex flex-col items-center justify-center w-14 h-14 rounded-2xl active:scale-[0.92] transition-all bg-transparent border-none cursor-pointer relative"
         >
-          {isActive('/') && <div className="absolute inset-0 bg-[#F37021]/10 rounded-2xl -z-10" />}
-          <Home className={`w-6 h-6 transition-colors ${isActive('/') ? "text-[#F37021]" : "text-[#121315]/40"}`} strokeWidth={isActive('/') ? 2.5 : 2} />
+          {isActive("/") && <div className="absolute inset-0 bg-[#F37021]/10 rounded-2xl -z-10" />}
+          <Home
+            className={`w-6 h-6 transition-colors ${isActive("/") ? "text-[#F37021]" : "text-[#121315]/40"}`}
+            strokeWidth={isActive("/") ? 2.5 : 2}
+          />
         </button>
 
         {/* Categories */}
@@ -41,8 +44,11 @@ export const MobileBottomNav: React.FC = () => {
           onClick={() => navigate("/categories")}
           className="flex flex-col items-center justify-center w-14 h-14 rounded-2xl active:scale-[0.92] transition-all bg-transparent border-none cursor-pointer relative"
         >
-          {isActive('/categories') && <div className="absolute inset-0 bg-[#F37021]/10 rounded-2xl -z-10" />}
-          <LayoutGrid className={`w-6 h-6 transition-colors ${isActive('/categories') ? "text-[#F37021]" : "text-[#121315]/40"}`} strokeWidth={isActive('/categories') ? 2.5 : 2} />
+          {isActive("/categories") && <div className="absolute inset-0 bg-[#F37021]/10 rounded-2xl -z-10" />}
+          <LayoutGrid
+            className={`w-6 h-6 transition-colors ${isActive("/categories") ? "text-[#F37021]" : "text-[#121315]/40"}`}
+            strokeWidth={isActive("/categories") ? 2.5 : 2}
+          />
         </button>
 
         {/* Wishlist */}
@@ -50,8 +56,13 @@ export const MobileBottomNav: React.FC = () => {
           onClick={() => setIsWishlistOpen(true)}
           className="flex flex-col items-center justify-center w-14 h-14 rounded-2xl active:scale-[0.92] transition-all relative bg-transparent border-none cursor-pointer"
         >
-          <Heart className={`w-6 h-6 transition-colors ${wishlist.length > 0 ? "text-[#F37021] fill-[#F37021]/20" : "text-[#121315]/40"}`} strokeWidth={wishlist.length > 0 ? 2.5 : 2} />
-          {wishlist.length > 0 && <span className="absolute top-2 right-3 w-2 h-2 bg-[#F37021] border-2 border-white rounded-full shadow-sm" />}
+          <Heart
+            className={`w-6 h-6 transition-colors ${wishlist.length > 0 ? "text-[#F37021] fill-[#F37021]/20" : "text-[#121315]/40"}`}
+            strokeWidth={wishlist.length > 0 ? 2.5 : 2}
+          />
+          {wishlist.length > 0 && (
+            <span className="absolute top-2 right-3 w-2 h-2 bg-[#F37021] border-2 border-white rounded-full shadow-sm" />
+          )}
         </button>
 
         {/* Cart */}
@@ -60,12 +71,15 @@ export const MobileBottomNav: React.FC = () => {
           className="flex flex-col items-center justify-center w-14 h-14 rounded-2xl active:scale-[0.92] transition-all relative bg-transparent border-none cursor-pointer"
         >
           <div className="relative">
-             <ShoppingBag className={`w-6 h-6 transition-colors ${cart.length > 0 ? "text-[#F37021]" : "text-[#121315]/40"}`} strokeWidth={cart.length > 0 ? 2.5 : 2} />
-             {cart.length > 0 && (
-                <span className="absolute -top-1.5 -right-2 w-4.5 h-4.5 bg-[#F37021] text-white text-[9px] rounded-full flex items-center justify-center font-black border-[1.5px] border-white shadow-sm">
-                  {cart.length}
-                </span>
-             )}
+            <ShoppingBag
+              className={`w-6 h-6 transition-colors ${cart.length > 0 ? "text-[#F37021]" : "text-[#121315]/40"}`}
+              strokeWidth={cart.length > 0 ? 2.5 : 2}
+            />
+            {cart.length > 0 && (
+              <span className="absolute -top-1.5 -right-2 w-4.5 h-4.5 bg-[#F37021] text-white text-[9px] rounded-full flex items-center justify-center font-black border-[1.5px] border-white shadow-sm">
+                {cart.length}
+              </span>
+            )}
           </div>
         </button>
 
@@ -73,7 +87,7 @@ export const MobileBottomNav: React.FC = () => {
         <button
           onClick={() => {
             if (!currentUser) {
-              navigate("/auth");
+              navigate("/auth", { replace: true });
               return;
             }
             if (userProfile?.role === "admin") {
@@ -86,8 +100,13 @@ export const MobileBottomNav: React.FC = () => {
           }}
           className="flex flex-col items-center justify-center w-14 h-14 rounded-2xl active:scale-[0.92] transition-all bg-transparent border-none cursor-pointer relative"
         >
-          {location.pathname.startsWith('/dashboard') && <div className="absolute inset-0 bg-[#F37021]/10 rounded-2xl -z-10" />}
-          <UserIcon className={`w-6 h-6 transition-colors ${location.pathname.startsWith('/dashboard') ? "text-[#F37021]" : "text-[#121315]/40"}`} strokeWidth={location.pathname.startsWith('/dashboard') ? 2.5 : 2} />
+          {location.pathname.startsWith("/dashboard") && (
+            <div className="absolute inset-0 bg-[#F37021]/10 rounded-2xl -z-10" />
+          )}
+          <UserIcon
+            className={`w-6 h-6 transition-colors ${location.pathname.startsWith("/dashboard") ? "text-[#F37021]" : "text-[#121315]/40"}`}
+            strokeWidth={location.pathname.startsWith("/dashboard") ? 2.5 : 2}
+          />
         </button>
       </div>
     </div>

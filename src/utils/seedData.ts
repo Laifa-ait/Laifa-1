@@ -64,7 +64,7 @@ export const seedProducts = async () => {
   const snapshot = await getDocs(productsQuery);
   
   if (snapshot.empty) {
-    console.log("Seeding products...");
+    (process.env.NODE_ENV === 'debug' ? console.log : function(){})("Seeding products...");
     for (const product of SAMPLE_PRODUCTS) {
       await addDoc(collection(db, "products"), {
         ...product,

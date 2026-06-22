@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from "react";
 
 interface UIContextType {
   isCartOpen: boolean;
@@ -23,13 +23,20 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isRecentlyViewedOpen, setIsRecentlyViewedOpen] = useState(false);
 
   return (
-    <UIContext.Provider value={{
-      isCartOpen, setIsCartOpen,
-      isWishlistOpen, setIsWishlistOpen,
-      isMobileMenuOpen, setIsMobileMenuOpen,
-      isSearchOpen, setIsSearchOpen,
-      isRecentlyViewedOpen, setIsRecentlyViewedOpen
-    }}>
+    <UIContext.Provider
+      value={{
+        isCartOpen,
+        setIsCartOpen,
+        isWishlistOpen,
+        setIsWishlistOpen,
+        isMobileMenuOpen,
+        setIsMobileMenuOpen,
+        isSearchOpen,
+        setIsSearchOpen,
+        isRecentlyViewedOpen,
+        setIsRecentlyViewedOpen,
+      }}
+    >
       {children}
     </UIContext.Provider>
   );

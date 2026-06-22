@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { Heart, Package } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
-import { useCart } from '../../context/CartContext';
-import { useShop } from '../../context/ShopContext';
-import { SideDrawer } from '../SideDrawer';
-import { formatPrice } from '../../utils/format';
-import { getTranslatedField } from '../../utils/translations';
-import { Language, Product } from '../../types';
+import React, { useEffect, useState } from "react";
+import { Heart, Package } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import { useCart } from "../../context/CartContext";
+import { useShop } from "../../context/ShopContext";
+import { SideDrawer } from "../SideDrawer";
+import { formatPrice } from "../../utils/format";
+import { getTranslatedField } from "../../utils/translations";
+import { Language, Product } from "../../types";
 
 export const WishlistDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
   const { wishlist } = useCart();
@@ -44,7 +44,8 @@ export const WishlistDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> 
               {t("empty_wishlist_title") || "Votre liste est vide"}
             </h3>
             <p className="text-xs rtl:text-sm text-zinc-400 font-bold max-w-[240px] leading-relaxed mb-8">
-              {t("empty_wishlist_desc") || "Explorez nos créations d'artisanat d'exception et sauvegardez vos articles favoris ici."}
+              {t("empty_wishlist_desc") ||
+                "Explorez nos créations d'artisanat d'exception et sauvegardez vos articles favoris ici."}
             </p>
             <button
               onClick={() => {
@@ -60,8 +61,8 @@ export const WishlistDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> 
         ) : (
           <div className="space-y-6">
             {wishlistProducts.map((p) => (
-              <div 
-                key={p.id} 
+              <div
+                key={p.id}
                 className="flex gap-4 group cursor-pointer"
                 onClick={() => {
                   onClose();
@@ -72,9 +73,7 @@ export const WishlistDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> 
                   <img loading="lazy" src={p.image} className="w-full h-full object-cover" alt="" />
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-medium text-sm group-hover:underline">
-                    {getTranslatedField(p, 'name', lang)}
-                  </h4>
+                  <h4 className="font-medium text-sm group-hover:underline">{getTranslatedField(p, "name", lang)}</h4>
                   <p className="text-xs rtl:text-sm text-zinc-500">{formatPrice(p.price)}</p>
                 </div>
               </div>

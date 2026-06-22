@@ -1,5 +1,5 @@
-import React from 'react';
-import { ChevronDown, ChevronUp, ChevronRight } from 'lucide-react';
+import React from "react";
+import { ChevronDown, ChevronUp, ChevronRight } from "lucide-react";
 
 interface CategorySectionProps {
   categories: any[];
@@ -11,7 +11,15 @@ interface CategorySectionProps {
   isRtl: boolean;
 }
 
-export const CategorySection: React.FC<CategorySectionProps> = ({ categories, expandedId, toggleExpand, handleCategoryDirectNav, handleSubcategoryNav, t, isRtl }) => {
+export const CategorySection: React.FC<CategorySectionProps> = ({
+  categories,
+  expandedId,
+  toggleExpand,
+  handleCategoryDirectNav,
+  handleSubcategoryNav,
+  t,
+  isRtl,
+}) => {
   return (
     <div className="space-y-4">
       <p className="text-[10px] rtl:text-[12px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal ml-1">
@@ -23,7 +31,10 @@ export const CategorySection: React.FC<CategorySectionProps> = ({ categories, ex
           const hasSections = category.sections && category.sections.length > 0;
 
           return (
-            <div key={category.id} className="bg-zinc-50 border border-zinc-100/60 rounded-2xl overflow-hidden transition-all duration-300">
+            <div
+              key={category.id}
+              className="bg-zinc-50 border border-zinc-100/60 rounded-2xl overflow-hidden transition-all duration-300"
+            >
               <div className="flex items-center justify-between p-4 hover:bg-zinc-100/30 transition-colors">
                 <button
                   onClick={() => handleCategoryDirectNav(category.name)}
@@ -47,7 +58,7 @@ export const CategorySection: React.FC<CategorySectionProps> = ({ categories, ex
                     className="w-full text-left py-2 px-3 rounded-xl text-xs rtl:text-sm font-semibold text-zinc-500 hover:bg-orange-50 hover:text-orange-600 transition-all flex items-center justify-between cursor-pointer border-none bg-transparent"
                   >
                     <span>{t("all_category") || "Voir toute la catégorie"}</span>
-                    <ChevronRight className={`w-3.5 h-3.5 text-zinc-400 ${isRtl ? 'rotate-180' : ''}`} />
+                    <ChevronRight className={`w-3.5 h-3.5 text-zinc-400 ${isRtl ? "rotate-180" : ""}`} />
                   </button>
                   {category.sections.map((section: any, sIdx: number) => (
                     <button
@@ -56,7 +67,7 @@ export const CategorySection: React.FC<CategorySectionProps> = ({ categories, ex
                       className="w-full text-left py-2 px-3 rounded-xl text-xs rtl:text-sm font-bold text-zinc-700 hover:bg-zinc-50 hover:text-orange-600 transition-all flex items-center justify-between cursor-pointer border-none bg-transparent"
                     >
                       <span>{t(section.name) || section.name}</span>
-                      <ChevronRight className={`w-3.5 h-3.5 text-zinc-300 ${isRtl ? 'rotate-180' : ''}`} />
+                      <ChevronRight className={`w-3.5 h-3.5 text-zinc-300 ${isRtl ? "rotate-180" : ""}`} />
                     </button>
                   ))}
                 </div>

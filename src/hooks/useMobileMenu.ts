@@ -13,7 +13,7 @@ export const useMobileMenu = () => {
   const { currentUser, logout, userProfile } = useAuth();
   const { isMobileMenuOpen, setIsMobileMenuOpen, setIsWishlistOpen } = useUI();
   const { setActiveCategory } = useShop();
-  
+
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [aboutText, setAboutText] = useState("");
   const [isLoadingAbout, setIsLoadingAbout] = useState(false);
@@ -22,21 +22,25 @@ export const useMobileMenu = () => {
     setIsMobileMenuOpen(false);
   }, [setIsMobileMenuOpen]);
 
-  const handleNav = useCallback((path: string) => {
-    if (path === "#wishlist") {
-      setIsWishlistOpen(true);
+  const handleNav = useCallback(
+    (path: string) => {
+      if (path === "#wishlist") {
+        setIsWishlistOpen(true);
+        closeMenu();
+        return;
+      }
+      navigate(path);
       closeMenu();
-      return;
-    }
-    navigate(path);
-    closeMenu();
-  }, [navigate, setIsWishlistOpen, closeMenu]);
+    },
+    [navigate, setIsWishlistOpen, closeMenu]
+  );
 
   const handleLanguageToggle = useCallback(() => {
     const langs = ["fr", "ar", "en"];
     let currentLang = i18n.language || "fr";
-    if (currentLang && typeof currentLang === 'string' && currentLang.includes("-")) currentLang = currentLang.split("-")[0];
-    
+    if (currentLang && typeof currentLang === "string" && currentLang.includes("-"))
+      currentLang = currentLang.split("-")[0];
+
     const safeLangs = Array.isArray(langs) ? langs : ["fr", "ar", "en"];
     const currentIndex = safeLangs.indexOf(currentLang) >= 0 ? safeLangs.indexOf(currentLang) : 0;
     const nextLang = safeLangs[(currentIndex + 1) % safeLangs.length];
@@ -45,11 +49,13 @@ export const useMobileMenu = () => {
 
   const fetchAboutText = useCallback(async () => {
     setIsAboutOpen(true);
-    if (aboutText) return; 
+    if (aboutText) return;
     setIsLoadingAbout(true);
     try {
-      const docSnap = await getDoc(doc(db, 'settings', 'global'));
-      setAboutText(docSnap.exists() && docSnap.data().aboutText ? docSnap.data().aboutText : "Bienvenue sur Olma Marketplace.");
+      const docSnap = await getDoc(doc(db, "settings", "global"));
+      setAboutText(
+        docSnap.exists() && docSnap.data().aboutText ? docSnap.data().aboutText : "Bienvenue sur Olma Marketplace."
+      );
     } catch {
       setAboutText("Bienvenue sur Olma Marketplace.");
     } finally {
@@ -69,6 +75,6 @@ export const useMobileMenu = () => {
     closeMenu,
     handleNav,
     handleLanguageToggle,
-    logout
+    logout,
   };
 };

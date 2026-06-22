@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 
 interface UseInfiniteScrollOptions {
   onLoadMore: () => Promise<void>;
@@ -7,12 +7,7 @@ interface UseInfiniteScrollOptions {
   threshold?: number;
 }
 
-export function useInfiniteScroll({
-  onLoadMore,
-  hasMore,
-  isLoading,
-  threshold = 100,
-}: UseInfiniteScrollOptions) {
+export function useInfiniteScroll({ onLoadMore, hasMore, isLoading, threshold = 100 }: UseInfiniteScrollOptions) {
   const loaderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

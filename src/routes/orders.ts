@@ -1,111 +1,16 @@
+import { Request, Response } from 'express';
+export interface AuthenticatedRequest extends Request { user?: any; file?: any; files?: any; }
+
 import { Router } from "express";
 import { admin, db } from "../config/firebase-admin";
 import { authenticateToken, authorizeSeller } from "../middlewares/auth";
 import { ALGERIA_WILAYAS, ALGERIA_SHIPPING_DATA } from "../constants";
 import { placeOrderSchema } from "../utils/validation";
+import { checkSellerVelocityLimit } from "../utils/velocity";
 
 const router = Router();
 
-export async function checkSellerVelocityLimit(sellerId: string) {
-  try {
-    const ordersSnap = await db.collection("orders")
-      .where("sellerIds", "array-contains", sellerId)
-      .orderBy("createdAt", "desc")
-      .limit(300)
-      .get();
-    
-    const pendingStatuses = ['pending', 'confirmed', 'preparing', 'processing'];
-    let pendingCount = 0;
-    
-    for (const doc of ordersSnap.docs) {
-      const orderData = doc.data();
-      const status = (orderData.status || '').toLowerCase();
-      if (pendingStatuses.includes(status)) {
-        const paymentMethod = (orderData.paymentMethod || '').toLowerCase();
-        const paymentStatus = (orderData.paymentStatus || '').toLowerCase();
-        
-        // 1. If it's prepaid (Wallet, Card, etc.), it's safe to count towards velocity limit
-        if (paymentMethod === 'wallet' || paymentStatus === 'paid') {
-          pendingCount++;
-          continue;
-        }
-
-        // 2. Otherwise (COD or Split COD), check if the buyer is established to prevent competitor spam DoS
-        const buyerId = orderData.userId || orderData.buyerId;
-        if (buyerId) {
-          // Fetch buyer's orders history
-          const buyerOrdersSnap = await db.collection("orders")
-            .where("userId", "==", buyerId)
-            .orderBy("createdAt", "desc")
-            .limit(20)
-            .get();
-          
-          const hasSuccessfulPurchase = buyerOrdersSnap.docs.some(d => {
-            const dData = d.data();
-            const dStatus = (dData.status || '').toLowerCase();
-            return ['shipped', 'delivered', 'completed', 'received'].includes(dStatus);
-          });
-
-          // Fetch buyer's profile creation date for age check as a fallback
-          const buyerSnap = await db.collection("users").doc(buyerId).get();
-          const buyerData = buyerSnap.exists ? buyerSnap.data() : null;
-          let isOldAccount = false;
-          if (buyerData && buyerData.createdAt) {
-            const createdAtTime = buyerData.createdAt.toDate 
-              ? buyerData.createdAt.toDate().getTime() 
-              : new Date(buyerData.createdAt).getTime();
-            isOldAccount = (Date.now() - createdAtTime) > 2 * 24 * 60 * 60 * 1000; // Account > 2 days old
-          }
-
-          if (hasSuccessfulPurchase || isOldAccount) {
-            pendingCount++;
-          } else {
-            console.log(`[VELOCITY DOS DEFENSE] Ignored unverified/guest/new COD order ${doc.id} for seller ${sellerId} to prevent malicious shutdown attacks.`);
-          }
-        } else {
-          // Anonymous or untracked buyer accounts are ignored from velocity counts to block bots
-          console.log(`[VELOCITY DOS DEFENSE] Ignored untracked buyer order ${doc.id} for seller ${sellerId} to prevent malicious shutdowns.`);
-        }
-      }
-    }
-    
-    const sellerRef = db.collection("users").doc(sellerId);
-    const sellerSnap = await sellerRef.get();
-    if (!sellerSnap.exists) return;
-    const sellerData = sellerSnap.data();
-    
-    if (pendingCount > 5) {
-      await sellerRef.update({
-        isActive: false,
-        is_active: false,
-        velocitySuspended: true,
-        bgSuspended_reason: `Alerte Rouge : Limite de vélocité dépassée (${pendingCount} commandes en attente non expédiées).`
-      });
-      
-      await db.collection("admin_alerts").add({
-        type: 'velocity_kill_switch',
-        sellerId,
-        shopName: sellerData?.shopName || sellerData?.displayName || sellerId,
-        pendingCount,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        resolved: false
-      });
-      console.log(`[KILL SWITCH] Suspended seller ${sellerId} (${pendingCount} pending orders).`);
-    } else if (pendingCount <= 5 && sellerData?.velocitySuspended) {
-      await sellerRef.update({
-        isActive: true,
-        is_active: true,
-        velocitySuspended: false,
-        bgSuspended_reason: null
-      });
-      console.log(`[KILL SWITCH] Realigned seller ${sellerId} (${pendingCount} pending orders).`);
-    }
-  } catch (err) {
-    console.error("Error in checkSellerVelocityLimit:", err);
-  }
-}
-
-router.post("/place-order", authenticateToken, async (req: any, res: any) => {
+router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   // Schema validation
   const validationResult = placeOrderSchema.safeParse(req.body);
   if (!validationResult.success) {
@@ -147,34 +52,58 @@ router.post("/place-order", authenticateToken, async (req: any, res: any) => {
       console.warn("Failed to fetch global settings, using fallback", err);
     }
 
-    const result = await db.runTransaction(async (t: any) => {
-      // --- ÉTAPE 1 : LECTURES PURES ---
-      const shopSnapshots = new Map<string, any>();
-      let couponDoc: any = null;
+    // --- ÉTAPE 0 : LECTURES HORS TRANSACTION POUR REDUIRE LA TAILLE ---
+    const shopSnapshots = new Map<string, any>();
+    
+    // Fetch unique products to know which sellers we need
+    const uniqueProductIds: string[] = Array.from(new Set(cart.map((item: any) => item.id as string)));
+    if (uniqueProductIds.length === 0) throw new Error("Panier vide.");
+    
+    const preFetchedProducts = await Promise.all(uniqueProductIds.map(pId => db.collection("products").doc(pId).get()));
+    preFetchedProducts.forEach((productSnap: any) => {
+      if (productSnap.exists) {
+        const sellerId = productSnap.data().sellerId;
+        if (sellerId) sellerIdsSet.add(sellerId);
+      }
+    });
 
-      // Extract unique product IDs to guarantee only one get operation per unique product
-      const uniqueProductIds: string[] = Array.from(new Set(cart.map((item: any) => item.id as string)));
+    const sellerIdsArray = Array.from(sellerIdsSet);
+    if (sellerIdsArray.length > 0) {
+      const sellerRefs = sellerIdsArray.map(sId => db.collection("users").doc(sId));
+      const sellerSnaps = await db.getAll(...sellerRefs);
+      
+      sellerSnaps.forEach((shopSnap: any, idx: number) => {
+        const sellerId = sellerIdsArray[idx];
+        if (shopSnap.exists) {
+          const sd = shopSnap.data();
+          if (sd && (sd.isActive === false || sd.is_active === false || sd.velocitySuspended)) {
+             throw new Error(`La boutique "${sd.shopName || sd.displayName || sellerId}" est fermée temporairement (capacité de commande maximale atteinte).`);
+          }
+          shopSnapshots.set(sellerId, sd);
+        } else {
+          shopSnapshots.set(sellerId, {});
+        }
+      });
+    }
+
+    const result = await db.runTransaction(async (t: any) => {
+      // --- ÉTAPE 1 : LECTURES TRANSACTIONNELLES PURES ---
+      let couponDoc: any = null;
       
       const productSnaps = new Map<string, any>();
       const productRefs = new Map<string, any>();
 
-      if (uniqueProductIds.length > 0) {
-        const refs = uniqueProductIds.map(pId => {
-          if (!pId) throw new Error("ID de produit requis.");
-          return db.collection("products").doc(pId);
-        });
-        
-        const snaps = await t.getAll(...refs);
-        
-        snaps.forEach((productSnap: any, idx: number) => {
-          const pId = uniqueProductIds[idx];
-          if (!productSnap.exists) {
-            throw new Error(`Produit ${pId} introuvable.`);
-          }
-          productSnaps.set(pId, productSnap);
-          productRefs.set(pId, refs[idx]);
-        });
-      }
+      const refs = uniqueProductIds.map(pId => db.collection("products").doc(pId));
+      const snaps = await t.getAll(...refs);
+      
+      snaps.forEach((productSnap: any, idx: number) => {
+        const pId = uniqueProductIds[idx];
+        if (!productSnap.exists) {
+          throw new Error(`Produit ${pId} introuvable.`);
+        }
+        productSnaps.set(pId, productSnap);
+        productRefs.set(pId, refs[idx]);
+      });
 
       // Reconstruct productDocs array cleanly for downstream seller splits
       const productDocs: any[] = [];
@@ -185,31 +114,6 @@ router.post("/place-order", authenticateToken, async (req: any, res: any) => {
         const snap = productSnaps.get(cartItem.id);
         const ref = productRefs.get(cartItem.id);
         productDocs.push({ cartItem, productSnap: snap, productRef: ref });
-      }
-
-      // 1.2 Identifier et lire les vendeurs uniques et verifier la suspension
-      productDocs.forEach(({ productSnap }) => {
-        const sellerId = productSnap.data().sellerId;
-        if (sellerId) sellerIdsSet.add(sellerId);
-      });
-
-      const sellerIdsArray = Array.from(sellerIdsSet);
-      if (sellerIdsArray.length > 0) {
-        const sellerRefs = sellerIdsArray.map(sId => db.collection("users").doc(sId));
-        const sellerSnaps = await t.getAll(...sellerRefs);
-        
-        sellerSnaps.forEach((shopSnap: any, idx: number) => {
-          const sellerId = sellerIdsArray[idx];
-          if (shopSnap.exists) {
-            const sd = shopSnap.data();
-            if (sd && (sd.isActive === false || sd.is_active === false || sd.velocitySuspended)) {
-               throw new Error(`La boutique "${sd.shopName || sd.displayName || sellerId}" est fermée temporairement (capacité de commande maximale atteinte).`);
-            }
-            shopSnapshots.set(sellerId, sd);
-          } else {
-            shopSnapshots.set(sellerId, {});
-          }
-        });
       }
 
       // 1.3 Lire les donnees de l'acheteur
@@ -250,12 +154,12 @@ router.post("/place-order", authenticateToken, async (req: any, res: any) => {
            if (!variant) {
              throw new Error(`Variante ${cartItem.selectedVariant} introuvable pour ${productData.name}.`);
            }
-           availableStock = parseInt(variant.stock) || 0;
+           availableStock = Number(variant.stock) || 0;
            if (variant) {
               if (variant.priceOverride !== undefined && variant.priceOverride !== null && variant.priceOverride !== '') {
                  targetPrice = Number(variant.priceOverride);
               } else if (variant.priceDiff) {
-                 targetPrice += parseInt(variant.priceDiff);
+                 targetPrice += Number(variant.priceDiff);
               }
            }
            variantInfo = variant;
@@ -289,12 +193,12 @@ router.post("/place-order", authenticateToken, async (req: any, res: any) => {
         if (variantInfo) {
            productData.variants = productData.variants.map((v: any) => {
               if (v.name === variantInfo.name) {
-                 return { ...v, stock: (parseInt(v.stock) - cartItem.quantity).toString() };
+                 return { ...v, stock: (Number(v.stock) - cartItem.quantity).toString() };
               }
               return v;
            });
-           productData.hasOutOfStockVariants = productData.variants.some((v: any) => (parseInt(v.stock) || 0) <= 0);
-           productData.stock = productData.variants.reduce((acc: number, curr: any) => acc + (parseInt(curr.stock) || 0), 0);
+           productData.hasOutOfStockVariants = productData.variants.some((v: any) => Math.max(0, Number(v.stock) || 0) <= 0);
+           productData.stock = productData.variants.reduce((acc: number, curr: any) => acc + Math.max(0, Number(curr.stock) || 0), 0);
         } else {
            productData.stock = (productData.stock || 0) - cartItem.quantity;
         }
@@ -325,7 +229,24 @@ router.post("/place-order", authenticateToken, async (req: any, res: any) => {
       if (couponDoc) {
         appliedCouponData = couponDoc.data();
         if (!appliedCouponData.isActive) throw new Error("Code promo inactif.");
-        if (new Date(appliedCouponData.expiryDate) <= new Date()) throw new Error("Code promo expiré.");
+        
+        let expiryDateObj = null;
+        if (appliedCouponData.expiresAt) {
+          if (typeof appliedCouponData.expiresAt.toDate === 'function') {
+            expiryDateObj = appliedCouponData.expiresAt.toDate();
+          } else if (appliedCouponData.expiresAt._seconds) {
+            expiryDateObj = new Date(appliedCouponData.expiresAt._seconds * 1000);
+          } else if (appliedCouponData.expiresAt.seconds) {
+            expiryDateObj = new Date(appliedCouponData.expiresAt.seconds * 1000);
+          } else {
+            expiryDateObj = new Date(appliedCouponData.expiresAt);
+          }
+        } else if (appliedCouponData.expiryDate) {
+           expiryDateObj = new Date(appliedCouponData.expiryDate);
+        }
+
+        if (expiryDateObj && expiryDateObj <= new Date()) throw new Error("Code promo expiré.");
+
         if (subtotal < (appliedCouponData.minOrderValue || 0)) throw new Error(`Minimum d'achat: ${appliedCouponData.minOrderValue}`);
         if (appliedCouponData.usageLimit && (appliedCouponData.usageCount || 0) >= appliedCouponData.usageLimit) {
            throw new Error("Limite d'utilisation du code pointe.");
@@ -647,7 +568,7 @@ router.post("/place-order", authenticateToken, async (req: any, res: any) => {
   }
 });
 
-router.post("/validate-coupon", authenticateToken, async (req: any, res: any) => {
+router.post("/validate-coupon", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   const { code, subtotal } = req.body;
   
   if (!code) {
@@ -662,7 +583,7 @@ router.post("/validate-coupon", authenticateToken, async (req: any, res: any) =>
     }
     
     const couponDoc = q.docs[0];
-    const couponData = { id: couponDoc.id, ...couponDoc.data() };
+    const couponData = { id: couponDoc.id, ...couponDoc.data() } as any;
     
     if (!couponData.isActive) {
       return res.status(400).json({ error: "Ce code promo n'est plus actif." });
@@ -687,8 +608,17 @@ router.post("/validate-coupon", authenticateToken, async (req: any, res: any) =>
   }
 });
 
-router.post("/webhooks/yalidine", async (req: any, res) => {
+router.post("/webhooks/yalidine", async (req: AuthenticatedRequest, res: Response) => {
   try {
+    // Vérification de sécurité du Webhook
+    const apiKey = process.env.DELIVERY_API_KEY || process.env.YALIDINE_WEBHOOK_SECRET;
+    const reqKey = req.headers['x-api-key'] || req.query.token || req.headers['authorization'];
+    
+    // Si une clé est configurée sur le serveur mais non fournie ou incorrecte dans la requête
+    if (apiKey && reqKey !== apiKey && reqKey !== `Bearer ${apiKey}`) {
+       return res.status(401).json({ error: "Accès non autorisé au Webhook. Signature invalide." });
+    }
+
     const { order_id, tracking, status } = req.body;
     
     // Simplification webhook: "Delivered", "Returned", "Shipped"
@@ -773,7 +703,7 @@ router.post("/prepare-shipment", authenticateToken, authorizeSeller, async (req:
 });
 
 
-router.post('/calculate-commissions', authenticateToken, async (req: any, res: any) => {
+router.post('/calculate-commissions', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { orders } = req.body;
     if (!orders || !Array.isArray(orders)) return res.status(400).json({ error: 'Valid orders array required' });

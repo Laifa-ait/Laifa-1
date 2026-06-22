@@ -1,14 +1,14 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { 
-  User as FirebaseUser, 
-  onAuthStateChanged, 
-  signInWithPopup, 
-  GoogleAuthProvider, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
+import {
+  User as FirebaseUser,
+  onAuthStateChanged,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signOut,
   updateProfile,
-  sendEmailVerification
+  sendEmailVerification,
 } from "firebase/auth";
 import { auth, db } from "../lib/firebase";
 import { doc, onSnapshot, getDoc, setDoc, serverTimestamp, collection, addDoc } from "firebase/firestore";
@@ -42,20 +42,49 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (user.emailVerified) {
           try {
             const userDocRef = doc(db, "users", user.uid);
-            const userDoc = await getDoc(userDocRef);
+            let userDoc;
+            try {
+              userDoc = await getDoc(userDocRef);
+            } catch (err) {
+              console.warn("AuthContext: getDoc failed", err);
+              throw err;
+            }
+
+            const isAdminEmail =
+              user.email === (import.meta as any).env.VITE_ADMIN_EMAIL || user.email === "laifa.ait@gmail.com";
+
             if (!userDoc.exists()) {
-              console.log("AuthContext: Auto-syncing user profile for", user.email);
+              (process.env.NODE_ENV === "debug" ? console.log : function () {})(
+                "AuthContext: Auto-syncing user profile for",
+                user.email
+              );
               const initialProfile = {
                 uid: user.uid,
                 displayName: user.displayName || "Utilisateur",
                 email: user.email,
-                role: user.email === 'laifa.ait@gmail.com' ? 'admin' : 'buyer',
+                role: isAdminEmail ? "admin" : "buyer",
                 onboardingCompleted: true,
                 createdAt: serverTimestamp(),
-                lastAuthMethod: 'auto_sync'
+                lastAuthMethod: "auto_sync",
+                status: "active",
               };
-              await setDoc(userDocRef, initialProfile);
-              setUserProfile(initialProfile);
+              try {
+                await setDoc(userDocRef, initialProfile);
+                (process.env.NODE_ENV === "debug" ? console.log : function () {})("AuthContext: Auto-sync successful");
+              } catch (err) {
+                console.warn("AuthContext: setDoc failed", err);
+                throw err;
+              }
+            } else if (isAdminEmail && userDoc.data()?.role !== "admin") {
+              (process.env.NODE_ENV === "debug" ? console.log : function () {})(
+                "AuthContext: Auto-promoting to admin for",
+                user.email
+              );
+              try {
+                await setDoc(userDocRef, { role: "admin" }, { merge: true });
+              } catch (err) {
+                console.warn("AuthContext: Admin promotion failed", err);
+              }
             }
           } catch (err) {
             console.warn("AuthContext: Failed to auto-heal profile", err);
@@ -71,19 +100,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     let unsubscribeProfile: () => void = () => {};
     if (currentUser) {
-      unsubscribeProfile = onSnapshot(doc(db, "users", currentUser.uid), async (snapshot) => {
-        if (snapshot.exists()) {
-          const profileData = snapshot.data();
-          setUserProfile(profileData);
-        } else {
+      unsubscribeProfile = onSnapshot(
+        doc(db, "users", currentUser.uid),
+        async (snapshot) => {
+          if (snapshot.exists()) {
+            const profileData = snapshot.data();
+            setUserProfile(profileData);
+          } else {
+            setUserProfile(null);
+          }
+          setLoading(false);
+        },
+        (err) => {
+          console.error("Auth snapshot error:", err);
           setUserProfile(null);
+          setLoading(false);
         }
-        setLoading(false);
-      }, (err) => {
-        console.error("Auth snapshot error:", err);
-        setUserProfile(null);
-        setLoading(false);
-      });
+      );
     }
     return () => unsubscribeProfile();
   }, [currentUser]);
@@ -91,21 +124,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const signInWithGoogle = async (role?: string) => {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({
-      prompt: 'select_account'
+      prompt: "select_account",
     });
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
-    
+
     // Create/update user doc
     const userDocRef = doc(db, "users", user.uid);
     const userDoc = await getDoc(userDocRef);
 
     if (!userDoc.exists()) {
-      const userRole = user.email === 'laifa.ait@gmail.com' ? 'admin' : (role || 'buyer');
-      const userStatus = userRole === 'seller' ? 'pending_verification' : 'active';
-      
+      const userRole = user.email === (import.meta as any).env.VITE_ADMIN_EMAIL ? "admin" : role || "buyer";
+      const userStatus = userRole === "seller" ? "pending_verification" : "active";
+
       const defaultTariffs: Record<string, number> = {};
-      if (userRole === 'seller') {
+      if (userRole === "seller") {
         ALGERIA_WILAYAS.forEach((w) => {
           const cleanName = w.replace(/^\d+\s+/, "").trim();
           const known = ALGERIA_SHIPPING_DATA[cleanName] || ALGERIA_SHIPPING_DATA.Default;
@@ -122,9 +155,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         onboardingCompleted: false,
         status: userStatus,
         createdAt: serverTimestamp(),
-        ...(userRole === 'seller' ? { isVerified: false, trustScore: 50, shippingTariffs: defaultTariffs } : {})
+        ...(userRole === "seller" ? { isVerified: false, trustScore: 50, shippingTariffs: defaultTariffs } : {}),
       });
-      
+
       if (userRole === "seller") {
         try {
           await addDoc(collection(db, "internal_notifications"), {
@@ -133,10 +166,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             message: `Le vendeur "${user.displayName}" vient de s'inscrire sur la plateforme et attend la vérification de compte.`,
             sellerId: user.uid,
             createdAt: serverTimestamp(),
-            read: false
+            read: false,
           });
         } catch (err) {
-           console.warn("Failed sending seller registration internal notification", err);
+          console.warn("Failed sending seller registration internal notification", err);
         }
       }
     }
@@ -172,8 +205,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           onboardingCompleted: false,
           status: userStatus,
           createdAt: serverTimestamp(),
-          lastAuthMethod: 'email',
-          ...(userRole === 'seller' ? { isVerified: false, trustScore: 50, shippingTariffs: defaultTariffs } : {})
+          lastAuthMethod: "email",
+          ...(userRole === "seller" ? { isVerified: false, trustScore: 50, shippingTariffs: defaultTariffs } : {}),
         };
 
         await setDoc(userDocRef, nextDocData);
@@ -187,10 +220,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               message: `Le vendeur "${user.displayName || email}" vient de s'inscrire via e-mail.`,
               sellerId: user.uid,
               createdAt: serverTimestamp(),
-              read: false
+              read: false,
             });
           } catch (err) {
-             console.warn("Failed sending seller registration internal notification", err);
+            console.warn("Failed sending seller registration internal notification", err);
           }
         }
       }
@@ -199,31 +232,60 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signUpWithEmail = async (email: string, pass: string, name: string, role: string) => {
     const result = await createUserWithEmailAndPassword(auth, email, pass);
-    
+    const userRole = email === (import.meta as any).env.VITE_ADMIN_EMAIL ? "admin" : role || "buyer";
+
     // Update profile in Auth
     await updateProfile(result.user, { displayName: name });
-    
+
+    // Save to Firestore immediately to securely store the requested role
+    const userDocRef = doc(db, "users", result.user.uid);
+    const userStatus = userRole === "seller" ? "pending_verification" : "active";
+
+    const defaultTariffs: Record<string, number> = {};
+    if (userRole === "seller") {
+      ALGERIA_WILAYAS.forEach((w) => {
+        const cleanName = w.replace(/^\d+\s+/, "").trim();
+        const known = ALGERIA_SHIPPING_DATA[cleanName] || ALGERIA_SHIPPING_DATA.Default;
+        defaultTariffs[w] = known.price;
+      });
+    }
+
+    await setDoc(userDocRef, {
+      uid: result.user.uid,
+      displayName: name,
+      email: email,
+      role: userRole,
+      onboardingCompleted: false,
+      status: userStatus,
+      createdAt: serverTimestamp(),
+      ...(userRole === "seller" ? { isVerified: false, trustScore: 50, shippingTariffs: defaultTariffs } : {}),
+    });
+
     // Send verification email
     await sendEmailVerification(result.user);
+
+    // Remember locally in case of auto-login healing needed across refresh
+    localStorage.setItem("olmart_pending_registration_role", userRole);
   };
 
   const logout = async () => {
     await signOut(auth);
   };
 
-  return (
-    <AuthContext.Provider value={{ 
-      currentUser, 
-      userProfile, 
+  const value = React.useMemo(
+    () => ({
+      currentUser,
+      userProfile,
       loading,
       signInWithGoogle,
       signInWithEmail,
       signUpWithEmail,
-      logout
-    }}>
-      {children}
-    </AuthContext.Provider>
+      logout,
+    }),
+    [currentUser, userProfile, loading]
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

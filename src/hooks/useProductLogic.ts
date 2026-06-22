@@ -19,21 +19,36 @@ export const useProductLogic = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       if (!id) return;
-      
+
       // Auto scroll to top on new product view
       window.scrollTo({ top: 0, behavior: "smooth" });
-      
+
       try {
         const prodDoc = await getDoc(doc(db, "products", id));
         if (prodDoc.exists()) {
           const data = { id: prodDoc.id, ...prodDoc.data() } as Product;
           setProduct(data);
-          
+
           if (data.colors && data.colors.length > 0) {
             setSelectedColor(data.colors[0]);
           }
           if (data.sizes && data.sizes.length > 0) {
             setSelectedSize(data.sizes[0]);
+          }
+
+          // Track recently viewed products
+          try {
+            const stored = localStorage.getItem("olma_recently_viewed");
+            let recents: string[] = stored ? JSON.parse(stored) : [];
+            // Remove if already exists to move to top
+            recents = recents.filter((productId) => productId !== data.id);
+            // Add to start
+            recents.unshift(data.id);
+            // Limit to max 20 items
+            if (recents.length > 20) recents = recents.slice(0, 20);
+            localStorage.setItem("olma_recently_viewed", JSON.stringify(recents));
+          } catch (storageErr) {
+            console.error("Could not update recently viewed:", storageErr);
           }
         }
       } catch (err) {
@@ -52,7 +67,11 @@ export const useProductLogic = () => {
 
   const currentPrice = useMemo(() => {
     if (!product) return 0;
-    const isFlashActive = !!(product.flashSaleActive && product.flashPrice && (!product.flashEndDate || new Date(product.flashEndDate).getTime() > Date.now()));
+    const isFlashActive = !!(
+      product.flashSaleActive &&
+      product.flashPrice &&
+      (!product.flashEndDate || new Date(product.flashEndDate).getTime() > Date.now())
+    );
     if (isFlashActive) return product.flashPrice;
     return product.promoPrice || product.price;
   }, [product]);
@@ -74,6 +93,6 @@ export const useProductLogic = () => {
     showStickyBuyBar,
     setShowStickyBuyBar,
     images,
-    currentPrice
+    currentPrice,
   };
 };

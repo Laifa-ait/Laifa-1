@@ -33,7 +33,7 @@ export const cacheEngine = new LocalMemoryCache();
  */
 export function handleDevQuotaLogger(context: string, isFromCache: boolean) {
   if ((import.meta as any).env?.DEV) {
-    console.log(
+    (process.env.NODE_ENV === 'debug' ? console.log : function(){})(
       `%c[Olma Dev-Safe Layer] %c${context} %c${isFromCache ? "⚡ SWR CACHED" : "📦 LIVE (Firestore)"}`,
       "color: #C95D3B; font-weight: bold;",
       "color: inherit;",

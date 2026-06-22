@@ -18,7 +18,7 @@ interface InternalNotification {
 }
 
 export const AdminInternalNotifications: React.FC = () => {
-    const { t } = useTranslation();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<InternalNotification[]>([]);
@@ -28,20 +28,20 @@ export const AdminInternalNotifications: React.FC = () => {
 
   useEffect(() => {
     // SECURITY: Only run this snapshot if we are sure the user is an admin
-    if (!userProfile || userProfile.role !== 'admin') {
+    if (!userProfile || userProfile.role !== "admin") {
       return;
     }
 
-    const q = query(
-      collection(db, "internal_notifications"),
-      orderBy("createdAt", "desc"),
-      limit(20)
-    );
+    const q = query(collection(db, "internal_notifications"), orderBy("createdAt", "desc"), limit(20));
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as InternalNotification));
-      setNotifications(docs);
-    }, (err) => console.warn("AdminNotifs Listener Error:", err));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const docs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as InternalNotification);
+        setNotifications(docs);
+      },
+      (err) => console.warn("AdminNotifs Listener Error:", err)
+    );
 
     return () => unsubscribe();
   }, []);
@@ -56,14 +56,14 @@ export const AdminInternalNotifications: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   const handleNotifClick = async (notif: InternalNotification) => {
     if (!notif.read) {
       await updateDoc(doc(db, "internal_notifications", notif.id), { read: true });
     }
     setIsOpen(false);
-    
+
     if (notif.type === "DOCUMENT_SUBMISSION" || notif.sellerId) {
       navigate(`/dashboard/admin/sellers`);
     }
@@ -92,7 +92,7 @@ export const AdminInternalNotifications: React.FC = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`p-2.5 rounded-xl transition-all relative border bg-zinc-900 border-white/10 hover:bg-zinc-800 cursor-pointer ${
-          unreadCount > 0 ? 'text-[#ea580c]' : 'text-zinc-400'
+          unreadCount > 0 ? "text-[#ea580c]" : "text-zinc-400"
         }`}
       >
         <Bell className="w-5 h-5" />
@@ -116,15 +116,20 @@ export const AdminInternalNotifications: React.FC = () => {
           >
             <div className="px-6 py-4 border-b border-white/10 bg-zinc-900/50 flex items-center justify-between">
               <div>
-                <h4 className="font-black text-white text-xs rtl:text-sm uppercase tracking-widest rtl:tracking-normal">{t("Alertes Internes")}</h4>
-                <p className="text-[9px] rtl:text-[11px] font-bold text-zinc-500 uppercase tracking-widest rtl:tracking-normal mt-0.5">{t("Validation SÉCURISÉE")}</p>
+                <h4 className="font-black text-white text-xs rtl:text-sm uppercase tracking-widest rtl:tracking-normal">
+                  {t("Alertes Internes")}
+                </h4>
+                <p className="text-[9px] rtl:text-[11px] font-bold text-zinc-500 uppercase tracking-widest rtl:tracking-normal mt-0.5">
+                  {t("Validation SÉCURISÉE")}
+                </p>
               </div>
               {unreadCount > 0 && (
                 <button
                   onClick={clearAll}
                   className="text-[9px] rtl:text-[11px] font-black uppercase text-zinc-400 hover:text-white transition-colors cursor-pointer bg-transparent border-none"
                 >
-                  {t("Tout lire")}</button>
+                  {t("Tout lire")}
+                </button>
               )}
             </div>
 
@@ -132,7 +137,9 @@ export const AdminInternalNotifications: React.FC = () => {
               {notifications.length === 0 ? (
                 <div className="p-10 text-center space-y-3">
                   <ShieldAlert className="w-8 h-8 text-zinc-700 mx-auto" />
-                  <p className="text-[10px] rtl:text-[12px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-600">{t("Aucune tâche en attente")}</p>
+                  <p className="text-[10px] rtl:text-[12px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-600">
+                    {t("Aucune tâche en attente")}
+                  </p>
                 </div>
               ) : (
                 notifications.map((item) => (
@@ -147,32 +154,33 @@ export const AdminInternalNotifications: React.FC = () => {
                       {getIcon(item.type)}
                     </div>
                     <div className="flex-1 min-w-0">
-                       <div className="flex justify-between items-start mb-1">
-                          <p className="text-xs rtl:text-sm font-black text-white leading-tight truncate pr-4">
-                            {item.sellerName || "Système Admin"}
-                          </p>
-                          <span className="text-[8px] font-bold text-zinc-600 uppercase shrink-0">
-                            {item.createdAt?.toDate?.() ? item.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Récemment"}
-                          </span>
-                       </div>
-                       <p className="text-[11px] text-zinc-400 font-medium leading-relaxed line-clamp-2">
-                         {item.message}
-                       </p>
+                      <div className="flex justify-between items-start mb-1">
+                        <p className="text-xs rtl:text-sm font-black text-white leading-tight truncate pr-4">
+                          {item.sellerName || "Système Admin"}
+                        </p>
+                        <span className="text-[8px] font-bold text-zinc-600 uppercase shrink-0">
+                          {item.createdAt?.toDate?.()
+                            ? item.createdAt.toDate().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                            : "Récemment"}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-zinc-400 font-medium leading-relaxed line-clamp-2">
+                        {item.message}
+                      </p>
                     </div>
-                    {!item.read && (
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#ea580c] mt-2 shrink-0" />
-                    )}
+                    {!item.read && <div className="w-1.5 h-1.5 rounded-full bg-[#ea580c] mt-2 shrink-0" />}
                   </button>
                 ))
               )}
             </div>
-            
+
             <div className="p-4 border-t border-white/10 bg-zinc-900/50 text-center">
-               <button 
-                 onClick={() => navigate('/dashboard/admin/sellers')}
-                 className="text-[10px] rtl:text-[12px] font-black uppercase tracking-widest rtl:tracking-normal text-[#ea580c] hover:text-white transition-colors bg-transparent border-none cursor-pointer"
-               >
-                 {t("Voir tous les vendeurs")}</button>
+              <button
+                onClick={() => navigate("/dashboard/admin/sellers")}
+                className="text-[10px] rtl:text-[12px] font-black uppercase tracking-widest rtl:tracking-normal text-[#ea580c] hover:text-white transition-colors bg-transparent border-none cursor-pointer"
+              >
+                {t("Voir tous les vendeurs")}
+              </button>
             </div>
           </motion.div>
         )}

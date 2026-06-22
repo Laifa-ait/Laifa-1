@@ -91,6 +91,9 @@ export const Shop: React.FC = () => {
     if (urlSubcategory) {
       conditions.push(where("subcategory", "==", urlSubcategory));
     }
+    if (urlSubsubcategory) {
+      conditions.push(where("subsubcategory", "==", urlSubsubcategory));
+    }
     if (activeWilaya !== "Tous") {
       conditions.push(where("wilaya", "==", activeWilaya));
     }

@@ -1,3 +1,6 @@
+import { Request, Response } from 'express';
+export interface AuthenticatedRequest extends Request { user?: any; file?: any; files?: any; }
+
 import { Router } from "express";
 import {
   authenticateToken,
@@ -8,8 +11,29 @@ import { ai } from "../config/gemini";
 import path from "path";
 import fs from "fs";
 import { translate } from "@vitalets/google-translate-api";
+import rateLimit from "express-rate-limit";
 
 const router = Router();
+
+// Rate limiter pour l'IA (éviter les factures Gemini élevées)
+const aiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // Limite à 20 requêtes par fenêtre par utilisateur
+  keyGenerator: (req: any) => req.user?.uid || req.ip,
+  handler: (req: AuthenticatedRequest, res: Response) => {
+    res.status(429).end("Trop de requêtes. Veuillez patienter avant de renvoyer un message.");
+  }
+});
+
+// Rate limiter spécifique pour les conversations chat avec l'I.A. (OLMART Security)
+const chatLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 15, // Limite spécifique à 15 requêtes
+  keyGenerator: (req: any) => req.user?.uid || req.ip,
+  handler: (req: AuthenticatedRequest, res: Response) => {
+    res.status(429).end("Trop de messages envoyés à l'assistant. Veuillez patienter quelques minutes pour préserver les ressources.");
+  }
+});
 
 // Cache en mémoire pour réduire les coûts de l'API Gemini
 const descCache = new Map<string, string>();
@@ -19,7 +43,8 @@ router.post(
   "/generate-description",
   authenticateToken,
   authorizeSeller,
-  async (req: any, res: any) => {
+  aiLimiter,
+  async (req: AuthenticatedRequest, res: Response) => {
     const { productName, category } = req.body;
     if (!productName)
       return res.status(400).json({ error: "productName requis" });
@@ -31,7 +56,7 @@ router.post(
 
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: "gemini-1.5-flash",
         contents: `Générez une description marketing courte (3-4 phrases), luxueuse et professionnelle pour un produit nommé "${productName}" dans la catégorie "${category || "Général"}". La description doit refléter l'excellence de l'artisanat ou du design algérien de Olma Marketplace. Répondez uniquement avec la description en Français.`,
       });
       const desc = response.text || "";
@@ -50,14 +75,15 @@ router.post(
   "/translate-product",
   authenticateToken,
   authorizeSeller,
-  async (req: any, res: any) => {
+  aiLimiter,
+  async (req: AuthenticatedRequest, res: Response) => {
     const { name, description } = req.body;
     if (!name || !description)
       return res.status(400).json({ error: "name et description requis" });
 
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: "gemini-1.5-flash",
         contents: `Translate the following product information from French to Arabic and English. Return ONLY a pure JSON object. Format strictly as: { "name": {"ar": "...", "en": "..."}, "description": {"ar": "...", "en": "..."} }\n\n{"name": "${name}", "description": "${description}"}`,
         config: { responseMimeType: "application/json" }
       });
@@ -84,7 +110,8 @@ router.post(
   "/admin/generate-newsletter",
   authenticateToken,
   authorizeAdmin,
-  async (req: any, res: any) => {
+  aiLimiter,
+  async (req: AuthenticatedRequest, res: Response) => {
     const { prompt } = req.body;
     if (!prompt) return res.status(400).json({ error: "prompt requis" });
 
@@ -94,7 +121,7 @@ router.post(
 
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: "gemini-1.5-flash",
         contents: `Générez une newsletter de luxe pour Olma Marketplace basée sur ceci: "${prompt}". 
     Répondez au format JSON strict:
     {
@@ -129,7 +156,7 @@ router.post(
   },
 );
 
-router.post("/chat", async (req: any, res: any) => {
+router.post("/chat", authenticateToken, chatLimiter, async (req: AuthenticatedRequest, res: Response) => {
   const { message, history = [] } = req.body;
   if (!message) return res.status(400).json({ error: "Message requis" });
 
@@ -143,7 +170,7 @@ router.post("/chat", async (req: any, res: any) => {
     ];
 
     const stream = await ai.models.generateContentStream({
-      model: "gemini-3.5-flash",
+      model: "gemini-1.5-flash",
       contents: contents,
       config: {
         systemInstruction:

@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
-import { db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { FlashSaleDocument } from '../types';
+import { useState, useEffect, useCallback } from "react";
+import { db, handleFirestoreError, OperationType } from "../lib/firebase";
+import { doc, onSnapshot } from "firebase/firestore";
+import { FlashSaleDocument } from "../types";
 
 interface Countdown {
   hours: string;
@@ -27,27 +27,31 @@ export function useFlashSale(): UseFlashSaleResult {
   const [flashSale, setFlashSale] = useState<FlashSaleDocument | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  
-  const [countdown, setCountdown] = useState<Countdown>({ hours: '00', minutes: '00', seconds: '00' });
+
+  const [countdown, setCountdown] = useState<Countdown>({ hours: "00", minutes: "00", seconds: "00" });
   const [status, setStatus] = useState({ isActive: false, isUpcoming: false, isExpired: false });
 
   // 1. Fetch Real-time Flash Sale Data
   useEffect(() => {
-    const docRef = doc(db, 'ui_elements', 'active_flash_sale');
-    
-    const unsubscribe = onSnapshot(docRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.data() as FlashSaleDocument;
-        setFlashSale(data);
-      } else {
-        setFlashSale(null);
+    const docRef = doc(db, "ui_elements", "active_flash_sale");
+
+    const unsubscribe = onSnapshot(
+      docRef,
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.data() as FlashSaleDocument;
+          setFlashSale(data);
+        } else {
+          setFlashSale(null);
+        }
+        setIsLoading(false);
+      },
+      (err) => {
+        handleFirestoreError(err, OperationType.GET, "ui_elements/active_flash_sale");
+        setError(err.message);
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    }, (err) => {
-      handleFirestoreError(err, OperationType.GET, 'ui_elements/active_flash_sale');
-      setError(err.message);
-      setIsLoading(false);
-    });
+    );
 
     return () => unsubscribe();
   }, []);
@@ -78,12 +82,12 @@ export function useFlashSale(): UseFlashSaleResult {
       const s = Math.floor((timeDiffEnd % (1000 * 60)) / 1000);
 
       setCountdown({
-        hours: h.toString().padStart(2, '0'),
-        minutes: m.toString().padStart(2, '0'),
-        seconds: s.toString().padStart(2, '0')
+        hours: h.toString().padStart(2, "0"),
+        minutes: m.toString().padStart(2, "0"),
+        seconds: s.toString().padStart(2, "0"),
       });
     } else {
-      setCountdown({ hours: '00', minutes: '00', seconds: '00' });
+      setCountdown({ hours: "00", minutes: "00", seconds: "00" });
     }
   }, [flashSale]);
 
@@ -93,11 +97,11 @@ export function useFlashSale(): UseFlashSaleResult {
     return () => clearInterval(timer);
   }, [calculateRemainingTime]);
 
-  return { 
-    flashSale, 
-    countdown, 
+  return {
+    flashSale,
+    countdown,
     ...status,
-    isLoading, 
-    error 
+    isLoading,
+    error,
   };
 }

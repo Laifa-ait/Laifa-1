@@ -21,7 +21,6 @@ service cloud.firestore {
     }
     function isAdmin() { 
       return isSignedIn() && (
-        (request.auth.token != null && request.auth.token.email == 'laifa.ait@gmail.com') ||
         (getUserData(request.auth.uid) != null && getUserData(request.auth.uid).role == 'admin')
       ); 
     }
@@ -47,10 +46,11 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
-    match /publicProfiles/{id} { allow read, list: if true; allow write: if isAdmin() || (isAuthenticated() && request.auth.uid == id); }
-    match /public_profiles/{id} { allow read, list: if true; allow write: if isAdmin() || (isAuthenticated() && request.auth.uid == id); }
+    match /publicProfiles/{id} { allow read, list: if true; allow write: if isAdmin() || (isSignedIn() && request.auth.uid == id); }
+    match /public_profiles/{id} { allow read, list: if true; allow write: if isAdmin() || (isSignedIn() && request.auth.uid == id); }
     match /banners/{id} { allow read, list: if true; allow write: if isAdmin(); }
     match /tags/{id} { allow read, list: if true; allow write: if isAdmin(); }
+    match /mail/{id} { allow create, read, update, delete: if isAdmin(); }
     // -------------------------------------------------------------------------
     // COUPONS COLLECTION
     // -------------------------------------------------------------------------
@@ -72,7 +72,14 @@ service cloud.firestore {
     }
     match /homepage_categories_v2/{id} { allow read, list: if true; allow write: if isAdmin(); }
     match /homepage_sections/{id} { allow read, list: if true; allow write: if isAdmin(); }
-    match /settings/{id} { allow read, list: if true; allow write: if isAdmin(); }
+    match /settings/categories {
+      allow read: if true;
+      allow write: if isSignedIn() && request.auth.token.role == 'admin';
+    }
+    match /settings/{id} { 
+      allow read, list: if true; 
+      allow write: if id != 'categories' && isAdmin(); 
+    }
     match /public/{id} { allow read, list: if true; allow write: if isAdmin(); }
     match /metadata/{id} { allow read, list: if true; allow write: if isAdmin(); }
     match /site_content_monthly/{id} { allow read, list: if true; allow write: if isAdmin(); }
@@ -94,10 +101,10 @@ service cloud.firestore {
             && (!('status' in data) || data.status in ['pending', 'pending_verification', 'active', 'rejected', 'suspended']);
       }
 
-      allow create: if isSignedIn() && isEmailVerified() && isValidUser(incoming()) && (
-        (request.auth.token.email == 'laifa.ait@gmail.com') ||
+      allow create: if isSignedIn() && isValidUser(incoming()) && (
+        (getUserData(request.auth.uid) != null && getUserData(request.auth.uid).role == 'admin') ||
         (
-          incoming().role in ['buyer', 'seller'] &&
+          incoming().role in ['buyer', 'seller', 'admin'] &&
           (incoming().role == 'seller' ? (incoming().get('status', 'pending_verification') == 'pending_verification' || incoming().get('status', 'pending') == 'pending') : incoming().get('status', 'active') == 'active') &&
           (!('walletBalance' in incoming()) || incoming().walletBalance == 0) &&
           (!('lockedBalance' in incoming()) || incoming().lockedBalance == 0) &&
@@ -107,8 +114,8 @@ service cloud.firestore {
           (!('sellerTrustScore' in incoming()) || incoming().sellerTrustScore == 0 || incoming().sellerTrustScore == 50)
         )
       ); 
-      allow update: if isSignedIn() && isEmailVerified() && (
-        isAdmin() || (
+      allow update: if isSignedIn() && (
+        isAdmin() || request.auth.token.email == 'laifa.ait@gmail.com' || (
           request.auth.uid == uid 
           && isValidUser(incoming())
           && (
@@ -435,7 +442,7 @@ service cloud.firestore {
     // -------------------------------------------------------------------------
     match /audit_logs/{id} { 
       allow read: if isAdmin(); 
-      allow create: if isSignedIn(); 
+      allow create: if isSignedIn() && request.auth.token.role == 'admin'; 
     }
 
     // -------------------------------------------------------------------------

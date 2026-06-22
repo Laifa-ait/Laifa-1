@@ -69,7 +69,7 @@ export function sanitizeXSS(input: string): string {
 
   // 3. Remove inline JavaScript event handlers (e.g. onload, onerror, onclick, onmouseover, any on[event]=)
   // Catch patterns like: onmouseover=... or onerror =
-  const eventHandlerRegex = /\s*\bon[a-z]+\s*=\s*(['"][^'"]*['"]|[^\s>]+)/gi;
+  const eventHandlerRegex = /\s*\bon[a-zA-Z]+\s*=\s*(['"][^'"]*['"]|[^\s>]+)/gi;
   sanitized = sanitized.replace(eventHandlerRegex, "");
 
   // 4. Remove javascript: and data: URI schemes in href, src, action or general attributes

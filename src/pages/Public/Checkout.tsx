@@ -151,9 +151,21 @@ export const Checkout: React.FC = () => {
         return;
       }
       
-      if (couponData.expiresAt) {
-        const expiry = couponData.expiresAt.toDate ? couponData.expiresAt.toDate() : new Date(couponData.expiresAt);
-        if (expiry <= new Date()) {
+      if (couponData.expiresAt || couponData.expiryDate) {
+        let expiry = null;
+        const rawExpiry = couponData.expiresAt || couponData.expiryDate;
+        
+        if (typeof rawExpiry?.toDate === 'function') {
+          expiry = rawExpiry.toDate();
+        } else if (rawExpiry?.seconds) {
+          expiry = new Date(rawExpiry.seconds * 1000);
+        } else if (rawExpiry?._seconds) {
+          expiry = new Date(rawExpiry._seconds * 1000);
+        } else {
+          expiry = new Date(rawExpiry);
+        }
+
+        if (expiry && !isNaN(expiry.getTime()) && expiry <= new Date()) {
           toast.error(t("checkout.expired_coupon_error", "Ce coupon a expiré."));
           return;
         }
@@ -323,7 +335,13 @@ export const Checkout: React.FC = () => {
       clearCart(filterSellerId || undefined);
       setStep('success');
     } catch (err: any) {
-      console.error(err);
+      // Securely scrub and sanitize any sensitive checkout error details (Credit Card #s, CVV, private tokens) before logging
+      const errorMsg = err?.message || String(err);
+      const scrubbed = errorMsg
+        .replace(/\b\d{13,19}\b/g, '[masked_card]')
+        .replace(/\b\d{3,4}\b/g, '[masked_cvv]')
+        .replace(/(?:key|token|secret|password|stripe|authorization|auth)[^=\s:"]*["\s:=]+[^\s",]+/gi, '$1: [masked]');
+      console.error("OLMART Checkout failed:", scrubbed);
       toast.error(err.message || t("payment_error") || "Erreur de paiement.");
     } finally {
       setIsSubmitting(false);

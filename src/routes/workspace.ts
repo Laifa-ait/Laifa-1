@@ -1,3 +1,6 @@
+import { Request, Response } from 'express';
+export interface AuthenticatedRequest extends Request { user?: any; file?: any; files?: any; googleToken?: string; }
+
 import { Router } from "express";
 import { google } from "googleapis";
 import { Readable } from "stream";
@@ -6,12 +9,12 @@ const router = Router();
 
 // Middleware pour extraire le Google Access Token
 // Doit être passé depuis le frontend via un header spécial par exemple: x-google-token
-const requireGoogleToken = (req: any, res: any, next: any) => {
+const requireGoogleToken = (req: AuthenticatedRequest, res: Response, next: any) => {
   const token = req.headers["x-google-token"];
   if (!token) {
     return res.status(401).json({ error: "Google access token manquant. Veuillez lier votre compte Google Workspace." });
   }
-  req.googleToken = token;
+  req.googleToken = token as string;
   next();
 };
 
@@ -19,7 +22,7 @@ const requireGoogleToken = (req: any, res: any, next: any) => {
  * 1. GOOGLE SHEETS (Export Premium "Canva-like")
  * Exportation des rapports formatés (Admin & Vendeur).
  */
-router.post("/sheets/export-premium", requireGoogleToken, async (req: any, res: any) => {
+router.post("/sheets/export-premium", requireGoogleToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { title, metadata, headers, rows, totals, theme } = req.body;
     
@@ -202,7 +205,7 @@ router.post("/sheets/export-premium", requireGoogleToken, async (req: any, res: 
  * 2. GOOGLE DRIVE (User Upload - Admin Backup / Admin Docs)
  * Upload sécurisé avec le token de l'utilisateur.
  */
-router.post("/drive/upload", requireGoogleToken, async (req: any, res: any) => {
+router.post("/drive/upload", requireGoogleToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { fileName, mimeType, base64Data } = req.body;
     
@@ -248,12 +251,46 @@ router.post("/drive/upload", requireGoogleToken, async (req: any, res: any) => {
  * Upload sécurisé via un Compte de Service (Service Account) pour les vendeurs,
  * car le Vendeur n'a pas accès au Google Drive de l'Admin !
  */
-router.post("/drive/system-upload-kyc", async (req: any, res: any) => {
+router.post("/drive/system-upload-kyc", async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { fileName, mimeType, base64Data, sellerId } = req.body;
     
     if (!base64Data || !sellerId) {
        return res.status(400).json({ error: "Données de fichier ou ID vendeur manquant." });
+    }
+
+    // 1. Décodage du Buffer pour vérifications réelles de taille et d'intégrité binaire
+    const buffer = Buffer.from(base64Data, 'base64');
+    const fileSizeInBytes = buffer.length;
+
+    // Protection contre les uploads trop volumineux (limite ferme de 10 Mo)
+    const maxBytes = 10 * 1024 * 1024; // 10 Mo
+    if (fileSizeInBytes > maxBytes) {
+       return res.status(400).json({ error: "Fichier trop volumineux. La taille maximale autorisée est de 10 Mo." });
+    }
+
+    // 2. Validation stricte du type MIME pour les KYC (uniquement PDF, PNG, JPEG)
+    const allowedMimeTypes = ["application/pdf", "image/png", "image/jpeg", "image/jpg"];
+    if (!mimeType || !allowedMimeTypes.includes(mimeType.toLowerCase())) {
+       return res.status(400).json({ error: "Format de fichier non autorisé. Seuls les fichiers PDF et les images (PNG, JPEG) sont acceptés." });
+    }
+
+    // 3. Validation de signature binaire (Magic Numbers) contre l'usurpation d'extension
+    let isValidHeader = false;
+    const isMimePdf = mimeType.toLowerCase() === "application/pdf";
+    const isMimePng = mimeType.toLowerCase() === "image/png";
+    const isMimeJpeg = mimeType.toLowerCase() === "image/jpeg" || mimeType.toLowerCase() === "image/jpg";
+
+    if (isMimePdf) {
+       isValidHeader = buffer.length >= 4 && buffer[0] === 0x25 && buffer[1] === 0x50 && buffer[2] === 0x44 && buffer[3] === 0x46; // %PDF
+    } else if (isMimePng) {
+       isValidHeader = buffer.length >= 4 && buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47; // \x89PNG
+    } else if (isMimeJpeg) {
+       isValidHeader = buffer.length >= 2 && buffer[0] === 0xFF && buffer[1] === 0xD8; // JPEG SOI
+    }
+
+    if (!isValidHeader) {
+       return res.status(400).json({ error: "Contenu de fichier non conforme ou corrompu (Signature binaire invalide)." });
     }
 
     // Stratégie Service Account expliquée dans la doc:
@@ -279,7 +316,6 @@ router.post("/drive/system-upload-kyc", async (req: any, res: any) => {
 
     const drive = google.drive({ version: "v3", auth });
 
-    const buffer = Buffer.from(base64Data, 'base64');
     const stream = new Readable();
     stream.push(buffer);
     stream.push(null);
@@ -312,7 +348,7 @@ router.post("/drive/system-upload-kyc", async (req: any, res: any) => {
  * 3. GOOGLE MEET & CALENDAR
  * Prise de RDV pour la vérification des nouveaux vendeurs.
  */
-router.post("/calendar/schedule", requireGoogleToken, async (req: any, res: any) => {
+router.post("/calendar/schedule", requireGoogleToken, async (req: AuthenticatedRequest, res: Response) => {
     try {
         const { sellerEmail, sellerEmails, startTime, endTime, summary, description } = req.body;
 

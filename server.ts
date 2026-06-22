@@ -6,12 +6,15 @@ import helmet from "helmet";
 import compression from "compression";
 import { promises as fsPromises } from "fs";
 import { doc, getDoc } from "firebase/firestore";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 // Cache in-memory HTML for production
 let cachedHtmlTemplate = "";
 
 // Imports extracted into modules
-import { admin, db, clientDb } from "./src/config/firebase-admin";
+import { admin, db, clientDb, verifyAndFixDb } from "./src/config/firebase-admin";
 import { ai } from "./src/config/gemini";
 import { authenticateToken, authorizeAdmin, authorizeSeller } from "./src/middlewares/auth";
 
@@ -25,43 +28,114 @@ import workspaceRouter from "./src/routes/workspace";
 const app = express();
 const PORT = 3000;
 
-// Tell Express to trust reverse proxy headers (Cloud Run, Nginx, etc.)
-app.set('trust proxy', 1);
+// Tell Express to trust reverse proxy headers securely by whitelisting trusted local and internal subnets
+app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal']);
 
 import rateLimit from "express-rate-limit";
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
-  message: "Trop de requêtes, veuillez réessayer dans 15 minutes.",
-  validate: { default: false }
+  message: "Trop de requêtes, veuillez réessayer dans 15 minutes."
 });
 
 const strictLimiter = rateLimit({
   windowMs: 1 * 60 * 1000,
   max: 10,
-  message: "Trop de requêtes, veuillez réessayer dans une minute.",
-  validate: { default: false }
+  message: "Trop de requêtes, veuillez réessayer dans une minute."
 });
 
 app.use("/api/chat", strictLimiter);
 app.use("/api/place-order", strictLimiter);
 app.use("/api", apiLimiter);
 
-app.use(helmet({ contentSecurityPolicy: false }));
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://apis.google.com", "https://www.gstatic.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+      imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
+      connectSrc: ["'self'", "https:", "wss:", "ws:"],
+      frameSrc: ["'self'", "https://*.firebaseapp.com", "https://*.google.com", "https://apis.google.com"],
+      frameAncestors: ["'self'", "https://aistudio.google.com", "https://*.google.com"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: []
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+  xFrameOptions: false,
+}));
 app.use(compression());
-app.use(cors());
+
+const allowedOrigins = [
+  "https://aistudio.google.com",
+];
+
+const corsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    if (!origin) return callback(null, true);
+    
+    const isAllowed = allowedOrigins.includes(origin) || 
+                      /^https:\/\/ais-.*\.europe-west2\.run\.app$/.test(origin) || 
+                      /^http:\/\/localhost:\d+$/.test(origin);
+                      
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error("Accès refusé par la politique de CORS OLMART"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
+};
+
+app.use(cors(corsOptions));
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ limit: "2mb", extended: true }));
 
+// Health Check Endpoint
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+import swaggerUi from 'swagger-ui-express';
+import swaggerJsdoc from 'swagger-jsdoc';
+
+const swaggerOptions = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Olma API',
+      version: '1.0.0',
+      description: 'API for Olma Marketplace',
+    },
+  },
+  apis: ['./src/routes/*.ts'], // read from routes
+};
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+const debugLimiter = rateLimit({ windowMs: 5 * 60 * 1000, max: 20, message: "Trop de requêtes debug." });
+app.use("/api/debug", debugLimiter);
+
 // Mount extracted routers
 app.use("/api/auth", authRouter);
-app.use("/api", authRouter); // Sync user claims
 app.use("/api", aiRouter);
 app.use("/api", ordersRouter);
 app.use("/api", adminRouter);
 app.use("/api/workspace", workspaceRouter);
 app.use("/", coreRouter); // All remaining endpoints
+
+import { Request, Response, NextFunction } from 'express';
+
+// Add Global Error Handler right after API routes
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  console.error("Global Error Handler caught an error:", err);
+  res.status(500).json({ error: "Une erreur interne du serveur est survenue." });
+});
 
 async function setupVite() {
   if (process.env.NODE_ENV !== "production") {
@@ -69,6 +143,7 @@ async function setupVite() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
+    app.use('/locales', express.static(path.join(distPath, 'locales'), { maxAge: '1y' }));
     app.use(express.static(distPath, { index: false }));
 
     // PERFORMANCE : Lecture du fichier index.html UNE SEULE FOIS au démarrage
@@ -121,8 +196,31 @@ async function setupVite() {
   }
 }
 
-setupVite().then(() => {
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+setupVite().then(async () => {
+  try {
+    await verifyAndFixDb();
+  } catch (err: any) {
+    console.error("Firestore Admin verification failed or restricted credentials:", err.message || err);
+  }
+  const server = app.listen(PORT, "0.0.0.0", () => {
+    (process.env.NODE_ENV === 'debug' ? console.log : function(){})(`Server running on http://localhost:${PORT}`);
   });
+
+  // Graceful shutdown handling
+  const shutdown = (signal: string) => {
+    (process.env.NODE_ENV === 'debug' ? console.log : function(){})(`\nReceived ${signal}. Shutting down gracefully...`);
+    server.close(() => {
+      (process.env.NODE_ENV === 'debug' ? console.log : function(){})("Closed out remaining connections.");
+      process.exit(0);
+    });
+
+    // Force close after 10s if connections are hanging
+    setTimeout(() => {
+      console.error("Could not close connections in time, forcefully shutting down");
+      process.exit(1);
+    }, 10000);
+  };
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 });

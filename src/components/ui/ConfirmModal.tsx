@@ -1,6 +1,6 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { AlertTriangle, X } from 'lucide-react';
+import React from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { AlertTriangle, X } from "lucide-react";
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -19,7 +19,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   title,
   message,
   confirmText = "Confirmer",
-  cancelText = "Annuler"
+  cancelText = "Annuler",
 }) => {
   return (
     <AnimatePresence>
@@ -40,22 +40,22 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
               className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-xl pointer-events-auto relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-stone-100 rounded-full blur-3xl -me-10 -mt-10 opacity-50 pointer-events-none" />
-              
+
               <div className="flex justify-between items-start mb-4 relative z-10">
                 <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center text-stone-600 shrink-0">
                   <AlertTriangle className="w-6 h-6" />
                 </div>
-                <button 
+                <button
                   onClick={onClose}
                   className="p-2 text-stone-400 hover:text-stone-600 hover:bg-stone-50 rounded-xl transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              
+
               <h3 className="text-xl font-black text-[#121315] mb-2 relative z-10">{title}</h3>
               <p className="text-stone-500 font-medium text-sm mb-8 leading-relaxed relative z-10">{message}</p>
-              
+
               <div className="flex gap-3 relative z-10">
                 <button
                   onClick={onClose}

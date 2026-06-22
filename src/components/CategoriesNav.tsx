@@ -20,7 +20,7 @@ export const CategoriesNav: React.FC<CategoriesNavProps> = ({
 }) => {
   const { activeCategory, setActiveCategory, setSearchQuery } = useShop();
   const { t } = useTranslation();
-  
+
   const categoriesScrollRef = useRef<HTMLDivElement>(null);
   const [canScrollCategoriesLeft, setCanScrollCategoriesLeft] = useState(false);
   const [canScrollCategoriesRight, setCanScrollCategoriesRight] = useState(false);
@@ -62,8 +62,8 @@ export const CategoriesNav: React.FC<CategoriesNavProps> = ({
   return (
     <div className="hidden lg:flex relative mb-8 group/categories items-center max-w-[1850px] mx-auto w-full">
       {/* Dynamic Left Gradient Fade */}
-      <div 
-        className={`absolute left-0 top-0 bottom-0 w-16 lg:w-32 bg-gradient-to-r from-[#faf9f8] via-[#faf9f8]/80 to-transparent z-10 pointer-events-none transition-opacity duration-300 ${canScrollCategoriesLeft ? 'opacity-100' : 'opacity-0'}`} 
+      <div
+        className={`absolute left-0 top-0 bottom-0 w-16 lg:w-32 bg-gradient-to-r from-[#faf9f8] via-[#faf9f8]/80 to-transparent z-10 pointer-events-none transition-opacity duration-300 ${canScrollCategoriesLeft ? "opacity-100" : "opacity-0"}`}
       />
 
       <button
@@ -86,10 +86,10 @@ export const CategoriesNav: React.FC<CategoriesNavProps> = ({
 
           const IconComponent = CATEGORY_ICONS[category] || Box;
           const icon = (
-            <IconComponent 
-                className={`w-4.5 h-4.5 lg:w-6 lg:h-6 transition-colors duration-200 ${
-                    isSelected ? "!text-white" : "text-zinc-600 group-hover:text-zinc-950"
-                }`}
+            <IconComponent
+              className={`w-4.5 h-4.5 lg:w-6 lg:h-6 transition-colors duration-200 ${
+                isSelected ? "!text-white" : "text-zinc-600 group-hover:text-zinc-950"
+              }`}
             />
           );
 
@@ -118,10 +118,14 @@ export const CategoriesNav: React.FC<CategoriesNavProps> = ({
                   : "bg-white text-zinc-700 border-zinc-200/60 hover:bg-zinc-50 hover:text-zinc-950 hover:shadow-md hover:border-zinc-300"
               }`}
             >
-              <span className={`flex items-center justify-center shrink-0 me-3.5 lg:me-4.5 ${isSelected ? "text-white" : ""}`}>
+              <span
+                className={`flex items-center justify-center shrink-0 me-3.5 lg:me-4.5 ${isSelected ? "text-white" : ""}`}
+              >
                 {icon}
               </span>
-              <span className={`uppercase tracking-tighter rtl:tracking-normal ${isSelected ? "!text-white" : "text-zinc-700 group-hover:text-zinc-950"}`}>
+              <span
+                className={`uppercase tracking-tighter rtl:tracking-normal ${isSelected ? "!text-white" : "text-zinc-700 group-hover:text-zinc-950"}`}
+              >
                 {getCategoryTranslation(category, t)}
               </span>
             </button>
@@ -130,8 +134,8 @@ export const CategoriesNav: React.FC<CategoriesNavProps> = ({
       </div>
 
       {/* Dynamic Right Gradient Fade */}
-      <div 
-        className={`absolute right-0 top-0 bottom-0 w-16 lg:w-32 bg-gradient-to-l from-[#faf9f8] via-[#faf9f8]/80 to-transparent z-10 pointer-events-none transition-opacity duration-300 ${canScrollCategoriesRight ? 'opacity-100' : 'opacity-0'}`} 
+      <div
+        className={`absolute right-0 top-0 bottom-0 w-16 lg:w-32 bg-gradient-to-l from-[#faf9f8] via-[#faf9f8]/80 to-transparent z-10 pointer-events-none transition-opacity duration-300 ${canScrollCategoriesRight ? "opacity-100" : "opacity-0"}`}
       />
 
       <button

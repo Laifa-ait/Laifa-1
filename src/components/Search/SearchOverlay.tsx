@@ -1,6 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Search, X, History, TrendingUp, ArrowRight, Loader2, Star, ShieldCheck, Compass, Info, Sparkles } from "lucide-react";
+import {
+  Search,
+  X,
+  History,
+  TrendingUp,
+  ArrowRight,
+  Loader2,
+  Star,
+  ShieldCheck,
+  Compass,
+  Info,
+  Sparkles,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUI } from "../../context/UIContext";
 import { useShop } from "../../context/ShopContext";
@@ -17,7 +29,7 @@ export const SearchOverlay: React.FC = () => {
   const { setSearchQuery } = useShop();
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  
+
   const [localSearch, setLocalSearch] = useState("");
   const [results, setResults] = useState<Product[]>([]);
   const [matchedStores, setMatchedStores] = useState<any[]>([]);
@@ -25,7 +37,7 @@ export const SearchOverlay: React.FC = () => {
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
   const trendingSearches = useTrendingSearches();
-  
+
   const inputRef = useRef<HTMLInputElement>(null);
   const isRtl = i18n.language === "ar";
 
@@ -49,7 +61,7 @@ export const SearchOverlay: React.FC = () => {
     if (isSearchOpen) {
       document.body.style.overflow = "hidden";
       setTimeout(() => inputRef.current?.focus(), 150);
-      
+
       // Load recent searches
       const saved = localStorage.getItem("olma_recent_searches");
       if (saved) {
@@ -65,13 +77,13 @@ export const SearchOverlay: React.FC = () => {
         try {
           const q = query(collection(db, "products"), limit(4));
           const snap = await getDocs(q);
-          const prods = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as unknown as Product));
+          const prods = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as unknown as Product);
           setRecommendedProducts(prods);
         } catch (err) {
           console.warn("Failed to load search overlay recommendations:", err);
         }
       };
-      
+
       fetchRecommendations();
     } else {
       document.body.style.overflow = "";
@@ -112,7 +124,7 @@ export const SearchOverlay: React.FC = () => {
   const saveSearchTerm = (term: string) => {
     const trimmed = term.trim();
     if (!trimmed) return;
-    const updated = [trimmed, ...recentSearches.filter(s => s !== trimmed)].slice(0, 5);
+    const updated = [trimmed, ...recentSearches.filter((s) => s !== trimmed)].slice(0, 5);
     setRecentSearches(updated);
     localStorage.setItem("olma_recent_searches", JSON.stringify(updated));
   };
@@ -137,7 +149,7 @@ export const SearchOverlay: React.FC = () => {
 
   const handleDeleteRecent = (term: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    const updated = recentSearches.filter(s => s !== term);
+    const updated = recentSearches.filter((s) => s !== term);
     setRecentSearches(updated);
     localStorage.setItem("olma_recent_searches", JSON.stringify(updated));
   };
@@ -150,13 +162,17 @@ export const SearchOverlay: React.FC = () => {
 
   const highlightMatch = (text: string, query: string) => {
     if (!query) return text;
-    const parts = text.split(new RegExp(`(${query})`, 'gi'));
+    const parts = text.split(new RegExp(`(${query})`, "gi"));
     return (
       <span>
-        {parts.map((part, i) => 
-          part.toLowerCase() === query.toLowerCase() 
-            ? <b key={i} className="text-[#F37021] font-extrabold bg-[#F37021]/15 px-1 rounded">{part}</b> 
-            : <span key={i}>{part}</span>
+        {parts.map((part, i) =>
+          part.toLowerCase() === query.toLowerCase() ? (
+            <b key={i} className="text-[#F37021] font-extrabold bg-[#F37021]/15 px-1 rounded">
+              {part}
+            </b>
+          ) : (
+            <span key={i}>{part}</span>
+          )
         )}
       </span>
     );
@@ -186,7 +202,7 @@ export const SearchOverlay: React.FC = () => {
                 <span>{t("common.key_k", "K")}</span>
               </div>
             </div>
-            
+
             <button
               onClick={() => setIsSearchOpen(false)}
               className="p-3 bg-white hover:bg-[#121315]/5 border border-[#EBE5DF] hover:border-[#F37021]/30 text-[#121315] rounded-full transition-all duration-300 hover:rotate-90 cursor-pointer flex items-center justify-center shadow-sm hover:shadow-md"
@@ -204,14 +220,16 @@ export const SearchOverlay: React.FC = () => {
               className="w-full"
             >
               <form onSubmit={handleSearchSubmit} className="relative group">
-                <div className={`absolute inset-y-0 ${isRtl ? "right-6" : "left-6"} flex items-center pointer-events-none text-zinc-400 group-focus-within:text-[#F37021] transition-all`}>
+                <div
+                  className={`absolute inset-y-0 ${isRtl ? "right-6" : "left-6"} flex items-center pointer-events-none text-zinc-400 group-focus-within:text-[#F37021] transition-all`}
+                >
                   {isSearching ? (
                     <Loader2 className="w-7 h-7 animate-spin text-[#F37021]" />
                   ) : (
                     <Search className="w-7 h-7" />
                   )}
                 </div>
-                
+
                 <input
                   ref={inputRef}
                   type="text"
@@ -265,13 +283,13 @@ export const SearchOverlay: React.FC = () => {
                     {recentSearches.length > 0 ? (
                       <ul className="space-y-1">
                         {recentSearches.map((term, i) => (
-                          <li 
+                          <li
                             key={i}
                             onClick={() => selectSearchTerm(term)}
                             className="flex items-center justify-between py-2.5 px-4 rounded-xl border border-[#EBE5DF] hover:border-[#F37021]/30 bg-white hover:bg-stone-50 text-[14px] font-medium text-[#121315] hover:text-[#F37021] transition-all cursor-pointer group shadow-sm hover:shadow"
                           >
                             <span className="truncate">{term}</span>
-                            <button 
+                            <button
                               onClick={(e) => handleDeleteRecent(term, e)}
                               className="text-zinc-400 hover:text-red-500 p-1 bg-transparent border-none cursor-pointer transition-colors opacity-80 md:opacity-0 group-hover:opacity-100"
                             >
@@ -281,7 +299,9 @@ export const SearchOverlay: React.FC = () => {
                         ))}
                       </ul>
                     ) : (
-                      <p className="text-zinc-500 text-xs rtl:text-sm px-2 py-4 italic">{t("Aucun historique de recherche.")}</p>
+                      <p className="text-zinc-500 text-xs rtl:text-sm px-2 py-4 italic">
+                        {t("Aucun historique de recherche.")}
+                      </p>
                     )}
                   </div>
 
@@ -310,100 +330,114 @@ export const SearchOverlay: React.FC = () => {
                   {isSearching ? (
                     <div className="py-24 flex flex-col justify-center items-center gap-4">
                       <Loader2 className="w-10 h-10 animate-spin text-[#F37021]" />
-                      <span className="text-sm text-zinc-400 font-medium">{t("Recherche en cours dans les 58 wilayas...")}</span>
+                      <span className="text-sm text-zinc-400 font-medium">
+                        {t("Recherche en cours dans les 58 wilayas...")}
+                      </span>
                     </div>
                   ) : results.length > 0 || matchedStores.length > 0 ? (
                     <div className="space-y-8">
-                    
                       {/* Stores Section */}
                       {matchedStores.length > 0 && (
-                          <div className="space-y-4">
-                            <div className="flex items-center gap-4 pb-2 border-b border-[#EBE5DF]">
-                               <h4 className="text-sm font-semibold uppercase tracking-wider text-zinc-800 flex items-center gap-2">
-                                <Sparkles className="w-4 h-4 text-[#F37021]" />
-                                {t("matching_stores") || "Boutiques correspondantes"}
-                               </h4>
-                            </div>
-                            <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                              {matchedStores.map((store) => (
-                                <li key={store.id || store.uid}>
-                                  <button
-                                    onClick={() => {
-                                      navigate(`/store/${store.id || store.uid}`);
-                                      setIsSearchOpen(false);
-                                    }}
-                                    className="w-full text-left p-4 hover:bg-orange-50/50 flex items-center gap-4 group transition-colors rounded-2xl outline-none border border-transparent hover:border-[#F37021]/30 hover:shadow-sm cursor-pointer"
-                                  >
-                                    <div className="w-14 h-14 rounded-xl bg-white overflow-hidden flex-shrink-0 border border-[#EBE5DF]">
-                                      {store.logoUrl ? (
-                                        <img loading="lazy" src={store.logoUrl} alt={store.shopName || store.displayName} className="w-full h-full object-cover" />
-                                      ) : (
-                                        <div className="w-full h-full bg-slate-100 flex items-center justify-center">
-                                           <span className="text-slate-400 font-black text-2xl uppercase">{(store.shopName || store.displayName || 'B').charAt(0)}</span>
-                                        </div>
-                                      )}
-                                    </div>
-                                    <div className="flex flex-col flex-1 overflow-hidden">
-                                      <span className="font-semibold text-[15px] text-[#121315] group-hover:text-[#F37021] truncate transition-colors">
-                                        {store.shopName || store.displayName}
-                                      </span>
-                                      <span className="text-[12px] font-medium text-zinc-500 uppercase tracking-wider mt-1 truncate">
-                                        {t("Wilaya")} {store.wilaya ? store.wilaya : "58"}
-                                      </span>
-                                    </div>
-                                    <ArrowRight className="w-4 h-4 text-zinc-300 group-hover:text-[#F37021] group-hover:translate-x-1 transition-all" />
-                                  </button>
-                                </li>
-                              ))}
-                            </ul>
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-4 pb-2 border-b border-[#EBE5DF]">
+                            <h4 className="text-sm font-semibold uppercase tracking-wider text-zinc-800 flex items-center gap-2">
+                              <Sparkles className="w-4 h-4 text-[#F37021]" />
+                              {t("matching_stores") || "Boutiques correspondantes"}
+                            </h4>
                           </div>
+                          <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {matchedStores.map((store) => (
+                              <li key={store.id || store.uid}>
+                                <button
+                                  onClick={() => {
+                                    navigate(`/store/${store.id || store.uid}`);
+                                    setIsSearchOpen(false);
+                                  }}
+                                  className="w-full text-left p-4 hover:bg-orange-50/50 flex items-center gap-4 group transition-colors rounded-2xl outline-none border border-transparent hover:border-[#F37021]/30 hover:shadow-sm cursor-pointer"
+                                >
+                                  <div className="w-14 h-14 rounded-xl bg-white overflow-hidden flex-shrink-0 border border-[#EBE5DF]">
+                                    {store.logoUrl ? (
+                                      <img
+                                        loading="lazy"
+                                        src={store.logoUrl}
+                                        alt={store.shopName || store.displayName}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full bg-slate-100 flex items-center justify-center">
+                                        <span className="text-slate-400 font-black text-2xl uppercase">
+                                          {(store.shopName || store.displayName || "B").charAt(0)}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex flex-col flex-1 overflow-hidden">
+                                    <span className="font-semibold text-[15px] text-[#121315] group-hover:text-[#F37021] truncate transition-colors">
+                                      {store.shopName || store.displayName}
+                                    </span>
+                                    <span className="text-[12px] font-medium text-zinc-500 uppercase tracking-wider mt-1 truncate">
+                                      {t("Wilaya")} {store.wilaya ? store.wilaya : "58"}
+                                    </span>
+                                  </div>
+                                  <ArrowRight className="w-4 h-4 text-zinc-300 group-hover:text-[#F37021] group-hover:translate-x-1 transition-all" />
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       )}
 
                       {/* Products Section */}
                       {results.length > 0 && (
-                          <div className="space-y-4">
-                            <div className="flex justify-between items-center gap-4 pb-2 border-b border-[#EBE5DF]">
-                              <h4 className="text-sm font-semibold uppercase tracking-wider rtl:tracking-normal text-zinc-800 flex items-center gap-2">
-                                <Sparkles className="w-4 h-4 text-[#F37021]" />
-                                {t("search_matching_title") || "Créations correspondantes"}
-                              </h4>
-                              <span className="text-xs rtl:text-sm font-medium text-zinc-500">
-                                {results.length} {t("articles") || "articles"}
-                              </span>
-                            </div>
-                            
-                            <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                              {results.slice(0, 9).map((product) => {
-                          
-                          return (
-                                                  <li key={product.id}>
-                                                    <button 
-                                                      onClick={() => navigateToProduct(product.id, product.name)}
-                                                      className="w-full text-start p-4 bg-white hover:bg-stone-50 flex items-center gap-4 group transition-all rounded-2xl outline-none border border-[#EBE5DF] hover:border-[#F37021]/30 cursor-pointer shadow-sm hover:shadow-md"
-                                                    >
-                                                      <div className="w-16 h-16 rounded-xl bg-white overflow-hidden flex-shrink-0 border border-[#EBE5DF] group-hover:border-[#F37021]/50 shadow-inner">
-                                                        <img loading="lazy" src={getOptimizedImageUrl(product.image, 200)} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" referrerPolicy="no-referrer" />
-                                                      </div>
-                                                      <div className="flex flex-col text-start overflow-hidden min-w-0 flex-grow">
-                                                        <span className="font-semibold text-[15px] text-[#121315] group-hover:text-[#F37021] transition-all truncate">
-                                                          {highlightMatch(product.name, localSearch)}
-                                                        </span>
-                                                        <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest rtl:tracking-normal mt-1 truncate">
-                                                          {product.category} {t("• Wilaya")}{product.wilaya ? product.wilaya : "58"}
-                                                        </span>
-                                                        <span className="text-sm font-serif italic text-stone-700 mt-1 font-bold">
-                                                          {formatPrice(product.price)}
-                                                        </span>
-                                                      </div>
-                                                      <div className="shrink-0 p-2 bg-stone-100 rounded-full group-hover:bg-[#F37021] group-hover:text-white text-zinc-400 transition-all">
-                                                        <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                                                      </div>
-                                                    </button>
-                                                  </li>
-                                                );
-                        })}
-                      </ul>
-                      </div>
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center gap-4 pb-2 border-b border-[#EBE5DF]">
+                            <h4 className="text-sm font-semibold uppercase tracking-wider rtl:tracking-normal text-zinc-800 flex items-center gap-2">
+                              <Sparkles className="w-4 h-4 text-[#F37021]" />
+                              {t("search_matching_title") || "Créations correspondantes"}
+                            </h4>
+                            <span className="text-xs rtl:text-sm font-medium text-zinc-500">
+                              {results.length} {t("articles") || "articles"}
+                            </span>
+                          </div>
+
+                          <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {results.slice(0, 9).map((product) => {
+                              return (
+                                <li key={product.id}>
+                                  <button
+                                    onClick={() => navigateToProduct(product.id, product.name)}
+                                    className="w-full text-start p-4 bg-white hover:bg-stone-50 flex items-center gap-4 group transition-all rounded-2xl outline-none border border-[#EBE5DF] hover:border-[#F37021]/30 cursor-pointer shadow-sm hover:shadow-md"
+                                  >
+                                    <div className="w-16 h-16 rounded-xl bg-white overflow-hidden flex-shrink-0 border border-[#EBE5DF] group-hover:border-[#F37021]/50 shadow-inner">
+                                      <img
+                                        loading="lazy"
+                                        src={getOptimizedImageUrl(product.image, 200)}
+                                        alt={product.name}
+                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                        referrerPolicy="no-referrer"
+                                      />
+                                    </div>
+                                    <div className="flex flex-col text-start overflow-hidden min-w-0 flex-grow">
+                                      <span className="font-semibold text-[15px] text-[#121315] group-hover:text-[#F37021] transition-all truncate">
+                                        {highlightMatch(product.name, localSearch)}
+                                      </span>
+                                      <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest rtl:tracking-normal mt-1 truncate">
+                                        {product.category} {t("• Wilaya")}
+                                        {product.wilaya ? product.wilaya : "58"}
+                                      </span>
+                                      <span className="text-sm font-serif italic text-stone-700 mt-1 font-bold">
+                                        {formatPrice(product.price)}
+                                      </span>
+                                    </div>
+                                    <div className="shrink-0 p-2 bg-stone-100 rounded-full group-hover:bg-[#F37021] group-hover:text-white text-zinc-400 transition-all">
+                                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                                    </div>
+                                  </button>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
                       )}
 
                       <div className="pt-6 flex justify-center">
@@ -417,11 +451,7 @@ export const SearchOverlay: React.FC = () => {
                     </div>
                   ) : (
                     /* Zero results found fallback alert + recommended carousel items */
-                    <motion.div
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="space-y-8"
-                    >
+                    <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
                       <div className="bg-white border border-[#F37021]/20 rounded-3xl p-8 flex flex-col items-center justify-center text-center space-y-4 shadow-xl max-w-2xl mx-auto backdrop-blur-md">
                         <div className="w-14 h-14 bg-[#F37021]/10 rounded-full flex items-center justify-center text-[#F37021]">
                           <Search className="w-7 h-7" />
@@ -430,10 +460,11 @@ export const SearchOverlay: React.FC = () => {
                           {t("search_no_results") || "Aucun résultat pour"} "{localSearch}"
                         </span>
                         <p className="text-sm text-zinc-500 max-w-md">
-                          {t("search_no_results_desc") || "Nous n'avons pas trouvé de correspondance exacte, mais voici d'autres créations uniques."}
+                          {t("search_no_results_desc") ||
+                            "Nous n'avons pas trouvé de correspondance exacte, mais voici d'autres créations uniques."}
                         </p>
                       </div>
-                      
+
                       {recommendedProducts.length > 0 && (
                         <div className="space-y-5 max-w-5xl mx-auto pt-4">
                           <h4 className="text-xs rtl:text-sm font-bold uppercase tracking-widest rtl:tracking-normal text-zinc-500 flex items-center gap-2 pb-2 border-b border-[#EBE5DF]">
@@ -442,13 +473,19 @@ export const SearchOverlay: React.FC = () => {
                           </h4>
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             {recommendedProducts.map((p) => (
-                              <button 
+                              <button
                                 key={p.id}
                                 onClick={() => navigateToProduct(p.id, p.name)}
                                 className="p-4 bg-white hover:bg-stone-50 border border-[#EBE5DF] hover:border-[#F37021]/30 rounded-2xl transition-all cursor-pointer flex flex-col text-start group shadow-sm hover:shadow-md"
                               >
                                 <div className="w-full aspect-square rounded-xl overflow-hidden bg-white border border-[#EBE5DF] relative">
-                                  <img loading="lazy" src={getOptimizedImageUrl(p.image, 400)} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
+                                  <img
+                                    loading="lazy"
+                                    src={getOptimizedImageUrl(p.image, 400)}
+                                    alt={p.name}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                    referrerPolicy="no-referrer"
+                                  />
                                 </div>
                                 <span className="font-semibold text-sm text-[#121315] group-hover:text-[#F37021] truncate transition-colors mt-3 w-full">
                                   {p.name}
@@ -458,7 +495,7 @@ export const SearchOverlay: React.FC = () => {
                                     {p.category}
                                   </span>
                                   <span className="text-xs rtl:text-sm font-bold text-zinc-500">
-                                    {p.wilaya ? `${t('wilaya', 'Wilaya')} ${p.wilaya}` : t('wilayas_58', '58 Wilayas')}
+                                    {p.wilaya ? `${t("wilaya", "Wilaya")} ${p.wilaya}` : t("wilayas_58", "58 Wilayas")}
                                   </span>
                                 </div>
                                 <span className="text-sm font-semibold text-[#F37021] mt-2 font-mono">

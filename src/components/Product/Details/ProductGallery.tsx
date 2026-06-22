@@ -27,15 +27,15 @@ export const ProductGallery: React.FC<GalleryProps> = ({
 }) => {
   return (
     <div className="space-y-4">
-      <div 
+      <div
         onClick={onOpenLightbox}
         onContextMenu={(e) => e.preventDefault()}
         className="relative aspect-[4/5] rounded-[2rem] overflow-hidden bg-white shadow-xl shadow-zinc-200/50 group cursor-pointer"
       >
         <div className="hidden md:block w-full h-full">
-          <ImageMagnifier 
-            src={getOptimizedImageUrl(images[selectedIndex], 800)} 
-            alt={productName} 
+          <ImageMagnifier
+            src={getOptimizedImageUrl(images[selectedIndex], 800)}
+            alt={productName}
             className="w-full h-full"
           />
         </div>
@@ -80,7 +80,8 @@ export const ProductGallery: React.FC<GalleryProps> = ({
               onContextMenu={(e) => e.preventDefault()}
               className={`w-20 h-28 rounded-xl overflow-hidden border-[3px] transition-all shrink-0 ${selectedIndex === i ? "border-[#F37021] shadow-md shadow-[#F37021]/20 scale-95" : "border-white shadow-sm hover:border-zinc-200"}`}
             >
-              <img loading="lazy"
+              <img
+                loading="lazy"
                 src={getOptimizedImageUrl(img, 200)}
                 draggable={false}
                 className="w-full h-full object-cover select-none pointer-events-none"

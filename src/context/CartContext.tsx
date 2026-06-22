@@ -25,8 +25,8 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const auth = useAuth() || { currentUser: null };
   const prevUserRef = useRef<any>(null);
-  const getWishlistKey = () => auth.currentUser ? `olma_wishlist_${auth.currentUser.uid}` : "olma_wishlist_guest";
-  const getCartKey = () => auth.currentUser ? `olma_cart_${auth.currentUser.uid}` : "olma_cart_guest";
+  const getWishlistKey = () => (auth.currentUser ? `olma_wishlist_${auth.currentUser.uid}` : "olma_wishlist_guest");
+  const getCartKey = () => (auth.currentUser ? `olma_cart_${auth.currentUser.uid}` : "olma_cart_guest");
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
@@ -40,7 +40,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Hydrate cart from Firestore (prices/names) to avoid stale data
   const hydrateCart = async (cartItems: any[]) => {
     if (!cartItems || cartItems.length === 0) return [];
-    
+
     const uniqueIds = Array.from(new Set(cartItems.map((item) => item.id)));
     const productDataMap = new Map<string, any>();
     const chunkSize = 30;
@@ -70,7 +70,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           flashSaleActive: pData.flashSaleActive,
           flashPrice: pData.flashPrice,
           image: pData.image || pData.images?.[0] || item.image,
-          variants: pData.variants || item.variants
+          variants: pData.variants || item.variants,
         };
       }
       return item; // fallback
@@ -85,10 +85,18 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       let finalCart: CartItem[] = [];
       let finalWishlist: string[] = [];
 
+      const safeParse = (data: string | null, fallback: any) => {
+        try {
+          return data ? JSON.parse(data) : fallback;
+        } catch (e) {
+          return fallback;
+        }
+      };
+
       const guestCartJson = localStorage.getItem("olma_cart_guest");
-      const guestCart = guestCartJson ? JSON.parse(guestCartJson) : [];
+      const guestCart = safeParse(guestCartJson, []);
       const guestWishlistJson = localStorage.getItem("olma_wishlist_guest");
-      const guestWishlist = guestWishlistJson ? JSON.parse(guestWishlistJson) : [];
+      const guestWishlist = safeParse(guestWishlistJson, []);
 
       if (auth.currentUser) {
         // User is logged in
@@ -98,46 +106,47 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // 1. Fetch user data from Cloud
         const cartRef = doc(db, `users/${auth.currentUser.uid}/cart`, "active");
         const wishRef = doc(db, `users/${auth.currentUser.uid}/wishlist`, "active");
-        
+
         const [cartSnap, wishSnap] = await Promise.all([getDoc(cartRef), getDoc(wishRef)]);
-        
+
         let cloudCart = cartSnap.exists() ? cartSnap.data().items || [] : [];
         let cloudWishlist = wishSnap.exists() ? wishSnap.data().items || [] : [];
 
         // 2. Fallback to localStorage if cloud is empty
         if (cloudCart.length === 0) {
-           const localUserCart = localStorage.getItem(userCartKey);
-           if (localUserCart) cloudCart = JSON.parse(localUserCart);
+          const localUserCart = localStorage.getItem(userCartKey);
+          if (localUserCart) cloudCart = safeParse(localUserCart, []);
         }
         if (cloudWishlist.length === 0) {
-           const localUserWish = localStorage.getItem(userWishlistKey);
-           if (localUserWish) cloudWishlist = JSON.parse(localUserWish);
+          const localUserWish = localStorage.getItem(userWishlistKey);
+          if (localUserWish) cloudWishlist = safeParse(localUserWish, []);
         }
 
         // 3. MERGE Guest Cart into User Cart if transition just happened
         if (!prevUserRef.current && guestCart.length > 0) {
-           guestCart.forEach((gItem: any) => {
-              const existingMerge = cloudCart.find((c: any) => c.id === gItem.id && c.selectedVariant === gItem.selectedVariant);
-              if (existingMerge) {
-                 existingMerge.quantity += (gItem.quantity || 1);
-              } else {
-                 cloudCart.push(gItem);
-              }
-           });
-           localStorage.removeItem("olma_cart_guest");
+          guestCart.forEach((gItem: any) => {
+            const existingMerge = cloudCart.find(
+              (c: any) => c.id === gItem.id && c.selectedVariant === gItem.selectedVariant
+            );
+            if (existingMerge) {
+              existingMerge.quantity += gItem.quantity || 1;
+            } else {
+              cloudCart.push(gItem);
+            }
+          });
+          localStorage.removeItem("olma_cart_guest");
         }
 
         // Merge wishlist
         if (!prevUserRef.current && guestWishlist.length > 0) {
-           guestWishlist.forEach((wId: string) => {
-              if (!cloudWishlist.includes(wId)) cloudWishlist.push(wId);
-           });
-           localStorage.removeItem("olma_wishlist_guest");
+          guestWishlist.forEach((wId: string) => {
+            if (!cloudWishlist.includes(wId)) cloudWishlist.push(wId);
+          });
+          localStorage.removeItem("olma_wishlist_guest");
         }
 
         finalCart = cloudCart;
         finalWishlist = cloudWishlist;
-
       } else {
         // User is guest
         finalCart = guestCart;
@@ -167,26 +176,25 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.setItem(userWishlistKey, JSON.stringify(wishlist));
 
     if (auth.currentUser) {
-       // Persist to Firestore
-       const cartRef = doc(db, `users/${auth.currentUser.uid}/cart`, "active");
-       const wishRef = doc(db, `users/${auth.currentUser.uid}/wishlist`, "active");
+      // Persist to Firestore
+      const cartRef = doc(db, `users/${auth.currentUser.uid}/cart`, "active");
+      const wishRef = doc(db, `users/${auth.currentUser.uid}/wishlist`, "active");
 
-       // Cloud stores only pointers for cart
-       const cartPointers = cart.map(item => ({
-          id: item.id,
-          sellerId: item.sellerId,
-          quantity: item.quantity,
-          selectedVariant: item.selectedVariant || null,
-          addedAt: item.addedAt || Date.now()
-       }));
+      // Cloud stores only pointers for cart
+      const cartPointers = cart.map((item) => ({
+        id: item.id,
+        sellerId: item.sellerId,
+        quantity: item.quantity,
+        selectedVariant: item.selectedVariant || null,
+        addedAt: item.addedAt || Date.now(),
+      }));
 
-       Promise.all([
-         setDoc(cartRef, { items: cartPointers, updatedAt: Date.now() }, { merge: true }),
-         setDoc(wishRef, { items: wishlist }, { merge: true })
-       ]).catch(err => console.error("Error syncing to cloud", err));
+      Promise.all([
+        setDoc(cartRef, { items: cartPointers, updatedAt: Date.now() }, { merge: true }),
+        setDoc(wishRef, { items: wishlist }, { merge: true }),
+      ]).catch((err) => console.error("Error syncing to cloud", err));
     }
   }, [cart, wishlist, isInitialized, auth.currentUser]);
-
 
   const addToCart = (productOrId: any, sellerIdOrOptions?: any, options?: any) => {
     let productId: string;
@@ -206,7 +214,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         flashSaleActive: productOrId.flashSaleActive,
         flashPrice: productOrId.flashPrice,
         image: productOrId.image || productOrId.images?.[0],
-        variants: productOrId.variants
+        variants: productOrId.variants,
       };
     } else {
       // Called with (productId, sellerId, options)
@@ -219,33 +227,36 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const quantityToAdd = actualOptions?.quantity || 1;
       const selectedVariant = actualOptions?.selectedVariant || null;
 
-      const existingItemIndex = prev.findIndex(item => {
-         const v1 = item.selectedVariant || null;
-         const v2 = selectedVariant || null;
-         return item.id === productId && v1 === v2;
+      const existingItemIndex = prev.findIndex((item) => {
+        const v1 = item.selectedVariant || null;
+        const v2 = selectedVariant || null;
+        return item.id === productId && v1 === v2;
       });
 
       if (existingItemIndex !== -1) {
-         // Increment quantity of existing item with matching variant
-         const newCart = [...prev];
-         newCart[existingItemIndex] = {
-            ...newCart[existingItemIndex],
-            quantity: newCart[existingItemIndex].quantity + quantityToAdd,
-            addedAt: Date.now()
-         };
-         return newCart;
+        // Increment quantity of existing item with matching variant
+        const newCart = [...prev];
+        newCart[existingItemIndex] = {
+          ...newCart[existingItemIndex],
+          quantity: newCart[existingItemIndex].quantity + quantityToAdd,
+          addedAt: Date.now(),
+        };
+        return newCart;
       }
 
       // Add a clean pointer reference with quantity
-      return [...prev, { 
-         id: productId,
-         sellerId: sellerId,
-         quantity: quantityToAdd,
-         selectedVariant: selectedVariant,
-         addedAt: Date.now(),
-         ...initialDetails,
-         ...actualOptions 
-      }];
+      return [
+        ...prev,
+        {
+          id: productId,
+          sellerId: sellerId,
+          quantity: quantityToAdd,
+          selectedVariant: selectedVariant,
+          addedAt: Date.now(),
+          ...initialDetails,
+          ...actualOptions,
+        },
+      ];
     });
 
     // Asynchronously fetch complete details with deduplication to ensure freshness, preventing race conditions
@@ -253,19 +264,21 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // 1. Check local cache map to instantly apply details
       if (productDetailsCache.current[productId]) {
         const pData = productDetailsCache.current[productId];
-        setCart(prev => prev.map(item => {
-          if (item.id === productId) {
-             return {
+        setCart((prev) =>
+          prev.map((item) => {
+            if (item.id === productId) {
+              return {
                 ...item,
                 name: pData.name,
                 price: pData.price,
                 promoPrice: pData.promoPrice,
                 image: pData.image || pData.images?.[0] || item.image,
-                variants: pData.variants || item.variants
-             };
-          }
-          return item;
-        }));
+                variants: pData.variants || item.variants,
+              };
+            }
+            return item;
+          })
+        );
         return;
       }
 
@@ -274,19 +287,21 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         try {
           const pData = await activeProductFetches.current[productId];
           if (pData) {
-            setCart(prev => prev.map(item => {
-              if (item.id === productId) {
-                 return {
+            setCart((prev) =>
+              prev.map((item) => {
+                if (item.id === productId) {
+                  return {
                     ...item,
                     name: pData.name,
                     price: pData.price,
                     promoPrice: pData.promoPrice,
                     image: pData.image || pData.images?.[0] || item.image,
-                    variants: pData.variants || item.variants
-                 };
-              }
-              return item;
-            }));
+                    variants: pData.variants || item.variants,
+                  };
+                }
+                return item;
+              })
+            );
           }
         } catch (e) {
           console.warn("Deduplicated background fetch catch:", e);
@@ -296,54 +311,54 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       // 3. Spawns a single atomic fetch promise and register it
       const fetchPromise = (async () => {
-         const productSnap = await getDoc(doc(db, "products", productId));
-         if (productSnap.exists()) {
-            const data = productSnap.data();
-            productDetailsCache.current[productId] = data;
-            return data;
-         }
-         return null;
+        const productSnap = await getDoc(doc(db, "products", productId));
+        if (productSnap.exists()) {
+          const data = productSnap.data();
+          productDetailsCache.current[productId] = data;
+          return data;
+        }
+        return null;
       })();
 
       activeProductFetches.current[productId] = fetchPromise;
 
       try {
-         const pData = await fetchPromise;
-         if (pData) {
-            setCart(prev => {
-               return prev.map(item => {
-                  if (item.id === productId) {
-                     return {
-                        ...item,
-                        name: pData.name,
-                        price: pData.price,
-                        promoPrice: pData.promoPrice,
-                        image: pData.image || pData.images?.[0] || item.image,
-                        variants: pData.variants || item.variants
-                     };
-                  }
-                  return item;
-               });
+        const pData = await fetchPromise;
+        if (pData) {
+          setCart((prev) => {
+            return prev.map((item) => {
+              if (item.id === productId) {
+                return {
+                  ...item,
+                  name: pData.name,
+                  price: pData.price,
+                  promoPrice: pData.promoPrice,
+                  image: pData.image || pData.images?.[0] || item.image,
+                  variants: pData.variants || item.variants,
+                };
+              }
+              return item;
             });
-         }
+          });
+        }
       } catch (err) {
-         console.warn("Background fetch of product details skipped:", err);
+        console.warn("Background fetch of product details skipped:", err);
       } finally {
-         delete activeProductFetches.current[productId];
+        delete activeProductFetches.current[productId];
       }
     };
     fetchLatestDetails();
-    
+
     setIsCartOpen(true);
   };
 
   const removeFromCart = (index: number) => {
     const item = cart[index];
     if (item) {
-      analyticsEngine.track('remove_from_cart', {
+      analyticsEngine.track("remove_from_cart", {
         productId: item.id,
         name: item.name,
-        price: item.price
+        price: item.price,
       });
     }
     setCart((prev) => prev.filter((_, i) => i !== index));
@@ -351,7 +366,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const clearCart = (sellerId?: string) => {
     if (sellerId) {
-      setCart((prev) => prev.filter(item => item.sellerId !== sellerId));
+      setCart((prev) => prev.filter((item) => item.sellerId !== sellerId));
     } else {
       setCart([]);
     }
@@ -377,23 +392,31 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const getCartItemPrice = (item: CartItem) => {
-    const isFlashActive = !!(item.flashSaleActive && item.flashPrice && (!item.flashEndDate || new Date(item.flashEndDate).getTime() > Date.now()));
-    const rawPrice: any = isFlashActive ? item.flashPrice : (item.promoPrice !== undefined && item.promoPrice !== null && (item.promoPrice as any) !== '' ? item.promoPrice : item.price);
+    const isFlashActive = !!(
+      item.flashSaleActive &&
+      item.flashPrice &&
+      (!item.flashEndDate || new Date(item.flashEndDate).getTime() > Date.now())
+    );
+    const rawPrice: any = isFlashActive
+      ? item.flashPrice
+      : item.promoPrice !== undefined && item.promoPrice !== null && (item.promoPrice as any) !== ""
+        ? item.promoPrice
+        : item.price;
     let targetPrice = 0;
-    
+
     if (rawPrice !== undefined && rawPrice !== null) {
-      if (typeof rawPrice === 'number') {
+      if (typeof rawPrice === "number") {
         targetPrice = rawPrice;
-      } else if (typeof rawPrice === 'string' && rawPrice.trim() !== '') {
-        const cleanStr = rawPrice.replace(/[^\d.]/g, '');
+      } else if (typeof rawPrice === "string" && rawPrice.trim() !== "") {
+        const cleanStr = rawPrice.replace(/[^\d.]/g, "");
         targetPrice = parseFloat(cleanStr) || 0;
       }
     }
-    
+
     if (item.selectedVariant && item.variants && Array.isArray(item.variants)) {
       const variant = item.variants.find((v: any) => v.name === item.selectedVariant);
       if (variant) {
-        if (variant.priceOverride !== undefined && variant.priceOverride !== null && variant.priceOverride !== '') {
+        if (variant.priceOverride !== undefined && variant.priceOverride !== null && variant.priceOverride !== "") {
           targetPrice = Number(variant.priceOverride) || 0;
         } else if (variant.priceDiff) {
           targetPrice += Number(variant.priceDiff) || 0;
@@ -403,17 +426,15 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return isNaN(targetPrice) ? 0 : targetPrice;
   };
 
-  const totalPrice = cart.reduce((sum, item) => sum + (getCartItemPrice(item) * (item.quantity || 1)), 0);
+  const totalPrice = cart.reduce((sum, item) => sum + getCartItemPrice(item) * (item.quantity || 1), 0);
 
   const toggleWishlist = (id: string) => {
     const isAdding = !wishlist.includes(id);
-    analyticsEngine.track('wishlist_toggle', {
+    analyticsEngine.track("wishlist_toggle", {
       productId: id,
-      action: isAdding ? 'add' : 'remove'
+      action: isAdding ? "add" : "remove",
     });
-    setWishlist((prev) =>
-      prev.includes(id) ? prev.filter((wishId) => wishId !== id) : [...prev, id]
-    );
+    setWishlist((prev) => (prev.includes(id) ? prev.filter((wishId) => wishId !== id) : [...prev, id]));
   };
 
   return (
@@ -445,4 +466,3 @@ export const useCart = () => {
   }
   return context;
 };
-

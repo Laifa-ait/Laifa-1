@@ -36,7 +36,7 @@ class AnalyticsEngine {
 
       // Logger for development transparency
       if ((import.meta as any).env?.DEV) {
-        console.log(
+        (process.env.NODE_ENV === 'debug' ? console.log : function(){})(
           `%c[Olma Analytics Engine] %cTracked "${name}"`,
           'color: #ea580c; font-weight: bold;',
           'color: #3f3f46;',

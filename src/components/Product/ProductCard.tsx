@@ -6,10 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { Product } from "../../types";
 import { formatPrice } from "../../utils/format";
-import {
-  getCategoryTranslation,
-  getTranslatedField,
-} from "../../utils/translations";
+import { getCategoryTranslation, getTranslatedField } from "../../utils/translations";
 import { getOptimizedImageUrl } from "../../utils/imageUtils";
 
 interface ProductCardProps {
@@ -36,7 +33,11 @@ export const ProductCard = React.memo(
     const { wishlist, toggleWishlist } = useCart();
     const navigate = useNavigate();
     const lang = i18n.language as any;
-    const isProductFlashActive = !!(product.flashSaleActive && product.flashPrice && (!product.flashEndDate || new Date(product.flashEndDate).getTime() > Date.now()));
+    const isProductFlashActive = !!(
+      product.flashSaleActive &&
+      product.flashPrice &&
+      (!product.flashEndDate || new Date(product.flashEndDate).getTime() > Date.now())
+    );
     const isFlashSale = (variant === "flash_sale" || isFlashSaleProp === true) && isProductFlashActive;
 
     const defaultClick = (prod: Product) => {
@@ -48,9 +49,7 @@ export const ProductCard = React.memo(
     };
 
     const getSpelledCorrectly = (str: string) => {
-      return str
-        .replace(/CHASSURE/gi, "Chaussure")
-        .replace(/Chassure/gi, "Chaussure");
+      return str.replace(/CHASSURE/gi, "Chaussure").replace(/Chassure/gi, "Chaussure");
     };
 
     return (
@@ -69,9 +68,7 @@ export const ProductCard = React.memo(
             <img
               loading="lazy"
               src={getOptimizedImageUrl(product.image, 400)}
-              alt={getSpelledCorrectly(
-                getTranslatedField(product, "name", lang),
-              )}
+              alt={getSpelledCorrectly(getTranslatedField(product, "name", lang))}
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               referrerPolicy="no-referrer"
               onError={(e) => {
@@ -86,12 +83,7 @@ export const ProductCard = React.memo(
             <div className="absolute top-3 right-3 flex items-center gap-1.5 z-20">
               {product.promoPrice && product.promoPrice < product.price && (
                 <span className="bg-[#C95D3B] text-white px-2 py-1 text-[10px] rtl:text-[12px] font-bold rounded">
-                  -
-                  {Math.round(
-                    ((product.price - product.promoPrice) / product.price) *
-                      100,
-                  )}
-                  %
+                  -{Math.round(((product.price - product.promoPrice) / product.price) * 100)}%
                 </span>
               )}
               <button
@@ -111,18 +103,14 @@ export const ProductCard = React.memo(
             {/* Content OVER image */}
             <div className="relative z-10 w-full p-4 flex flex-col">
               <span className="font-mono text-[9px] rtl:text-[11px] uppercase tracking-widest rtl:tracking-normal text-zinc-300 mb-0.5">
-                {getCategoryTranslation(product.category, t) ||
-                  product.category ||
-                  "Mode"}
+                {getCategoryTranslation(product.category, t) || product.category || "Mode"}
               </span>
               <h3 className="font-sans font-bold text-white text-[14px] sm:text-[16px] leading-tight line-clamp-1 mb-0.5 drop-shadow-md">
                 {getSpelledCorrectly(getTranslatedField(product, "name", lang))}
               </h3>
               <div className="flex items-center gap-1.5 text-zinc-400 mb-2 font-mono text-[9px] rtl:text-[11px] tracking-wider rtl:tracking-normal uppercase">
                 <Store className="w-3 h-3 text-[#F37021]" />
-                <span className="truncate max-w-[120px]">
-                  {product.sellerName || "Olma Seller"}
-                </span>
+                <span className="truncate max-w-[120px]">{product.sellerName || "Olma Seller"}</span>
               </div>
 
               <div className="flex items-center gap-2 mb-1">
@@ -130,9 +118,7 @@ export const ProductCard = React.memo(
                   {formatPrice(product.promoPrice || product.price)}
                 </span>
                 {product.promoPrice && product.promoPrice < product.price && (
-                  <span className="font-mono text-[11px] text-zinc-500 line-through">
-                    {formatPrice(product.price)}
-                  </span>
+                  <span className="font-mono text-[11px] text-zinc-500 line-through">{formatPrice(product.price)}</span>
                 )}
               </div>
             </div>
@@ -144,9 +130,7 @@ export const ProductCard = React.memo(
               <img
                 loading="lazy"
                 src={getOptimizedImageUrl(product.image, 400)}
-                alt={getSpelledCorrectly(
-                  getTranslatedField(product, "name", lang),
-                )}
+                alt={getSpelledCorrectly(getTranslatedField(product, "name", lang))}
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 referrerPolicy="no-referrer"
                 onError={(e) => {
@@ -162,36 +146,31 @@ export const ProductCard = React.memo(
                 <div className="flex flex-col gap-2">
                   {product.isSponsored && (
                     <span className="inline-flex items-center gap-1 bg-stone-900 text-white font-mono text-[9px] rtl:text-[11px] uppercase tracking-widest rtl:tracking-normal px-2 py-1 rounded-sm shadow-sm">
-                      <Zap className="w-3 h-3 fill-white" /> {t("SPONSORED")}</span>
+                      <Zap className="w-3 h-3 fill-white" /> {t("SPONSORED")}
+                    </span>
                   )}
                   {isProductFlashActive ? (
                     <span className="inline-flex items-center gap-1 bg-gradient-to-r from-red-600 to-amber-500 text-white font-mono text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-sm shadow-md animate-pulse">
                       <Flame className="w-3 h-3 fill-current" />
                       {t("VENTE FLASH")} -
-                      {Math.round(
-                        ((product.price - (product.flashPrice || product.price)) / product.price) *
-                          100,
-                      )}
-                      %
+                      {Math.round(((product.price - (product.flashPrice || product.price)) / product.price) * 100)}%
                     </span>
                   ) : (
-                    product.promoPrice && product.promoPrice < product.price && (
+                    product.promoPrice &&
+                    product.promoPrice < product.price && (
                       <span className="inline-block bg-[#F37021] text-white font-mono text-[10px] rtl:text-[12px] tracking-widest rtl:tracking-normal px-2 py-1 rounded-sm shadow-sm">
-                        -
-                        {Math.round(
-                          ((product.price - product.promoPrice) / product.price) *
-                            100,
-                        )}
-                        %
+                        -{Math.round(((product.price - product.promoPrice) / product.price) * 100)}%
                       </span>
                     )
                   )}
                   {product.stock <= 0 ? (
                     <span className="inline-block bg-stone-900 text-white font-mono border border-stone-800 text-[9px] rtl:text-[11px] uppercase tracking-widest rtl:tracking-normal px-2 py-1 rounded-sm shadow-sm">
-                      {t("SOLD OUT")}</span>
+                      {t("SOLD OUT")}
+                    </span>
                   ) : product.stock <= 5 ? (
                     <span className="inline-block bg-red-50 text-red-600 font-mono border border-red-200 text-[9px] rtl:text-[11px] uppercase tracking-widest rtl:tracking-normal px-2 py-1 rounded-sm shadow-sm">
-                      {t("DROP LIMITÉ")}</span>
+                      {t("DROP LIMITÉ")}
+                    </span>
                   ) : null}
                 </div>
 
@@ -214,11 +193,7 @@ export const ProductCard = React.memo(
             <div className="p-4 sm:p-5 flex flex-col flex-1 bg-white">
               <div className="flex items-center justify-between gap-1.5 sm:gap-2 mb-2">
                 <span className="font-mono text-[9px] rtl:text-[11px] uppercase tracking-widest rtl:tracking-normal text-[#121315]/80">
-                  [{" "}
-                  {getCategoryTranslation(product.category, t) ||
-                    product.category ||
-                    "Mode"}{" "}
-                  ]
+                  [ {getCategoryTranslation(product.category, t) || product.category || "Mode"} ]
                 </span>
               </div>
 
@@ -228,17 +203,16 @@ export const ProductCard = React.memo(
 
               <div className="flex items-center gap-1.5 text-[#121315]/70 mb-4 font-mono text-[10px] rtl:text-[12px] tracking-wider rtl:tracking-normal uppercase">
                 <Store className="w-3 h-3 text-[#F37021]" />
-                <span className="truncate max-w-[120px]">
-                  {product.sellerName || "Olma Seller"}
-                </span>
+                <span className="truncate max-w-[120px]">{product.sellerName || "Olma Seller"}</span>
               </div>
 
               <div className="mt-auto flex flex-col gap-3">
                 <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                   <span className="font-mono font-bold text-stone-900 text-[14px] sm:text-[16px]">
-                    {formatPrice(isProductFlashActive ? product.flashPrice : (product.promoPrice || product.price))}
+                    {formatPrice(isProductFlashActive ? product.flashPrice : product.promoPrice || product.price)}
                   </span>
-                  {((product.promoPrice && product.promoPrice < product.price) || (isProductFlashActive && product.flashPrice && product.flashPrice < product.price)) && (
+                  {((product.promoPrice && product.promoPrice < product.price) ||
+                    (isProductFlashActive && product.flashPrice && product.flashPrice < product.price)) && (
                     <span className="font-mono text-[11px] text-stone-400 line-through">
                       {formatPrice(product.price)}
                     </span>
@@ -248,15 +222,10 @@ export const ProductCard = React.memo(
                 {isFlashSale && (
                   <div className="flex flex-col gap-1.5 mt-2">
                     <div className="flex items-center justify-between font-mono text-[9px] rtl:text-[11px] uppercase text-[#F37021]">
-                      <span className="animate-pulse flex items-center gap-1">
-                        {t("⏱️ VITE!")}</span>
+                      <span className="animate-pulse flex items-center gap-1">{t("⏱️ VITE!")}</span>
                       <span className="flex items-center gap-1 bg-orange-50 px-1 border border-orange-200 rounded-sm">
-                        🔥{" "}
-                        {Math.min(
-                          9,
-                          ((parseInt(product.id.slice(-1), 16) || 4) % 6) + 2,
-                        )}{" "}
-                        {t("RESTANTS")}</span>
+                        🔥 {Math.min(9, ((parseInt(product.id.slice(-1), 16) || 4) % 6) + 2)} {t("RESTANTS")}
+                      </span>
                     </div>
                     <div className="h-1 w-full bg-stone-200 rounded-full overflow-hidden">
                       <div
@@ -274,5 +243,5 @@ export const ProductCard = React.memo(
         )}
       </motion.div>
     );
-  },
+  }
 );

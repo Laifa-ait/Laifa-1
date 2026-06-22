@@ -16,7 +16,7 @@ export const VerifyEmail: React.FC = () => {
 
   useEffect(() => {
     if (!currentUser) {
-      navigate('/auth');
+      navigate('/auth', { replace: true });
       return;
     }
 
@@ -62,7 +62,7 @@ export const VerifyEmail: React.FC = () => {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/auth');
+    navigate('/auth', { replace: true });
   };
 
   return (

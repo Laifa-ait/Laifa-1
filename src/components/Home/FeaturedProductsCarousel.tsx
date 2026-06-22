@@ -89,10 +89,7 @@ export const FeaturedProductsCarousel: React.FC = () => {
   const handleNext = () => setCurrentPage((prev) => (prev + 1) % totalPages);
   const handlePrev = () => setCurrentPage((prev) => (prev - 1 + totalPages) % totalPages);
 
-  const currentProducts = displayProducts.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
+  const currentProducts = displayProducts.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
 
   if (loading) {
     return (
@@ -135,7 +132,7 @@ export const FeaturedProductsCarousel: React.FC = () => {
               {t("home.featured.title_prefix") || "LA SÉLECTION"}
             </h3>
           </div>
-          
+
           <div className="flex items-center gap-3 shrink-0">
             {totalPages > 1 && (
               <div className="flex gap-2">
@@ -166,14 +163,10 @@ export const FeaturedProductsCarousel: React.FC = () => {
         {/* Neo-Heritage Bento Grid for Featured Products */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pb-12">
           {currentProducts.map((product, idx) => {
-            const isPromo =
-              product.promoPrice && product.promoPrice < product.price;
-            const translatedName =
-              getTranslatedField(product, "name", lang) || product.name;
-            const coverImage = getOptimizedImageUrl(
-              product.image,
-              800
-            ) ||
+            const isPromo = product.promoPrice && product.promoPrice < product.price;
+            const translatedName = getTranslatedField(product, "name", lang) || product.name;
+            const coverImage =
+              getOptimizedImageUrl(product.image, 800) ||
               "https://images.unsplash.com/photo-1555529771-835f59fc5efe?auto=format&fit=crop&q=80&w=800";
 
             // Bento logic: make the first item span 2 rows and columns
@@ -218,12 +211,11 @@ export const FeaturedProductsCarousel: React.FC = () => {
                   <div className="absolute top-4 left-4 z-20 flex flex-col gap-2 items-start">
                     {idx === 0 && (
                       <span className="bg-[#121315] text-white text-[9px] rtl:text-[11px] font-mono font-black uppercase tracking-widest rtl:tracking-normal px-2 py-1 rounded-sm shadow-sm select-none border-none">
-                        {t("PIÈCE UNIQUE ARTISANALE")}</span>
+                        {t("PIÈCE UNIQUE ARTISANALE")}
+                      </span>
                     )}
                     <span className="bg-white text-stone-900 border border-stone-200 text-[9px] rtl:text-[11px] font-mono font-black uppercase tracking-widest rtl:tracking-normal px-2 py-1 rounded-sm shadow-sm select-none">
-                      [{" "}
-                      {product.category || "PREMIUM"}{" "}
-                      ]
+                      [ {product.category || "PREMIUM"} ]
                     </span>
                   </div>
 

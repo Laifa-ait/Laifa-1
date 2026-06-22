@@ -28,20 +28,8 @@ export interface OlmaLogoProps {
 }
 
 export const OlmaLogo: React.FC<OlmaLogoProps> = ({ className }) => (
-  <svg
-    viewBox="0 0 120 120"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    className={className}
-  >
-    <ellipse
-      cx="60"
-      cy="70"
-      rx="30"
-      ry="34"
-      stroke="currentColor"
-      strokeWidth="8"
-    />
+  <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <ellipse cx="60" cy="70" rx="30" ry="34" stroke="currentColor" strokeWidth="8" />
     <path
       d="M60 40C60 40 52 20 60 15C68 20 60 40 60 40Z"
       stroke="currentColor"
@@ -69,13 +57,7 @@ export const OlmaLogo: React.FC<OlmaLogoProps> = ({ className }) => (
 export const Navbar: React.FC = () => {
   const { currentUser, userProfile } = useAuth();
   const { cart, wishlist } = useCart();
-  const {
-    searchQuery,
-    setSearchQuery,
-    setActiveCategory,
-    setIsSaleFilterActive,
-    setActiveTag,
-  } = useShop();
+  const { searchQuery, setSearchQuery, setActiveCategory, setIsSaleFilterActive, setActiveTag } = useShop();
   const { setIsCartOpen, setIsWishlistOpen, setIsMobileMenuOpen, setIsSearchOpen } = useUI();
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -96,13 +78,13 @@ export const Navbar: React.FC = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
-          
+
           if (currentScrollY > 120 && currentScrollY > lastScrollYRef.current) {
             setIsHeaderVisible((prev) => (prev ? false : prev)); // scrolling down
           } else {
             setIsHeaderVisible((prev) => (!prev ? true : prev)); // scrolling up
           }
-          
+
           lastScrollYRef.current = currentScrollY;
           ticking = false;
         });
@@ -193,7 +175,8 @@ export const Navbar: React.FC = () => {
             >
               <OlmaLogo className="w-7 h-7 sm:w-9 sm:h-9 text-[#F37021] group-hover:scale-110 transition-transform duration-300" />
               <span className="font-display font-medium text-2xl sm:text-3xl tracking-tight rtl:tracking-normal text-[#121315] uppercase hidden xs:block">
-                {t("Olma")}<span className="text-[#F37021] font-medium">{t("rt")}</span>
+                {t("Olma")}
+                <span className="text-[#F37021] font-medium">{t("rt")}</span>
               </span>
             </button>
           </div>
@@ -229,10 +212,7 @@ export const Navbar: React.FC = () => {
               </button>
               {isLangDropdownOpen && (
                 <>
-                  <div
-                    className="fixed inset-0 z-50 cursor-default"
-                    onClick={() => setIsLangDropdownOpen(false)}
-                  />
+                  <div className="fixed inset-0 z-50 cursor-default" onClick={() => setIsLangDropdownOpen(false)} />
                   <div className="absolute top-full right-0 mt-3 bg-[#FAF8F5] border border-[#EBE5DF]/80 shadow-[0_20px_40px_rgba(44,30,22,0.12)] z-[60] py-1.5 rounded-2xl min-w-[130px] overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
                     {[
                       { code: "fr", name: "Français" },
@@ -246,9 +226,7 @@ export const Navbar: React.FC = () => {
                           setIsLangDropdownOpen(false);
                         }}
                         className={`w-full text-left rtl:text-right px-4 py-2.5 text-xs rtl:text-sm font-semibold tracking-wide transition-colors bg-transparent border-none cursor-pointer flex items-center justify-between gap-2 border-b border-[#EBE5DF]/30 last:border-b-0 ${
-                          lang === l.code
-                            ? "text-[#F37021] bg-[#EBE5DF]/20"
-                            : "text-[#121315] hover:bg-[#EBE5DF]/40"
+                          lang === l.code ? "text-[#F37021] bg-[#EBE5DF]/20" : "text-[#121315] hover:bg-[#EBE5DF]/40"
                         }`}
                       >
                         <span>{l.name}</span>
@@ -295,16 +273,13 @@ export const Navbar: React.FC = () => {
 
             {isUserDropdownOpen && (
               <>
-                <div
-                  className="fixed inset-0 z-[60]"
-                  onClick={() => setIsUserDropdownOpen(false)}
-                />
+                <div className="fixed inset-0 z-[60]" onClick={() => setIsUserDropdownOpen(false)} />
                 <div className="absolute top-full right-0 mt-6 bg-[#FAF8F5] border border-[#EBE5DF] shadow-[0_20px_40px_rgba(44,30,22,0.1)] z-[70] overflow-hidden flex flex-col py-2 animate-in fade-in slide-in-from-top-2 duration-300 min-w-[240px]">
                   {!currentUser ? (
                     <div className="p-4">
                       <button
                         onClick={() => {
-                          navigate("/auth");
+                          navigate("/auth", { replace: true });
                           setIsUserDropdownOpen(false);
                         }}
                         className="w-full py-3.5 bg-[#121315] text-white font-medium text-[11px] uppercase tracking-[0.2em] transition-colors hover:bg-[#F37021] border-none cursor-pointer"
@@ -316,16 +291,16 @@ export const Navbar: React.FC = () => {
                     <>
                       <div className="px-5 py-4 border-b border-[#EBE5DF] flex flex-col gap-1 text-left bg-[#121315] text-[#FAF8F5]">
                         <p className="text-sm font-serif italic flex items-center gap-2 tracking-wide">
-                          <span className="truncate">
-                            {userProfile?.displayName || currentUser.email}
-                          </span>
+                          <span className="truncate">{userProfile?.displayName || currentUser.email}</span>
                           {userProfile?.clientType === "architect" && (
                             <span className="bg-amber-500/20 text-amber-300 text-[8px] font-bold uppercase tracking-widest rtl:tracking-normal px-2 py-0.5 rounded-full border border-amber-500/30 whitespace-nowrap">
-                              {t("Pro / Architecte")}</span>
+                              {t("Pro / Architecte")}
+                            </span>
                           )}
                           {userProfile?.clientType === "vip" && (
                             <span className="bg-amber-500/20 text-amber-300 text-[8px] font-bold uppercase tracking-widest rtl:tracking-normal px-2 py-0.5 rounded-full border border-amber-500/30 whitespace-nowrap">
-                              {t("VIP")}</span>
+                              {t("VIP")}
+                            </span>
                           )}
                         </p>
                         <p className="text-[9px] rtl:text-[11px] font-normal tracking-[0.2em] uppercase text-white/60">

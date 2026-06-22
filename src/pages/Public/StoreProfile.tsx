@@ -335,12 +335,12 @@ export const StoreProfile: React.FC = () => {
         // Decrement followersCount in publicProfiles
         await updateDoc(sellerPublicRef, {
           followersCount: increment(-1)
-        }).catch(err => console.log("PublicProfile follow count dec error", err));
+        }).catch(err => (process.env.NODE_ENV === 'debug' ? console.log : function(){})("PublicProfile follow count dec error", err));
 
         // Decrement followersCount in users
         await updateDoc(sellerPrivateRef, {
           followersCount: increment(-1)
-        }).catch(err => console.log("UserProfile follow count dec error", err));
+        }).catch(err => (process.env.NODE_ENV === 'debug' ? console.log : function(){})("UserProfile follow count dec error", err));
 
         setIsFollowing(false);
         // Update local state smoothly
@@ -362,12 +362,12 @@ export const StoreProfile: React.FC = () => {
         // Increment followersCount in publicProfiles
         await updateDoc(sellerPublicRef, {
           followersCount: increment(1)
-        }).catch(err => console.log("PublicProfile follow count inc error", err));
+        }).catch(err => (process.env.NODE_ENV === 'debug' ? console.log : function(){})("PublicProfile follow count inc error", err));
 
         // Increment followersCount in users
         await updateDoc(sellerPrivateRef, {
           followersCount: increment(1)
-        }).catch(err => console.log("UserProfile follow count inc error", err));
+        }).catch(err => (process.env.NODE_ENV === 'debug' ? console.log : function(){})("UserProfile follow count inc error", err));
 
         setIsFollowing(true);
         // Update local state smoothly

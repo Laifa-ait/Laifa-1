@@ -1,22 +1,26 @@
-import React from 'react';
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import React from "react";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 interface AuthGuardProps {
   requireAuth?: boolean;
 }
 
 export const AuthGuard: React.FC<AuthGuardProps> = ({ requireAuth = false }) => {
-  const { loading } = useAuth();
+  const { currentUser, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#faf8f5]">
-        <div className="w-8 h-8 border-4 border-[#ea580c] border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-8 h-8 border-4 border-[#ea580c] border-[#ffebd5] border-t-[#ea580c] rounded-full animate-spin"></div>
       </div>
     );
   }
 
-  // Security checks disabled at user request.
+  if (requireAuth && !currentUser) {
+    return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+
   return <Outlet />;
 };

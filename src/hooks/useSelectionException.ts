@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
-import { PremiumProduct, SelectionExceptionDocument } from '../types';
+import { useState, useEffect } from "react";
+import { db, handleFirestoreError, OperationType } from "../lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { PremiumProduct, SelectionExceptionDocument } from "../types";
 
 interface UseSelectionExceptionResult {
   data: PremiumProduct[];
@@ -24,13 +24,13 @@ export function useSelectionException(): UseSelectionExceptionResult {
       setError(null);
 
       try {
-        const docRef = doc(db, 'ui_elements', 'selection_exception');
+        const docRef = doc(db, "ui_elements", "selection_exception");
         const snap = await getDoc(docRef);
 
         if (snap.exists()) {
           const docData = snap.data() as SelectionExceptionDocument;
           const allProducts = docData.products || [];
-          
+
           // Utility: Randomize and pick 4-6 items
           if (allProducts.length > 0) {
             const shuffled = [...allProducts].sort(() => 0.5 - Math.random());
@@ -43,8 +43,8 @@ export function useSelectionException(): UseSelectionExceptionResult {
           setData([]);
         }
       } catch (err: any) {
-        handleFirestoreError(err, OperationType.GET, 'ui_elements/selection_exception');
-        setError(err.message || 'Error loading premium selection');
+        handleFirestoreError(err, OperationType.GET, "ui_elements/selection_exception");
+        setError(err.message || "Error loading premium selection");
       } finally {
         setIsLoading(false);
       }

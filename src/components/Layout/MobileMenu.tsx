@@ -67,7 +67,7 @@ export const MobileMenu: React.FC = () => {
               animate={{ x: 0 }}
               exit={{ x: isRtl ? "-100%" : "100%" }}
               transition={{ type: "spring", damping: 26, stiffness: 260 }}
-              className={`fixed top-0 bottom-0 ${isRtl ? 'left-0 border-r rounded-r-3xl' : 'right-0 border-l rounded-l-3xl'} w-[85vw] max-w-[340px] bg-[#FAF8F5] z-[110] shadow-2xl border-[#EBE5DF]/60 flex flex-col overflow-hidden`}
+              className={`fixed top-0 bottom-0 ${isRtl ? "left-0 border-r rounded-r-3xl" : "right-0 border-l rounded-l-3xl"} w-[85vw] max-w-[340px] bg-[#FAF8F5] z-[110] shadow-2xl border-[#EBE5DF]/60 flex flex-col overflow-hidden`}
             >
               {/* Header / Top */}
               <div className="flex items-center justify-between px-6 pb-4 pt-8 border-b border-[#EBE5DF]/60 bg-transparent">
@@ -89,13 +89,12 @@ export const MobileMenu: React.FC = () => {
                     <div className="bg-white backdrop-blur-md rounded-3xl p-5 border border-[#EBE5DF]/60 shadow-[0_4px_20px_rgba(44,30,22,0.02)] space-y-5">
                       <div className="flex items-center gap-4">
                         <div className="w-14 h-14 rounded-full border border-[#EBE5DF]/80 overflow-hidden shrink-0">
-                          <img loading="lazy"
+                          <img
+                            loading="lazy"
                             src={
                               userProfile?.photoURL ||
                               currentUser.photoURL ||
-                              getRetroAvatar(
-                                currentUser.email || currentUser.uid,
-                              )
+                              getRetroAvatar(currentUser.email || currentUser.uid)
                             }
                             className="w-full h-full object-cover"
                             alt=""
@@ -109,11 +108,13 @@ export const MobileMenu: React.FC = () => {
                             </h4>
                             {userProfile?.clientType === "architect" && (
                               <span className="bg-amber-100 text-amber-700 text-[9px] rtl:text-[11px] font-bold uppercase tracking-widest rtl:tracking-normal px-2 py-0.5 rounded-md border border-amber-200 whitespace-nowrap">
-                                {t("Pro / Architecte")}</span>
+                                {t("Pro / Architecte")}
+                              </span>
                             )}
                             {userProfile?.clientType === "vip" && (
                               <span className="bg-amber-100 text-amber-700 text-[9px] rtl:text-[11px] font-bold uppercase tracking-widest rtl:tracking-normal px-2 py-0.5 rounded-md border border-amber-200 whitespace-nowrap">
-                                {t("VIP")}</span>
+                                {t("VIP")}
+                              </span>
                             )}
                           </div>
                           <p className="text-[13px] text-[#121315]/60 truncate">
@@ -165,10 +166,10 @@ export const MobileMenu: React.FC = () => {
                       <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full blur-2xl -mr-10 -mt-10" />
                       <div className="relative z-10 flex flex-col gap-4 items-center text-center">
                         <div className="space-y-1">
-                          <h4 className="font-semibold text-[18px] text-[#121315]">
-                            {t("Rejoignez Olma")}</h4>
+                          <h4 className="font-semibold text-[18px] text-[#121315]">{t("Rejoignez Olma")}</h4>
                           <p className="text-[14px] text-stone-500">
-                            {t("Connectez-vous pour une expérience personnalisée.")}</p>
+                            {t("Connectez-vous pour une expérience personnalisée.")}
+                          </p>
                         </div>
                         <button
                           onClick={() => {
@@ -177,7 +178,8 @@ export const MobileMenu: React.FC = () => {
                           }}
                           className="w-full bg-[#F37021] hover:bg-[#D95B18] text-[#121315] py-3 rounded-2xl font-medium text-[15px] transition-colors border-none cursor-pointer shadow-md"
                         >
-                          {t("Se connecter")}</button>
+                          {t("Se connecter")}
+                        </button>
                       </div>
                     </div>
                   )}
@@ -195,9 +197,7 @@ export const MobileMenu: React.FC = () => {
                     <div className="w-10 h-10 rounded-full bg-[#FAF8F5] flex items-center justify-center text-[#121315] mb-1">
                       <ShoppingBag className="w-5 h-5 stroke-[1.5]" />
                     </div>
-                    <span className="text-[14px] font-medium text-[#121315]">
-                      {t("catalog") || "Catalogue"}
-                    </span>
+                    <span className="text-[14px] font-medium text-[#121315]">{t("catalog") || "Catalogue"}</span>
                   </button>
                   <button
                     onClick={() => {
@@ -209,9 +209,7 @@ export const MobileMenu: React.FC = () => {
                     <div className="w-10 h-10 rounded-full bg-[#FAF8F5] flex items-center justify-center text-[#121315] mb-1">
                       <Heart className="w-5 h-5 stroke-[1.5]" />
                     </div>
-                    <span className="text-[14px] font-medium text-[#121315]">
-                      {t("favorites") || "Favoris"}
-                    </span>
+                    <span className="text-[14px] font-medium text-[#121315]">{t("favorites") || "Favoris"}</span>
                   </button>
                 </div>
 
@@ -233,11 +231,10 @@ export const MobileMenu: React.FC = () => {
                         <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-[#121315] shadow-sm">
                           <item.icon className="w-5 h-5 stroke-[1.5]" />
                         </div>
-                        <span className="text-[16px] font-medium text-[#121315]">
-                          {item.label}
-                        </span>
+                        <span className="text-[16px] font-medium text-[#121315]">{item.label}</span>
                       </button>
-                    ))}                    <button
+                    ))}{" "}
+                    <button
                       onClick={handleLanguageToggle}
                       className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-white border border-transparent hover:border-[#EBE5DF] transition-all cursor-pointer"
                     >
@@ -253,7 +250,7 @@ export const MobileMenu: React.FC = () => {
                     </button>
                   </div>
                 </div>
- 
+
                 {/* Catégories Section */}
                 <div className="space-y-2">
                   <h4 className="text-[13px] font-semibold text-[#121315]/40 uppercase tracking-wider rtl:tracking-normal mb-4 px-1">
@@ -266,16 +263,9 @@ export const MobileMenu: React.FC = () => {
                       const isLast = i === categoriesData.length - 1;
 
                       return (
-                        <div
-                          key={i}
-                          className={
-                            isLast ? "" : "border-b border-[#EBE5DF]/60"
-                          }
-                        >
+                        <div key={i} className={isLast ? "" : "border-b border-[#EBE5DF]/60"}>
                           <button
-                            onClick={() =>
-                              setExpandedCat(isExpanded ? null : cat.id)
-                            }
+                            onClick={() => setExpandedCat(isExpanded ? null : cat.id)}
                             className="w-full flex items-center justify-between p-4 bg-transparent border-none cursor-pointer hover:bg-[#FAF8F5] transition-colors"
                           >
                             <div className="flex items-center gap-3">
@@ -305,7 +295,7 @@ export const MobileMenu: React.FC = () => {
                                       key={j}
                                       onClick={() => {
                                         handleNav(
-                                          `/shop?category=${encodeURIComponent(cat.name)}&subcategory=${encodeURIComponent(sec.name)}`,
+                                          `/shop?category=${encodeURIComponent(cat.name)}&subcategory=${encodeURIComponent(sec.name)}`
                                         );
                                         closeMenu();
                                       }}
@@ -378,9 +368,7 @@ export const MobileMenu: React.FC = () => {
                 <div className="w-12 h-12 rounded-2xl justify-center items-center flex bg-[#F37021]/10 text-[#F37021]">
                   <Info className="w-6 h-6 stroke-[1.5]" />
                 </div>
-                <h3 className="font-semibold text-2xl text-[#121315]">
-                  {t("about_olma") || "À propos d'Olma"}
-                </h3>
+                <h3 className="font-semibold text-2xl text-[#121315]">{t("about_olma") || "À propos d'Olma"}</h3>
               </div>
               {isLoadingAbout ? (
                 <div className="animate-pulse space-y-3">

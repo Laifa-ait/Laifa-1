@@ -46,7 +46,8 @@ export const ImageMagnifier: React.FC<ImageMagnifierProps> = ({
       onMouseMove={handleMouseMove}
       onMouseLeave={() => setShowMagnifier(false)}
     >
-      <img loading="lazy"
+      <img
+        loading="lazy"
         src={src}
         draggable={false}
         className="w-full h-full object-cover select-none pointer-events-none"
