@@ -2,38 +2,37 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Users, ShieldCheck, Search, Filter, CheckCircle2, XCircle, Eye, ShieldAlert, FileText, Landmark, ShieldOff, Download, ChevronLeft, ChevronRight, Store, Video } from 'lucide-react';
 import { db } from '../../lib/firebase';
-import { collection, query, where, getDocs, updateDoc, doc, limit, startAfter, setDoc, serverTimestamp, addDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, updateDoc, doc, limit, startAfter, setDoc, serverTimestamp, addDoc, Timestamp } from 'firebase/firestore';
 import { formatPrice } from '../../utils/format';
 import { useAuth } from '../../context/AuthContext';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from "react-i18next";
 import { scheduleVerificationMeet } from '../../services/googleWorkspace';
 import toast from 'react-hot-toast';
+import { forceDownload } from '../../utils/download';
 
-
-export const forceDownload = async (url: string | undefined, filename: string) => {
-  if (!url) return;
-  try {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    const blobUrl = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = blobUrl;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(blobUrl);
-    document.body.removeChild(a);
-  } catch (error) {
-    console.error("Error downloading file", error);
-    window.open(url, '_blank');
-  }
-};
+interface Seller {
+  id: string;
+  shopName: string;
+  displayName: string;
+  email: string;
+  role: string;
+  status: 'pending' | 'pending_verification' | 'active' | 'rejected' | 'suspended';
+  documents: {
+    fileRC?: string;
+    fileId?: string;
+    fileRib?: string;
+  };
+  rcNumber?: string;
+  nifNumber?: string;
+  rib?: string;
+  createdAt: Timestamp;
+}
 
 export const SellerModeration: React.FC = () => {
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === 'ar' || i18n.language?.startsWith('ar');
-  const { currentUser } = useAuth();
+  const { currentUser, userProfile } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const pageParam = parseInt(searchParams.get('page') || '1');
   const statusParam = searchParams.get('status') || '';
@@ -41,7 +40,7 @@ export const SellerModeration: React.FC = () => {
   const sortByParam = searchParams.get('sortBy') || 'createdAt';
   const sortOrderParam = searchParams.get('sortOrder') || 'desc';
 
-  const [sellers, setSellers] = useState<any[]>([]);
+  const [sellers, setSellers] = useState<Seller[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -145,24 +144,38 @@ export const SellerModeration: React.FC = () => {
 
   const handleUpdateStatus = async (sellerId: string, status: 'active' | 'rejected' | 'suspended') => {
     try {
-      if (!currentUser) return;
+      if (!currentUser || userProfile?.role !== 'admin') {
+        toast.error("Action non autorisée");
+        return;
+      }
       const userRef = doc(db, 'users', sellerId);
       
+      let loggedDetails = '';
+
       if (status === 'rejected') {
+        const reasons = [...rejectReasons];
+        if (rejectComment.trim()) reasons.push(rejectComment.trim());
+        if (reasons.length === 0) {
+          toast.error("Veuillez sélectionner ou saisir au moins un motif");
+          return;
+        }
+
         const existingS = sellers.find(s => s.id === sellerId);
         await updateDoc(userRef, {
           status: 'rejected',
-          rejectionReasons: rejectReasons,
+          rejectionReasons: reasons,
           rejectionComment: rejectComment,
+          rejectedBy: currentUser.uid,
           rejectedAt: serverTimestamp()
         });
+        loggedDetails = `Vendeur rejeté: ${reasons.join(', ')}`;
         
         if (existingS) {
            await addDoc(collection(db, "user_notifications"), {
              recipientId: sellerId,
              type: "KYC_REJECTED",
              title: t("Mise à jour concernant vos documents (KYC) ⚠️"),
-             message: `Vos documents nécessitent des corrections. Raisons : ${rejectReasons.join(', ')}. Remarque admin : ${rejectComment}`,
+             message: `Vos documents nécessitent des corrections. Raisons : ${reasons.join(', ')}. Remarque admin : ${rejectComment}`,
              createdAt: serverTimestamp(),
              read: false
            });
@@ -172,8 +185,7 @@ export const SellerModeration: React.FC = () => {
              message: {
                subject: "Mise à jour de votre compte Vendeur Olmart - Action Requise",
                html: `<p>Bonjour,</p><p>Lors de la révision de votre dossier de création de boutique, nous avons constaté que certains documents nécessitent votre attention.</p>
-                      <p><strong>Raisons :</strong> ${rejectReasons.join(', ')}</p>
-                      <p><strong>Remarque :</strong> ${rejectComment}</p>
+                      <p><strong>Raisons :</strong> ${reasons.join(', ')}</p>
                       <p>Veuillez vous connecter à votre compte pour mettre à jour vos informations afin que nous puissions finaliser l'activation de votre boutique.</p>`
              }
            });
@@ -229,6 +241,15 @@ export const SellerModeration: React.FC = () => {
       setSellers(sellers.map(s => s.id === sellerId ? { ...s, status } : s));
       if (selectedSeller?.id === sellerId) setSelectedSeller({ ...selectedSeller, status });
       
+      await addDoc(collection(db, "audit_logs"), {
+        type: 'SELLER_MODERATION',
+        action: status.toUpperCase(),
+        sellerId,
+        adminId: currentUser?.uid,
+        details: loggedDetails || `Statut mis à jour vers: ${status}`,
+        timestamp: serverTimestamp()
+      });
+
       const statusText = status === 'active' 
         ? (t("activé"))
         : status === 'rejected'
@@ -250,6 +271,11 @@ export const SellerModeration: React.FC = () => {
 
   const handleScheduleMeet = async (sellerId: string, email: string) => {
     try {
+        if (typeof scheduleVerificationMeet !== 'function') {
+           console.warn("scheduleVerificationMeet non disponible");
+           toast.error(isArabic ? "خدمة الجدولة غير متاحة." : "Le service de planification n'est pas disponible.");
+           return;
+        }
         const start = new Date();
         start.setDate(start.getDate() + 1); // Demain
         const end = new Date(start);

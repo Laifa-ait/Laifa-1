@@ -11,7 +11,14 @@ import { OrderChatBox } from '../../components/OrderChatBox';
 import { useTranslation } from "react-i18next";
 import { exportPremiumToSheets } from '../../services/googleWorkspace';
 import { getOptimizedImageUrl } from '../../utils/imageUtils';
-import * as XLSX from 'xlsx';
+import { utils, writeFile } from 'xlsx';
+
+interface CalculatedOrder {
+  id: string;
+  commissionAmount: number;
+  netRevenue: number;
+  platformFee: number;
+}
 
 export const Orders: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -29,37 +36,49 @@ export const Orders: React.FC = () => {
   const [showGuide, setShowGuide] = useState(() => {
     return localStorage.getItem('olmart_hide_order_guide') !== 'true';
   });
-  const [calculatedOrdersMap, setCalculatedOrdersMap] = useState<Record<string, any>>({});
+  const [calculatedOrdersMap, setCalculatedOrdersMap] = useState<Record<string, CalculatedOrder>>({});
 
   useEffect(() => {
     if (orders.length === 0) {
       setCalculatedOrdersMap({});
       return;
     }
-    const calculateCommissions = async () => {
+    
+    let cancelled = false;
+    const timeout = setTimeout(async () => {
       try {
-        const token = await auth.currentUser?.getIdToken();
+        const token = await currentUser?.getIdToken();
+        if (!token) return;
+        
         const response = await fetch('/api/calculate-commissions', {
            method: 'POST',
            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
            body: JSON.stringify({ orders })
         });
-        if (!response.ok) throw new Error('API Error');
-        const data = await response.json();
         
-        const map: Record<string, any> = {};
-        data.calculatedOrders.forEach((co: any) => {
-           map[co.id] = co;
-        });
-        setCalculatedOrdersMap(map);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          if (!cancelled) toast.error(errorData.error || "Erreur calcul commissions");
+          return;
+        }
+        
+        if (!cancelled) {
+          const data = await response.json();
+          const map: Record<string, CalculatedOrder> = {};
+          data.calculatedOrders.forEach((co: CalculatedOrder) => {
+             map[co.id] = co;
+          });
+          setCalculatedOrdersMap(map);
+        }
       } catch (err) {
-        console.error('Failed to calculate server commissions', err);
+        if (!cancelled) {
+          toast.error("Service indisponible");
+          console.error('Failed to calculate server commissions', err);
+        }
       }
-    };
-    
-    const timeout = setTimeout(calculateCommissions, 500);
-    return () => clearTimeout(timeout);
-  }, [orders]);
+    }, 500);
+    return () => { cancelled = true; clearTimeout(timeout); };
+  }, [orders, currentUser]);
 
   const ORDERS_PER_PAGE = 20;
 
@@ -132,7 +151,7 @@ export const Orders: React.FC = () => {
 
   const handleUpdateStatus = async (orderId: string, newStatus: string) => {
     try {
-      const token = await auth.currentUser?.getIdToken();
+      const token = await currentUser?.getIdToken();
       const res = await fetch("/api/seller/orders/status", {
         method: "POST",
         headers: {
@@ -179,7 +198,7 @@ export const Orders: React.FC = () => {
 
      toast.loading("Mise à jour en cours...", { id: "bulk" });
      try {
-        const token = await auth.currentUser?.getIdToken();
+        const token = await currentUser?.getIdToken();
         const res = await fetch("/api/seller/orders/status", {
           method: "POST",
           headers: {
@@ -252,10 +271,9 @@ export const Orders: React.FC = () => {
   const handleGenerateTracking = async (orderId: string) => {
     if (!currentUser) return;
     try {
-      const currentAuthUser = auth.currentUser;
       let idToken = "";
-      if (currentAuthUser) {
-        idToken = await currentAuthUser.getIdToken();
+      if (currentUser) {
+        idToken = await currentUser.getIdToken();
       }
       const response = await fetch('/api/prepare-shipment', {
         method: 'POST',
@@ -336,8 +354,8 @@ export const Orders: React.FC = () => {
     const worksheetData = [headers, ...rows];
     
     // Create a new workbook and adding the worksheet
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet(worksheetData);
+    const wb = utils.book_new();
+    const ws = utils.aoa_to_sheet(worksheetData);
 
     // Set column widths to give it a "Canva/Premium" Excel design feel
     const colWidths = [
@@ -353,10 +371,10 @@ export const Orders: React.FC = () => {
     ];
     ws['!cols'] = colWidths;
 
-    XLSX.utils.book_append_sheet(wb, ws, "Commandes");
+    utils.book_append_sheet(wb, ws, "Commandes");
 
     // Produce an Excel spreadsheet rather than raw CSV, to instantly display as a grid on mobile/desktop.
-    XLSX.writeFile(wb, `olmart_orders_${new Date().toISOString().split('T')[0]}.xlsx`);
+    writeFile(wb, `olmart_orders_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
   const getExportHeaders = (lang: string) => {
@@ -404,15 +422,15 @@ export const Orders: React.FC = () => {
       const commissionRate = userProfile?.commissionRate || 10;
 
       const rawOrders = ordersSnap.docs.map(d => ({id: d.id, ...d.data()})) as any[];
-      const token = await auth.currentUser?.getIdToken();
+      const token = await currentUser?.getIdToken();
       const calcRes = await fetch('/api/calculate-commissions', {
          method: 'POST',
          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
          body: JSON.stringify({ orders: rawOrders })
       });
       const calcData = await calcRes.json();
-      const calcMap = {} as any;
-      calcData.calculatedOrders?.forEach(co => calcMap[co.id] = co);
+      const calcMap: Record<string, CalculatedOrder> = {};
+      calcData.calculatedOrders?.forEach((co: CalculatedOrder) => calcMap[co.id] = co);
 
       rawOrders.forEach(order => {
         const orderId = order.id;
@@ -712,7 +730,9 @@ export const Orders: React.FC = () => {
                </div>
             ) : (
                orders.map((o) => {
-                 
+                 const sellerItems = o.items?.filter((item: any) => item.sellerId === currentUser?.uid) || [];
+                 if (sellerItems.length === 0) return null;
+
                  return (
                                  <div key={o.id} className="p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 hover:bg-zinc-50/50 transition-colors group">
                                     <div className="flex gap-6 items-center">

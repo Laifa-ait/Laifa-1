@@ -36,7 +36,7 @@ import {
   startAfter,
 } from "firebase/firestore";
 import { cacheEngine, handleDevQuotaLogger } from "../../utils/mockProducts";
-import { MobileSwipeIndicator } from "../UI/MobileSwipeIndicator";
+import { MobileSwipeIndicator } from "../ui/MobileSwipeIndicator";
 
 export const DynamicSection: React.FC<{ section: HomepageSection; isFramed?: boolean }> = ({
   section,

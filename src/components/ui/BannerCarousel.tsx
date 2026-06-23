@@ -337,7 +337,7 @@ export const BannerCarousel: React.FC<BannerCarouselProps> = ({
 
         {/* Carousel indicator dots with progress representation */}
         {activeBanners.length > 1 && (
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center justify-center gap-2.5 z-20 bg-black/10 backdrop-blur-sm px-3.5 py-1.5 rounded-full border border-white/5">
+          <div className="absolute bottom-6 start-1/2 -translate-x-1/2 flex items-center justify-center gap-2.5 z-20 bg-black/10 backdrop-blur-sm px-3.5 py-1.5 rounded-full border border-white/5">
             {activeBanners.map((_, idx) => (
               <button
                 key={idx}

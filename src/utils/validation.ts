@@ -42,5 +42,6 @@ export const placeOrderSchema = z.object({
   deliveryMethod: z.enum(["domicile", "stopdesk"]),
   couponCode: z.string().nullable().optional(),
   useCashbackPoints: z.boolean().optional().default(false),
-  useWallet: z.boolean().optional().default(false)
+  useWallet: z.boolean().optional().default(false),
+  idempotencyKey: z.string().optional()
 });

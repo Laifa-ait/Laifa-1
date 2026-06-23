@@ -7,6 +7,7 @@ import { authenticateToken, authorizeSeller } from "../middlewares/auth";
 import { ALGERIA_WILAYAS, ALGERIA_SHIPPING_DATA } from "../constants";
 import { placeOrderSchema } from "../utils/validation";
 import { checkSellerVelocityLimit } from "../utils/velocity";
+import { firestoreBreaker } from "../utils/circuitBreaker";
 
 const router = Router();
 
@@ -24,8 +25,25 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
     });
   }
   
-  const { cart, shippingAddress, couponCode, useCashbackPoints, useWallet, deliveryMethod } = validationResult.data;
+  const { cart, shippingAddress, couponCode, useCashbackPoints, useWallet, deliveryMethod, idempotencyKey } = validationResult.data;
   const userId = req.user.uid;
+
+  if (idempotencyKey) {
+    const existingOrder = await db.collection("orders")
+      .where("idempotencyKey", "==", idempotencyKey)
+      .where("userId", "==", req.user.uid)
+      .limit(1)
+      .get();
+    
+    if (!existingOrder.empty) {
+      const existingDoc = existingOrder.docs[0];
+      return res.json({ 
+        orderId: existingDoc.id, 
+        status: "already_processed",
+        message: "Commande déjà traitée" 
+      });
+    }
+  }
 
   const sellerIdsSet = new Set<string>();
   try {
@@ -52,41 +70,13 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
       console.warn("Failed to fetch global settings, using fallback", err);
     }
 
-    // --- ÉTAPE 0 : LECTURES HORS TRANSACTION POUR REDUIRE LA TAILLE ---
-    const shopSnapshots = new Map<string, any>();
-    
-    // Fetch unique products to know which sellers we need
     const uniqueProductIds: string[] = Array.from(new Set(cart.map((item: any) => item.id as string)));
     if (uniqueProductIds.length === 0) throw new Error("Panier vide.");
-    
-    const preFetchedProducts = await Promise.all(uniqueProductIds.map(pId => db.collection("products").doc(pId).get()));
-    preFetchedProducts.forEach((productSnap: any) => {
-      if (productSnap.exists) {
-        const sellerId = productSnap.data().sellerId;
-        if (sellerId) sellerIdsSet.add(sellerId);
-      }
-    });
 
-    const sellerIdsArray = Array.from(sellerIdsSet);
-    if (sellerIdsArray.length > 0) {
-      const sellerRefs = sellerIdsArray.map(sId => db.collection("users").doc(sId));
-      const sellerSnaps = await db.getAll(...sellerRefs);
-      
-      sellerSnaps.forEach((shopSnap: any, idx: number) => {
-        const sellerId = sellerIdsArray[idx];
-        if (shopSnap.exists) {
-          const sd = shopSnap.data();
-          if (sd && (sd.isActive === false || sd.is_active === false || sd.velocitySuspended)) {
-             throw new Error(`La boutique "${sd.shopName || sd.displayName || sellerId}" est fermée temporairement (capacité de commande maximale atteinte).`);
-          }
-          shopSnapshots.set(sellerId, sd);
-        } else {
-          shopSnapshots.set(sellerId, {});
-        }
-      });
-    }
+    let sellerIdsArray: string[] = [];
+    const shopSnapshots = new Map<string, any>();
 
-    const result = await db.runTransaction(async (t: any) => {
+    const result = await firestoreBreaker.execute(() => db.runTransaction(async (t: any) => {
       // --- ÉTAPE 1 : LECTURES TRANSACTIONNELLES PURES ---
       let couponDoc: any = null;
       
@@ -103,7 +93,29 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
         }
         productSnaps.set(pId, productSnap);
         productRefs.set(pId, refs[idx]);
+
+        const sellerId = productSnap.data().sellerId;
+        if (sellerId) sellerIdsSet.add(sellerId);
       });
+
+      sellerIdsArray = Array.from(sellerIdsSet);
+      if (sellerIdsArray.length > 0) {
+        const sellerRefs = sellerIdsArray.map(sId => db.collection("users").doc(sId));
+        const sellerSnaps = await t.getAll(...sellerRefs);
+        
+        sellerSnaps.forEach((shopSnap: any, idx: number) => {
+          const sellerId = sellerIdsArray[idx];
+          if (shopSnap.exists) {
+            const sd = shopSnap.data();
+            if (sd && (sd.isActive === false || sd.is_active === false || sd.velocitySuspended)) {
+               throw new Error(`La boutique "${sd.shopName || sd.displayName || sellerId}" est fermée temporairement (capacité de commande maximale atteinte).`);
+            }
+            shopSnapshots.set(sellerId, sd);
+          } else {
+            shopSnapshots.set(sellerId, {});
+          }
+        });
+      }
 
       // Reconstruct productDocs array cleanly for downstream seller splits
       const productDocs: any[] = [];
@@ -439,6 +451,7 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
           sellerIds: [sellerId],
           shippingBreakdown: { [sellerId]: sellerShippingCost },
           discountBreakdown: discountBreakdownMap,
+          idempotencyKey: idempotencyKey || null,
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
           updatedAt: admin.firestore.FieldValue.serverTimestamp()
         };
@@ -545,7 +558,7 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
       t.set(masterOrderRef, masterOrderData);
 
       return { orderId: subOrdersToCreate[0].ref.id, total: grandTotalBeforeWallet, walletDeducted, codAmount };
-    });
+    }));
 
     // Enforce instant velocity limits right after placing the order
     for (const sellerId of sellerIdsSet) {

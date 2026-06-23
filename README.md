@@ -1,20 +1,66 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# OLMART — Marketplace E-Commerce Multi-Vendeurs
 
-# Run and deploy your AI Studio app
+Plateforme e-commerce destinée au marché algérien, couvrant les 58 wilayas.
 
-This contains everything you need to run your app locally.
+## Stack Technique
 
-View your app in AI Studio: https://ai.studio/apps/217f6d79-c758-4e14-845d-737228cd3915
+- **Frontend :** React 19 + TypeScript + Vite + Tailwind CSS
+- **Backend :** Express.js + Firebase (Auth, Firestore, Storage)
+- **AI :** Gemini 1.5 Flash
+- **i18n :** Français, Arabe, Anglais
 
-## Run Locally
+## Prérequis
 
-**Prerequisites:**  Node.js
+- Node.js 20+
+- npm 10+
+- Compte Firebase
 
+## Installation
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+```bash
+npm install
+```
+
+## Configuration
+
+```bash
+cp .env.example .env
+# Remplir les variables dans .env
+```
+
+## Scripts
+
+| Commande | Description |
+|---|---|
+| `npm run dev` | Démarrer en développement |
+| `npm run build` | Build production |
+| `npm start` | Démarrer en production |
+| `npm test` | Lancer les tests |
+| `npm run lint` | Vérifier les types |
+| `npm run format` | Formater le code |
+
+## Architecture
+
+```
+src/
+├── pages/Public/    # Storefront
+├── pages/Seller/    # Dashboard vendeur
+├── pages/Admin/     # Backoffice admin
+├── components/      # Composants UI
+├── context/         # Contextes React
+├── hooks/           # Hooks personnalisés
+├── routes/          # API endpoints
+├── utils/           # Utilitaires
+└── services/        # Services métier
+```
+
+## Sécurité
+ 
+- RBAC (Admin / Vendeur / Acheteur)
+- KYC vendeur avec modération
+- Rate limiting sur les endpoints sensibles
+- CSP et Helmet configurés
+- Sanitization XSS
+
+## Licence
+UNLICENSED

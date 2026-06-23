@@ -35,20 +35,39 @@ import { formatPrice } from "../../utils/format";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
+import { useConfirm } from "../../hooks/useConfirm";
+
+interface ModerationProduct {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  sellerId: string;
+  sellerName: string;
+  status: 'pending' | 'active' | 'rejected' | 'pending_deletion' | 'deleted';
+  images: string[];
+  category: string;
+  createdAt: Timestamp;
+  rejectionReason?: string;
+  moderationType?: 'new' | 'update';
+}
 
 export const ProductModeration: React.FC = () => {
   const { t, i18n } = useTranslation();
-  const { currentUser } = useAuth();
+  const { currentUser, userProfile } = useAuth();
+  const { confirm: showConfirmModal, ConfirmationDialog } = useConfirm();
   const isArabic = i18n.language === "ar" || i18n.language?.startsWith("ar");
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<ModerationProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"pending" | "active" | "rejected" | "pending_deletion">("pending");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Tous");
+  const [lastVisible, setLastVisible] = useState<any>(null);
+  const PRODUCTS_PER_PAGE = 25;
 
   // Rejection modal state
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
-  const [targetProduct, setTargetProduct] = useState<any | null>(null);
+  const [targetProduct, setTargetProduct] = useState<ModerationProduct | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [customReason, setCustomReason] = useState("");
 
@@ -63,16 +82,29 @@ export const ProductModeration: React.FC = () => {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      // Add limit to prevent performance issues with large databases
-      const { limit } = await import("firebase/firestore");
-      let q = query(collection(db, "products"), where("status", "==", activeTab), limit(100));
+      const { limit, startAfter } = await import("firebase/firestore");
+      let q = selectedCategory !== "Tous"
+        ? query(
+            collection(db, "products"),
+            where("status", "==", activeTab),
+            where("category", "==", selectedCategory),
+            orderBy("createdAt", "desc"),
+            limit(PRODUCTS_PER_PAGE)
+          )
+        : query(
+            collection(db, "products"),
+            where("status", "==", activeTab),
+            orderBy("createdAt", "desc"),
+            limit(PRODUCTS_PER_PAGE)
+          );
 
       const snap = await getDocs(q);
       const items = snap.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-      }));
+      })) as ModerationProduct[];
       setProducts(items);
+      setLastVisible(snap.docs[snap.docs.length - 1]);
     } catch (err) {
       console.error("Error fetching products for moderation:", err);
     } finally {
@@ -80,11 +112,59 @@ export const ProductModeration: React.FC = () => {
     }
   };
 
+  const loadMore = async () => {
+    if (!lastVisible) return;
+    try {
+      const { limit, startAfter } = await import("firebase/firestore");
+      let q = selectedCategory !== "Tous"
+        ? query(
+            collection(db, "products"),
+            where("status", "==", activeTab),
+            where("category", "==", selectedCategory),
+            orderBy("createdAt", "desc"),
+            startAfter(lastVisible),
+            limit(PRODUCTS_PER_PAGE)
+          )
+        : query(
+            collection(db, "products"),
+            where("status", "==", activeTab),
+            orderBy("createdAt", "desc"),
+            startAfter(lastVisible),
+            limit(PRODUCTS_PER_PAGE)
+          );
+
+      const snap = await getDocs(q);
+      const items = snap.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as ModerationProduct[];
+      setProducts(prev => [...prev, ...items]);
+      setLastVisible(snap.docs[snap.docs.length - 1]);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
-  }, [activeTab]);
+  }, [activeTab, selectedCategory]);
 
-  const handleApprove = async (product: any) => {
+  const logModerationAction = async (action: string, productId: string, details: string) => {
+    await addDoc(collection(db, "audit_logs"), {
+      type: 'PRODUCT_MODERATION',
+      action,
+      productId,
+      adminId: currentUser?.uid,
+      details,
+      timestamp: serverTimestamp()
+    });
+  };
+
+  const handleApprove = async (product: ModerationProduct) => {
+    if (!currentUser || userProfile?.role !== 'admin') {
+      toast.error("Action non autorisée");
+      return;
+    }
     const toastId = toast.loading(t("Approbation en cours..."));
     try {
       const token = await currentUser?.getIdToken(true);
@@ -96,6 +176,7 @@ export const ProductModeration: React.FC = () => {
       if (!res.ok) throw new Error("Erreur serveur");
       const data = await res.json();
       setProducts((prev) => prev.filter((p) => p.id !== product.id));
+      await logModerationAction('APPROVE', product.id, 'Produit approuvé');
       toast.success(
         isArabic
           ? "تمت الموافقة على المنتج " + product.name + " بنجاح!"
@@ -108,7 +189,7 @@ export const ProductModeration: React.FC = () => {
     }
   };
 
-  const handleOpenRejectModal = (product: any) => {
+  const handleOpenRejectModal = (product: ModerationProduct) => {
     setTargetProduct(product);
     setRejectReason(preconfiguredReasons[0]);
     setCustomReason("");
@@ -116,6 +197,10 @@ export const ProductModeration: React.FC = () => {
   };
 
   const handleRejectSubmit = async () => {
+    if (!currentUser || userProfile?.role !== 'admin') {
+      toast.error("Action non autorisée");
+      return;
+    }
     if (!targetProduct) return;
     const finalReason = rejectReason === "Autre reason" ? customReason : rejectReason;
     if (!finalReason.trim()) {
@@ -133,6 +218,7 @@ export const ProductModeration: React.FC = () => {
       });
       if (!res.ok) throw new Error("Erreur serveur");
       setProducts((prev) => prev.filter((p) => p.id !== targetProduct.id));
+      await logModerationAction('REJECT', targetProduct.id, `Produit rejeté: ${finalReason}`);
       setRejectModalOpen(false);
       setTargetProduct(null);
       toast.success(
@@ -145,39 +231,55 @@ export const ProductModeration: React.FC = () => {
     }
   };
 
-  const handleConfirmDelete = async (product: any) => {
+  const handleConfirmDelete = async (product: ModerationProduct) => {
+    if (!currentUser || userProfile?.role !== 'admin') {
+      toast.error("Action non autorisée");
+      return;
+    }
     const confirmationText = isArabic
       ? `هل تريد حذف المنتج "${product.name}" نهائيًا من الكتالوج؟`
-      : `Voulez-vous supprimer définitivement le produit "${product.name}" du catalogue ?`;
+      : `SUPPRIMER DÉFINITIVEMENT ce produit ? Cette action est irréversible.`;
 
-    if (window.confirm(confirmationText)) {
-      try {
-        await deleteDoc(doc(db, "products", product.id));
-        setProducts((prev) => prev.filter((p) => p.id !== product.id));
-        toast.success(t("Le produit a été définitivement supprimé."));
-      } catch (err) {
-        console.error("Error deleting product:", err);
-        toast.error(t("Erreur lors de la suppression définitive."));
-      }
+    const confirmed = await showConfirmModal(confirmationText);
+    if (!confirmed) return;
+
+    try {
+      await updateDoc(doc(db, "products", product.id), {
+        status: 'deleted',
+        deletedAt: serverTimestamp(),
+        deletedBy: currentUser.uid
+      });
+      await logModerationAction('SOFT_DELETE', product.id, 'Produit supprimé (soft delete)');
+      setProducts((prev) => prev.filter((p) => p.id !== product.id));
+      toast.success(t("Produit supprimé (soft delete)"));
+    } catch (err) {
+      console.error("Error deleting product:", err);
+      toast.error(t("Erreur lors de la suppression."));
     }
   };
 
-  const handleDenyDelete = async (product: any) => {
+  const handleDenyDelete = async (product: ModerationProduct) => {
+    if (!currentUser || userProfile?.role !== 'admin') {
+      toast.error("Action non autorisée");
+      return;
+    }
     const confirmationText = isArabic
       ? `هل تريد رفض الحذف والإبقاء على المنتج "${product.name}" نشطًا عبر الإنترنت؟`
       : `Voulez-vous refuser la suppression et conserver le produit "${product.name}" actif en ligne ?`;
 
-    if (window.confirm(confirmationText)) {
-      try {
-        await updateDoc(doc(db, "products", product.id), {
-          status: "active",
-        });
-        setProducts((prev) => prev.filter((p) => p.id !== product.id));
-        toast.success(t("La suppression a été refusée et le produit est réactivé."));
-      } catch (err) {
-        console.error("Error setting product as active:", err);
-        toast.error(t("Erreur lors de la réactivation."));
-      }
+    const confirmed = await showConfirmModal(confirmationText);
+    if (!confirmed) return;
+
+    try {
+      await updateDoc(doc(db, "products", product.id), {
+        status: "active",
+      });
+      await logModerationAction('DENY_DELETE', product.id, 'Suppression refusée, produit réactivé');
+      setProducts((prev) => prev.filter((p) => p.id !== product.id));
+      toast.success(t("La suppression a été refusée et le produit est réactivé."));
+    } catch (err) {
+      console.error("Error setting product as active:", err);
+      toast.error(t("Erreur lors de la réactivation."));
     }
   };
 
@@ -487,6 +589,16 @@ export const ProductModeration: React.FC = () => {
               );
             })}
           </AnimatePresence>
+          {lastVisible && (
+            <div className="flex justify-center mt-12 mb-8">
+              <button
+                onClick={loadMore}
+                className="px-8 py-3 bg-white border border-stone-200 text-stone-900 rounded-full font-black text-xs uppercase tracking-widest hover:border-orange-500 hover:text-orange-500 transition-all flex items-center gap-2 shadow-sm"
+              >
+                {t("Afficher plus de produits")}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -592,6 +704,7 @@ export const ProductModeration: React.FC = () => {
           </div>
         )}
       </AnimatePresence>
+      <ConfirmationDialog />
     </div>
   );
 };

@@ -47,7 +47,7 @@ export const Verification: React.FC = () => {
   const currentStatus = statuses[status as keyof typeof statuses] || statuses.pending_verification;
 
   const simulateSubmission = async () => {
-     const uid = auth.currentUser?.uid;
+     const uid = userProfile?.uid;
      if (!uid) {
        toast.error(isArabic ? "لم يتم التعرف على الهوية (Auth)" : "Non identifié (Auth)");
        return;
@@ -55,7 +55,9 @@ export const Verification: React.FC = () => {
      setLoading(true);
      try {
        toast.loading(isArabic ? "جاري تشغيل المحاكاة..." : "Simulation en cours...", { id: "sim" });
-       (process.env.NODE_ENV === 'debug' ? console.log : function(){})("Simulating for UID:", uid);
+       if (process.env.NODE_ENV === 'development') {
+         console.log("Simulating for UID:", uid);
+       }
        
        // Simulate Update directly in 'users/uid'
        await setDoc(doc(db, "users", uid), {
@@ -68,10 +70,10 @@ export const Verification: React.FC = () => {
        await addDoc(collection(db, "internal_notifications"), {
          type: "DOCUMENT_SUBMISSION",
          sellerId: uid,
-         sellerName: userProfile?.displayName || auth.currentUser?.displayName || "Simulateur Test",
+         sellerName: userProfile?.displayName || userProfile?.name || "Simulateur Test",
          read: false,
          createdAt: serverTimestamp(),
-         message: `TEST SIMULATION: Le vendeur ${userProfile?.displayName || auth.currentUser?.displayName || "TEST"} a soumis ses documents.`
+         message: `TEST SIMULATION: Le vendeur ${userProfile?.displayName || userProfile?.name || "TEST"} a soumis ses documents.`
        });
 
        toast.success(isArabic ? "نجحت المحاكاة! سيرى المشرف إخطارًا بالتحقق." : "Simulation réussie ! L'admin devrait voir une notification.", { id: "sim" });
@@ -85,7 +87,7 @@ export const Verification: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const uid = auth.currentUser?.uid;
+    const uid = userProfile?.uid;
     if (!uid) {
       toast.error(isArabic ? "يرجى تسجيل الدخول مجدداً." : "Veuillez vous reconnecter.");
       return;
@@ -100,24 +102,56 @@ export const Verification: React.FC = () => {
       return;
     }
 
+    const ALLOWED_KYC_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
+    const MAX_KYC_SIZE = 10 * 1024 * 1024; // 10MB
+
+    const validateKYCFile = (file: File): boolean => {
+      if (!ALLOWED_KYC_TYPES.includes(file.type)) {
+        toast.error(isArabic ? "تنسيق PDF أو JPG أو PNG فقط" : "Format PDF, JPG ou PNG uniquement");
+        return false;
+      }
+      if (file.size > MAX_KYC_SIZE) {
+        toast.error(isArabic ? "ملف كبير جدًا (الحد الأقصى 10 ميغابايت)" : "Fichier trop volumineux (max 10MB)");
+        return false;
+      }
+      return true;
+    };
+
     setLoading(true);
     let finalFileRC = formData.fileRC;
     let finalFileId = formData.fileId;
     let finalFileRib = formData.fileRib;
 
+    // Validate files before upload
+    if (selectedFileRC && !validateKYCFile(selectedFileRC)) { setLoading(false); return; }
+    if (selectedFileId && !validateKYCFile(selectedFileId)) { setLoading(false); return; }
+    if (selectedFileRib && !validateKYCFile(selectedFileRib)) { setLoading(false); return; }
+
     try {
-      setUploadProgress(isArabic ? "جاري رفع المستندات بأمان إلى Google Drive..." : "Upload sécurisé des documents vers Google Drive (KYC Vault)...");
+      setUploadProgress(isArabic ? "جاري رفع المستندات (KYC)..." : "Upload sécurisé des documents (KYC Vault)...");
       
-      const uid = auth.currentUser?.uid || "unknown";
+      const uploadKYCFile = async (file: File, prefix: string) => {
+        try {
+          const extension = file.name.split('.').pop() || 'png';
+          const fileName = `${prefix}_${Date.now()}.${extension}`;
+          const storageRef = ref(storage, `kyc/${uid}/${fileName}`);
+          await uploadBytes(storageRef, file);
+          return await getDownloadURL(storageRef);
+        } catch (err) {
+          toast.error(isArabic ? "حدث خطأ أثناء تحميل المستند" : "Erreur lors de l'upload du document");
+          console.error(err);
+          return null;
+        }
+      };
 
       if (selectedFileRC) {
-         finalFileRC = await systemUploadKYCToDrive(selectedFileRC, uid);
+         finalFileRC = await uploadKYCFile(selectedFileRC, "RC") || finalFileRC;
       }
       if (selectedFileId) {
-         finalFileId = await systemUploadKYCToDrive(selectedFileId, uid);
+         finalFileId = await uploadKYCFile(selectedFileId, "ID") || finalFileId;
       }
       if (selectedFileRib) {
-         finalFileRib = await systemUploadKYCToDrive(selectedFileRib, uid);
+         finalFileRib = await uploadKYCFile(selectedFileRib, "RIB") || finalFileRib;
       }
 
       setUploadProgress(isArabic ? "جاري حفظ البيانات..." : "Sauvegarde des données...");
@@ -234,21 +268,23 @@ export const Verification: React.FC = () => {
       </div>
 
       <div className="bg-white rounded-[2.5rem] border border-zinc-100 shadow-sm overflow-hidden p-10">
-         <div className="bg-emerald-50 border border-emerald-100 rounded-3xl p-6 flex items-start gap-4 mb-10">
-             <ShieldCheck className="w-6 h-6 text-emerald-600 mt-1" />
-             <div className="flex-1">
-                <p className="text-emerald-900 font-black text-[12px] uppercase tracking-widest rtl:tracking-normal">{t("Mode Diagnostic Olma")}</p>
-                <p className="text-emerald-700/80 text-[11px] font-medium mt-1 leading-relaxed">
-                  {t("Utilisez ce bouton pour tester instantanément si l'administration reçoit vos signaux de validation.")}</p>
-                <button 
-                  type="button"
-                  onClick={simulateSubmission}
-                  disabled={loading}
-                  className="mt-4 px-6 py-2.5 bg-emerald-600 text-white text-[10px] uppercase font-black tracking-widest rtl:tracking-normal rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20 cursor-pointer border-none disabled:opacity-50"
-                >
-                  {t("SIMULER UNE RÉCEPTION ADMIN")}</button>
-             </div>
-          </div>
+         {process.env.NODE_ENV === 'development' && (
+           <div className="bg-emerald-50 border border-emerald-100 rounded-3xl p-6 flex items-start gap-4 mb-10">
+               <ShieldCheck className="w-6 h-6 text-emerald-600 mt-1" />
+               <div className="flex-1">
+                  <p className="text-emerald-900 font-black text-[12px] uppercase tracking-widest rtl:tracking-normal">{t("Mode Diagnostic Olma")}</p>
+                  <p className="text-emerald-700/80 text-[11px] font-medium mt-1 leading-relaxed">
+                    {t("Utilisez ce bouton pour tester instantanément si l'administration reçoit vos signaux de validation.")}</p>
+                  <button 
+                    type="button"
+                    onClick={simulateSubmission}
+                    disabled={loading}
+                    className="mt-4 px-6 py-2.5 bg-emerald-600 text-white text-[10px] uppercase font-black tracking-widest rtl:tracking-normal rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20 cursor-pointer border-none disabled:opacity-50"
+                  >
+                    {t("SIMULER UNE RÉCEPTION ADMIN")}</button>
+               </div>
+            </div>
+         )}
 
          <form onSubmit={handleSubmit} className="space-y-10">
             {/* Étape 1 : Le Profil Artistique */}

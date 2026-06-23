@@ -9,15 +9,27 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "node scripts/check-social-kill-switch.cjs && node scripts/check-rtl-logical-placement.cjs && npx tsx scripts/check-localization-zero-hardcoding.ts && vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
+    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "start": "node dist/server.cjs",
+    "audit:olmart": "node scripts/check-social-kill-switch.cjs && node scripts/check-rtl-logical-placement.cjs && node scripts/check-localization-zero-hardcoding.cjs",
     "test": "vitest run",
     "lint": "tsc --noEmit",
-    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css,md}\""
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css,md}\"",
+    "prepare": "node -e \"try { if (require('fs').existsSync('.git')) { require('child_process').execSync('husky', { stdio: 'inherit' }); } } catch (e) {}\"",
+    "backup:firestore": "tsx scripts/backup-firestore.ts"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "prettier --write",
+      "tsc --noEmit"
+    ],
+    "*.{css,md}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
-    "@sentry/react": "^10.55.0",
+    "@sentry/react": "^10.59.0",
     "@tanstack/react-table": "^8.21.3",
     "@vitalets/google-translate-api": "^9.2.1",
     "browser-image-compression": "^2.0.2",
@@ -62,6 +74,7 @@
   },
   "devDependencies": {
     "@firebase/eslint-plugin-security-rules": "^0.0.2",
+    "@firebase/rules-unit-testing": "^5.0.1",
     "@tailwindcss/vite": "^4.3.0",
     "@types/compression": "^1.8.1",
     "@types/express": "^4.17.25",
@@ -70,6 +83,8 @@
     "@types/swagger-ui-express": "^4.1.8",
     "@vitejs/plugin-react": "^5.0.4",
     "esbuild": "^0.25.12",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.8",
     "prettier": "^3.8.4",
     "tailwindcss": "^4.3.0",
     "ts-morph": "^28.0.0",

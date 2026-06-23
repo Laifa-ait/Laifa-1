@@ -17,15 +17,16 @@ import {
   Percent,
 } from "lucide-react";
 import { db } from "../../lib/firebase";
-import { collection, query, getDocs, updateDoc, doc, getDoc, setDoc, orderBy, increment } from "firebase/firestore";
+import { collection, query, getDocs, updateDoc, doc, getDoc, setDoc, orderBy, increment, limit, serverTimestamp, addDoc } from "firebase/firestore";
 import { formatPrice } from "../../utils/format";
 import { WithdrawalRequest } from "../../types";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
-import * as XLSX from "xlsx";
+import { useAuth } from "../../context/AuthContext";
 
 export const Finances: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const { currentUser, userProfile } = useAuth();
   const isArabic = i18n.language === "ar" || i18n.language?.startsWith("ar");
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,7 +39,6 @@ export const Finances: React.FC = () => {
   useEffect(() => {
     const fetchFinancesData = async () => {
       try {
-        const { limit } = await import("firebase/firestore");
         const q = query(collection(db, "withdrawals"), orderBy("createdAt", "desc"), limit(100));
         const snap = await getDocs(q);
         setWithdrawals(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as WithdrawalRequest));
@@ -61,9 +61,14 @@ export const Finances: React.FC = () => {
     fetchFinancesData();
   }, []);
 
+  const handleCommissionChange = (value: number) => {
+    const clamped = Math.min(Math.max(value, 0), 50); // 0% a 50%
+    setGlobalCommission(clamped);
+  };
+
   const handleSaveCommission = async () => {
-    if (globalCommission < 0 || globalCommission > 100) {
-      toast.error(t("Taux de commission invalide"));
+    if (globalCommission < 0 || globalCommission > 50) {
+      toast.error(t("Taux de commission invalide (max 50%)"));
       return;
     }
     setIsSavingCommission(true);
@@ -78,32 +83,34 @@ export const Finances: React.FC = () => {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 500 * 1024) {
-        // 500kb limit for base64 mockup
-        toast.error(t("Le fichier est trop lourd. Limite : 500ko (pour la démo)."));
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setReceiptValue(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+  const logFinanceAction = async (action: string, withdrawalId: string, amount: number) => {
+    await addDoc(collection(db, "finance_logs"), {
+      type: 'WITHDRAWAL_' + action.toUpperCase(),
+      withdrawalId,
+      amount,
+      adminId: currentUser?.uid,
+      timestamp: serverTimestamp()
+    });
+  };
+
+  const validateReceipt = (value: string): boolean => {
+    return /^[A-Z0-9]{5,30}$/i.test(value.trim());
   };
 
   const handleMarkAsPaid = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentUser || userProfile?.role !== 'admin') {
+      toast.error("Action non autorisée");
+      return;
+    }
     if (!selectedWithdrawal) return;
-    if (!receiptValue) {
-      return toast.error(t("Vous devez fournir une preuve de virement."));
+    if (!validateReceipt(receiptValue)) {
+      toast.error("Numéro de reçu invalide (5-30 caractères alphanumériques)");
+      return;
     }
 
     setProcessing(true);
     try {
-      const { currentUser } = await import("../../lib/firebase").then((m) => m.auth);
       const token = await currentUser?.getIdToken();
 
       const res = await fetch(`/api/admin/withdrawals/${selectedWithdrawal.id}/approve`, {
@@ -123,6 +130,7 @@ export const Finances: React.FC = () => {
         )
       );
 
+      await logFinanceAction('APPROVE', selectedWithdrawal.id, selectedWithdrawal.amount);
       toast.success(t("Retrait marqué comme payé !"));
       setSelectedWithdrawal(null);
       setReceiptValue("");
@@ -135,13 +143,16 @@ export const Finances: React.FC = () => {
   };
 
   const handleRejectWithdrawal = async () => {
+    if (!currentUser || userProfile?.role !== 'admin') {
+      toast.error("Action non autorisée");
+      return;
+    }
     if (!selectedWithdrawal) return;
     const reason = prompt(t("Motif du rejet (ex: RIB Invalide) :"));
     if (!reason) return toast.error(t("Le motif est obligatoire pour un rejet."));
 
     setProcessing(true);
     try {
-      const { currentUser } = await import("../../lib/firebase").then((m) => m.auth);
       const token = await currentUser?.getIdToken();
 
       const res = await fetch(`/api/admin/withdrawals/${selectedWithdrawal.id}/reject`, {
@@ -157,6 +168,7 @@ export const Finances: React.FC = () => {
 
       setWithdrawals(withdrawals.map((w) => (w.id === selectedWithdrawal.id ? { ...w, status: "CANCELED" } : w)));
 
+      await logFinanceAction('REJECT', selectedWithdrawal.id, selectedWithdrawal.amount);
       toast.success(t("Retrait rejeté et fonds recrédités !"));
       setSelectedWithdrawal(null);
       setReceiptValue("");
@@ -386,7 +398,7 @@ export const Finances: React.FC = () => {
               <h3 className="text-2xl font-black text-zinc-900 tracking-tight rtl:tracking-normal mb-2">
                 {t("Confirmer le paiement")}
               </h3>
-              <p className="text-zinc-500 text-sm mb-6">{t("Uploadez la preuve de virement (image/PDF).")}</p>
+              <p className="text-zinc-500 text-sm mb-6">{t("Entrez le N° de reçu du virement.")}</p>
 
               <div className="bg-zinc-50 rounded-2xl p-4 mb-6 border border-zinc-100">
                 <p className="text-[10px] font-black uppercase text-zinc-400 tracking-widest rtl:tracking-normal mb-1">
@@ -404,25 +416,14 @@ export const Finances: React.FC = () => {
 
               <form onSubmit={handleMarkAsPaid} className="space-y-6">
                 <div>
-                  <div>
-                    <div className="relative overflow-hidden w-full px-5 py-4 bg-zinc-50 border border-zinc-200 border-dashed rounded-2xl flex items-center justify-center hover:bg-zinc-100 transition-colors cursor-pointer">
-                      <input
-                        type="file"
-                        required
-                        accept="image/*,application/pdf"
-                        onChange={handleFileChange}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      />
-                      <div className="flex flex-col items-center text-center gap-2 pointer-events-none">
-                        <Upload className="w-6 h-6 text-zinc-400" />
-                        <span className="text-xs font-bold text-zinc-500">
-                          {receiptValue
-                            ? "Fichier chargé (Cliquez pour changer)"
-                            : "Cliquez ou glissez une image preuve ici"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                  <input
+                    type="text"
+                    required
+                    placeholder="N° de reçu (ex: TR12345678)"
+                    value={receiptValue}
+                    onChange={(e) => setReceiptValue(e.target.value)}
+                    className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl p-4 font-bold text-sm outline-none shrink"
+                  />
                 </div>
 
                 <div className="flex flex-col gap-3">

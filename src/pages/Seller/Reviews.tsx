@@ -1,27 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { Star, MessageSquareQuote, Search, ExternalLink } from 'lucide-react';
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { Star, MessageSquareQuote, Search, ExternalLink, Loader2 } from 'lucide-react';
+import { collection, query, where, getDocs, orderBy, limit, startAfter } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 import { useTranslation } from "react-i18next";
 
 export const SellerReviews: React.FC = () => {
-    const { t } = useTranslation();
+   const { t } = useTranslation();
    const { currentUser } = useAuth();
    const [reviews, setReviews] = useState<any[]>([]);
    const [loading, setLoading] = useState(true);
+   const [loadingMore, setLoadingMore] = useState(false);
    const [averageRating, setAverageRating] = useState(0);
+   const [lastVisible, setLastVisible] = useState<any>(null);
+   const [productIdsState, setProductIdsState] = useState<string[]>([]);
+   const [productNamesState, setProductNamesState] = useState<Record<string, string>>({});
+   
+   const REVIEWS_PER_PAGE = 10;
 
    useEffect(() => {
       const fetchReviews = async () => {
          if (!currentUser) return;
          try {
-            // Dans Firestore, les reviews ont l'ID du produit = productID. 
-            // Mais comment trouver les reviews du vendeur ?
-            // On récupère d'abord les produits du vendeur.
-            const { limit } = await import('firebase/firestore');
             const productsQuery = query(collection(db, "products"), where("sellerId", "==", currentUser.uid), limit(500));
             const productsSnap = await getDocs(productsQuery);
             const productIds = productsSnap.docs.map(d => d.id);
@@ -30,23 +32,32 @@ export const SellerReviews: React.FC = () => {
                return acc;
             }, {} as any);
 
-            // Comme Firestore a des limitations sur "where in" (max 30), s'il a beaucoup de produits, 
-            // il vaut mieux récupérer les reviews d'une autre manière.
-            // Pour l'instant, on va simuler en récupérant les reviews globales et en filtrant.
-            // Idéalement, chaque review devrait avoir "sellerId". S'il ne l'a pas, on filtre en frontend.
+            setProductIdsState(productIds);
+            setProductNamesState(productNames);
             
             if (productIds.length > 0) {
-              const reviewsQuery = query(collection(db, "reviews"), orderBy("createdAt", "desc"), limit(1000));
-              const allReviews = await getDocs(reviewsQuery);
-              const sellerReviews = allReviews.docs
-                  .map(d => ({ id: d.id, ...(d.data() as any) }))
-                  .filter((r: any) => productIds.includes(r.productId));
-
-              setReviews(sellerReviews.map((r: any) => ({ ...r, productName: productNames[r.productId] })));
+              const BATCH_SIZE = 10;
+              const batchToUse = productIds.slice(0, BATCH_SIZE);
               
-              if (sellerReviews.length > 0) {
-                 const avg = sellerReviews.reduce((sum: number, r: any) => sum + r.rating, 0) / sellerReviews.length;
-                 setAverageRating(Math.round(avg * 10) / 10);
+              if (batchToUse.length > 0) {
+                 const reviewsQuery = query(
+                   collection(db, "reviews"),
+                   where("productId", "in", batchToUse),
+                   orderBy("createdAt", "desc"),
+                   limit(REVIEWS_PER_PAGE)
+                 );
+                 const snap = await getDocs(reviewsQuery);
+                 const sellerReviews = snap.docs.map(d => ({ id: d.id, ...(d.data() as any) }));
+   
+                 setReviews(sellerReviews.map((r: any) => ({ ...r, productName: productNames[r.productId] })));
+                 setLastVisible(snap.docs[snap.docs.length - 1] || null);
+                 
+                 // Calculates average overall if we fetch them all without limit (using another query if needed), 
+                 // but for performance we just use what we loaded.
+                 if (sellerReviews.length > 0) {
+                    const avg = sellerReviews.reduce((sum: number, r: any) => sum + r.rating, 0) / sellerReviews.length;
+                    setAverageRating(Math.round(avg * 10) / 10);
+                 }
               }
             }
          } catch (err) {
@@ -57,6 +68,29 @@ export const SellerReviews: React.FC = () => {
       };
       fetchReviews();
    }, [currentUser]);
+
+   const loadMoreReviews = async () => {
+     if (!lastVisible || productIdsState.length === 0) return;
+     setLoadingMore(true);
+     try {
+       const batchToUse = productIdsState.slice(0, 10);
+       const reviewsQuery = query(
+         collection(db, "reviews"),
+         where("productId", "in", batchToUse),
+         orderBy("createdAt", "desc"),
+         startAfter(lastVisible),
+         limit(REVIEWS_PER_PAGE)
+       );
+       const snap = await getDocs(reviewsQuery);
+       const newReviews = snap.docs.map(d => ({ id: d.id, ...d.data(), productName: productNamesState[(d.data() as any).productId] }));
+       setReviews(prev => [...prev, ...newReviews]);
+       setLastVisible(snap.docs[snap.docs.length - 1] || null);
+     } catch (err) {
+       console.error(err);
+     } finally {
+       setLoadingMore(false);
+     }
+   };
 
    if (loading) return <div className="p-6 text-zinc-500 text-center font-bold">{t("Chargement des avis...")}</div>;
 
@@ -116,6 +150,18 @@ export const SellerReviews: React.FC = () => {
                         </p>
                      </div>
                   ))}
+                  {lastVisible && (
+                     <div className="pt-6 flex justify-center">
+                        <button 
+                           onClick={loadMoreReviews} 
+                           disabled={loadingMore}
+                           className="px-6 py-3 bg-white border border-zinc-200 text-zinc-900 rounded-full font-black text-xs uppercase tracking-widest rtl:tracking-normal hover:border-orange-500 hover:text-orange-500 transition-all flex items-center gap-2 shadow-sm relative group"
+                        >
+                           {loadingMore && <Loader2 className="w-4 h-4 animate-spin" />}
+                           {loadingMore ? t("Chargement...") : t("Afficher plus d'avis")}
+                        </button>
+                     </div>
+                  )}
                </div>
             )}
          </div>

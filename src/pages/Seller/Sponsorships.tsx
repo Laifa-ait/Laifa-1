@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'motion/react';
 import { Megaphone, Star, CheckCircle2, ChevronRight, Search, ShieldAlert, BadgeInfo, Zap, Clock, TrendingUp, Sparkles, HelpCircle } from 'lucide-react';
 import { db } from '../../lib/firebase';
-import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, serverTimestamp, limit } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
 import { Product } from '../../types';
 import { toast } from 'react-hot-toast';
@@ -26,12 +26,12 @@ export const SellerSponsorships: React.FC = () => {
     if (!currentUser) return;
     setLoading(true);
     try {
-      const { limit } = await import('firebase/firestore');
       // 1. Fetch products
       const q = query(
         collection(db, 'products'),
         where('sellerId', '==', currentUser.uid),
-        limit(500)
+        where('status', '==', 'active'),
+        limit(50)
       );
       const snapshot = await getDocs(q);
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Product[];
@@ -66,6 +66,17 @@ export const SellerSponsorships: React.FC = () => {
   const handleSubmitSponsorship = async () => {
     if (!agreedToConditions || !selectedProduct || !currentUser || !userProfile) {
       toast.error("Vous devez accepter les conditions pour continuer.");
+      return;
+    }
+
+    if (selectedProduct.status !== 'active') {
+      toast.error("Seuls les produits approuvés peuvent être sponsorisés");
+      return;
+    }
+
+    const activeSponsorships = sponsorshipRequests.filter(r => r.status === 'active' || r.status === 'approved').length;
+    if (activeSponsorships >= 5) {
+      toast.error("Limite de 5 sponsorings actifs atteinte");
       return;
     }
 

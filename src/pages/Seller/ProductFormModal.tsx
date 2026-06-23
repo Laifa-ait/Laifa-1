@@ -42,6 +42,7 @@ import { PRODUCT_HIERARCHY, PRODUCT_COLORS } from '../../constants';
 import { useTranslation } from "react-i18next";
 import { maskSensitiveData } from '../../utils/masking';
 import { sanitizeXSS } from '../../utils/sanitization';
+import { useConfirm } from '../../hooks/useConfirm';
 
 export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   onClose,
@@ -54,6 +55,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   onSaveSuccess
 }) => {
   const { t } = useTranslation();
+  const { confirm: showConfirmModal, ConfirmationDialog } = useConfirm();
   const [activeStep, setActiveStep] = useState(0);
   
   const [formData, setFormData] = useState({
@@ -208,10 +210,10 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
     if (!formData.name) return toast.error("Entrez un nom de produit d'abord.");
     setAiGenerating(true);
     try {
-      const currentAuthUser = auth.currentUser;
-      let idToken = "";
-      if (currentAuthUser) {
-        idToken = await currentAuthUser.getIdToken();
+      const idToken = await currentUser?.getIdToken() || "";
+      if (!idToken) {
+        toast.error("Session expirée, veuillez vous reconnecter");
+        return;
       }
       const response = await fetch('/api/generate-description', {
         method: 'POST',
@@ -265,12 +267,29 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
     });
   };
 
+  const MAX_IMAGES = 8;
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video', index?: number) => {
     const file = e.target.files?.[0];
     if (!file || !currentUser) return;
 
+    if (type === 'image') {
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        toast.error("Format non supporté. Utilisez JPG, PNG, WebP ou GIF.");
+        return;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error("Image trop lourde. Maximum 5MB.");
+        return;
+      }
+      if (index === undefined && formData.images && formData.images.length >= MAX_IMAGES) {
+        toast.error(`Maximum ${MAX_IMAGES} images par produit`);
+        return;
+      }
+    }
     if (type === 'video' && file.size > 10 * 1024 * 1024) return toast.error("Vidéo trop lourde (Max 10Mo)");
-    if (type === 'image' && file.size > 5 * 1024 * 1024) return toast.error("Image trop lourde (Max 5Mo)");
 
     const uploadKey = index !== undefined ? `image-${index}` : type;
     setUploading(prev => ({ ...prev, [uploadKey]: true }));
@@ -406,10 +425,10 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       // The new system is "Smart": it detects the source language of each field.
       if ((formData.autoTranslate || !finalTranslations.en?.name || !finalTranslations.ar?.name) && formData.name && formData.description) {
          try {
-            const currentAuthUser = auth.currentUser;
-            let idToken = "";
-            if (currentAuthUser) {
-              idToken = await currentAuthUser.getIdToken();
+            const idToken = await currentUser?.getIdToken() || "";
+            if (!idToken) {
+              toast.error("Session expirée, veuillez vous reconnecter");
+              return;
             }
             const response = await fetch('/api/translate-product', {
                method: 'POST',
@@ -445,22 +464,32 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
             }
          } catch (e) {
             console.error("Auto-translation failed before save", e);
+            const shouldContinue = await showConfirmModal("La traduction automatique a échoué. Voulez-vous continuer sans traductions ?");
+            if (!shouldContinue) {
+              setLoading(false);
+              return;
+            }
          }
       }
 
+      const safeParseFloat = (value: string | undefined | null): number | null => {
+        const trimmed = value?.trim();
+        if (!trimmed) return null;
+        const parsed = parseFloat(trimmed);
+        if (isNaN(parsed) || !isFinite(parsed)) return null;
+        if (!/^-?\d+(\.\d+)?$/.test(trimmed)) return null;
+        return parsed;
+      };
+
       const hasPromo = formData.promoPrice && parseFloat(formData.promoPrice) > 0;
-      const parsedMainPrice = parseFloat(formData.price?.trim() || '0') || 0;
-      const parsedPromoPrice = hasPromo ? (parseFloat(formData.promoPrice?.trim() || '0') || 0) : null;
-      const costPriceVal = (formData.costPrice && formData.costPrice.trim() !== '') ? parseFloat(formData.costPrice.trim()) : null;
+      const parsedMainPrice = safeParseFloat(formData.price) ?? 0;
+      const parsedPromoPrice = hasPromo ? (safeParseFloat(formData.promoPrice) || null) : null;
+      const costPriceVal = safeParseFloat(formData.costPrice);
       
-      const parsedFlashPrice = (formData.flashSaleActive && formData.flashPrice && formData.flashPrice.trim() !== '') ? parseFloat(formData.flashPrice.trim()) : null;
+      const parsedFlashPrice = formData.flashSaleActive ? safeParseFloat(formData.flashPrice) : null;
       const parsedFlashQty = (formData.flashSaleActive && formData.flashQuantity && formData.flashQuantity.trim() !== '') ? parseInt(formData.flashQuantity.trim(), 10) : null;
 
-      if (!formData.name || formData.name.trim() === '') {
-      toast.error("Veuillez saisir le nom du produit.");
-      return;
-    }
-    const valPrice = parseFloat(formData.price);
+    const valPrice = parsedMainPrice;
     if (!formData.price || isNaN(valPrice) || valPrice < 0) {
       toast.error("Veuillez saisir un prix de produit valide.");
       return;
@@ -496,7 +525,12 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       // Image Verification with OCR for Sellers
       if (validImages.length > 0 && !isEdit) {
          try {
-           const idToken = await currentUser.getIdToken();
+           const idToken = await currentUser?.getIdToken() || "";
+           if (!idToken) {
+              toast.error("Session expirée");
+              setLoading(false);
+              return;
+           }
            for (const imgUrl of validImages) {
               const ocrRes = await fetch('/api/seller/analyze-image', {
                  method: 'POST',
@@ -588,19 +622,35 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       if (!productData.subcategory) delete productData.subcategory;
       if (!productData.subSubCategory) delete productData.subSubCategory;
 
-      const originalUpdatedAt = productData.updatedAt;
-      delete productData.updatedAt;
-      
-      const cleanProductData = JSON.parse(JSON.stringify(productData));
-      cleanProductData.updatedAt = originalUpdatedAt;
+      const { updatedAt, ...productDataWithoutTimestamp } = productData;
+      const cleanProductData = {
+        ...JSON.parse(JSON.stringify(productDataWithoutTimestamp)),
+        updatedAt: serverTimestamp(),
+      };
       
       if (editingProduct) {
+        cleanProductData.createdAt = editingProduct.createdAt;
+      }
+      
+      const arraysEqual = (a: any[], b: any[]): boolean => {
+        if (!a || !b || a.length !== b.length) return false;
+        const setA = new Set(a);
+        return b.every(x => setA.has(x));
+      };
+      
+      if (editingProduct) {
+        if (editingProduct.sellerId !== currentUser?.uid) {
+          toast.error("Produit non autorisé");
+          setLoading(false);
+          return;
+        }
+
         // Validation stricte anti-fraude: Si le vendeur modifie l'identité du produit (photos, nom, description, variantes),
         // on le repasse en statut 'pending' pour forcer une validation par l'équipe Olmart
         const coreIdentityChanged = 
           editingProduct.name !== cleanProductData.name ||
           editingProduct.description !== cleanProductData.description ||
-          JSON.stringify(editingProduct.images) !== JSON.stringify(cleanProductData.images) ||
+          !arraysEqual(editingProduct.images, cleanProductData.images) ||
           JSON.stringify(editingProduct.variants) !== JSON.stringify(cleanProductData.variants);
           
         if (coreIdentityChanged) {
@@ -623,7 +673,17 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           // Keep prior moderationType or clear it as it might not be relevant if it's already active
         }
 
-        await setDoc(doc(db, "products", editingProduct.id), cleanProductData, { merge: true });
+        const productDataToSave = Object.fromEntries(
+          Object.entries(cleanProductData).filter(([_, v]) =>
+            v !== '' && v !== null && v !== undefined
+          )
+        );
+
+        if (coreIdentityChanged) {
+          await setDoc(doc(db, "products", editingProduct.id), productDataToSave);
+        } else {
+          await setDoc(doc(db, "products", editingProduct.id), productDataToSave, { merge: true });
+        }
         onSaveSuccess({ id: editingProduct.id, ...cleanProductData }, true);
       } else {
         cleanProductData.createdAt = serverTimestamp();
@@ -1644,6 +1704,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         </div>
 
       </motion.div>
+      <ConfirmationDialog />
     </div>
   );
 };

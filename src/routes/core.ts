@@ -84,12 +84,15 @@ router.post(
           .json({ error: "Ce code promo n'est plus actif." });
       }
 
-      if (couponData.expiresAt && couponData.expiresAt.toDate) {
-        if (couponData.expiresAt.toDate() <= new Date()) {
-          return res.status(400).json({ error: "Ce code promo est expiré." });
-        }
-      } else if (couponData.expiresAt && new Date(couponData.expiresAt) <= new Date()) {
-        return res.status(400).json({ error: "Ce code promo est expiré." });
+      const now = new Date();
+      const expiresAt = couponData.expiresAt?.toDate ? couponData.expiresAt.toDate() : (couponData.expiresAt ? new Date(couponData.expiresAt) : undefined);
+
+      if (expiresAt && expiresAt < now) {
+        return res.status(400).json({ error: "Ce coupon a expiré" });
+      }
+
+      if (couponData.maxUses && (couponData.usedCount || 0) >= couponData.maxUses) {
+        return res.status(400).json({ error: "Ce coupon a atteint sa limite d'utilisation" });
       }
 
       if (subtotal < (couponData.minOrderValue || 0)) {

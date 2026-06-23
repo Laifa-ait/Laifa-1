@@ -1,3 +1,17 @@
+export interface UserProfile {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
+  role: "buyer" | "seller" | "admin";
+  isVerified: boolean;
+  onboardingCompleted: boolean;
+  velocitySuspended?: boolean;
+  bgSuspended_reason?: string;
+  createdAt?: Date | any;
+  [key: string]: any;
+}
+
 export interface GuestUser {
   uid: string;
   isGuest: true;

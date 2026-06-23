@@ -15,7 +15,7 @@ import { useAuth } from "../../context/AuthContext";
 import { AlertCircle, ArrowRight, ShieldCheck } from "lucide-react";
 import { VerificationModal } from "../Auth/VerificationModal";
 
-import { SupportFAB } from "../../routes/SupportFAB";
+import { SupportFAB } from "../SupportFAB";
 
 interface LayoutProps {
   children: ReactNode;

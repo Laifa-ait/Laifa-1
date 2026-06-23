@@ -3,7 +3,7 @@ import { motion } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useShop } from "../../context/ShopContext";
-import { MobileSwipeIndicator } from "../UI/MobileSwipeIndicator";
+import { MobileSwipeIndicator } from "../ui/MobileSwipeIndicator";
 import { getOptimizedImageUrl } from "../../utils/imageUtils";
 
 export const NeoCategoryGrid: React.FC<{

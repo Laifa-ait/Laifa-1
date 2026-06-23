@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { AppRouter } from "./AppRouter";
-import { InstallPrompt } from "./pages/Seller/InstallPrompt";
+import { InstallPrompt } from "./components/InstallPrompt";
 import { useTranslation } from "react-i18next";
 
 const App: React.FC = () => {

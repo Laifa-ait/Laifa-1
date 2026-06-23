@@ -54,6 +54,10 @@ export const Checkout: React.FC = () => {
   const [activeAccordion, setActiveAccordion] = useState(1);
   const [successNotifPrompted, setSuccessNotifPrompted] = useState(false);
 
+  const idempotencyKey = useMemo(() => {
+    return `${currentUser?.uid}_${Date.now()}_${Math.random().toString(36).substring(2)}`;
+  }, [currentUser]);
+
   useEffect(() => {
      revalidateCart().catch(err => console.error("Checkout cart hydration error:", err));
   }, [revalidateCart]);
@@ -320,6 +324,7 @@ export const Checkout: React.FC = () => {
         couponCode: appliedCoupon ? appliedCoupon.code : null,
         useCashbackPoints,
         useWallet,
+        idempotencyKey,
       };
 
       const data = await processCheckout(payload);

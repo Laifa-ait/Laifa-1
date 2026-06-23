@@ -3,17 +3,43 @@ import { motion } from 'motion/react';
 import { Wallet as WalletIcon, ArrowUpRight, Clock, CheckCircle2, History, CreditCard, Landmark, Download, Loader2, ShoppingBag } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../lib/firebase';
-import { collection, query, where, getDocs, addDoc, serverTimestamp, orderBy, updateDoc, doc, increment, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, serverTimestamp, orderBy, updateDoc, doc, increment, limit, startAfter } from 'firebase/firestore';
 import { formatPrice } from '../../utils/format';
 import { toast } from 'react-hot-toast';
 import { WithdrawalRequest } from '../../types';
 import { useTranslation } from "react-i18next";
+import { useConfirm } from "../../hooks/useConfirm";
+
+const safeParseFloat = (value: string): number | null => {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const parsed = parseFloat(trimmed);
+  if (isNaN(parsed) || !isFinite(parsed)) return null;
+  if (!/^\d+(\.\d{1,2})?$/.test(trimmed)) return null;
+  return parsed;
+};
+
+const fetchWithRetry = async (url: string, options: RequestInit, retries = 3): Promise<Response> => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await fetch(url, options);
+      if (res.ok || res.status < 500) return res;
+    } catch (e) {
+      if (i === retries - 1) throw e;
+    }
+    await new Promise(r => setTimeout(r, 1000 * (i + 1)));
+  }
+  throw new Error("Max retries exceeded");
+};
 
 export const Wallet: React.FC = () => {
     const { t, i18n } = useTranslation();
+  const { confirm: showConfirmModal, ConfirmationDialog } = useConfirm();
   const { currentUser, userProfile } = useAuth();
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [lastVisible, setLastVisible] = useState<any>(null);
   const [requestLoading, setRequestLoading] = useState(false);
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState<'VIREMENT_BANCAIRE' | 'CCP_BARIDIMOB'>(userProfile?.legalStatus ? 'VIREMENT_BANCAIRE' : 'CCP_BARIDIMOB');
@@ -31,6 +57,7 @@ export const Wallet: React.FC = () => {
         );
         const snap = await getDocs(q);
         setWithdrawals(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as WithdrawalRequest)));
+        setLastVisible(snap.docs[snap.docs.length - 1] || null);
       } catch (err) {
         console.error(err);
       } finally {
@@ -40,18 +67,45 @@ export const Wallet: React.FC = () => {
     fetchWithdrawals();
   }, [currentUser]);
 
+  const loadMoreWithdrawals = async () => {
+    if (!currentUser || !lastVisible) return;
+    setLoadingMore(true);
+    try {
+      const q = query(
+        collection(db, "withdrawals"),
+        where("sellerId", "==", currentUser.uid),
+        orderBy("createdAt", "desc"),
+        startAfter(lastVisible),
+        limit(20)
+      );
+      const snap = await getDocs(q);
+      const newWithdrawals = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as WithdrawalRequest));
+      setWithdrawals(prev => [...prev, ...newWithdrawals]);
+      setLastVisible(snap.docs[snap.docs.length - 1] || null);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
   const handleRequestWithdrawal = async () => {
-    const val = parseFloat(amount);
+    const val = safeParseFloat(amount);
     const balance = userProfile?.walletBalance || 0;
     
-    if (isNaN(val) || val < 2000) return toast.error(isArabic ? "الحد الأدنى للسحب هو 2000 د.ج." : "Le montant minimum est de 2000 DA.");
+    if (val === null || val < 2000) return toast.error(isArabic ? "الحد الأدنى للسحب هو 2000 د.ج." : "Le montant minimum est de 2000 DA.");
     if (val > balance) return toast.error(isArabic ? "الرصيد غير كافٍ." : "Solde insuffisant.");
     if (!userProfile?.rib) return toast.error(isArabic ? "يرجى إعداد رمز RIB الخاص بك في قسم التحقق." : "Veuillez configurer votre RIB dans la section Vérification.");
+
+    const confirmed = await showConfirmModal(
+      isArabic ? `هل تؤكد سحب ${val} د.ج؟` : `Confirmer le retrait de ${val} DA ?`
+    );
+    if (!confirmed) return;
 
     setRequestLoading(true);
     try {
       const token = await currentUser?.getIdToken();
-      const res = await fetch("/api/seller/withdraw", {
+      const res = await fetchWithRetry("/api/seller/withdraw", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -65,11 +119,12 @@ export const Wallet: React.FC = () => {
       });
 
       if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || (isArabic ? "خطأ في خادم النظام" : "Erreur serveur"));
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || errData.message || (isArabic ? "خطأ في خادم النظام" : "Erreur serveur"));
       }
       
-      toast.success(isArabic ? "تم إرسال طلب السحب بنجاح! تم تجميد الأموال حتى المعالجة." : "Demande de retrait envoyée ! Les fonds sont gelés.");
+      const responseData = await res.json().catch(() => ({}));
+      toast.success(responseData.message || (isArabic ? "تم إرسال طلب السحب بنجاح! تم تجميد الأموال حتى المعالجة." : "Demande de retrait envoyée ! Les fonds sont gelés."));
       setAmount('');
       window.location.reload(); // Quick refresh to update Context's userProfile
     } catch (err: any) {
@@ -176,11 +231,16 @@ export const Wallet: React.FC = () => {
                   <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal ml-1">{t("Montant à retirer (DA)")}</label>
                   <div className="relative">
                     <input 
-                      type="number" 
+                      type="text" 
+                      inputMode="decimal"
+                      pattern="[0-9]*[.]?[0-9]{0,2}"
                       placeholder={t("Min. 2 000 DA") || "Min. 2 000 DA"}
                       className="w-full px-8 py-5 bg-zinc-50 border border-zinc-100 rounded-3xl outline-none text-2xl font-black tracking-tight rtl:tracking-normal focus:ring-4 ring-orange-500/5 transition-all"
                       value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (/^\d*\.?\d{0,2}$/.test(val)) setAmount(val);
+                      }}
                     />
                     <div className="absolute right-8 top-1/2 -translate-y-1/2 text-zinc-400 font-black">{t("DA")}</div>
                   </div>
@@ -252,7 +312,20 @@ export const Wallet: React.FC = () => {
                })
             )}
          </div>
+         {lastVisible && (
+            <div className="p-8 border-t border-zinc-50 flex justify-center bg-zinc-50/10">
+               <button 
+                  onClick={loadMoreWithdrawals} 
+                  disabled={loadingMore}
+                  className="px-6 py-3 bg-white border border-zinc-200 text-zinc-900 rounded-full font-black text-xs uppercase tracking-widest hover:border-orange-500 hover:text-orange-500 transition-all flex items-center gap-2 shadow-sm relative group"
+               >
+                  {loadingMore && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {loadingMore ? t("Chargement...") : t("Afficher plus")}
+               </button>
+            </div>
+         )}
       </div>
+      <ConfirmationDialog />
     </div>
   );
 };

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { MapPin, BadgeCheck, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Shop } from "../../types";
-import { MobileSwipeIndicator } from "../UI/MobileSwipeIndicator";
+import { MobileSwipeIndicator } from "../ui/MobileSwipeIndicator";
 import { getOptimizedImageUrl } from "../../utils/imageUtils";
 
 interface BoutiquesMarquesProps {

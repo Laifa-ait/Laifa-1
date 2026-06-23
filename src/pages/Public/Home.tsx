@@ -32,7 +32,7 @@ import { TechTrustBanner } from "../../components/Home/TechTrustBanner";
 import { NeoCategoryGrid } from "../../components/Home/NeoCategoryGrid";
 import { DynamicSection } from "../../components/Home/DynamicSection";
 import { HomepageSection, Banner } from "../../types";
-import { BannerCarousel } from "../../components/UI/BannerCarousel";
+import { BannerCarousel } from "../../components/ui/BannerCarousel";
 import { ProductCard } from "../../components/Product/ProductCard";
 import { formatPrice } from "../../utils/format";
 import { db } from "../../lib/firebase";
@@ -40,7 +40,7 @@ import { collection, query, orderBy, limit, getDocs, where } from "firebase/fire
 import { Product } from "../../types";
 import { Helmet } from "react-helmet-async";
 import { getTranslatedField } from "../../utils/translations";
-import { MobileSwipeIndicator } from "../../components/UI/MobileSwipeIndicator";
+import { MobileSwipeIndicator } from "../../components/ui/MobileSwipeIndicator";
 import {
   cacheEngine,
   handleDevQuotaLogger,

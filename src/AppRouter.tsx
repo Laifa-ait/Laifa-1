@@ -1,8 +1,8 @@
 import React, { Suspense } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 
-import { PageLoader } from "./components/UI/PageLoader";
+import { PageLoader } from "./components/ui/PageLoader";
 
 // Public Pages (Lazy Loaded)
 const Home = React.lazy(() => import("./pages/Public/Home").then((m) => ({ default: m.Home })));

@@ -4,7 +4,7 @@ import { Plus, Package, Search, Filter, Trash2, Edit2, Sparkles, X, ChevronRight
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../lib/firebase';
-import { collection, query, where, getDocs, orderBy, updateDoc, deleteDoc, doc, limit, startAfter, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, updateDoc, deleteDoc, doc, limit, startAfter, addDoc, Timestamp, getDoc } from 'firebase/firestore';
 import { formatPrice } from '../../utils/format';
 import { toast } from 'react-hot-toast';
 import { ProductFormModal } from './ProductFormModal';
@@ -13,27 +13,52 @@ import { getOptimizedImageUrl } from '../../utils/imageUtils';
 import { useSearchParams } from 'react-router-dom';
 import { PRODUCT_HIERARCHY } from '../../constants';
 
+import type { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
+
+interface SellerProduct {
+  id: string;
+  name: string;
+  stock: number;
+  price: number;
+  promoPrice?: number;
+  flashPrice?: number;
+  flashSaleActive?: boolean;
+  category: string;
+  status: 'active' | 'pending' | 'rejected' | 'pending_deletion' | 'draft' | 'deleted';
+  sellerId: string;
+  image: string;
+  isSponsored?: boolean;
+  rejectionReason?: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+import { ConfirmModal } from '../../components/ui/ConfirmModal';
+
 export const Catalog: React.FC = () => {
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === 'ar' || i18n.language?.startsWith('ar');
   const { currentUser, userProfile } = useAuth();
   const [searchParams] = useSearchParams();
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<SellerProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [lastVisible, setLastVisible] = useState<any>(null);
+  const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<SellerProduct | null>(null);
   const PRODUCTS_PER_PAGE = 20;
   
   const [isAddMode, setIsAddMode] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<any | null>(null);
+  const [editingProduct, setEditingProduct] = useState<SellerProduct | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'active', 'out_of_stock', 'draft'
-  const [adminTags, setAdminTags] = useState<any[]>([]);
+  const [adminTags, setAdminTags] = useState<{id: string; name: string}[]>([]);
   const [categoryHierarchy, setCategoryHierarchy] = useState<Record<string, Record<string, string[]>>>(PRODUCT_HIERARCHY);
   const [categories, setCategories] = useState<string[]>(Object.keys(PRODUCT_HIERARCHY));
   
   useEffect(() => {
     if (!currentUser) return;
+    let cancelled = false;
+
     const fetchData = async () => {
       try {
         const prodQ = query(
@@ -43,36 +68,46 @@ export const Catalog: React.FC = () => {
           limit(PRODUCTS_PER_PAGE)
         );
         const prodSnap = await getDocs(prodQ);
-        setProducts(prodSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        setLastVisible(prodSnap.docs[prodSnap.docs.length - 1]);
+        if (!cancelled) {
+          setProducts(prodSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as SellerProduct)));
+          setLastVisible(prodSnap.docs[prodSnap.docs.length - 1] || null);
+        }
         
         // Fetch Categories
         const catRef = doc(db, "settings", "categories");
-        const categoryDocSnap = await (await import("firebase/firestore")).getDoc(catRef);
+        const categoryDocSnap = await getDoc(catRef);
         if (categoryDocSnap && categoryDocSnap.exists() && categoryDocSnap.data().hierarchy) {
            const h = categoryDocSnap.data().hierarchy;
-           if (Object.keys(h).length > 0) {
-             setCategoryHierarchy(h);
-             setCategories(Object.keys(h));
-           } else {
-             setCategoryHierarchy(PRODUCT_HIERARCHY);
-             setCategories(Object.keys(PRODUCT_HIERARCHY));
+           if (!cancelled) {
+             if (Object.keys(h).length > 0) {
+               setCategoryHierarchy(h);
+               setCategories(Object.keys(h));
+             } else {
+               setCategoryHierarchy(PRODUCT_HIERARCHY);
+               setCategories(Object.keys(PRODUCT_HIERARCHY));
+             }
            }
         }
 
         // Fetch admin tags
-        const resTags = await fetch('/api/tags');
-        if (resTags.ok) {
-           const tagsData = await resTags.json();
-           setAdminTags(tagsData.tags || []);
+        const tagsSnap = await getDocs(collection(db, "tags"));
+        if (!cancelled) {
+          setAdminTags(tagsSnap.docs.map(d => ({ id: d.id, ...d.data() } as any)));
         }
       } catch (err) {
-        console.error("Error fetching data:", err);
+        if (!cancelled) {
+          console.error("Erreur fetch catalog:", err);
+          toast.error("Impossible de charger le catalogue");
+          setProducts([]);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
     fetchData();
+    return () => { cancelled = true; };
   }, [currentUser]);
 
   const loadMoreProducts = async () => {
@@ -97,11 +132,25 @@ export const Catalog: React.FC = () => {
     }
   };
 
-  const handleSaveSuccess = (savedProduct: any, isEdit: boolean) => {
-    if (isEdit) {
-      setProducts(products.map(p => p.id === savedProduct.id ? { ...p, ...savedProduct } : p));
-    } else {
-      setProducts([savedProduct, ...products]);
+  const handleSaveSuccess = async () => {
+    setIsAddMode(false);
+    setEditingProduct(null);
+    if (!currentUser) return;
+    setLoading(true);
+    try {
+      const prodQ = query(
+        collection(db, "products"),
+        where("sellerId", "==", currentUser.uid),
+        orderBy("createdAt", "desc"),
+        limit(PRODUCTS_PER_PAGE)
+      );
+      const prodSnap = await getDocs(prodQ);
+      setProducts(prodSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as SellerProduct)));
+      setLastVisible(prodSnap.docs[prodSnap.docs.length - 1] || null);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -213,6 +262,10 @@ export const Catalog: React.FC = () => {
                                       onBlur={async (e) => {
                                         const newStock = parseInt(e.target.value);
                                         if (newStock !== p.stock && !isNaN(newStock)) {
+                                          if (p.sellerId !== currentUser?.uid) {
+                                            toast.error("Produit non autorisé");
+                                            return;
+                                          }
                                           setLoading(true);
                                           try {
                                             await updateDoc(doc(db, "products", p.id), { stock: newStock });
@@ -258,12 +311,12 @@ export const Catalog: React.FC = () => {
                                   )}
                                   {p.flashSaleActive && (
                                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 text-[9px] font-black uppercase tracking-wider rtl:tracking-normal border border-purple-100">
-                                      {t("⚡ Vente Flash (")}{formatPrice(p.flashPrice)})
+                                      <span>{t("flash_sale_label")} {formatPrice(p.flashPrice || 0)}</span>
                                     </span>
                                   )}
                                   {p.promoPrice && !p.flashSaleActive && (
                                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 text-[9px] font-black uppercase tracking-wider rtl:tracking-normal border border-rose-100">
-                                      {t("💎 Promo (")}{formatPrice(p.promoPrice)})
+                                      <span>{t("promo_label")} {formatPrice(p.promoPrice)}</span>
                                     </span>
                                   )}
                                   {p.isSponsored && (
@@ -288,7 +341,7 @@ export const Catalog: React.FC = () => {
                                 onClick={() => { 
                                   if (p.status === 'pending_deletion') return;
                                   const { id, createdAt, updatedAt, ...cloneData } = p;
-                                  setEditingProduct({ ...cloneData, name: `${p.name} (Copie)` }); 
+                                  setEditingProduct({ ...cloneData, name: `${p.name} (Copie)` } as SellerProduct); 
                                   setIsAddMode(true); 
                                 }}
                                 title={p.status === 'pending_deletion' ? "Duplication impossible" : "Dupliquer"}
@@ -310,33 +363,9 @@ export const Catalog: React.FC = () => {
                               </button>
                               <button 
                                 disabled={p.status === 'pending_deletion'}
-                                onClick={async () => {
+                                onClick={() => {
                                   if (p.status === 'pending_deletion') return;
-                                  const confirmMsg = isArabic
-                                    ? `هل تريد حذف هذا المنتج من الكتالوج الخاص بك؟ سيتم إرسال الطلب للمسؤول وسيصبح المنتج تحت حالة "قيد الحذف".`
-                                    : "Voulez-vous supprimer ce produit de votre catalogue ? La demande sera envoyée à l'administrateur pour validation et l'article passera en statut 'Suppression en attente'.";
-                                  if(window.confirm(confirmMsg)) {
-                                    try {
-                                      await updateDoc(doc(db, "products", p.id), { status: "pending_deletion" });
-                                      setProducts(products.map(item => item.id === p.id ? { ...item, status: "pending_deletion" } : item));
-                                      
-                                      // Log internal moderation alert for admins
-                                      await addDoc(collection(db, "internal_notifications"), {
-                                        type: "PRODUCT_DELETION_REQUEST",
-                                        title: "Demande de suppression de produit",
-                                        message: `Le vendeur "${userProfile?.shopName || userProfile?.name || currentUser?.uid}" demande la suppression de "${p.name}".`,
-                                        productId: p.id,
-                                        sellerId: currentUser?.uid || "UNKNOWN",
-                                        createdAt: Timestamp.now(),
-                                        read: false
-                                      });
-                                      
-                                      toast.success(isArabic ? "تم إرسال طلب الحذف إلى مسؤول النظام." : "Demande de suppression transmise à l'administrateur.");
-                                    } catch (err) {
-                                      console.error(err);
-                                      toast.error(isArabic ? "فشل طلب الحذف." : "Erreur lors de la demande de suppression.");
-                                    }
-                                  }
+                                  setPendingDelete(p);
                                 }}
                                 title={p.status === 'pending_deletion' ? "Suppression déjà en cours" : "Supprimer"}
                                 className={`p-2.5 sm:p-3 bg-white border rounded-xl active:scale-95 transition-all shadow-sm flex items-center justify-center shrink-0 ${p.status === 'pending_deletion' ? 'text-zinc-300 border-zinc-100 cursor-not-allowed opacity-50' : 'border-zinc-150 text-zinc-400 hover:text-red-500 hover:border-red-100'}`}
@@ -376,6 +405,40 @@ export const Catalog: React.FC = () => {
           />
         )}
       </AnimatePresence>
+
+      <ConfirmModal
+        isOpen={!!pendingDelete}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={async () => {
+          if (!pendingDelete) return;
+          try {
+            await updateDoc(doc(db, "products", pendingDelete.id), { status: "pending_deletion" });
+            setProducts(products.map(item => item.id === pendingDelete.id ? { ...item, status: "pending_deletion" } : item));
+            
+            // Log internal moderation alert for admins
+            await addDoc(collection(db, "internal_notifications"), {
+              type: "PRODUCT_DELETION_REQUEST",
+              title: "Demande de suppression de produit",
+              message: `Le vendeur "${userProfile?.shopName || userProfile?.name || currentUser?.uid}" demande la suppression de "${pendingDelete.name}".`,
+              productId: pendingDelete.id,
+              sellerId: currentUser?.uid || "UNKNOWN",
+              createdAt: Timestamp.now(),
+              read: false
+            });
+            
+            toast.success(isArabic ? "تم إرسال طلب الحذف إلى مسؤول النظام." : "Demande de suppression transmise à l'administrateur.");
+          } catch (err) {
+            console.error(err);
+            toast.error(isArabic ? "فشل طلب الحذف." : "Erreur lors de la demande de suppression.");
+          } finally {
+            setPendingDelete(null);
+          }
+        }}
+        title={isArabic ? "تأكيد الحذف" : "Confirmer la suppression"}
+        message={isArabic 
+          ? `هل تريد حذف هذا المنتج من الكتالوج الخاص بك؟ سيتم إرسال الطلب للمسؤول وسيصبح المنتج تحت حالة "قيد الحذف".`
+          : "Voulez-vous supprimer ce produit de votre catalogue ? La demande sera envoyée à l'administrateur pour validation et l'article passera en statut 'Suppression en attente'."}
+      />
     </div>
   );
 };

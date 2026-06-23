@@ -13,10 +13,11 @@ import {
 import { auth, db } from "../lib/firebase";
 import { doc, onSnapshot, getDoc, setDoc, serverTimestamp, collection, addDoc } from "firebase/firestore";
 import { ALGERIA_WILAYAS, ALGERIA_SHIPPING_DATA } from "../constants";
+import { UserProfile } from "../types";
 
 interface AuthContextType {
   currentUser: FirebaseUser | null;
-  userProfile: any | null;
+  userProfile: UserProfile | null;
   loading: boolean;
   signInWithGoogle: (role?: string) => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
@@ -28,7 +29,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
-  const [userProfile, setUserProfile] = useState<any | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

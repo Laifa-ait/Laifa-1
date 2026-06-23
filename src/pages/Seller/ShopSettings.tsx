@@ -9,9 +9,17 @@ import toast from 'react-hot-toast';
 import { useTranslation } from "react-i18next";
 import { maskSensitiveData, hasExternalChannel } from '../../utils/masking';
 import { getOptimizedImageUrl } from '../../utils/imageUtils';
+import { useConfirm } from "../../hooks/useConfirm";
+
+const validateShippingTariff = (value: string): boolean => {
+  if (value === "") return true; // Allow empty temporary state during input
+  const num = parseFloat(value);
+  return !isNaN(num) && num >= 0 && num <= 10000;
+};
 
 export const ShopSettings: React.FC = () => {
     const { t, i18n } = useTranslation();
+  const { confirm: showConfirmModal, ConfirmationDialog } = useConfirm();
   const { userProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'profile' | 'shipping'>('profile');
@@ -33,13 +41,30 @@ export const ShopSettings: React.FC = () => {
 
   const [globalPrice, setGlobalPrice] = useState('600');
 
-  const applyToAll = () => {
+  const applyToAll = async () => {
+    const confirmed = await showConfirmModal(
+      isArabic 
+        ? `هل تريد تطبيق ${globalPrice} د.ج على جميع الولايات؟ هذا سيستبدل الإعدادات الحالية.` 
+        : `Appliquer ${globalPrice} DA à TOUTES les wilayas ? Cela écrasera vos paramètres actuels.`
+    );
+    if (!confirmed) return;
     setShippingTariffs(ALGERIA_WILAYAS.reduce((acc, curr) => ({ ...acc, [curr]: globalPrice }), {}));
+  };
+
+  const handleTariffChange = (wilaya: string, value: string) => {
+    if (!validateShippingTariff(value)) {
+      toast.error(isArabic ? "رسوم غير صالحة (0-10000 د.ج)" : "Frais invalides (0-10000 DA)");
+      return;
+    }
+    setShippingTariffs(prev => ({ ...prev, [wilaya]: value }));
   };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userProfile?.uid) return;
+    if (!userProfile?.uid) {
+      toast.error(isArabic ? "مستخدم غير معروف" : "Utilisateur non identifié");
+      return;
+    }
     
     if (hasExternalChannel(shopData.shopName) || hasExternalChannel(shopData.shopDescription)) {
       toast.error(t("external_channel_blocked", "Les coordonnees de communication exterieure (messages, liens ou reseaux) ne sont pas autorisees dans ce champ de texte. Tout contact doit s'effectuer exclusivement via la plateforme OLMART."));
@@ -78,7 +103,10 @@ export const ShopSettings: React.FC = () => {
   };
 
   const handleSaveShipping = async () => {
-    if (!userProfile?.uid) return;
+    if (!userProfile?.uid) {
+      toast.error(isArabic ? "مستخدم غير معروف" : "Utilisateur non identifié");
+      return;
+    }
     setLoading(true);
     try {
       let hasError = false;
@@ -290,7 +318,7 @@ export const ShopSettings: React.FC = () => {
                                                   className={`w-20 text-end bg-white px-3 py-1.5 rounded-lg text-sm font-black border border-zinc-100 outline-none focus:border-orange-500 ${shippingTariffs[w] === null ? 'opacity-30 cursor-not-allowed' : ''}`} 
                                                   value={shippingTariffs[w] === null || shippingTariffs[w] === undefined ? '' : shippingTariffs[w]}
                                                   disabled={shippingTariffs[w] === null}
-                                                  onChange={(e) => setShippingTariffs({ ...shippingTariffs, [w]: e.target.value })}
+                                                  onChange={(e) => handleTariffChange(w, e.target.value)}
                                                 />
                                                 <span className={`text-[10px] font-black uppercase ${shippingTariffs[w] === null ? 'text-zinc-200' : 'text-zinc-400'}`}>{t("DA")}</span>
                                               </div>
@@ -324,6 +352,7 @@ export const ShopSettings: React.FC = () => {
            </div>
         </motion.div>
       )}
+      <ConfirmationDialog />
     </div>
   );
 };

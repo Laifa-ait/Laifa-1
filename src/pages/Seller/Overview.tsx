@@ -28,70 +28,99 @@ export const Overview: React.FC = () => {
   const [wilayaStats, setWilayaStats] = useState<{name: string, count: number}[]>([]);
   const [chartData, setChartData] = useState<{name: string, sales: number}[]>([]);
 
+  // Types
+  interface SellerOrder {
+    id: string;
+    total: number;
+    createdAt: Timestamp;
+    status: string;
+    shippingAddress?: { wilaya: string };
+    items?: Array<{ sellerId: string; id: string; name: string; quantity: number; price: number; image: string }>;
+  }
+
+  interface TopProduct {
+    id: string;
+    name: string;
+    count: number;
+    total: number;
+    image: string;
+  }
+
   useEffect(() => {
     if (!currentUser) return;
+    let cancelled = false;
+
+    const safeFetch = async <T,>(fn: () => Promise<T>, fallback: T): Promise<T> => {
+      try { 
+        return await fn(); 
+      } catch (e) { 
+        if (!cancelled) console.error(e); 
+        return fallback; 
+      }
+    };
+
     const fetchData = async () => {
       // 1. Aggregations (No full document fetch)
       const pQ = query(collection(db, "products"), where("sellerId", "==", currentUser.uid));
       const oQ = query(collection(db, "orders"), where("sellerIds", "array-contains", currentUser.uid));
+      const returnQ = query(collection(db, "orders"), where("sellerIds", "array-contains", currentUser.uid), where("status", "==", "RETURN_REQUESTED"));
       
-      try {
-        const productCountSnap = await getCountFromServer(pQ);
-        const orderCountSnap = await getCountFromServer(oQ);
+      const productCountSnap = await safeFetch(() => getCountFromServer(pQ), { data: () => ({ count: 0 }) } as any);
+      const orderCountSnap = await safeFetch(() => getCountFromServer(oQ), { data: () => ({ count: 0 }) } as any);
+      const returnSnap = await safeFetch(() => getCountFromServer(returnQ), { data: () => ({ count: 0 }) } as any);
 
-        const returnQ = query(collection(db, "orders"), where("sellerIds", "array-contains", currentUser.uid), where("status", "==", "RETURN_REQUESTED"));
-        const returnSnap = await getCountFromServer(returnQ);
+      // Global Sales All Time
+      const salesAggSnap = await safeFetch(() => getAggregateFromServer(oQ, { totalSales: sum('total') }), { data: () => ({ totalSales: 0 }) } as any);
 
-        // 2. Out of stock alert
-        const outOfStockQ = query(collection(db, "products"), where("sellerId", "==", currentUser.uid), where("stock", "<=", 0), limit(100));
-        const outOfStockSnap = await getDocs(outOfStockQ);
+      // 2. Out of stock alert
+      const outOfStockQ = query(collection(db, "products"), where("sellerId", "==", currentUser.uid), where("stock", "<=", 0), limit(100));
+      const outOfStockVariantsQ = query(collection(db, "products"), where("sellerId", "==", currentUser.uid), where("hasOutOfStockVariants", "==", true), limit(100));
+      
+      const outOfStockSnap = await safeFetch(() => getDocs(outOfStockQ), { docs: [] } as any);
+      const outOfStockVariantsSnap = await safeFetch(() => getDocs(outOfStockVariantsQ), { docs: [] } as any);
 
-        const outOfStockVariantsQ = query(collection(db, "products"), where("sellerId", "==", currentUser.uid), where("hasOutOfStockVariants", "==", true), limit(100));
-        const outOfStockVariantsSnap = await getDocs(outOfStockVariantsQ);
+      const outOfStockProductIds = new Set<string>();
+      outOfStockSnap.docs.forEach((d: any) => outOfStockProductIds.add(d.id));
+      outOfStockVariantsSnap.docs.forEach((d: any) => outOfStockProductIds.add(d.id));
 
-        const outOfStockProductIds = new Set<string>();
-        outOfStockSnap.forEach(d => outOfStockProductIds.add(d.id));
-        outOfStockVariantsSnap.forEach(d => outOfStockProductIds.add(d.id));
+      if (!cancelled) setOutOfStockCount(outOfStockProductIds.size);
 
-        setOutOfStockCount(outOfStockProductIds.size);
+      // 3. True Growth and Sales Calculation
+      const now = new Date();
+      
+      // This Week
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1)); // Start on Monday
+      startOfWeek.setHours(0, 0, 0, 0);
 
-        // 3. True Growth and Sales Calculation
-        const now = new Date();
-        
-        // This Week
-        const startOfWeek = new Date(now);
-        startOfWeek.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1)); // Start on Monday
-        startOfWeek.setHours(0, 0, 0, 0);
+      // Last Week
+      const startOfLastWeek = new Date(startOfWeek);
+      startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
+      const endOfLastWeek = new Date(startOfWeek);
+      endOfLastWeek.setMilliseconds(-1);
 
-        // Last Week
-        const startOfLastWeek = new Date(startOfWeek);
-        startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
-        const endOfLastWeek = new Date(startOfWeek);
-        endOfLastWeek.setMilliseconds(-1);
+      const thisWeekQ = query(collection(db, "orders"), where("sellerIds", "array-contains", currentUser.uid), where("createdAt", ">=", startOfWeek));
+      const lastWeekQ = query(collection(db, "orders"), where("sellerIds", "array-contains", currentUser.uid), where("createdAt", ">=", startOfLastWeek), where("createdAt", "<", startOfWeek));
+      
+      const thisWeekSnap = await safeFetch(() => getDocs(thisWeekQ), { docs: [] } as any);
+      const lastWeekSnap = await safeFetch(() => getDocs(lastWeekQ), { docs: [] } as any);
+      
+      const thisWeekOrders = thisWeekSnap.docs.map((d: any) => d.data());
+      const lastWeekOrders = lastWeekSnap.docs.map((d: any) => d.data());
+      
+      let currentWeekTotal = 0;
+      thisWeekOrders.forEach((o: any) => currentWeekTotal += (o.total || 0));
 
-        const thisWeekQ = query(collection(db, "orders"), where("sellerIds", "array-contains", currentUser.uid), where("createdAt", ">=", startOfWeek));
-        const thisWeekSnap = await getDocs(thisWeekQ);
-        const thisWeekOrders = thisWeekSnap.docs.map(d => d.data());
-        let currentWeekTotal = 0;
-        thisWeekOrders.forEach(o => currentWeekTotal += (o.total || 0));
+      let lastWeekTotal = 0;
+      lastWeekOrders.forEach((o: any) => lastWeekTotal += (o.total || 0));
 
-        const lastWeekQ = query(collection(db, "orders"), where("sellerIds", "array-contains", currentUser.uid), where("createdAt", ">=", startOfLastWeek), where("createdAt", "<", startOfWeek));
-        const lastWeekSnap = await getDocs(lastWeekQ);
-        const lastWeekOrders = lastWeekSnap.docs.map(d => d.data());
-        let lastWeekTotal = 0;
-        lastWeekOrders.forEach(o => lastWeekTotal += (o.total || 0));
+      let growthCalc = 'N/A';
+      if (lastWeekTotal > 0) {
+          const growthFactor = ((currentWeekTotal - lastWeekTotal) / lastWeekTotal) * 100;
+          growthCalc = (growthFactor > 0 ? '+' : '') + growthFactor.toFixed(1) + '%';
+      }
 
-        let growthCalc = 'N/A';
-        if (lastWeekTotal > 0) {
-            const growthFactor = ((currentWeekTotal - lastWeekTotal) / lastWeekTotal) * 100;
-            growthCalc = (growthFactor > 0 ? '+' : '') + growthFactor.toFixed(1) + '%';
-        }
-
-        // Global Sales All Time
-        const salesAggSnap = await getAggregateFromServer(oQ, {
-          totalSales: sum('total')
-        });
-
+      if (!cancelled) {
         setStats({
           totalSales: salesAggSnap.data().totalSales || 0,
           orderCount: orderCountSnap.data().count,
@@ -99,38 +128,41 @@ export const Overview: React.FC = () => {
           growth: growthCalc,
           pendingReturns: returnSnap.data().count
         });
+      }
 
-        // 4. Fetch recent orders for Activity Feed
-        const recentOQ = query(collection(db, "orders"), where("sellerIds", "array-contains", currentUser.uid), orderBy("createdAt", "desc"), limit(10));
-        const recentOSnap = await getDocs(recentOQ);
-        const fetchedOrders = recentOSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-        setRecentOrders(fetchedOrders.slice(0, 5));
+      // 4. Fetch recent orders for Activity Feed
+      const recentOQ = query(collection(db, "orders"), where("sellerIds", "array-contains", currentUser.uid), orderBy("createdAt", "desc"), limit(10));
+      const recentOSnap = await safeFetch(() => getDocs(recentOQ), { docs: [] } as any);
+      const fetchedOrders = recentOSnap.docs.map((d: any) => ({ id: d.id, ...d.data() } as SellerOrder));
+      
+      if (!cancelled) setRecentOrders(fetchedOrders.slice(0, 5));
 
-        // Wilaya Stats Calculation
-        const wStats: Record<string, number> = {};
-        fetchedOrders.forEach((o: any) => {
-          const w = o.shippingAddress?.wilaya;
-          if (w) wStats[w] = (wStats[w] || 0) + 1;
-        });
-        const sortedWilayas = Object.entries(wStats)
-          .map(([name, count]) => ({ name, count }))
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 5);
-        setWilayaStats(sortedWilayas);
+      // Wilaya Stats Calculation
+      const wStats: Record<string, number> = {};
+      fetchedOrders.forEach((o: SellerOrder) => {
+        const w = o.shippingAddress?.wilaya;
+        if (w) wStats[w] = (wStats[w] || 0) + 1;
+      });
+      const sortedWilayas = Object.entries(wStats)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+      
+      if (!cancelled) setWilayaStats(sortedWilayas);
 
-        // 5. Chart Data (Current Week Only)
-        const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-        const chartMap = { 'Lun': 0, 'Mar': 0, 'Mer': 0, 'Jeu': 0, 'Ven': 0, 'Sam': 0, 'Dim': 0 };
-        
-        thisWeekOrders.forEach((order: any) => {
-           if (order.createdAt) {
-              const date = order.createdAt.toDate();
-              const dayName = days[date.getDay()];
-              chartMap[dayName as keyof typeof chartMap] += (order.total || 0);
-           }
-        });
-        
-        // Ensure starting from Monday
+      // 5. Chart Data (Current Week Only)
+      const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+      const chartMap = { 'Lun': 0, 'Mar': 0, 'Mer': 0, 'Jeu': 0, 'Ven': 0, 'Sam': 0, 'Dim': 0 };
+      
+      thisWeekOrders.forEach((order: any) => {
+          if (order.createdAt) {
+            const date = order.createdAt.toDate();
+            const dayName = days[date.getDay()];
+            chartMap[dayName as keyof typeof chartMap] += (order.total || 0);
+          }
+      });
+      
+      if (!cancelled) {
         setChartData([
           { name: 'Lun', sales: chartMap['Lun'] },
           { name: 'Mar', sales: chartMap['Mar'] },
@@ -140,54 +172,56 @@ export const Overview: React.FC = () => {
           { name: 'Sam', sales: chartMap['Sam'] },
           { name: 'Dim', sales: chartMap['Dim'] },
         ]);
+      }
 
-        // 6. Top Products & Payout Simulation
-        // For Top Products, we fetch recent completed orders and count product ID frequencies
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        const topOQ = query(
-          collection(db, "orders"), 
-          where("sellerIds", "array-contains", currentUser.uid),
-          where("createdAt", ">=", thirtyDaysAgo),
-          limit(20)
-        );
-        const topOSnap = await getDocs(topOQ);
-        const productFreq: Record<string, {name: string, count: number, total: number, image: string}> = {};
-        
-        topOSnap.docs.forEach(doc => {
-          const o = doc.data();
-          (o.items || []).forEach((item: any) => {
-            if (item.sellerId === currentUser.uid) {
-               if (!productFreq[item.id]) {
-                 productFreq[item.id] = { name: item.name, count: 0, total: 0, image: item.image };
-               }
-               productFreq[item.id].count += item.quantity;
-               productFreq[item.id].total += (item.price * item.quantity);
-            }
-          });
+      // 6. Top Products & Payout Simulation
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const topOQ = query(
+        collection(db, "orders"), 
+        where("sellerIds", "array-contains", currentUser.uid),
+        where("createdAt", ">=", thirtyDaysAgo),
+        limit(20)
+      );
+      const topOSnap = await safeFetch(() => getDocs(topOQ), { docs: [] } as any);
+      
+      const productFreq: Record<string, {name: string, count: number, total: number, image: string}> = {};
+      
+      topOSnap.docs.forEach((doc: any) => {
+        const o = doc.data();
+        (o.items || []).forEach((item: any) => {
+          if (item.sellerId === currentUser.uid) {
+              if (!productFreq[item.id]) {
+                productFreq[item.id] = { name: item.name, count: 0, total: 0, image: item.image };
+              }
+              productFreq[item.id].count += item.quantity;
+              productFreq[item.id].total += (item.price * item.quantity);
+          }
         });
+      });
 
-        const sortedTopProducts = Object.entries(productFreq)
-          .map(([id, data]) => ({ id, ...data }))
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 4);
-        
-        setTopProducts(sortedTopProducts);
+      const sortedTopProducts: TopProduct[] = Object.entries(productFreq)
+        .map(([id, data]) => ({ id, ...data }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 4);
+      
+      if (!cancelled) setTopProducts(sortedTopProducts);
 
-        // Simulation de paiements (80% des ventes totales libérées au bout de 7 jours post-livraison)
-        const availablePayout = Math.floor(salesAggSnap.data().totalSales * 0.72);
-        const nextDate = new Date();
-        nextDate.setDate(nextDate.getDate() + (7 - nextDate.getDay() % 7)); // Prochain Lundi
+      // Simulation de paiements
+      const availablePayout = Math.floor((salesAggSnap.data().totalSales || 0) * 0.72);
+      const nextDate = new Date();
+      nextDate.setDate(nextDate.getDate() + (7 - nextDate.getDay() % 7)); // Prochain Lundi
+      
+      if (!cancelled) {
         setPayoutStats({
           available: availablePayout,
           nextPaymentDate: nextDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
         });
-
-      } catch (err) {
-        console.error("Error fetching overview data:", err);
       }
     };
+    
     fetchData();
+    return () => { cancelled = true; };
   }, [currentUser]);
 
   return (
@@ -440,7 +474,7 @@ export const Overview: React.FC = () => {
                                  <div className="flex-1 overflow-hidden">
                                     <p className="text-xs font-black text-zinc-950 truncate">{t("seller.overview.new_order_prefix", "Nouvelle Commande #")}{o.id.substring(0, 6)}</p>
                                     <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest rtl:tracking-normal">
-                                       {o.createdAt?.toDate?.()?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || t("seller.overview.recent", "Récent")}
+                                       {o.createdAt && typeof o.createdAt.toDate === 'function' ? o.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : t("seller.overview.recent", "Récent")}
                                     </p>
                                  </div>
                                  <div className="text-end">

@@ -1,30 +1,46 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { collection, query, where, getDocs, doc, updateDoc, or } from "firebase/firestore";
-import { db, auth } from "../../lib/firebase";
+import { collection, query, where, getDocs, doc, updateDoc, or, limit } from "firebase/firestore";
+import { db } from "../../lib/firebase";
 import { AlertTriangle, Package, Check, X, User, CreditCard } from "lucide-react";
 import toast from "react-hot-toast";
 import { formatPrice } from "../../utils/format";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../../context/AuthContext";
+
+interface DisputeCase {
+  id: string;
+  orderId?: string;
+  buyerId?: string;
+  sellerId?: string;
+  type?: 'return' | 'dispute';
+  status?: string;
+  amount?: number;
+  reason?: string;
+  createdAt?: any;
+  resolution?: 'approved' | 'rejected';
+  resolvedAt?: any;
+  returnRequest?: any;
+  disputeRequest?: any;
+  total?: number;
+}
 
 export const DisputeManagement: React.FC = () => {
   const { t } = useTranslation();
-  const [cases, setCases] = useState<any[]>([]);
+  const { currentUser, userProfile } = useAuth();
+  const [cases, setCases] = useState<DisputeCase[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchCases = async () => {
       setLoading(true);
-      // Find all orders with return requests or disputes
-      // Note: splitting due to Firestore limitation on multiple inequality filters on different fields
+
       const fetchReturns = async () => {
-        const { limit } = await import("firebase/firestore");
         const q = query(collection(db, "orders"), where("returnRequest", "!=", null), limit(100));
         return getDocs(q);
       };
 
       const fetchDisputes = async () => {
-        const { limit } = await import("firebase/firestore");
         const q = query(collection(db, "orders"), where("disputeRequest", "!=", null), limit(100));
         return getDocs(q);
       };
@@ -34,15 +50,9 @@ export const DisputeManagement: React.FC = () => {
         const returns = returnsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         const disputes = disputesSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
-        // Merge and dedup
-        const merged = [...returns];
-        disputes.forEach((d) => {
-          if (!merged.find((m) => m.id === d.id)) {
-            merged.push(d);
-          }
-        });
-
-        setCases(merged);
+        // Merge and dedup O(n)
+        const mergedMap = new Map([...returns, ...disputes].map((d) => [d.id, d]));
+        setCases(Array.from(mergedMap.values()));
       } catch (e) {
         console.error("Error fetching disputes:", e);
         toast.error(t("Erreur lors du chargement des litiges"));
@@ -54,8 +64,13 @@ export const DisputeManagement: React.FC = () => {
   }, []);
 
   const resolveDispute = async (orderId: string, resolution: "approved" | "rejected", amount: number) => {
+    if (!currentUser || userProfile?.role !== "admin") {
+      toast.error(t("Action non autorisée"));
+      return;
+    }
+
     try {
-      const token = await auth.currentUser?.getIdToken();
+      const token = await currentUser.getIdToken();
       const res = await fetch(`/api/admin/orders/${orderId}/resolve-dispute`, {
         method: "POST",
         headers: {
@@ -65,6 +80,7 @@ export const DisputeManagement: React.FC = () => {
         body: JSON.stringify({
           resolution: resolution === "approved" ? "refund_to_wallet" : "close",
           refundAmount: amount,
+          adminId: currentUser.uid,
         }),
       });
 
@@ -142,18 +158,18 @@ export const DisputeManagement: React.FC = () => {
                       <div className="pt-2 flex items-center gap-2">
                         <Package className="w-3.5 h-3.5 text-zinc-600" />
                         <span className="text-xs font-black text-emerald-600">
-                          {formatPrice(c.total)} {t("DZD")}
+                          {formatPrice(c.total || 0)} {t("DZD")}
                         </span>
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 w-full md:w-auto">
                     <button
-                      onClick={() => resolveDispute(c.id, "approved", c.total)}
+                      onClick={() => resolveDispute(c.id, "approved", c.total || 0)}
                       className="flex-1 md:flex-none px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest rtl:tracking-normal transition-all shadow-lg shadow-emerald-500/20"
                     >
                       {t("Rembourser (")}
-                      {formatPrice(c.total)})
+                      {formatPrice(c.total || 0)})
                     </button>
                     <button
                       onClick={() => resolveDispute(c.id, "rejected", 0)}

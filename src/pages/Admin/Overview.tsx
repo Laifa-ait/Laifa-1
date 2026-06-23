@@ -1,4 +1,4 @@
-import React, { useEffect, useState, Suspense, lazy } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { motion } from "motion/react";
 import {
   TrendingUp,
@@ -26,15 +26,39 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-const OverviewChart = lazy(() => import("../../components/Admin/OverviewChart"));
+import OverviewChart from "../../components/Admin/OverviewChart";
 import { db } from "../../lib/firebase";
-import { collection, query, getDocs, limit, orderBy, where } from "firebase/firestore";
+import { collection, query, getDocs, limit, orderBy, where, startAfter, Timestamp } from "firebase/firestore";
 import { formatPrice } from "../../utils/format";
 import { analyticsEngine, AnalyticsEvent } from "../../utils/analyticsEngine";
 import { WorkspaceActions } from "../../components/Admin/WorkspaceActions";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { AdminManualGuide } from "../../components/Admin/AdminManualGuide";
+import { useDebounce } from "../../hooks/useDebounce";
+
+interface AdminAlert {
+  id: string;
+  type: string;
+  title?: string;
+  message?: string;
+  createdAt?: Timestamp;
+  resolved?: boolean;
+  priority?: 'low' | 'medium' | 'high' | 'critical';
+  details?: string;
+  sellerId?: string;
+}
+
+interface DashboardData {
+  metric?: string;
+  value?: number;
+  change?: number;
+  period?: string;
+}
+
+export const safeFetch = async <T,>(fn: () => Promise<T>, fallback: T): Promise<T> => {
+  try { return await fn(); } catch (e) { console.error(e); return fallback; }
+};
 
 export const Overview: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -46,20 +70,61 @@ export const Overview: React.FC = () => {
     netRevenue: 0,
     pendingVendors: 0,
   });
-  const [adminAlerts, setAdminAlerts] = useState<any[]>([]);
-  const [data, setData] = useState<any[]>([]);
-  const [recentEvents, setRecentEvents] = useState<any[]>([]);
+  const [adminAlerts, setAdminAlerts] = useState<AdminAlert[]>([]);
+  const [data, setData] = useState<DashboardData[]>([]);
+  const [recentEvents, setRecentEvents] = useState<AnalyticsEvent[]>([]);
   const [globalOrders, setGlobalOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
-  const [insights, setInsights] = useState(() => analyticsEngine.getInsights());
-  const [analyticsEvents, setAnalyticsEvents] = useState<AnalyticsEvent[]>(() =>
-    analyticsEngine.getEvents().slice(-15).reverse()
-  );
-  const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [lastAlertVisible, setLastAlertVisible] = useState<any>(null);
+  const ALERTS_PER_PAGE = 20;
 
-  const refreshAnalytics = () => {
-    setInsights(analyticsEngine.getInsights());
-    setAnalyticsEvents(analyticsEngine.getEvents().slice(-15).reverse());
+  const [insights, setInsights] = useState(() => {
+    try {
+      return analyticsEngine.getInsights();
+    } catch {
+      return { events: [], summary: {} };
+    }
+  });
+
+  const [analyticsEvents, setAnalyticsEvents] = useState<AnalyticsEvent[]>(() => {
+    try {
+      return analyticsEngine.getEvents().slice(-15).reverse();
+    } catch {
+      return [];
+    }
+  });
+
+  const [isGuideOpen, setIsGuideOpen] = useState(() => {
+    return localStorage.getItem('olmart_admin_guide_closed') !== 'true';
+  });
+
+  const closeGuide = () => {
+    setIsGuideOpen(false);
+    localStorage.setItem('olmart_admin_guide_closed', 'true');
+  };
+
+  const refreshAnalytics = useCallback(() => {
+    try {
+      setInsights(analyticsEngine.getInsights());
+      setAnalyticsEvents(analyticsEngine.getEvents().slice(-15).reverse());
+    } catch {
+       // fallback silently
+    }
+  }, []);
+
+  const debouncedRefresh = useDebounce(refreshAnalytics, 500);
+
+  const loadMoreAlerts = async () => {
+    if (!lastAlertVisible) return;
+    const q = query(
+      collection(db, "internal_notifications"),
+      orderBy("createdAt", "desc"),
+      startAfter(lastAlertVisible),
+      limit(ALERTS_PER_PAGE)
+    );
+    const snap = await getDocs(q);
+    setAdminAlerts(prev => [...prev, ...snap.docs.map(d => ({ id: d.id, ...d.data() }) as AdminAlert)]);
+    setLastAlertVisible(snap.docs[snap.docs.length - 1]);
   };
 
   const [disputeCount, setDisputeCount] = useState(0);
@@ -79,42 +144,46 @@ export const Overview: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     const fetchAnalyticsDoc = async () => {
       try {
         const { getDoc, doc, collection, query, where, getCountFromServer } = await import("firebase/firestore");
-        const docSnap = await getDoc(doc(db, "analytics", "daily"));
+        const docSnap = await safeFetch(() => getDoc(doc(db, "analytics", "daily")), null as any);
 
         const pendingQuery = query(
           collection(db, "users"),
           where("role", "==", "seller"),
           where("status", "==", "pending")
         );
-        const pendingSnap = await getCountFromServer(pendingQuery);
+        const pendingSnap = await safeFetch(() => getCountFromServer(pendingQuery), { data: () => ({ count: 0 }) } as any);
 
-        if (docSnap.exists()) {
-          const d = docSnap.data();
-          setStats({
-            totalSales: d.totalSales || 0,
-            activeVendors: d.activeVendors || 0,
-            totalOrders: d.totalOrders || 0,
-            netRevenue: d.netRevenue || 0,
-            pendingVendors: pendingSnap.data().count,
-          });
-          if (d.chartData) {
-            setData(d.chartData);
+        if (!cancelled) {
+          if (docSnap && docSnap.exists()) {
+            const d = docSnap.data();
+            setStats({
+              totalSales: d.totalSales || 0,
+              activeVendors: d.activeVendors || 0,
+              totalOrders: d.totalOrders || 0,
+              netRevenue: d.netRevenue || 0,
+              pendingVendors: pendingSnap.data().count,
+            });
+            if (d.chartData) {
+              setData(d.chartData);
+            }
+          } else {
+            setStats((prev) => ({ ...prev, pendingVendors: pendingSnap.data().count }));
           }
-        } else {
-          setStats((prev) => ({ ...prev, pendingVendors: pendingSnap.data().count }));
         }
       } catch (err) {
-        console.error("Erreur KPI:", err);
+        if (!cancelled) console.error("Erreur KPI:", err);
       }
     };
     fetchAnalyticsDoc();
 
     setRecentEvents([
-      { type: "order", label: t("Nouvelle commande"), time: t("Il y a 2 min"), color: "text-orange-500" },
+      { id: "1", type: "order", label: t("Nouvelle commande"), time: t("Il y a 2 min"), color: "text-orange-500", timestamp: Timestamp.now(), data: {} },
     ]);
+    return () => { cancelled = true; };
   }, [t]);
 
   useEffect(() => {
@@ -133,9 +202,10 @@ export const Overview: React.FC = () => {
 
     const fetchAlerts = async () => {
       try {
-        const q = query(collection(db, "admin_alerts"), where("resolved", "==", false), limit(10));
+        const q = query(collection(db, "internal_notifications"), orderBy("createdAt", "desc"), limit(ALERTS_PER_PAGE));
         const snap = await getDocs(q);
-        setAdminAlerts(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+        setAdminAlerts(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as AdminAlert));
+        setLastAlertVisible(snap.docs[snap.docs.length - 1]);
       } catch (e) {
         (process.env.NODE_ENV === "debug" ? console.log : function () {})("No admin alerts or missing index");
       }
@@ -169,7 +239,7 @@ export const Overview: React.FC = () => {
           </div>
 
           <button
-            onClick={refreshAnalytics}
+            onClick={() => debouncedRefresh()}
             className="flex items-center gap-3 px-6 py-4 bg-white border border-zinc-100 rounded-2xl font-black text-[10px] uppercase tracking-widest rtl:tracking-normal text-zinc-500 hover:text-zinc-900 transition-all shadow-sm cursor-pointer"
           >
             <RefreshCw className="w-4 h-4" /> {t("Actualiser")}
@@ -210,6 +280,16 @@ export const Overview: React.FC = () => {
               );
             })}
           </div>
+          {lastAlertVisible && (
+            <div className="flex justify-center mt-4">
+              <button
+                onClick={loadMoreAlerts}
+                className="px-6 py-2 bg-white border border-red-200 text-red-600 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-50 transition-colors shadow-sm"
+              >
+                {t("Charger plus d'alertes")}
+              </button>
+            </div>
+          )}
         </div>
       )}
 

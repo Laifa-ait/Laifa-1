@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { db, auth } from "../../lib/firebase";
+import { db } from "../../lib/firebase";
 import {
   collection,
   query,
@@ -37,9 +37,23 @@ import { Order, OrderStatus } from "../../types";
 import { useTranslation } from "react-i18next";
 import { ALGERIA_WILAYAS } from "../../constants";
 import { toast } from "react-hot-toast";
+import { useAuth } from "../../context/AuthContext";
+import { useConfirm } from "../../hooks/useConfirm";
+import { OrderFilters } from "../../components/Admin/Orders/OrderFilters";
+import { OrderTable } from "../../components/Admin/Orders/OrderTable";
+
+interface CalculatedOrder {
+  id: string;
+  commissionAmount: number;
+  netRevenue: number;
+  platformFee: number;
+  sellerPayout: number;
+}
 
 export const OrdersAdmin: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const { currentUser, userProfile } = useAuth();
+  const { confirm: showConfirmModal, ConfirmationDialog } = useConfirm();
   const isRtl = i18n.language === "ar";
 
   const [orders, setOrders] = useState<Order[]>([]);
@@ -56,7 +70,7 @@ export const OrdersAdmin: React.FC = () => {
   const [totalVolume, setTotalVolume] = useState(0);
   const [totalCommission, setTotalCommission] = useState(0);
   const [sellersNetPayout, setSellersNetPayout] = useState(0);
-  const [calculatedOrdersMap, setCalculatedOrdersMap] = useState<Record<string, any>>({});
+  const [calculatedOrdersMap, setCalculatedOrdersMap] = useState<Record<string, CalculatedOrder>>({});
 
   // Multi-selection (Bulk Actions) State
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
@@ -189,7 +203,7 @@ export const OrdersAdmin: React.FC = () => {
     // Batch process to prevent payload limit issues if too many orders, but limiting to 200 usually fits
     const calculateCommissions = async () => {
       try {
-        const token = await auth.currentUser?.getIdToken();
+        const token = await currentUser?.getIdToken();
         const response = await fetch("/api/calculate-commissions", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -238,14 +252,16 @@ export const OrdersAdmin: React.FC = () => {
 
   // Direct single order status update handler (using secure server-side endpoint)
   const handleUpdateOrderStatus = async (orderId: string, newStatus: OrderStatus) => {
-    if (!auth.currentUser) {
+    if (!currentUser || userProfile?.role !== 'admin') {
       toast.error(t("Veuillez vous authentifier d'abord."));
       return;
     }
+    const confirmed = await showConfirmModal(`Modifier le statut de la commande en "${statusLabels[newStatus]}" ?`);
+    if (!confirmed) return;
     setIsUpdatingStatus(true);
     const progressToast = toast.loading(t("Mise à jour du statut..."));
     try {
-      const idToken = await auth.currentUser.getIdToken();
+      const idToken = await currentUser.getIdToken();
       const response = await fetch("/api/seller/orders/status", {
         method: "POST",
         headers: {
@@ -283,15 +299,18 @@ export const OrdersAdmin: React.FC = () => {
   // Bulk Status Update Handler (using secure server-side endpoint)
   const handleBulkStatusChange = async (newStatus: OrderStatus) => {
     if (selectedOrderIds.length === 0) return;
-    if (!auth.currentUser) {
+    if (!currentUser || userProfile?.role !== 'admin') {
       toast.error(t("Veuillez vous authentifier d'abord."));
       return;
     }
+    const confirmed = await showConfirmModal(`Modifier le statut de ${selectedOrderIds.length} commandes en "${statusLabels[newStatus]}" ?`);
+    if (!confirmed) return;
+
     const progressToast = toast.loading(
       `${t("Mise à jour en masse de")} ${selectedOrderIds.length} ${t("commandes...")}`
     );
     try {
-      const idToken = await auth.currentUser.getIdToken();
+      const idToken = await currentUser.getIdToken();
       const response = await fetch("/api/seller/orders/status", {
         method: "POST",
         headers: {
@@ -571,283 +590,46 @@ export const OrdersAdmin: React.FC = () => {
       </div>
 
       {/* Multidimensional Advanced Filters Panel */}
-      <div className="p-6 bg-zinc-50 border border-zinc-200 rounded-3xl space-y-4">
-        <h3 className="text-xs font-black uppercase tracking-widest text-[#121315] flex items-center gap-2">
-          <Filter className="w-4 h-4 text-orange-500" />
-          {t("Filtres Analytiques & Recherche")}
-        </h3>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
-          {/* Reference Search */}
-          <div className="space-y-1">
-            <label className="block text-[10px] font-black text-zinc-450 uppercase tracking-wider">
-              {t("ID Commande / Code")}
-            </label>
-            <div className="bg-white border border-zinc-200 rounded-xl px-3 py-2 flex items-center gap-2">
-              <Search className="w-3.5 h-3.5 text-zinc-400" />
-              <input
-                type="text"
-                value={searchId}
-                onChange={(e) => setSearchId(e.target.value)}
-                placeholder={t("Filtrer ID...")}
-                className="w-full text-xs font-bold bg-transparent outline-none text-zinc-800"
-              />
-            </div>
-          </div>
-
-          {/* Wilaya Filter */}
-          <div className="space-y-1">
-            <label className="block text-[10px] font-black text-zinc-450 uppercase tracking-wider">
-              {t("Wilaya (Algérie)")}
-            </label>
-            <select
-              value={selectedWilaya}
-              onChange={(e) => setSelectedWilaya(e.target.value)}
-              className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-2.5 text-xs font-bold outer-none text-zinc-700 outline-none cursor-pointer"
-            >
-              <option value="all">{t("Toutes (Les 58 Wilayas)")}</option>
-              {ALGERIA_WILAYAS.map((w) => (
-                <option key={w} value={w}>
-                  {w}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Status Filter */}
-          <div className="space-y-1">
-            <label className="block text-[10px] font-black text-zinc-450 uppercase tracking-wider">
-              {t("Statut Actuel")}
-            </label>
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-2.5 text-xs font-bold outer-none text-zinc-700 outline-none cursor-pointer"
-            >
-              <option value="all">{t("Tous les statuts")}</option>
-              {Object.keys(statusLabels).map((key) => (
-                <option key={key} value={key}>
-                  {statusLabels[key]}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Seller Search */}
-          <div className="space-y-1">
-            <label className="block text-[10px] font-black text-zinc-450 uppercase tracking-wider">
-              {t("Vendeur (ID / Magasin)")}
-            </label>
-            <div className="bg-white border border-zinc-200 rounded-xl px-3 py-2 flex items-center gap-2">
-              <Search className="w-3.5 h-3.5 text-zinc-400" />
-              <input
-                type="text"
-                value={sellerSearch}
-                onChange={(e) => setSellerSearch(e.target.value)}
-                placeholder={t("Chercher vendeur...")}
-                className="w-full text-xs font-bold bg-transparent outline-none text-zinc-800"
-              />
-            </div>
-          </div>
-
-          {/* Date de Début */}
-          <div className="space-y-1">
-            <label className="block text-[10px] font-black text-zinc-450 uppercase tracking-wider">
-              {t("Date Début")}
-            </label>
-            <div className="bg-white border border-zinc-200 rounded-xl px-3 py-2 flex items-center gap-2 justify-between">
-              <Calendar className="w-3.5 h-3.5 text-zinc-400" />
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="text-xs font-semibold bg-transparent outline-none text-zinc-700 cursor-pointer"
-              />
-            </div>
-          </div>
-
-          {/* Date de Fin */}
-          <div className="space-y-1">
-            <label className="block text-[10px] font-black text-zinc-450 uppercase tracking-wider">
-              {t("Date Fin")}
-            </label>
-            <div className="bg-white border border-zinc-200 rounded-xl px-3 py-2 flex items-center gap-2 justify-between">
-              <Calendar className="w-3.5 h-3.5 text-zinc-400" />
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="text-xs font-semibold bg-transparent outline-none text-zinc-700 cursor-pointer"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Clear Filters Label */}
-        {(searchId || selectedWilaya !== "all" || selectedStatus !== "all" || sellerSearch || startDate || endDate) && (
-          <div className="flex justify-end">
-            <button
-              onClick={() => {
-                setSearchId("");
-                setSelectedWilaya("all");
-                setSelectedStatus("all");
-                setSellerSearch("");
-                setStartDate("");
-                setEndDate("");
-                setSelectedOrderIds([]);
-                toast.success(t("Filtres réinitialisés !"));
-              }}
-              className="px-3.5 py-1.5 bg-zinc-200 hover:bg-zinc-300 text-zinc-855 rounded-lg text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all border-none"
-            >
-              {t("Réinitialiser tous les filtres")}
-            </button>
-          </div>
-        )}
-      </div>
+      <OrderFilters
+        searchId={searchId}
+        setSearchId={setSearchId}
+        selectedWilaya={selectedWilaya}
+        setSelectedWilaya={setSelectedWilaya}
+        selectedStatus={selectedStatus}
+        setSelectedStatus={setSelectedStatus}
+        sellerSearch={sellerSearch}
+        setSellerSearch={setSellerSearch}
+        startDate={startDate}
+        setStartDate={setStartDate}
+        endDate={endDate}
+        setEndDate={setEndDate}
+        statusLabels={statusLabels}
+        onResetFilters={() => {
+          setSearchId("");
+          setSelectedWilaya("all");
+          setSelectedStatus("all");
+          setSellerSearch("");
+          setStartDate("");
+          setEndDate("");
+          setSelectedOrderIds([]);
+          toast.success(t("Filtres réinitialisés !"));
+        }}
+      />
 
       {/* Orders List Table Card */}
-      <div className="bg-white rounded-[2rem] border border-zinc-200/80 shadow-sm overflow-hidden pb-10">
-        {loading ? (
-          <div className="p-20 text-center text-zinc-400 font-bold uppercase tracking-widest text-xs animate-pulse">
-            {t("Calcul de l'inventaire & Téléchargement des ventes...")}
-          </div>
-        ) : filteredOrders.length === 0 ? (
-          <div className="p-20 text-center block text-zinc-450">
-            <HelpCircle className="w-12 h-12 mx-auto text-zinc-350 mb-3 animate-bounce" />
-            <strong className="block text-sm font-bold">{t("Aucune commande correspondante")}</strong>
-            <p className="text-xs text-zinc-450 mt-1">
-              {t("Ajustez vos critères de filtrage ou réinitialisez la recherche.")}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-start border-collapse">
-              <thead>
-                <tr className="bg-zinc-50/70 border-b border-zinc-200">
-                  {/* Select Checkbox Column */}
-                  <th className="p-5 w-12 text-center">
-                    <button
-                      type="button"
-                      onClick={() => handleSelectAll(selectedOrderIds.length !== filteredOrders.length)}
-                      className="text-zinc-400 hover:text-zinc-600 transition-colors"
-                    >
-                      {selectedOrderIds.length === filteredOrders.length ? (
-                        <CheckSquare className="w-5 h-5 text-orange-500" />
-                      ) : (
-                        <Square className="w-5 h-5" />
-                      )}
-                    </button>
-                  </th>
-                  <th className="p-5 text-[10px] font-black uppercase tracking-widest text-zinc-450">
-                    {t("Manifeste & ID")}
-                  </th>
-                  <th className="p-5 text-[10px] font-black uppercase tracking-widest text-zinc-450">
-                    {t("Client & Livrable")}
-                  </th>
-                  <th className="p-5 text-[10px] font-black uppercase tracking-widest text-zinc-450">
-                    {t("Encaissable COD / 5% Math")}
-                  </th>
-                  <th className="p-5 text-[10px] font-black uppercase tracking-widest text-zinc-450">
-                    {t("ID Suivi / Transport")}
-                  </th>
-                  <th className="p-5 text-[10px] font-black uppercase tracking-widest text-zinc-450">
-                    {t("Statut Étape")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-150">
-                {filteredOrders.map((order) => {
-                  const dateVal = getOrderDate(order.createdAt);
-                  const isSelected = selectedOrderIds.includes(order.id);
-
-                  return (
-                    <tr
-                      key={order.id}
-                      className={`hover:bg-zinc-50/40 transition-all cursor-pointer ${isSelected ? "bg-orange-50/20" : ""}`}
-                      onClick={() => setSelectedOrder(order)}
-                    >
-                      {/* Selection Checkbox */}
-                      <td className="p-5 text-center" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          type="button"
-                          onClick={() => handleSelectOrder(order.id, !isSelected)}
-                          className="text-zinc-400 hover:text-zinc-600 transition-colors inline-block"
-                        >
-                          {isSelected ? (
-                            <CheckSquare className="w-5 h-5 text-[#ea580c]" />
-                          ) : (
-                            <Square className="w-5 h-5" />
-                          )}
-                        </button>
-                      </td>
-
-                      {/* Reference Column */}
-                      <td className="p-5">
-                        <span className="text-xs font-bold font-mono text-zinc-900 bg-zinc-100 px-2 py-1 rounded inline-block">
-                          {order.id.slice(-8).toUpperCase()}
-                        </span>
-                        <div className="text-[10px] tracking-wide text-zinc-400 font-bold mt-1">
-                          {dateVal ? dateVal.toLocaleString() : "N/A"}
-                        </div>
-                      </td>
-
-                      {/* Client Column */}
-                      <td className="p-5">
-                        <strong className="block text-sm text-zinc-900 font-black">
-                          {order.shippingAddress?.fullName || order.shippingAddress?.name || "Client Olmart"}
-                        </strong>
-                        <div className="text-[10px] font-bold text-zinc-450 uppercase flex items-center gap-1 mt-1">
-                          <span>📍</span>
-                          <span>
-                            {order.shippingAddress?.wilaya} • {order.shippingAddress?.commune}
-                          </span>
-                        </div>
-                      </td>
-
-                      {/* Encaissable Column */}
-                      <td className="p-5 font-sans">
-                        <strong className="block text-base font-black text-zinc-950 tracking-tight">
-                          {formatPrice(order.total)}
-                        </strong>
-                        <span className="text-[9px] font-black text-purple-600 bg-purple-50 px-2 py-0.5 rounded inline-block uppercase tracking-wide mt-1">
-                          {t("Portion (5%):")} {formatPrice(calculatedOrdersMap[order.id]?.commissionCalc || 0)}
-                        </span>
-                      </td>
-
-                      {/* Tracking ID Column */}
-                      <td className="p-5">
-                        {order.trackingId || order.trackingNumber ? (
-                          <div className="space-y-1">
-                            <span className="text-[11px] font-black font-mono bg-zinc-950 text-white rounded px-2 py-0.5 inline-block uppercase select-all">
-                              {order.trackingId || order.trackingNumber}
-                            </span>
-                            <span className="block text-[8px] font-black uppercase text-zinc-400">
-                              {order.deliveryProvider || "YALIDINE"}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-zinc-400 text-xs italic font-semibold">{t("Non synchronisé")}</span>
-                        )}
-                      </td>
-
-                      {/* Status Check Column */}
-                      <td className="p-5">
-                        <span
-                          className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${
-                            statusColors[order.status?.toLowerCase()] || "bg-slate-50 text-slate-700 border-slate-150"
-                          }`}
-                        >
-                          {statusLabels[order.status?.toLowerCase()] || order.status}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      <OrderTable
+        loading={loading}
+        ordersCount={orders.length}
+        filteredOrders={filteredOrders}
+        selectedOrderIds={selectedOrderIds}
+        calculatedOrdersMap={calculatedOrdersMap}
+        statusLabels={statusLabels}
+        statusColors={statusColors}
+        handleSelectAll={handleSelectAll}
+        handleSelectOrder={handleSelectOrder}
+        setSelectedOrder={setSelectedOrder}
+        getOrderDate={getOrderDate}
+      />
 
       {/* Floating Bottom Massive Bulk Actions Controller */}
       {selectedOrderIds.length > 0 && (
@@ -1100,6 +882,7 @@ export const OrdersAdmin: React.FC = () => {
           </div>
         </div>
       )}
+      <ConfirmationDialog />
     </div>
   );
 };

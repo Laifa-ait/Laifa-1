@@ -49,24 +49,32 @@ app.use("/api/chat", strictLimiter);
 app.use("/api/place-order", strictLimiter);
 app.use("/api", apiLimiter);
 
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://apis.google.com", "https://www.gstatic.com"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-      imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
-      connectSrc: ["'self'", "https:", "wss:", "ws:"],
-      frameSrc: ["'self'", "https://*.firebaseapp.com", "https://*.google.com", "https://apis.google.com"],
-      frameAncestors: ["'self'", "https://aistudio.google.com", "https://*.google.com"],
-      objectSrc: ["'none'"],
-      upgradeInsecureRequests: []
+if (process.env.NODE_ENV === "production") {
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://apis.google.com", "https://www.gstatic.com"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+        imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
+        connectSrc: ["'self'", "https:", "wss:", "ws:"],
+        frameSrc: ["'self'", "https://*.firebaseapp.com", "https://*.google.com", "https://apis.google.com"],
+        frameAncestors: ["'self'", "https://aistudio.google.com", "https://*.google.com"],
+        objectSrc: ["'none'"],
+        upgradeInsecureRequests: []
+      },
     },
-  },
-  crossOriginEmbedderPolicy: false,
-  xFrameOptions: false,
-}));
+    crossOriginEmbedderPolicy: false,
+    xFrameOptions: false,
+  }));
+} else {
+  app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+    xFrameOptions: false,
+  }));
+}
 app.use(compression());
 
 const allowedOrigins = [
@@ -97,8 +105,26 @@ app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ limit: "2mb", extended: true }));
 
 // Health Check Endpoint
-app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
+app.get("/api/health", async (req, res) => {
+  const checks = {
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    firebase: "unknown",
+  };
+  
+  try {
+    await admin.firestore().collection("_health").doc("ping").get();
+    checks.firebase = "ok";
+  } catch (e) {
+    checks.firebase = "error";
+  }
+  
+  const allOk = checks.firebase === "ok";
+  res.status(allOk ? 200 : 503).json({
+    status: allOk ? "healthy" : "unhealthy",
+    ...checks,
+  });
 });
 
 import swaggerUi from 'swagger-ui-express';

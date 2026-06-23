@@ -7,7 +7,7 @@ import { collection, query, limit, getDocs, where } from "firebase/firestore";
 import { Product } from "../../types";
 import { formatPrice } from "../../utils/format";
 import { ProductCard } from "../Product/ProductCard";
-import { MobileSwipeIndicator } from "../UI/MobileSwipeIndicator";
+import { MobileSwipeIndicator } from "../ui/MobileSwipeIndicator";
 
 export const FlashSales: React.FC = () => {
   const navigate = useNavigate();

@@ -77,8 +77,8 @@ export const BannerSlider: React.FC<BannerSliderProps> = ({ banners, onAction })
                     alt={banner.title}
                   />
                 </picture>
-                <div className="absolute bottom-0 left-0 right-0 h-3/4 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                <div className="absolute bottom-0 left-0 w-3/4 h-full bg-gradient-to-r from-black/60 via-black/10 to-transparent sm:block hidden" />
+                <div className="absolute bottom-0 start-0 end-0 h-3/4 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <div className="absolute bottom-0 start-0 w-3/4 h-full bg-gradient-to-e from-black/60 via-black/10 to-transparent sm:block hidden" />
               </div>
               <div className="relative z-10 max-w-xl text-white">
                 <motion.div
@@ -110,7 +110,7 @@ export const BannerSlider: React.FC<BannerSliderProps> = ({ banners, onAction })
 
         {/* Indicators */}
         {banners.length > 1 && (
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+          <div className="absolute bottom-6 start-1/2 -translate-x-1/2 flex gap-2 z-20">
             {banners.map((_, i) => (
               <button
                 key={i}
