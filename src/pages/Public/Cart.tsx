@@ -10,58 +10,7 @@ import { db } from '../../lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { Shop } from '../../types';
 import { ALGERIA_WILAYAS } from '../../constants';
-
-const CartItemTimer: React.FC<{ addedAt?: number }> = ({ addedAt }) => {
-  const { t } = useTranslation();
-  const [timeLeft, setTimeLeft] = React.useState<number>(0);
-
-  React.useEffect(() => {
-    if (!addedAt) return;
-    const calculateTimeLeft = () => {
-      const diff = (addedAt + 15 * 60 * 1000) - Date.now();
-      return Math.max(0, diff);
-    };
-
-    setTimeLeft(calculateTimeLeft());
-
-    const interval = setInterval(() => {
-      const rem = calculateTimeLeft();
-      setTimeLeft(rem);
-      if (rem <= 0) {
-        clearInterval(interval);
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [addedAt]);
-
-  if (!addedAt) return null;
-
-  const totalSeconds = Math.floor(timeLeft / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-
-  const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-
-  if (totalSeconds <= 0) {
-    return (
-      <span className="inline-flex items-center gap-1 bg-red-50 text-red-600 border border-red-200 text-[10px] font-black px-2.5 py-1 rounded-lg">
-        ⏱️ {t("reservation_expired") || "Réservation expirée"}
-      </span>
-    );
-  }
-
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-black rounded-lg ${
-      totalSeconds < 180 
-        ? "bg-red-50 text-red-600 border border-red-200 animate-pulse" 
-        : "bg-orange-50 text-orange-600 border border-orange-200"
-    }`}>
-      <span className="w-1.5 h-1.5 bg-current rounded-full animate-ping" />
-      {t("exclusivity_reserved") || "Exclusivité réservée :"} {formattedTime}
-    </span>
-  );
-};
+import { CartItemTimer } from '../../components/Cart/CartItemTimer';
 
 const SizeGuideModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
@@ -72,14 +21,14 @@ const SizeGuideModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
          <button onClick={onClose} className="absolute top-6 right-6 text-zinc-400 hover:text-zinc-600 font-bold p-2 text-sm">
             {t("common.close") || "✕ Fermer"}
          </button>
-         <h3 className="text-2xl font-black text-[#121315] tracking-tight rtl:tracking-normal mb-4">{t("product.details.size_guide_title")}</h3>
+         <h3 className="text-2xl font-kinder text-[#3C2B22] tracking-tight rtl:tracking-normal mb-4">{t("product.details.size_guide_title")}</h3>
          <p className="text-xs text-zinc-500 mb-6 leading-relaxed">
             {t("product.details.size_guide_desc")}
          </p>
          <div className="overflow-x-auto rounded-2xl border border-zinc-100 mb-6">
             <table className="w-full text-left border-collapse text-xs">
                <thead>
-                  <tr className="bg-zinc-50 border-b border-zinc-150 font-black text-[#121315]">
+                  <tr className="bg-zinc-50 border-b border-zinc-150 font-kinder text-[#3C2B22]">
                      <th className="p-3">{t("size_eur_tk") || "Taille EUR/Turquie"}</th>
                      <th className="p-3">{t("equiv_china") || "Équivalence Chine"}</th>
                      <th className="p-3">{t("fit_algeria") || "Coupe Algérie"}</th>
@@ -145,15 +94,19 @@ export const Cart: React.FC = () => {
       const sellerIds = Array.from(new Set(cart.map(item => item.sellerId).filter(Boolean))) as string[];
       const shopData: Record<string, Shop> = {};
       
-      const fetchPromises = sellerIds.map(id => getDoc(doc(db, "publicProfiles", id)));
-      const snaps = await Promise.all(fetchPromises);
-      
-      snaps.forEach(snap => {
-         if (snap.exists()) {
-           shopData[snap.id] = { uid: snap.id, ...snap.data() } as unknown as Shop;
-         }
-      });
-      setShops(shopData);
+      try {
+        const fetchPromises = sellerIds.map(id => getDoc(doc(db, "publicProfiles", id)));
+        const snaps = await Promise.all(fetchPromises);
+        
+        snaps.forEach(snap => {
+           if (snap.exists()) {
+             shopData[snap.id] = { uid: snap.id, ...snap.data() } as unknown as Shop;
+           }
+        });
+        setShops(shopData);
+      } catch (err) {
+        console.error("Erreur fetch shop:", err);
+      }
     };
 
     if (cart.length > 0) fetchShops();
@@ -183,11 +136,11 @@ export const Cart: React.FC = () => {
 
   if (cart.length === 0) {
     return (
-      <div className="min-h-screen bg-[#faf8f5] flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen bg-[#FDF9EC] flex flex-col items-center justify-center p-6 text-center">
          <div className="w-40 h-40 bg-white rounded-[4rem] border border-zinc-100 flex items-center justify-center text-zinc-200 mb-10 shadow-2xl">
             <ShoppingBag className="w-16 h-16" />
          </div>
-         <h1 className="text-4xl md:text-5xl font-black text-zinc-950 tracking-tighter rtl:tracking-normal mb-6">
+         <h1 className="text-4xl md:text-5xl font-kinder text-zinc-950 tracking-tighter rtl:tracking-normal mb-6">
            {t("cart_empty_title", "Votre panier est vide")}
          </h1>
          <p className="text-zinc-500 font-medium text-lg max-w-sm mb-12 italic">
@@ -195,7 +148,7 @@ export const Cart: React.FC = () => {
          </p>
          <button 
            onClick={() => navigate('/shop')}
-           className="px-12 py-6 bg-zinc-950 text-white rounded-[2rem] font-black text-sm uppercase tracking-[0.2em] rtl:tracking-normal hover:bg-orange-600 transition-all shadow-2xl flex items-center gap-4 group cursor-pointer"
+           className="px-12 py-6 bg-zinc-950 text-white rounded-[2rem] font-kinder text-sm uppercase tracking-[0.2em] rtl:tracking-normal hover:bg-orange-600 transition-all shadow-2xl flex items-center gap-4 group cursor-pointer"
          >
             {t("go_to_shop", "Explorer le Catalogue")}
             <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
@@ -213,22 +166,22 @@ export const Cart: React.FC = () => {
                     <div className="w-10 h-10 bg-orange-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/20">
                        <ShoppingCart className="w-5 h-5" />
                     </div>
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-600">
+                    <h4 className="text-[10px] font-kinder uppercase tracking-[0.3em] text-orange-600">
                       {t("cart_caption", "Votre Sélection")}
                     </h4>
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-zinc-950 tracking-tighter rtl:tracking-normal">
+                 <h1 className="text-5xl md:text-6xl font-kinder text-zinc-950 tracking-tighter rtl:tracking-normal">
                    {t("cart_title", "Mon Panier")}
                  </h1>
                   {isRevalidating && (
-                     <p className="text-[9px] font-black text-orange-600 uppercase tracking-widest rtl:tracking-normal animate-pulse mt-2">
+                     <p className="text-[9px] font-kinder text-orange-600 uppercase tracking-widest rtl:tracking-normal animate-pulse mt-2">
                         ● {t("cart_revalidating", "Hydratation des prix en temps réel...")}
                      </p>
                   )}
              </div>
              <div className="flex items-center gap-4 p-5 bg-white border border-zinc-100 rounded-[2rem] shadow-sm">
                 <Info className="w-5 h-5 text-zinc-400" />
-                <p className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-500">
+                <p className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-500">
                   {t("shipping_disclaimer", "Frais de livraison calculés par colis vendeur")}
                 </p>
              </div>
@@ -263,21 +216,21 @@ export const Cart: React.FC = () => {
                          {/* Package Header with multi-seller action splitting */}
                          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-zinc-100 pb-6 gap-6">
                             <div className="flex items-center gap-3">
-                               <div className="w-10 h-10 bg-[#121315]/10 text-[#121315] rounded-xl flex items-center justify-center shadow-inner">
+                               <div className="w-10 h-10 bg-[#3C2B22]/10 text-[#3C2B22] rounded-xl flex items-center justify-center shadow-inner">
                                   <Store className="w-5 h-5" />
                                </div>
                                <div>
-                                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-orange-500 mb-0.5">
+                                  <p className="text-[9px] font-kinder uppercase tracking-[0.2em] text-orange-500 mb-0.5">
                                     {t("cart_info.package") || "Colis"} {packageIdx + 1}
                                   </p>
-                                  <h3 className="text-lg font-black text-[#121315] tracking-tight rtl:tracking-normal">
+                                  <h3 className="text-lg font-kinder text-[#3C2B22] tracking-tight rtl:tracking-normal">
                                      {shop?.shopName || "Atelier Olma"}
                                   </h3>
                                </div>
                             </div>
                             
                             <div className="flex flex-wrap items-center gap-3 sm:self-center">
-                               <div className="px-4 py-2.5 bg-stone-50 border border-stone-200/50 rounded-xl text-[10px] font-black text-stone-600 uppercase tracking-wider rtl:tracking-normal flex items-center gap-1.5">
+                               <div className="px-4 py-2.5 bg-stone-50 border border-stone-200/50 rounded-xl text-[10px] font-kinder text-stone-600 uppercase tracking-wider rtl:tracking-normal flex items-center gap-1.5">
                                   <Truck className="w-3.5 h-3.5 text-orange-600" />
                                   {t("cart_info.delivery", "Livraison : ")}{formatPrice(shippingFee)}
                                 </div>
@@ -285,7 +238,7 @@ export const Cart: React.FC = () => {
                                 <button
                                   type="button"
                                   onClick={() => navigate(`/checkout?sellerId=${sellerId}`)}
-                                  className="px-5 py-2.5 bg-[#121315] hover:bg-[#F37021] text-white transition-all text-[9px] font-black uppercase tracking-[0.15em] rounded-xl cursor-pointer hover:scale-[1.02] active:scale-[0.98] shadow-sm"
+                                  className="px-5 py-2.5 bg-[#3C2B22] hover:bg-[#FF5C00] text-white transition-all text-[9px] font-kinder uppercase tracking-[0.15em] rounded-xl cursor-pointer hover:scale-[1.02] active:scale-[0.98] shadow-sm"
                                 >
                                    {t("cart_info.pay_package_only", "Régler ce colis uniquement")}</button>
                             </div>
@@ -313,10 +266,10 @@ export const Cart: React.FC = () => {
                                         <div className="flex-1 space-y-3 text-center sm:text-left">
                                            <div className="space-y-1">
                                               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
-                                                 <span className="text-[9px] font-black text-orange-500 uppercase tracking-widest rtl:tracking-normal">{item.category}</span>
+                                                 <span className="text-[9px] font-kinder text-orange-500 uppercase tracking-widest rtl:tracking-normal">{item.category}</span>
                                                  {item.addedAt && <CartItemTimer addedAt={item.addedAt} />}
                                               </div>
-                                              <h3 className="text-xl font-black text-[#121315] tracking-tight rtl:tracking-normal line-clamp-1">{item.name}</h3>
+                                              <h3 className="text-xl font-kinder text-[#3C2B22] tracking-tight rtl:tracking-normal line-clamp-1">{item.name}</h3>
                                            </div>
                                            
                                            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
@@ -345,21 +298,21 @@ export const Cart: React.FC = () => {
                                                     updateQuantity(masterIndex, currentQty - 1);
                                                   }
                                                 }}
-                                                className="w-8 h-8 flex items-center justify-center text-stone-400 hover:text-[#F37021] transition-colors"
+                                                className="w-8 h-8 flex items-center justify-center text-stone-400 hover:text-[#FF5C00] transition-colors"
                                               >
                                                 <Minus className="w-3.5 h-3.5" />
                                               </button>
-                                              <span className="w-10 text-center font-black text-xs text-stone-800">{item.quantity || 1}</span>
+                                              <span className="w-10 text-center font-kinder text-xs text-stone-800">{item.quantity || 1}</span>
                                               <button 
                                                 onClick={() => updateQuantity(masterIndex, (item.quantity || 1) + 1)}
-                                                className="w-8 h-8 flex items-center justify-center text-stone-400 hover:text-[#F37021] transition-colors"
+                                                className="w-8 h-8 flex items-center justify-center text-stone-400 hover:text-[#FF5C00] transition-colors"
                                               >
                                                 <Plus className="w-3.5 h-3.5" />
                                               </button>
                                            </div>
                                            
                                            <div className="text-right">
-                                              <p className="text-lg font-black text-[#121315] tracking-tight rtl:tracking-normal">
+                                              <p className="text-lg font-kinder text-[#3C2B22] tracking-tight rtl:tracking-normal">
                                                  {formatPrice(getCartItemPrice(item) * (item.quantity || 1))}
                                               </p>
                                            </div>
@@ -380,7 +333,7 @@ export const Cart: React.FC = () => {
                          {/* Package Sub-total detail */}
                          <div className="flex justify-between items-center pt-5 border-t border-stone-100 text-xs font-bold text-zinc-500 leading-none">
                             <span>{t("cart_info.subtotal_package") || "Sous-total Colis"} {packageIdx + 1} :</span>
-                            <span className="font-extrabold text-[#121315]">{formatPrice(sellerSubtotal)} (+ {formatPrice(shippingFee)} {t("shipping") || "livraison"})</span>
+                            <span className="font-extrabold text-[#3C2B22]">{formatPrice(sellerSubtotal)} (+ {formatPrice(shippingFee)} {t("shipping") || "livraison"})</span>
                          </div>
                       </div>
                    );
@@ -392,13 +345,13 @@ export const Cart: React.FC = () => {
                 <div className="bg-zinc-950 rounded-[4rem] p-10 text-white shadow-2xl relative overflow-hidden">
                    <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl" />
                    
-                   <h3 className="text-2xl font-black mb-10 tracking-tighter rtl:tracking-normal">
+                   <h3 className="text-2xl font-kinder mb-10 tracking-tighter rtl:tracking-normal">
                       {t("summary_title", "Résumé Global")}
                    </h3>
                    
                    <div className="space-y-6 pb-8 border-b border-white/10">
                       <div className="flex justify-between items-center text-zinc-400">
-                         <p className="text-[11px] font-black uppercase tracking-widest rtl:tracking-normal">
+                         <p className="text-[11px] font-kinder uppercase tracking-widest rtl:tracking-normal">
                             {t("summary_subtotal", "articles au panier")} ({cart.length})
                          </p>
                          <p className="font-bold text-white">{formatPrice(total)}</p>
@@ -406,7 +359,7 @@ export const Cart: React.FC = () => {
 
                       {/* Realtime Wilaya Estimation dropdown */}
                       <div className="space-y-3 pt-2">
-                         <label className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-400 flex items-center gap-1">
+                         <label className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-400 flex items-center gap-1">
                             <MapPin className="w-3.5 h-3.5 text-orange-500" />
                             {t("estimate_wilaya", "Estimer pour ma wilaya")}
                          </label>
@@ -423,7 +376,7 @@ export const Cart: React.FC = () => {
                       </div>
 
                       <div className="flex justify-between items-center text-zinc-400 pt-2">
-                         <p className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-400">
+                         <p className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-400">
                             {t("estimated_shipping", "Frais de livraison")} {t("(Total)")}</p>
                          <p className="font-bold text-white">{formatPrice(estimatedShippingTotal)}</p>
                       </div>
@@ -431,21 +384,21 @@ export const Cart: React.FC = () => {
 
                    <div className="pt-10 mb-12">
                       <div className="flex justify-between items-center mb-2">
-                         <p className="text-[11px] font-black uppercase tracking-widest rtl:tracking-normal text-orange-500">
+                         <p className="text-[11px] font-kinder uppercase tracking-widest rtl:tracking-normal text-orange-500">
                             {t("grand_total", "Total Estimé")}
                          </p>
-                         <p className="text-3xl font-black tracking-tighter rtl:tracking-normal text-white">
+                         <p className="text-3xl font-kinder tracking-tighter rtl:tracking-normal text-white">
                             {formatPrice(estimatedGrandTotal)}
                          </p>
                       </div>
-                      <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest rtl:tracking-normal">
+                      <p className="text-[9px] font-kinder text-zinc-500 uppercase tracking-widest rtl:tracking-normal">
                          {t("cod_guarantee", "Paiement en espèces à la livraison")}
                       </p>
                    </div>
 
                    <button 
                      onClick={() => navigate('/checkout')}
-                     className="w-full bg-white text-zinc-950 rounded-[2.5rem] py-8 flex items-center justify-center gap-4 hover:bg-orange-500 hover:text-white transition-all shadow-2xl font-black uppercase tracking-[0.2em] rtl:tracking-normal text-sm group cursor-pointer"
+                     className="w-full bg-white text-zinc-950 rounded-[2.5rem] py-8 flex items-center justify-center gap-4 hover:bg-orange-500 hover:text-white transition-all shadow-2xl font-kinder uppercase tracking-[0.2em] rtl:tracking-normal text-sm group cursor-pointer"
                    >
                       {t("checkout_button", "Passer la commande")}
                       <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
@@ -461,15 +414,15 @@ export const Cart: React.FC = () => {
                          <ShieldCheck className="w-6 h-6" />
                       </div>
                       <div>
-                         <h4 className="font-black text-[#121315] text-sm">{t("cart.secure_buy", "Achat 100% Sécurisé")}</h4>
-                         <p className="text-[9px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-400">{t("cart.olma_guarantee", "Garantie Olma Algérie")}</p>
+                         <h4 className="font-kinder text-[#3C2B22] text-sm">{t("cart.secure_buy", "Achat 100% Sécurisé")}</h4>
+                         <p className="text-[9px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-400">{t("cart.olma_guarantee", "Garantie Olma Algérie")}</p>
                       </div>
                    </div>
                 </div>
 
                 <button 
                   onClick={() => navigate('/shop')}
-                  className="w-full py-6 rounded-[2.5rem] border-2 border-stone-200 text-stone-400 hover:text-[#121315] hover:border-[#121315] transition-all font-black uppercase tracking-[0.2em] rtl:tracking-normal text-[10px] cursor-pointer"
+                  className="w-full py-6 rounded-[2.5rem] border-2 border-stone-200 text-stone-400 hover:text-[#3C2B22] hover:border-[#3C2B22] transition-all font-kinder uppercase tracking-[0.2em] rtl:tracking-normal text-[10px] cursor-pointer"
                 >
                    {t("go_to_shop") || "Retourner au catalogue"}
                 </button>

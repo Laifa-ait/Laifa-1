@@ -1,9 +1,17 @@
+/**
+ * OLMART — Design System Reference
+ * @see DESIGN_SYSTEM.md at the root of the project
+ * Colors: primary=#f97316, bg=#f9f4e8, surface=#ffffff
+ * Icons: lucide-react only
+ */
+
 import React, { useEffect } from "react";
 import { AppRouter } from "./AppRouter";
 import { InstallPrompt } from "./components/InstallPrompt";
 import { useTranslation } from "react-i18next";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
-const App: React.FC = () => {
+const App = () => {
   const { i18n } = useTranslation();
 
   useEffect(() => {
@@ -20,13 +28,13 @@ const App: React.FC = () => {
     return () => {
       i18n.off("languageChanged", handleLangChange);
     };
-  }, [i18n]);
+  }, []);
 
   return (
-    <>
+    <ErrorBoundary>
       <AppRouter />
       <InstallPrompt />
-    </>
+    </ErrorBoundary>
   );
 };
 

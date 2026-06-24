@@ -43,7 +43,7 @@ export const OrderFilters: React.FC<OrderFiltersProps> = ({
 
   return (
     <div className="p-6 bg-zinc-50 border border-zinc-200 rounded-3xl space-y-4">
-      <h3 className="text-xs font-black uppercase tracking-widest text-[#121315] flex items-center gap-2">
+      <h3 className="text-xs font-kinder uppercase tracking-widest text-[#3C2B22] flex items-center gap-2">
         <Filter className="w-4 h-4 text-orange-500" />
         {t("Filtres Analytiques & Recherche")}
       </h3>
@@ -51,7 +51,7 @@ export const OrderFilters: React.FC<OrderFiltersProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
         {/* Reference Search */}
         <div className="space-y-1">
-          <label className="block text-[10px] font-black text-zinc-450 uppercase tracking-wider">
+          <label className="block text-[10px] font-kinder text-zinc-450 uppercase tracking-wider">
             {t("ID Commande / Code")}
           </label>
           <div className="bg-white border border-zinc-200 rounded-xl px-3 py-2 flex items-center gap-2">
@@ -68,7 +68,7 @@ export const OrderFilters: React.FC<OrderFiltersProps> = ({
 
         {/* Wilaya Filter */}
         <div className="space-y-1">
-          <label className="block text-[10px] font-black text-zinc-450 uppercase tracking-wider">
+          <label className="block text-[10px] font-kinder text-zinc-450 uppercase tracking-wider">
             {t("Wilaya (Algérie)")}
           </label>
           <select
@@ -87,7 +87,7 @@ export const OrderFilters: React.FC<OrderFiltersProps> = ({
 
         {/* Status Filter */}
         <div className="space-y-1">
-          <label className="block text-[10px] font-black text-zinc-450 uppercase tracking-wider">
+          <label className="block text-[10px] font-kinder text-zinc-450 uppercase tracking-wider">
             {t("Statut Actuel")}
           </label>
           <select
@@ -106,7 +106,7 @@ export const OrderFilters: React.FC<OrderFiltersProps> = ({
 
         {/* Seller Search */}
         <div className="space-y-1">
-          <label className="block text-[10px] font-black text-zinc-450 uppercase tracking-wider">
+          <label className="block text-[10px] font-kinder text-zinc-450 uppercase tracking-wider">
             {t("Vendeur (ID / Magasin)")}
           </label>
           <div className="bg-white border border-zinc-200 rounded-xl px-3 py-2 flex items-center gap-2">
@@ -123,7 +123,7 @@ export const OrderFilters: React.FC<OrderFiltersProps> = ({
 
         {/* Date de Début */}
         <div className="space-y-1">
-          <label className="block text-[10px] font-black text-zinc-450 uppercase tracking-wider">
+          <label className="block text-[10px] font-kinder text-zinc-450 uppercase tracking-wider">
             {t("Date Début")}
           </label>
           <div className="bg-white border border-zinc-200 rounded-xl px-3 py-2 flex items-center gap-2 justify-between">
@@ -139,7 +139,7 @@ export const OrderFilters: React.FC<OrderFiltersProps> = ({
 
         {/* Date de Fin */}
         <div className="space-y-1">
-          <label className="block text-[10px] font-black text-zinc-450 uppercase tracking-wider">
+          <label className="block text-[10px] font-kinder text-zinc-450 uppercase tracking-wider">
             {t("Date Fin")}
           </label>
           <div className="bg-white border border-zinc-200 rounded-xl px-3 py-2 flex items-center gap-2 justify-between">
@@ -158,7 +158,7 @@ export const OrderFilters: React.FC<OrderFiltersProps> = ({
         <div className="flex justify-end">
           <button
             onClick={onResetFilters}
-            className="px-3.5 py-1.5 bg-zinc-200 hover:bg-zinc-300 text-zinc-855 rounded-lg text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all border-none"
+            className="px-3.5 py-1.5 bg-zinc-200 hover:bg-zinc-300 text-zinc-855 rounded-lg text-[10px] font-kinder uppercase tracking-wider cursor-pointer transition-all border-none"
           >
             {t("Réinitialiser tous les filtres")}
           </button>

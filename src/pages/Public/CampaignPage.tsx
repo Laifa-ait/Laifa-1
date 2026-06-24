@@ -50,19 +50,19 @@ export const CampaignPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FAF8F5]">
-        <Loader2 className="w-8 h-8 animate-spin text-[#F37021]" />
+      <div className="min-h-screen flex items-center justify-center bg-[#FDF9EC]">
+        <Loader2 className="w-8 h-8 animate-spin text-[#FF5C00]" />
       </div>
     );
   }
 
   if (!banner) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#FAF8F5] px-4">
-        <h1 className="text-2xl font-black text-[#121315] mb-4 text-center">{t("Campagne introuvable")}</h1>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#FDF9EC] px-4">
+        <h1 className="text-2xl font-kinder text-[#3C2B22] mb-4 text-center">{t("Campagne introuvable")}</h1>
         <button 
           onClick={() => navigate('/shop')}
-          className="px-6 py-3 bg-[#F37021] text-white rounded-xl font-bold hover:bg-[#c44e03] transition-colors"
+          className="px-6 py-3 bg-[#FF5C00] text-white rounded-xl font-bold hover:bg-[#c44e03] transition-colors"
         >
           {t("Retourner à la boutique")}</button>
       </div>
@@ -87,27 +87,27 @@ export const CampaignPage: React.FC = () => {
   const pageSubtitle = banner ? getTranslatedValue(banner, 'subtitle') : "";
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] pb-24 font-sans selection:bg-[#F37021]/30">
+    <div className="min-h-screen bg-[#FDF9EC] pb-24 font-sans selection:bg-[#FF5C00]/30">
       <Helmet>
         <title>{pageTitle || "Sélection Spéciale"} {t("| Olma")}</title>
         <meta name="description" content={pageSubtitle || "Découvrez notre sélection spéciale de produits"} />
       </Helmet>
 
       {/* Campaign Header / Hero */}
-      <div className="relative w-full h-[40vh] min-h-[300px] overflow-hidden bg-zinc-900 border-b border-[#EBE5DF]">
+      <div className="relative w-full h-[40vh] min-h-[300px] overflow-hidden bg-zinc-900 border-b border-[#FF5C00]">
         <img loading="lazy" 
           src={banner.imageUrl || banner.desktopImage} 
           alt={pageTitle}
           className="absolute inset-0 w-full h-full object-cover opacity-80"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#121315]/90 via-[#121315]/50 to-transparent flex flex-col justify-end p-6 sm:p-12 md:p-16">
+        <div className="absolute inset-0 bg-gradient-to-t from-[#3C2B22]/90 via-[#3C2B22]/50 to-transparent flex flex-col justify-end p-6 sm:p-12 md:p-16">
           <div className="max-w-[1600px] mx-auto w-full relative">
             <button 
               onClick={() => navigate(-1)}
               className="absolute -top-16 left-0 text-white/80 hover:text-white flex items-center gap-2 text-sm font-bold bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full backdrop-blur-md transition-all"
             >
               <ArrowLeft className="w-4 h-4" /> {t("Retour")}</button>
-            <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-white mb-3 md:mb-4 tracking-tight rtl:tracking-normal drop-shadow-md">
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-kinder text-white mb-3 md:mb-4 tracking-tight rtl:tracking-normal drop-shadow-md">
               {pageTitle}
             </h1>
             {pageSubtitle && (
@@ -115,17 +115,17 @@ export const CampaignPage: React.FC = () => {
                 {pageSubtitle}
               </p>
             )}
-            <div className="w-16 h-1.5 bg-[#F37021] mt-6 md:mt-8 rounded-full" />
+            <div className="w-16 h-1.5 bg-[#FF5C00] mt-6 md:mt-8 rounded-full" />
           </div>
         </div>
       </div>
 
       {/* Products Grid */}
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 mt-12 md:mt-16">
-        <div className="flex items-center justify-between mb-8 pb-4 border-b border-[#EBE5DF]/60">
-          <h2 className="text-xl md:text-2xl font-black text-[#121315] uppercase tracking-wider rtl:tracking-normal">
+        <div className="flex items-center justify-between mb-8 pb-4 border-b border-[#FF5C00]/60">
+          <h2 className="text-xl md:text-2xl font-kinder text-[#3C2B22] uppercase tracking-wider rtl:tracking-normal">
             {t("La Sélection")}</h2>
-          <span className="text-sm font-bold text-[#121315]/60 bg-white border border-[#EBE5DF] px-3 py-1 rounded-full shadow-sm">
+          <span className="text-sm font-bold text-[#3C2B22]/60 bg-white border border-[#FF5C00] px-3 py-1 rounded-full shadow-sm">
             {products.length} {products.length > 1 ? 'produits' : 'produit'}
           </span>
         </div>
@@ -142,14 +142,14 @@ export const CampaignPage: React.FC = () => {
           </div>
         ) : (
           <div className="py-20 flex flex-col items-center justify-center text-center">
-            <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-sm border border-[#EBE5DF] mb-6">
+            <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-sm border border-[#FF5C00] mb-6">
               <span className="text-4xl">🛍️</span>
             </div>
-            <p className="text-[#121315] font-bold text-lg mb-2">{t("Aucun produit dans cette sélection.")}</p>
-            <p className="text-[#121315]/60 text-sm max-w-sm mb-6">{t("Les articles associés à cette campagne ne sont peut-être plus disponibles.")}</p>
+            <p className="text-[#3C2B22] font-bold text-lg mb-2">{t("Aucun produit dans cette sélection.")}</p>
+            <p className="text-[#3C2B22]/60 text-sm max-w-sm mb-6">{t("Les articles associés à cette campagne ne sont peut-être plus disponibles.")}</p>
             <button 
               onClick={() => navigate('/shop')}
-              className="px-6 py-3 bg-white border-2 border-[#EBE5DF] text-[#121315] rounded-xl font-bold hover:border-[#F37021] hover:text-[#F37021] transition-colors"
+              className="px-6 py-3 bg-white border-2 border-[#FF5C00] text-[#3C2B22] rounded-xl font-bold hover:border-[#FF5C00] hover:text-[#FF5C00] transition-colors"
             >
               {t("Explorer le catalogue")}</button>
           </div>

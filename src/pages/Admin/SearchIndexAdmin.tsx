@@ -240,9 +240,9 @@ export const SearchIndexAdmin: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Database className="w-5 h-5 text-orange-600" />
-            <span className="text-xs font-black text-orange-600 uppercase tracking-widest rtl:tracking-normal leading-none">{t("Modules Intel-Search")}</span>
+            <span className="text-xs font-kinder text-orange-600 uppercase tracking-widest rtl:tracking-normal leading-none">{t("Modules Intel-Search")}</span>
           </div>
-          <h1 className="text-3xl font-black tracking-tight rtl:tracking-normal text-zinc-900 uppercase">{t("Export & Modélisation de Recherche")}</h1>
+          <h1 className="text-3xl font-kinder tracking-tight rtl:tracking-normal text-zinc-900 uppercase">{t("Export & Modélisation de Recherche")}</h1>
           <p className="text-sm text-zinc-500 mt-1 max-w-2xl">
             {t("Préparez, testez et exportez vos données de produits dans des schémas optimisés pour vos moteurs de recherche à haute vélocité (Algolia, Typesense).")}</p>
         </div>
@@ -271,7 +271,7 @@ export const SearchIndexAdmin: React.FC = () => {
           
           {/* Section: Select engine format & parameters */}
           <div className="bg-white border border-zinc-200 rounded-3xl p-6 md:p-8 shadow-sm">
-            <h2 className="text-lg font-black tracking-tight rtl:tracking-normal text-zinc-900 uppercase flex items-center gap-3 mb-6">
+            <h2 className="text-lg font-kinder tracking-tight rtl:tracking-normal text-zinc-900 uppercase flex items-center gap-3 mb-6">
               <Settings className="w-5 h-5 text-zinc-400" />
               {t("1. Choix du Moteur & Filtres d'exportation")}</h2>
             
@@ -279,7 +279,7 @@ export const SearchIndexAdmin: React.FC = () => {
               
               {/* Target search provider choosing */}
               <div>
-                <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2.5">{t("Moteur de recherche cible")}</label>
+                <label className="block text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2.5">{t("Moteur de recherche cible")}</label>
                 <div className="flex bg-zinc-100 p-1.5 rounded-2xl gap-1">
                   {(['algolia', 'typesense', 'elasticsearch'] as const).map(format => (
                     <button
@@ -299,7 +299,7 @@ export const SearchIndexAdmin: React.FC = () => {
 
               {/* Filtering scopes */}
               <div>
-                <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2.5">{t("Portée de l'indexation")}</label>
+                <label className="block text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2.5">{t("Portée de l'indexation")}</label>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <select
@@ -335,11 +335,11 @@ export const SearchIndexAdmin: React.FC = () => {
               <div className="flex items-center gap-3">
                 <FileCode className="w-5 h-5 text-[#ea580c]" />
                 <div>
-                  <h2 className="text-sm font-black text-white uppercase tracking-wider rtl:tracking-normal leading-none">{t("Schéma de configuration d'Index")}</h2>
+                  <h2 className="text-sm font-kinder text-white uppercase tracking-wider rtl:tracking-normal leading-none">{t("Schéma de configuration d'Index")}</h2>
                   <p className="text-[10px] text-zinc-500 mt-1 uppercase tracking-widest rtl:tracking-normal font-mono">{t("index-schema-")}{selectedFormat}{t(".json")}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-[#ea580c]/10 text-[#ea580c] border border-[#ea580c]/20 rounded-full text-[9px] font-black uppercase tracking-wider rtl:tracking-normal">
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-[#ea580c]/10 text-[#ea580c] border border-[#ea580c]/20 rounded-full text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal">
                 <RefreshCw className="w-3 h-3 animate-spin" /> {t("Prêt")}</div>
             </div>
 
@@ -357,7 +357,7 @@ export const SearchIndexAdmin: React.FC = () => {
           <div className="bg-white border border-zinc-200 rounded-3xl p-6 md:p-8 shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-lg font-black tracking-tight rtl:tracking-normal text-zinc-900 uppercase">{t("Documents Formatés (")}{filteredRecords.length})</h3>
+                <h3 className="text-lg font-kinder tracking-tight rtl:tracking-normal text-zinc-900 uppercase">{t("Documents Formatés (")}{filteredRecords.length})</h3>
                 <p className="text-xs text-zinc-500">{t("Aperçu en temps réel de l'export des attributs")}</p>
               </div>
             </div>
@@ -375,7 +375,7 @@ export const SearchIndexAdmin: React.FC = () => {
                                         referrerPolicy="no-referrer"
                                       />
                                       <div>
-                                        <h4 className="text-xs font-black text-zinc-900 leading-tight">{doc.name}</h4>
+                                        <h4 className="text-xs font-kinder text-zinc-900 leading-tight">{doc.name}</h4>
                                         <p className="text-[10px] text-zinc-500 font-mono mt-1 uppercase tracking-wide">
                                           {t("ID:")}{doc.objectID} {t("• Cat:")}{doc.category}
                                         </p>
@@ -393,11 +393,11 @@ export const SearchIndexAdmin: React.FC = () => {
 
                                     <div className="flex sm:flex-col items-end gap-2 shrink-0 sm:text-end">
                                       <div>
-                                        <span className="text-xs font-black text-zinc-900">
+                                        <span className="text-xs font-kinder text-zinc-900">
                                           {(doc.price / 100).toFixed(2)} {t("DZD")}</span>
                                       </div>
                                       <div className="flex items-center gap-1">
-                                        <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal leading-none">{t("Score Index :")}</span>
+                                        <span className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal leading-none">{t("Score Index :")}</span>
                                         <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-100 font-mono">
                                           {doc.rankingScore} {t("pts")}</span>
                                       </div>
@@ -417,7 +417,7 @@ export const SearchIndexAdmin: React.FC = () => {
           <div className="bg-white border border-zinc-900 rounded-3xl p-6 md:p-8 shadow-md relative overflow-hidden">
             <div className="absolute top-0 end-0 w-32 h-32 bg-orange-650/5 rounded-full  pointer-events-none" />
             
-            <h3 className="text-base font-black tracking-tight rtl:tracking-normal text-zinc-900 uppercase flex items-center gap-2 mb-2">
+            <h3 className="text-base font-kinder tracking-tight rtl:tracking-normal text-zinc-900 uppercase flex items-center gap-2 mb-2">
               <Play className="w-5 h-5 text-[#ea580c] fill-[#ea580c]" />
               {t("Simulateur de recherche")}</h3>
             <p className="text-xs text-zinc-500 mb-6">{t("Testez l'indexation instantanée sans requêtes Firestore (Dev-Safe Layer).")}</p>
@@ -434,7 +434,7 @@ export const SearchIndexAdmin: React.FC = () => {
             </div>
 
             <div className="space-y-4">
-              <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal block">{t("Classement de pertinence instantanée")}</span>
+              <span className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal block">{t("Classement de pertinence instantanée")}</span>
               
               {simulatedResults.length === 0 ? (
                 <div className="text-center py-6 bg-zinc-50 rounded-2xl text-xs text-zinc-400 font-semibold uppercase">
@@ -445,7 +445,7 @@ export const SearchIndexAdmin: React.FC = () => {
                   return (
                                   <div key={item.objectID} className="p-3 bg-zinc-50 rounded-xl border border-zinc-150 flex items-center justify-between gap-3">
                                     <div className="flex items-center gap-2">
-                                      <span className="text-xs font-black text-zinc-400 font-mono">#{index + 1}</span>
+                                      <span className="text-xs font-kinder text-zinc-400 font-mono">#{index + 1}</span>
                                       <div>
                                         <h4 className="text-xs font-extrabold text-zinc-800 leading-tight">{item.name}</h4>
                                         <span className="text-[9px] text-zinc-500 font-mono">{t("Rating:")}{item.rating} {t("• Stock:")}{item.stockCount}</span>
@@ -462,7 +462,7 @@ export const SearchIndexAdmin: React.FC = () => {
 
           {/* Sub-card: Configure ranking weight sliders */}
           <div className="bg-white border border-zinc-200 rounded-3xl p-6 md:p-8 shadow-sm">
-            <h3 className="text-base font-black tracking-tight rtl:tracking-normal text-zinc-900 uppercase flex items-center gap-2 mb-1">
+            <h3 className="text-base font-kinder tracking-tight rtl:tracking-normal text-zinc-900 uppercase flex items-center gap-2 mb-1">
               <Sliders className="w-5 h-5 text-orange-600" />
               {t("Réglage de la Pertinence")}</h3>
             <p className="text-xs text-zinc-500 mb-6 font-sans">{t("Configurez la pondération des critères de tri personnalisables.")}</p>
@@ -554,7 +554,7 @@ export const SearchIndexAdmin: React.FC = () => {
 
           {/* Geographical distribution preview */}
           <div className="bg-zinc-50 border border-zinc-200 rounded-3xl p-6 shadow-sm">
-            <h4 className="text-xs font-black text-zinc-800 uppercase tracking-widest rtl:tracking-normal flex items-center gap-2 mb-4">
+            <h4 className="text-xs font-kinder text-zinc-800 uppercase tracking-widest rtl:tracking-normal flex items-center gap-2 mb-4">
               <MapPin className="w-4 h-4 text-orange-600" />
               {t("Répartition par Wilaya")}</h4>
             <div className="space-y-3">

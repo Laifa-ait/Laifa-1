@@ -135,7 +135,7 @@ export const DynamicFilterSidebar: React.FC<DynamicFilterSidebarProps> = ({
         <div className="lg:border lg:border-slate-200 lg:bg-white lg:rounded-2xl overflow-hidden p-4">
           <div className="hidden lg:flex items-center gap-2 mb-6 pb-4 border-b border-slate-100">
             <Filter className="w-4 h-4 text-blue-900" />
-            <span className="font-black text-sm uppercase tracking-wider rtl:tracking-normal text-slate-900">
+            <span className="font-kinder text-sm uppercase tracking-wider rtl:tracking-normal text-slate-900">
               {t("dynamic_filters", "Filtres Dynamiques")}
             </span>
           </div>

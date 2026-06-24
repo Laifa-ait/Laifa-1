@@ -66,7 +66,7 @@ export const VerifyEmail: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] flex items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-[#FDF9EC] flex items-center justify-center p-6 relative overflow-hidden">
       <div className="absolute top-10 left-10 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -79,7 +79,7 @@ export const VerifyEmail: React.FC = () => {
           <Mail className="w-10 h-10" />
         </div>
 
-        <h2 className="text-3xl font-black text-zinc-950 mb-4 tracking-tight rtl:tracking-normal">{t("verify_email_title", "Vérifiez votre boîte e-mail")}</h2>
+        <h2 className="text-3xl font-kinder text-zinc-950 mb-4 tracking-tight rtl:tracking-normal">{t("verify_email_title", "Vérifiez votre boîte e-mail")}</h2>
         <p className="text-zinc-500 font-medium leading-relaxed mb-8">
           {t("verify_email_sent_to", "Nous avons envoyé un lien de confirmation à")} <br/>
           <strong className="text-zinc-900">{currentUser?.email}</strong>
@@ -89,7 +89,7 @@ export const VerifyEmail: React.FC = () => {
           <button 
             onClick={handleCheck}
             disabled={checking}
-            className="w-full py-5 bg-zinc-950 text-white rounded-2xl font-black text-xs uppercase tracking-widest rtl:tracking-normal hover:bg-zinc-900 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+            className="w-full py-5 bg-zinc-950 text-white rounded-2xl font-kinder text-xs uppercase tracking-widest rtl:tracking-normal hover:bg-zinc-900 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
           >
             {checking ? <RefreshCw className="w-5 h-5 animate-spin" /> : <span>{t("i_clicked_link", "J'ai cliqué sur le lien")}</span>}
             {!checking && <ArrowRight className="w-4 h-4" />}
@@ -98,7 +98,7 @@ export const VerifyEmail: React.FC = () => {
           <button 
             onClick={handleResend}
             disabled={resending}
-            className="w-full py-5 bg-zinc-50 text-zinc-600 rounded-2xl font-black text-xs uppercase tracking-widest rtl:tracking-normal hover:bg-zinc-100 hover:text-zinc-900 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+            className="w-full py-5 bg-zinc-50 text-zinc-600 rounded-2xl font-kinder text-xs uppercase tracking-widest rtl:tracking-normal hover:bg-zinc-100 hover:text-zinc-900 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
           >
             {resending ? <RefreshCw className="w-5 h-5 animate-spin" /> : <span>{t("resend_email", "Renvoyer l'e-mail")}</span>}
           </button>

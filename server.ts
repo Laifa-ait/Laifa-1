@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
@@ -6,9 +7,6 @@ import helmet from "helmet";
 import compression from "compression";
 import { promises as fsPromises } from "fs";
 import { doc, getDoc } from "firebase/firestore";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 // Cache in-memory HTML for production
 let cachedHtmlTemplate = "";
@@ -49,32 +47,24 @@ app.use("/api/chat", strictLimiter);
 app.use("/api/place-order", strictLimiter);
 app.use("/api", apiLimiter);
 
-if (process.env.NODE_ENV === "production") {
-  app.use(helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://apis.google.com", "https://www.gstatic.com"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-        fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-        imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
-        connectSrc: ["'self'", "https:", "wss:", "ws:"],
-        frameSrc: ["'self'", "https://*.firebaseapp.com", "https://*.google.com", "https://apis.google.com"],
-        frameAncestors: ["'self'", "https://aistudio.google.com", "https://*.google.com"],
-        objectSrc: ["'none'"],
-        upgradeInsecureRequests: []
-      },
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://apis.google.com", "https://www.gstatic.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+      imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
+      connectSrc: ["'self'", "https:", "wss:", "ws:"],
+      frameSrc: ["'self'", "https://*.firebaseapp.com", "https://*.google.com", "https://apis.google.com"],
+      frameAncestors: ["'self'", "https://aistudio.google.com", "https://*.google.com"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: []
     },
-    crossOriginEmbedderPolicy: false,
-    xFrameOptions: false,
-  }));
-} else {
-  app.use(helmet({
-    contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false,
-    xFrameOptions: false,
-  }));
-}
+  },
+  crossOriginEmbedderPolicy: false,
+  xFrameOptions: false,
+}));
 app.use(compression());
 
 const allowedOrigins = [
@@ -165,7 +155,13 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 
 async function setupVite() {
   if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({ server: { middlewareMode: true }, appType: "spa" });
+    const vite = await createViteServer({ 
+      server: { 
+        middlewareMode: true,
+        hmr: false
+      }, 
+      appType: "spa" 
+    });
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');

@@ -61,7 +61,7 @@ export const ReturnManagement: React.FC<{ currentUser: any }> = ({ currentUser }
   return (
     <div className="space-y-6">
       <header>
-        <h2 className="text-2xl font-black text-[#121315] mb-1">{t("Mes Retours & Annulations")}</h2>
+        <h2 className="text-2xl font-kinder text-[#3C2B22] mb-1">{t("Mes Retours & Annulations")}</h2>
         <p className="text-zinc-500 font-medium text-sm">
           {t("Gérez vos demandes de retours, remboursements et refus de colis.")}
         </p>
@@ -79,11 +79,11 @@ export const ReturnManagement: React.FC<{ currentUser: any }> = ({ currentUser }
             </div>
           </div>
         ) : returns.length === 0 ? (
-          <div className="p-10 md:p-16 flex flex-col items-center justify-center text-center bg-[#FAF8F5] m-2 border border-zinc-100 rounded-3xl border-dashed">
+          <div className="p-10 md:p-16 flex flex-col items-center justify-center text-center bg-[#FDF9EC] m-2 border border-zinc-100 rounded-3xl border-dashed">
             <div className="w-20 h-20 bg-white border border-zinc-200 rounded-full flex items-center justify-center mb-6 shadow-sm shadow-zinc-200/50">
               <PackageX className="w-10 h-10 text-zinc-300" />
             </div>
-            <h3 className="text-xl font-black text-[#121315] mb-2 tracking-tight rtl:tracking-normal">
+            <h3 className="text-xl font-kinder text-[#3C2B22] mb-2 tracking-tight rtl:tracking-normal">
               {t("Aucun retour en cours")}
             </h3>
             <p className="text-zinc-500 font-medium max-w-sm mb-6 leading-relaxed">
@@ -93,7 +93,7 @@ export const ReturnManagement: React.FC<{ currentUser: any }> = ({ currentUser }
             </p>
             <button
               onClick={() => navigate("/dashboard/buyer?tab=orders")}
-              className="px-6 py-3 bg-[#121315] text-white rounded-xl font-bold uppercase tracking-widest rtl:tracking-normal text-[10px] rtl:text-[12px] hover:bg-[#0a0b0c] transition-colors"
+              className="px-6 py-3 bg-[#3C2B22] text-white rounded-xl font-bold uppercase tracking-widest rtl:tracking-normal text-[10px] rtl:text-[12px] hover:bg-[#0a0b0c] transition-colors"
             >
               {t("Voir mes commandes")}
             </button>
@@ -105,11 +105,11 @@ export const ReturnManagement: React.FC<{ currentUser: any }> = ({ currentUser }
               return (
                 <div
                   key={req.id}
-                  className="p-6 hover:bg-[#FAF8F5] transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                  className="p-6 hover:bg-[#FDF9EC] transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                 >
                   <div className="space-y-2 flex-grow">
                     <div className="flex flex-wrap items-center gap-2.5">
-                      <span className="font-extrabold text-[#121315] text-base">
+                      <span className="font-extrabold text-[#3C2B22] text-base">
                         {t("Commande #")}
                         {req.id.substring(0, 8)}
                       </span>
@@ -128,15 +128,15 @@ export const ReturnManagement: React.FC<{ currentUser: any }> = ({ currentUser }
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <span className="text-[#121315] font-extrabold">{t("Total :")}</span>
-                        <span className="text-[#9E6E4E] font-black">
+                        <span className="text-[#3C2B22] font-extrabold">{t("Total :")}</span>
+                        <span className="text-[#9E6E4E] font-kinder">
                           {req.total || 0} {t("currency.da", "DA")}
                         </span>
                       </div>
                     </div>
 
                     <div className="text-xs bg-white border border-zinc-150 p-3 rounded-2xl max-w-2xl">
-                      <span className="font-extrabold text-[#121315] block mb-0.5">
+                      <span className="font-extrabold text-[#3C2B22] block mb-0.5">
                         {t("Motif :")} {req.returnRequest?.reason}
                       </span>
                       <span className="text-zinc-500 font-medium leading-relaxed italic">
@@ -148,7 +148,7 @@ export const ReturnManagement: React.FC<{ currentUser: any }> = ({ currentUser }
                   <div className="shrink-0 flex items-center">
                     <button
                       onClick={() => navigate(`/order/${req.id}`)}
-                      className="w-full sm:w-auto px-4 py-2.5 bg-white hover:bg-zinc-50 border border-zinc-300 rounded-xl font-bold text-xs text-[#121315] transition-all flex items-center justify-center gap-1.5"
+                      className="w-full sm:w-auto px-4 py-2.5 bg-white hover:bg-zinc-50 border border-zinc-300 rounded-xl font-bold text-xs text-[#3C2B22] transition-all flex items-center justify-center gap-1.5"
                     >
                       <span>{t("Détails Commande")}</span>
                       <ExternalLink className="w-3.5 h-3.5" />

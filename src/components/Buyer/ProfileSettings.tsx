@@ -156,7 +156,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ currentUser, u
           <button
             type="submit"
             disabled={saving}
-            className="flex items-center gap-2 px-8 py-3.5 bg-[#121315] text-white hover:bg-[#0a0b0c] font-bold text-xs rtl:text-sm uppercase tracking-wider rtl:tracking-normal rounded-xl transition-all shadow-md shadow-zinc-100 active:scale-95 disabled:opacity-50 min-h-[44px]"
+            className="flex items-center gap-2 px-8 py-3.5 bg-[#3C2B22] text-white hover:bg-[#0a0b0c] font-bold text-xs rtl:text-sm uppercase tracking-wider rtl:tracking-normal rounded-xl transition-all shadow-md shadow-zinc-100 active:scale-95 disabled:opacity-50 min-h-[44px]"
           >
             {saving ? (
               <RefreshCw className="w-4 h-4 animate-spin text-white" />

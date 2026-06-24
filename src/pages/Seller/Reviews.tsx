@@ -98,14 +98,14 @@ export const SellerReviews: React.FC = () => {
       <div className="max-w-6xl space-y-10">
          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
-               <h2 className="text-3xl font-black tracking-tight rtl:tracking-normal text-zinc-950">{t("Avis Clients")}</h2>
+               <h2 className="text-3xl font-kinder tracking-tight rtl:tracking-normal text-zinc-950">{t("Avis Clients")}</h2>
                <p className="text-zinc-500 font-medium mt-1">{t("Consultez les retours de vos clients sur vos produits.")}</p>
             </div>
             <div className="flex items-center gap-4 bg-white px-6 py-4 rounded-3xl border border-zinc-100 shadow-sm">
                <div className="flex flex-col">
-                  <span className="text-[10px] font-black uppercase text-zinc-400 tracking-widest rtl:tracking-normal">{t("Note Moyenne Catalog")}</span>
+                  <span className="text-[10px] font-kinder uppercase text-zinc-400 tracking-widest rtl:tracking-normal">{t("Note Moyenne Catalog")}</span>
                   <div className="flex items-end gap-2 mt-1">
-                     <span className="text-3xl font-black text-zinc-950 leading-none">{averageRating > 0 ? averageRating.toFixed(1) : '-'}</span>
+                     <span className="text-3xl font-kinder text-zinc-950 leading-none">{averageRating > 0 ? averageRating.toFixed(1) : '-'}</span>
                      <Star className={`w-5 h-5 mb-0.5 ${averageRating > 0 ? 'text-[#ea580c] fill-[#ea580c]' : 'text-zinc-300'}`} />
                   </div>
                </div>
@@ -118,7 +118,7 @@ export const SellerReviews: React.FC = () => {
                   <div className="w-20 h-20 bg-zinc-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
                      <MessageSquareQuote className="w-8 h-8 text-zinc-300" />
                   </div>
-                  <h3 className="text-xl font-black text-zinc-950 mb-2">{t("Aucun avis pour le moment")}</h3>
+                  <h3 className="text-xl font-kinder text-zinc-950 mb-2">{t("Aucun avis pour le moment")}</h3>
                   <p className="text-zinc-500">{t("Les clients n'ont pas encore noté vos produits.")}</p>
                </div>
             ) : (
@@ -155,7 +155,7 @@ export const SellerReviews: React.FC = () => {
                         <button 
                            onClick={loadMoreReviews} 
                            disabled={loadingMore}
-                           className="px-6 py-3 bg-white border border-zinc-200 text-zinc-900 rounded-full font-black text-xs uppercase tracking-widest rtl:tracking-normal hover:border-orange-500 hover:text-orange-500 transition-all flex items-center gap-2 shadow-sm relative group"
+                           className="px-6 py-3 bg-white border border-zinc-200 text-zinc-900 rounded-full font-kinder text-xs uppercase tracking-widest rtl:tracking-normal hover:border-orange-500 hover:text-orange-500 transition-all flex items-center gap-2 shadow-sm relative group"
                         >
                            {loadingMore && <Loader2 className="w-4 h-4 animate-spin" />}
                            {loadingMore ? t("Chargement...") : t("Afficher plus d'avis")}

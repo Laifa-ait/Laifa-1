@@ -79,7 +79,7 @@ export const SponsorshipsAdmin: React.FC = () => {
     <div className="space-y-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-4xl font-black tracking-tight rtl:tracking-normal text-zinc-950 flex items-center gap-4">
+          <h2 className="text-4xl font-kinder tracking-tight rtl:tracking-normal text-zinc-950 flex items-center gap-4">
             <Megaphone className="w-10 h-10 text-orange-500" />
             {t("Gestion du Sponsoring")}</h2>
           <p className="text-zinc-500 font-medium mt-2">{t("Approuvez ou refusez les demandes de mise en avant des vendeurs.")}</p>
@@ -88,7 +88,7 @@ export const SponsorshipsAdmin: React.FC = () => {
 
       <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-zinc-100">
          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-            <h3 className="text-xl font-black text-zinc-950 uppercase tracking-widest rtl:tracking-normal">{t("Requêtes en attente")}</h3>
+            <h3 className="text-xl font-kinder text-zinc-950 uppercase tracking-widest rtl:tracking-normal">{t("Requêtes en attente")}</h3>
             <div className="relative w-full md:w-96">
               <Search className="w-5 h-5 absolute start-5 top-1/2 -translate-y-1/2 text-zinc-400" />
               <input 
@@ -116,7 +116,7 @@ export const SponsorshipsAdmin: React.FC = () => {
                                             <img loading="lazy" src={req.productImage || 'https://via.placeholder.com/150'} alt={req.productName} className="w-20 h-20 rounded-2xl object-cover shrink-0 bg-zinc-50" />
                                             <div>
                                                <div className="flex items-center gap-3 mb-1">
-                                                  <h4 className="font-black text-zinc-950 text-lg uppercase">{req.productName}</h4>
+                                                  <h4 className="font-kinder text-zinc-950 text-lg uppercase">{req.productName}</h4>
                                                   <span className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rtl:tracking-normal rounded-full ${
                                                     req.status === 'pending' ? 'bg-orange-100 text-orange-600' :
                                                     req.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
@@ -144,12 +144,12 @@ export const SponsorshipsAdmin: React.FC = () => {
                                             <div className="flex items-center gap-3 shrink-0">
                                                <button 
                                                  onClick={() => handleUpdateStatus(req.id, 'rejected', req.productId)}
-                                                 className="px-5 py-3 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 font-black text-xs uppercase tracking-widest rtl:tracking-normal transition-colors flex items-center gap-2"
+                                                 className="px-5 py-3 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 font-kinder text-xs uppercase tracking-widest rtl:tracking-normal transition-colors flex items-center gap-2"
                                                >
                                                  <XCircle className="w-4 h-4" /> {t("Rejeter")}</button>
                                                <button 
                                                  onClick={() => handleUpdateStatus(req.id, 'approved', req.productId)}
-                                                 className="px-5 py-3 rounded-xl bg-orange-600 text-white hover:bg-orange-700 font-black text-xs uppercase tracking-widest rtl:tracking-normal transition-colors flex items-center gap-2 shadow-lg shadow-orange-500/20"
+                                                 className="px-5 py-3 rounded-xl bg-orange-600 text-white hover:bg-orange-700 font-kinder text-xs uppercase tracking-widest rtl:tracking-normal transition-colors flex items-center gap-2 shadow-lg shadow-orange-500/20"
                                                >
                                                  <CheckCircle2 className="w-4 h-4" /> {t("Approuver")}</button>
                                             </div>
@@ -157,7 +157,7 @@ export const SponsorshipsAdmin: React.FC = () => {
                                             <div className="flex items-center gap-3 shrink-0">
                                                <button 
                                                  onClick={() => handleUpdateStatus(req.id, 'expired', req.productId)}
-                                                 className="px-5 py-3 rounded-xl border border-amber-200 text-amber-700 hover:bg-amber-50 font-black text-xs uppercase tracking-widest rtl:tracking-normal transition-colors flex items-center gap-2"
+                                                 className="px-5 py-3 rounded-xl border border-amber-200 text-amber-700 hover:bg-amber-50 font-kinder text-xs uppercase tracking-widest rtl:tracking-normal transition-colors flex items-center gap-2"
                                                >
                                                  <XCircle className="w-4 h-4" /> {t("Retirer le sponsoring")}</button>
                                             </div>

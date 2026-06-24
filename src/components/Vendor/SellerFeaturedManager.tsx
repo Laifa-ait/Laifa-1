@@ -63,19 +63,19 @@ export const SellerFeaturedManager: React.FC<SellerFeaturedManagerProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-[2rem] border border-[#EBE5DF]/40 overflow-hidden shadow-sm selection:bg-[#EBE5DF]">
+    <div className="bg-white rounded-[2rem] border border-[#FF5C00]/40 overflow-hidden shadow-sm selection:bg-[#EBE5DF]">
       {/* Tabs Header */}
-      <div className="flex border-b border-[#EBE5DF]/20 bg-[#FDF9F1]">
+      <div className="flex border-b border-[#FF5C00]/20 bg-[#FDF9F1]">
         <button
           onClick={() => setActiveTab("performance")}
-          className={`flex-1 py-4 flex items-center justify-center gap-2 text-[10px] rtl:text-[12px] font-black uppercase tracking-widest rtl:tracking-normal transition-all ${activeTab === "performance" ? "text-[#121315] bg-white border-b-2 border-[#121315]" : "text-zinc-400"}`}
+          className={`flex-1 py-4 flex items-center justify-center gap-2 text-[10px] rtl:text-[12px] font-black uppercase tracking-widest rtl:tracking-normal transition-all ${activeTab === "performance" ? "text-[#3C2B22] bg-white border-b-2 border-[#3C2B22]" : "text-zinc-400"}`}
         >
           <BarChart3 className="w-4 h-4" />
           {t("Performance")}
         </button>
         <button
           onClick={() => setActiveTab("boost")}
-          className={`flex-1 py-4 flex items-center justify-center gap-2 text-[10px] rtl:text-[12px] font-black uppercase tracking-widest rtl:tracking-normal transition-all ${activeTab === "boost" ? "text-[#F37021] bg-white border-b-2 border-[#F37021]" : "text-zinc-400"}`}
+          className={`flex-1 py-4 flex items-center justify-center gap-2 text-[10px] rtl:text-[12px] font-black uppercase tracking-widest rtl:tracking-normal transition-all ${activeTab === "boost" ? "text-[#FF5C00] bg-white border-b-2 border-[#FF5C00]" : "text-zinc-400"}`}
         >
           <Zap className="w-4 h-4" />
           {t("Boost Payé")}
@@ -90,7 +90,7 @@ export const SellerFeaturedManager: React.FC<SellerFeaturedManagerProps> = ({
                 <Target className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="text-sm font-black text-[#121315] uppercase tracking-tight rtl:tracking-normal">
+                <h4 className="text-sm font-kinder text-[#3C2B22] uppercase tracking-tight rtl:tracking-normal">
                   {t("Objectif : Incontournable")}
                 </h4>
                 <p className="text-blue-600 text-[11px] font-bold mt-0.5">
@@ -103,10 +103,10 @@ export const SellerFeaturedManager: React.FC<SellerFeaturedManagerProps> = ({
 
             <div className="space-y-3">
               <div className="flex justify-between items-end px-1">
-                <span className="text-[10px] rtl:text-[12px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal leading-none">
+                <span className="text-[10px] rtl:text-[12px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal leading-none">
                   {t("Progression Hebdomadaire")}
                 </span>
-                <span className="text-xl font-black text-[#121315] leading-none">
+                <span className="text-xl font-kinder text-[#3C2B22] leading-none">
                   {currentSales}/{SALES_THRESHOLD}
                 </span>
               </div>
@@ -115,7 +115,7 @@ export const SellerFeaturedManager: React.FC<SellerFeaturedManagerProps> = ({
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 1, ease: "easeOut" }}
-                  className="h-full bg-[#121315] rounded-full shadow-[0_0_12px_rgba(30,67,86,0.3)]"
+                  className="h-full bg-[#3C2B22] rounded-full shadow-[0_0_12px_rgba(30,67,86,0.3)]"
                 />
               </div>
               <p className="text-[10px] rtl:text-[12px] text-zinc-500 font-medium text-center">
@@ -128,55 +128,55 @@ export const SellerFeaturedManager: React.FC<SellerFeaturedManagerProps> = ({
         ) : (
           <div className="space-y-5">
             <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100 flex items-center gap-3">
-              <Sparkles className="w-5 h-5 text-[#F37021]" />
-              <span className="text-[11px] font-black text-[#F37021] uppercase tracking-widest rtl:tracking-normal">
+              <Sparkles className="w-5 h-5 text-[#FF5C00]" />
+              <span className="text-[11px] font-kinder text-[#FF5C00] uppercase tracking-widest rtl:tracking-normal">
                 {t("Boost immédiat de visibilité")}
               </span>
             </div>
 
             <div className="grid gap-4">
               {/* Package 24h */}
-              <div className="p-5 bg-white border-2 border-zinc-100 rounded-3xl hover:border-[#F37021]/40 transition-all group flex items-center justify-between">
+              <div className="p-5 bg-white border-2 border-zinc-100 rounded-3xl hover:border-[#FF5C00]/40 transition-all group flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-zinc-50 flex items-center justify-center text-[#121315] group-hover:bg-orange-50 transition-colors">
+                  <div className="w-12 h-12 rounded-2xl bg-zinc-50 flex items-center justify-center text-[#3C2B22] group-hover:bg-orange-50 transition-colors">
                     <Calendar className="w-6 h-6" />
                   </div>
                   <div>
-                    <h5 className="text-[11px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-0.5 whitespace-nowrap">
+                    <h5 className="text-[11px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-0.5 whitespace-nowrap">
                       {t("Boost Rapide")}
                     </h5>
-                    <p className="text-sm font-black text-[#121315] uppercase leading-none">{t("Visibilité 24h")}</p>
+                    <p className="text-sm font-kinder text-[#3C2B22] uppercase leading-none">{t("Visibilité 24h")}</p>
                   </div>
                 </div>
                 <button
                   disabled={isPurchasing}
                   onClick={() => handlePurchaseBoost("boost_24h")}
-                  className="px-5 py-2.5 bg-[#121315] text-white rounded-full text-[10px] rtl:text-[12px] font-black uppercase tracking-widest rtl:tracking-normal hover:scale-105 active:scale-95 transition-all shadow-xl shadow-[#121315]/20 disabled:opacity-50"
+                  className="px-5 py-2.5 bg-[#3C2B22] text-white rounded-full text-[10px] rtl:text-[12px] font-kinder uppercase tracking-widest rtl:tracking-normal hover:scale-105 active:scale-95 transition-all shadow-xl shadow-[#3C2B22]/20 disabled:opacity-50"
                 >
                   {t("990 DA")}
                 </button>
               </div>
 
               {/* Package 48h */}
-              <div className="p-5 bg-white border-2 border-zinc-100 rounded-3xl hover:border-[#121315]/40 transition-all group flex items-center justify-between relative overflow-hidden">
-                <div className="absolute top-0 right-0 bg-[#F37021] text-white text-[7px] font-black uppercase px-3 py-1 tracking-widest rtl:tracking-normal">
+              <div className="p-5 bg-white border-2 border-zinc-100 rounded-3xl hover:border-[#3C2B22]/40 transition-all group flex items-center justify-between relative overflow-hidden">
+                <div className="absolute top-0 right-0 bg-[#FF5C00] text-white text-[7px] font-kinder uppercase px-3 py-1 tracking-widest rtl:tracking-normal">
                   {t("Populaire")}
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-zinc-50 flex items-center justify-center text-[#121315] group-hover:bg-[#121315]/10 transition-colors">
+                  <div className="w-12 h-12 rounded-2xl bg-zinc-50 flex items-center justify-center text-[#3C2B22] group-hover:bg-[#3C2B22]/10 transition-colors">
                     <Zap className="w-6 h-6" />
                   </div>
                   <div>
-                    <h5 className="text-[11px] font-black text-[#F37021] uppercase tracking-widest rtl:tracking-normal mb-0.5">
+                    <h5 className="text-[11px] font-kinder text-[#FF5C00] uppercase tracking-widest rtl:tracking-normal mb-0.5">
                       {t("Maximum Impact")}
                     </h5>
-                    <p className="text-sm font-black text-[#121315] uppercase leading-none">{t("Visibilité 48h")}</p>
+                    <p className="text-sm font-kinder text-[#3C2B22] uppercase leading-none">{t("Visibilité 48h")}</p>
                   </div>
                 </div>
                 <button
                   disabled={isPurchasing}
                   onClick={() => handlePurchaseBoost("boost_48h")}
-                  className="px-5 py-2.5 bg-[#F37021] text-white rounded-full text-[10px] rtl:text-[12px] font-black uppercase tracking-widest rtl:tracking-normal hover:scale-105 active:scale-95 transition-all shadow-xl shadow-[#F37021]/20 disabled:opacity-50"
+                  className="px-5 py-2.5 bg-[#FF5C00] text-white rounded-full text-[10px] rtl:text-[12px] font-kinder uppercase tracking-widest rtl:tracking-normal hover:scale-105 active:scale-95 transition-all shadow-xl shadow-[#FF5C00]/20 disabled:opacity-50"
                 >
                   {t("1790 DA")}
                 </button>
@@ -186,13 +186,13 @@ export const SellerFeaturedManager: React.FC<SellerFeaturedManagerProps> = ({
             <div className="grid grid-cols-2 gap-3 mt-2">
               <div className="p-3 bg-zinc-50 rounded-xl flex items-center gap-2">
                 <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="text-[9px] rtl:text-[11px] font-black uppercase text-zinc-500 tracking-tight rtl:tracking-normal">
+                <span className="text-[9px] rtl:text-[11px] font-kinder uppercase text-zinc-500 tracking-tight rtl:tracking-normal">
                   {t("Conversion +35%")}
                 </span>
               </div>
               <div className="p-3 bg-zinc-50 rounded-xl flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="text-[9px] rtl:text-[11px] font-black uppercase text-zinc-500 tracking-tight rtl:tracking-normal">
+                <span className="text-[9px] rtl:text-[11px] font-kinder uppercase text-zinc-500 tracking-tight rtl:tracking-normal">
                   {t("SAV Prioritaire")}
                 </span>
               </div>

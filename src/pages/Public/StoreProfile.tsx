@@ -523,7 +523,7 @@ export const StoreProfile: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#faf8f5] flex items-center justify-center">
+      <div className="min-h-screen bg-[#FDF9EC] flex items-center justify-center">
         <Spinner size="xl" />
       </div>
     );
@@ -531,12 +531,12 @@ export const StoreProfile: React.FC = () => {
 
   if (!storeInfo) {
     return (
-      <div className="min-h-screen bg-[#faf8f5] pt-32 pb-20 flex items-center justify-center">
+      <div className="min-h-screen bg-[#FDF9EC] pt-32 pb-20 flex items-center justify-center">
          <div className="text-center space-y-6">
             <Store className="w-20 h-20 text-zinc-300 mx-auto" />
-            <h1 className="text-3xl font-black text-zinc-900">{d('notExist')}</h1>
+            <h1 className="text-3xl font-kinder text-zinc-900">{d('notExist')}</h1>
             <p className="text-zinc-500 font-medium">{d('notExistDesc')}</p>
-            <button onClick={() => navigate('/shop')} className="px-8 py-4 bg-zinc-950 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest rtl:tracking-normal hover:bg-zinc-800 transition-colors">
+            <button onClick={() => navigate('/shop')} className="px-8 py-4 bg-zinc-950 text-white rounded-2xl font-kinder text-[11px] uppercase tracking-widest rtl:tracking-normal hover:bg-zinc-800 transition-colors">
                {d('backToCatalog')}
             </button>
          </div>
@@ -545,7 +545,7 @@ export const StoreProfile: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] pb-32" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="min-h-screen bg-[#FDF9EC] pb-32" dir={isRTL ? "rtl" : "ltr"}>
       <ConfirmModal 
         isOpen={showConfirm}
         onClose={() => setShowConfirm(false)}
@@ -634,12 +634,12 @@ export const StoreProfile: React.FC = () => {
                <div className="flex flex-col md:flex-row items-center md:justify-between w-full gap-4">
                   <div className="space-y-1">
                      <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-2.5">
-                        <h1 className="text-2xl sm:text-3xl font-black text-zinc-950 tracking-tight rtl:tracking-normal">
+                        <h1 className="text-2xl sm:text-3xl font-kinder text-zinc-950 tracking-tight rtl:tracking-normal">
                            {storeInfo.shopName || storeInfo.displayName || 'Boutique'}
                         </h1>
                         {/* Status Verification Badge */}
                         {storeInfo.status === 'ACTIVE' && (
-                           <div className="flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider">
+                           <div className="flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-full text-[10px] font-kinder uppercase tracking-wider">
                               <ShieldCheck className="w-3.5 h-3.5" />
                               <span>{t("store_profile.verified", "Vérifié")}</span>
                            </div>
@@ -650,7 +650,7 @@ export const StoreProfile: React.FC = () => {
                   {/* Owner Status Tag or Follow Button */}
                   <div className="shrink-0">
                      {isOwner ? (
-                       <div className="bg-zinc-950 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-[#F37021] border border-zinc-800 shadow-sm select-none">
+                       <div className="bg-zinc-950 px-4 py-2 rounded-xl text-[10px] font-kinder uppercase tracking-widest text-[#FF5C00] border border-zinc-800 shadow-sm select-none">
                           {isRTL ? "متجرك الخاص" : "Votre Boutique"}
                        </div>
                      ) : (
@@ -681,19 +681,19 @@ export const StoreProfile: React.FC = () => {
 
                {/* Elegant modern pill-based Statistics Highlights */}
                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5 pt-1">
-                  <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-600 bg-zinc-50 border border-zinc-100 rounded-lg px-2.5 py-1">
+                  <span className="flex items-center gap-1.5 text-[10px] font-kinder uppercase tracking-widest text-zinc-600 bg-zinc-50 border border-zinc-100 rounded-lg px-2.5 py-1">
                      <MapPin className="w-3.5 h-3.5 text-orange-500" />
                      {storeInfo.wilaya || 'Algérie'}
                   </span>
-                  <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-600 bg-zinc-50 border border-zinc-100 rounded-lg px-2.5 py-1">
+                  <span className="flex items-center gap-1.5 text-[10px] font-kinder uppercase tracking-widest text-zinc-600 bg-zinc-50 border border-zinc-100 rounded-lg px-2.5 py-1">
                      <Package className="w-3.5 h-3.5 text-emerald-500" />
                      {totalCount !== null ? totalCount : "..."} {d('articles')}
                   </span>
-                  <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-600 bg-zinc-50 border border-zinc-100 rounded-lg px-2.5 py-1">
+                  <span className="flex items-center gap-1.5 text-[10px] font-kinder uppercase tracking-widest text-zinc-600 bg-zinc-50 border border-zinc-100 rounded-lg px-2.5 py-1">
                      <Users className="w-3.5 h-3.5 text-indigo-500" />
                      {(storeInfo.followersCount || 0)} {d('subscribers')}
                   </span>
-                  <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-amber-700 bg-amber-50/50 border border-amber-100 rounded-lg px-2.5 py-1">
+                  <span className="flex items-center gap-1.5 text-[10px] font-kinder uppercase tracking-widest text-amber-700 bg-amber-50/50 border border-amber-100 rounded-lg px-2.5 py-1">
                      <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                      {d('newSeller')}
                   </span>
@@ -809,7 +809,7 @@ export const StoreProfile: React.FC = () => {
                               </div>
                               <button 
                                  onClick={() => { setSearchQuery(''); setSelectedCategory(null); }}
-                                 className="text-orange-600 hover:text-orange-700 underline text-[10px] uppercase font-black tracking-wider"
+                                 className="text-orange-600 hover:text-orange-700 underline text-[10px] uppercase font-kinder tracking-wider"
                               >
                                  {isRTL ? "إعادة تعيين" : "Réinitialiser"}
                               </button>
@@ -828,7 +828,7 @@ export const StoreProfile: React.FC = () => {
                               {filteredProducts.filter((p: any) => p.isStoreFeatured).length > 0 && (
                                  <div className="space-y-6">
                                     <div className="flex items-center gap-2 border-l-4 border-amber-500 pl-4">
-                                       <h2 className="text-lg font-black text-zinc-900 uppercase tracking-widest">{d('featured')}</h2>
+                                       <h2 className="text-lg font-kinder text-zinc-900 uppercase tracking-widest">{d('featured')}</h2>
                                     </div>
                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
                                        {filteredProducts.filter((p: any) => p.isStoreFeatured).map((product, i) => (
@@ -844,7 +844,7 @@ export const StoreProfile: React.FC = () => {
                               {filteredProducts.filter((p: any) => !p.isStoreFeatured).length > 0 && (
                                  <div className="space-y-6">
                                     <div className="flex items-center gap-2 border-l-4 border-zinc-950 pl-4">
-                                       <h2 className="text-lg font-black text-zinc-900 uppercase tracking-widest">{d('allArticles')}</h2>
+                                       <h2 className="text-lg font-kinder text-zinc-900 uppercase tracking-widest">{d('allArticles')}</h2>
                                     </div>
                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
                                        {filteredProducts.filter((p: any) => !p.isStoreFeatured).slice(0, displayLimit).map((product, i) => (
@@ -887,7 +887,7 @@ export const StoreProfile: React.FC = () => {
                            <SearchX className="w-9 h-9" />
                         </div>
                         <div className="space-y-1">
-                           <h3 className="text-lg font-black text-zinc-900">
+                           <h3 className="text-lg font-kinder text-zinc-900">
                               {(searchQuery || selectedCategory) ? (isRTL ? "لا توجد نتائج" : "Aucun article trouvé") : d('emptyStore')}
                            </h3>
                            <p className="text-zinc-400 max-w-sm text-xs font-bold leading-relaxed">
@@ -899,7 +899,7 @@ export const StoreProfile: React.FC = () => {
                         {(searchQuery || selectedCategory) && (
                            <button 
                               onClick={() => { setSearchQuery(''); setSelectedCategory(null); }}
-                              className="px-6 py-2.5 bg-zinc-950 text-white text-[10px] uppercase tracking-widest font-black rounded-lg hover:bg-zinc-800 transition-all shadow-sm"
+                              className="px-6 py-2.5 bg-zinc-950 text-white text-[10px] uppercase tracking-widest font-kinder rounded-lg hover:bg-zinc-800 transition-all shadow-sm"
                            >
                               {isRTL ? "إعادة تعيين البحث" : "Réinitialiser la recherche"}
                            </button>
@@ -916,14 +916,14 @@ export const StoreProfile: React.FC = () => {
                         <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
                            <div className="flex items-center gap-3">
                               <Store className="w-5 h-5 text-orange-500" />
-                              <h3 className="text-sm font-black uppercase text-zinc-900 tracking-wider">
+                              <h3 className="text-sm font-kinder uppercase text-zinc-900 tracking-wider">
                                  {isRTL ? "عن العلامة التجارية" : `La Boutique ${storeInfo.shopName || 'Boutique'}`}
                               </h3>
                            </div>
                            {isOwner && (
                               <button
                                  onClick={() => setIsEditingAbout(!isEditingAbout)}
-                                 className="text-[10px] font-black uppercase tracking-widest text-orange-600 hover:text-orange-700 bg-orange-50 px-3 py-1.5 rounded-lg transition-colors border border-orange-100"
+                                 className="text-[10px] font-kinder uppercase tracking-widest text-orange-600 hover:text-orange-700 bg-orange-50 px-3 py-1.5 rounded-lg transition-colors border border-orange-100"
                               >
                                  {isEditingAbout ? (isRTL ? "إلغاء التعديل" : "Annuler") : (isRTL ? "تعديل" : "Modifier")}
                               </button>
@@ -933,7 +933,7 @@ export const StoreProfile: React.FC = () => {
                         {isEditingAbout ? (
                            <div className="space-y-4">
                               <div className="space-y-1.5">
-                                 <label className="text-[10px] uppercase font-black tracking-widest text-zinc-500">{isRTL ? "اسم المتجر" : "Nom de la boutique"}</label>
+                                 <label className="text-[10px] uppercase font-kinder tracking-widest text-zinc-500">{isRTL ? "اسم المتجر" : "Nom de la boutique"}</label>
                                  <input
                                     type="text"
                                     value={editForm.shopName}
@@ -943,7 +943,7 @@ export const StoreProfile: React.FC = () => {
                                  />
                               </div>
                               <div className="space-y-1.5">
-                                 <label className="text-[10px] uppercase font-black tracking-widest text-zinc-500">{isRTL ? "وصف المتجر" : "Description de la boutique"}</label>
+                                 <label className="text-[10px] uppercase font-kinder tracking-widest text-zinc-500">{isRTL ? "وصف المتجر" : "Description de la boutique"}</label>
                                  <textarea
                                     value={editForm.shopDescription}
                                     onChange={(e) => setEditForm(prev => ({...prev, shopDescription: e.target.value}))}
@@ -953,7 +953,7 @@ export const StoreProfile: React.FC = () => {
                                  />
                               </div>
                               <div className="space-y-1.5">
-                                 <label className="text-[10px] uppercase font-black tracking-widest text-zinc-500">{isRTL ? "الولاية" : "Wilaya"}</label>
+                                 <label className="text-[10px] uppercase font-kinder tracking-widest text-zinc-500">{isRTL ? "الولاية" : "Wilaya"}</label>
                                  <select
                                     value={editForm.wilaya}
                                     onChange={(e) => setEditForm(prev => ({...prev, wilaya: e.target.value}))}
@@ -1001,14 +1001,14 @@ export const StoreProfile: React.FC = () => {
                         <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
                            <div className="flex items-center gap-3">
                               <ShieldCheck className="w-5 h-5 text-emerald-500" />
-                              <h3 className="text-sm font-black uppercase text-zinc-900 tracking-wider">
+                              <h3 className="text-sm font-kinder uppercase text-zinc-900 tracking-wider">
                                  {isRTL ? "التزامات المتجر وخدمة العملاء" : "Engagements & Service Client"}
                               </h3>
                            </div>
                            {isOwner && (
                               <button
                                  onClick={() => setIsEditingAbout(!isEditingAbout)}
-                                 className="text-[10px] font-black uppercase tracking-widest text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg transition-colors border border-emerald-100"
+                                 className="text-[10px] font-kinder uppercase tracking-widest text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg transition-colors border border-emerald-100"
                               >
                                  {isEditingAbout ? (isRTL ? "إلغاء التعديل" : "Annuler") : (isRTL ? "تعديل" : "Modifier")}
                               </button>
@@ -1018,7 +1018,7 @@ export const StoreProfile: React.FC = () => {
                         {isEditingAbout ? (
                            <div className="space-y-5">
                               <div className="space-y-1.5">
-                                 <label className="text-[10px] uppercase font-black tracking-widest text-zinc-500">{isRTL ? "الوضع القانوني (اختياري)" : "Statut Légal (Optionnel)"}</label>
+                                 <label className="text-[10px] uppercase font-kinder tracking-widest text-zinc-500">{isRTL ? "الوضع القانوني (اختياري)" : "Statut Légal (Optionnel)"}</label>
                                  <input
                                     type="text"
                                     value={editForm.legalStatus}
@@ -1028,7 +1028,7 @@ export const StoreProfile: React.FC = () => {
                                  />
                               </div>
                               <div className="space-y-1.5">
-                                 <label className="text-[10px] uppercase font-black tracking-widest text-zinc-500">{isRTL ? "متوسط وقت التحضير" : "Délai moyen de préparation"}</label>
+                                 <label className="text-[10px] uppercase font-kinder tracking-widest text-zinc-500">{isRTL ? "متوسط وقت التحضير" : "Délai moyen de préparation"}</label>
                                  <input
                                     type="text"
                                     value={editForm.avgPreparationTime}
@@ -1038,7 +1038,7 @@ export const StoreProfile: React.FC = () => {
                                  />
                               </div>
                               <div className="space-y-1.5">
-                                 <label className="text-[10px] uppercase font-black tracking-widest text-zinc-500">{isRTL ? "سياسة الإرجاع" : "Politique de retour et garantie"}</label>
+                                 <label className="text-[10px] uppercase font-kinder tracking-widest text-zinc-500">{isRTL ? "سياسة الإرجاع" : "Politique de retour et garantie"}</label>
                                  <textarea
                                     value={editForm.returnPolicy}
                                     onChange={(e) => setEditForm(prev => ({...prev, returnPolicy: e.target.value}))}
@@ -1052,7 +1052,7 @@ export const StoreProfile: React.FC = () => {
                                  <button
                                     onClick={saveAboutInfo}
                                     disabled={savingAbout}
-                                    className="px-8 py-3.5 bg-zinc-950 text-white hover:bg-zinc-800 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto"
+                                    className="px-8 py-3.5 bg-zinc-950 text-white hover:bg-zinc-800 rounded-xl font-kinder text-[11px] uppercase tracking-widest transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto"
                                  >
                                     {savingAbout ? (isRTL ? "جاري الحفظ..." : "Enregistrement...") : (isRTL ? "حفظ التغييرات" : "Enregistrer les modifications")}
                                  </button>
@@ -1067,8 +1067,8 @@ export const StoreProfile: React.FC = () => {
                                        <Building2 className="w-4 h-4 text-zinc-500" />
                                     </div>
                                     <div>
-                                       <h4 className="text-[10px] font-black text-zinc-400 uppercase tracking-wider">{d('legalStatus')}</h4>
-                                       <p className="text-xs font-black text-zinc-800 mt-0.5">{storeInfo.legalStatus}</p>
+                                       <h4 className="text-[10px] font-kinder text-zinc-400 uppercase tracking-wider">{d('legalStatus')}</h4>
+                                       <p className="text-xs font-kinder text-zinc-800 mt-0.5">{storeInfo.legalStatus}</p>
                                        <p className="text-[11px] text-zinc-400 font-medium mt-1">{t("store_profile.verified_desc", "Vendeur certifié ayant fourni ses documents d'immatriculation officiels.")}</p>
                                     </div>
                                  </div>
@@ -1081,8 +1081,8 @@ export const StoreProfile: React.FC = () => {
                                        <Truck className="w-4 h-4 text-orange-500" />
                                     </div>
                                     <div className="flex-1">
-                                       <h4 className="text-[10px] font-black text-orange-700 uppercase tracking-wider">{d('prepTime')}</h4>
-                                       <p className="text-xs font-black text-zinc-800 mt-0.5">{storeInfo.avgPreparationTime}</p>
+                                       <h4 className="text-[10px] font-kinder text-orange-700 uppercase tracking-wider">{d('prepTime')}</h4>
+                                       <p className="text-xs font-kinder text-zinc-800 mt-0.5">{storeInfo.avgPreparationTime}</p>
                                        <p className="text-[11px] text-zinc-500 font-semibold mt-1">{t("store_profile.dispatch_desc", "Délai estimé pour confier votre commande à l'agence d'expédition agréée.")}</p>
                                     </div>
                                  </div>
@@ -1095,8 +1095,8 @@ export const StoreProfile: React.FC = () => {
                                        <Undo2 className="w-4 h-4 text-blue-500" />
                                     </div>
                                     <div className="flex-1">
-                                       <h4 className="text-[10px] font-black text-blue-700 uppercase tracking-wider">{d('returnPolicy')}</h4>
-                                       <p className="text-xs font-black text-zinc-800 leading-relaxed mt-1 italic">
+                                       <h4 className="text-[10px] font-kinder text-blue-700 uppercase tracking-wider">{d('returnPolicy')}</h4>
+                                       <p className="text-xs font-kinder text-zinc-800 leading-relaxed mt-1 italic">
                                           "{storeInfo.returnPolicy}"
                                        </p>
                                        <p className="text-[11px] text-zinc-400 font-medium mt-2">{t("store_profile.guarantee_desc", "La conformité de la marchandise est garantie selon la législation algérienne sur le commerce électronique.")}</p>

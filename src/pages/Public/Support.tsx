@@ -68,7 +68,7 @@ export const Support: React.FC = () => {
                     <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
                         <CheckCircle2 className="w-8 h-8" />
                     </div>
-                    <h2 className="text-2xl font-black text-stone-900 mb-2">{t("Demande Envoyée")}</h2>
+                    <h2 className="text-2xl font-kinder text-stone-900 mb-2">{t("Demande Envoyée")}</h2>
                     <p className="text-stone-500 text-sm mb-8 leading-relaxed">
                         {t("Merci de nous avoir contactés. Notre équipe de support traitera votre demande dans les plus brefs délais et vous répondra sur")} <span className="font-bold text-stone-900">{email}</span>.
                     </p>
@@ -88,7 +88,7 @@ export const Support: React.FC = () => {
             <Toaster position="bottom-right" />
             <div className="max-w-4xl mx-auto px-4 sm:px-6">
                 <div className="text-center mb-10">
-                    <h1 className="text-3xl sm:text-4xl font-black text-stone-900 tracking-tight">{t("Comment pouvons-nous vous aider ?")}</h1>
+                    <h1 className="text-3xl sm:text-4xl font-kinder text-stone-900 tracking-tight">{t("Comment pouvons-nous vous aider ?")}</h1>
                     <p className="text-stone-500 font-medium mt-3 text-sm sm:text-base max-w-xl mx-auto">
                         {t("Notre équipe de support est là pour répondre à vos questions et résoudre vos problèmes rapidement.")}
                     </p>

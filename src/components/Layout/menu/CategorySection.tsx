@@ -22,7 +22,7 @@ export const CategorySection: React.FC<CategorySectionProps> = ({
 }) => {
   return (
     <div className="space-y-4">
-      <p className="text-[10px] rtl:text-[12px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal ml-1">
+      <p className="text-[10px] rtl:text-[12px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal ml-1">
         {t("menu_categories") || "Rayons"}
       </p>
       <div className="space-y-2.5">
@@ -38,7 +38,7 @@ export const CategorySection: React.FC<CategorySectionProps> = ({
               <div className="flex items-center justify-between p-4 hover:bg-zinc-100/30 transition-colors">
                 <button
                   onClick={() => handleCategoryDirectNav(category.name)}
-                  className="bg-transparent border-none text-left font-black text-sm text-zinc-800 flex-1 hover:text-orange-600 transition-colors cursor-pointer"
+                  className="bg-transparent border-none text-left font-kinder text-sm text-zinc-800 flex-1 hover:text-orange-600 transition-colors cursor-pointer"
                 >
                   {t(category.name) || category.name}
                 </button>

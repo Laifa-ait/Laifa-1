@@ -493,7 +493,7 @@ export const HomepageBuilder: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black text-zinc-950 uppercase tracking-tighter rtl:tracking-normal">
+          <h2 className="text-2xl font-kinder text-zinc-950 uppercase tracking-tighter rtl:tracking-normal">
             {t("Homepage Builder")}
           </h2>
           <p className="text-sm font-bold text-zinc-950/60">
@@ -560,11 +560,11 @@ export const HomepageBuilder: React.FC = () => {
                         <div>
                           <h4 className="font-bold text-zinc-950">{item.name || "Sans nom"}</h4>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="px-2 py-0.5 bg-orange-600/10 text-orange-600 rounded text-[9px] font-black uppercase tracking-widest rtl:tracking-normal">
+                            <span className="px-2 py-0.5 bg-orange-600/10 text-orange-600 rounded text-[9px] font-kinder uppercase tracking-widest rtl:tracking-normal">
                               {item.type || "N/A"}
                             </span>
                             {(item.themeName || item.themeImage) && (
-                              <span className="px-2 py-0.5 bg-zinc-950/10 text-zinc-950 rounded text-[9px] font-black uppercase tracking-widest rtl:tracking-normal flex items-center gap-1">
+                              <span className="px-2 py-0.5 bg-zinc-950/10 text-zinc-950 rounded text-[9px] font-kinder uppercase tracking-widest rtl:tracking-normal flex items-center gap-1">
                                 <Sparkles className="w-2.5 h-2.5" />
                                 {item.themeName || "Saison active"}
                               </span>
@@ -607,7 +607,7 @@ export const HomepageBuilder: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Left panel: List Categories */}
           <div className="lg:col-span-4 bg-white rounded-2xl border border-zinc-200 p-6 shadow-sm space-y-4">
-            <h3 className="font-black text-xs text-zinc-950 uppercase tracking-wider rtl:tracking-normal mb-2 flex items-center gap-2">
+            <h3 className="font-kinder text-xs text-zinc-950 uppercase tracking-wider rtl:tracking-normal mb-2 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-orange-500" /> {t("Catalogues Marketplace")}
             </h3>
             <div className="space-y-2">
@@ -635,7 +635,7 @@ export const HomepageBuilder: React.FC = () => {
             </div>
 
             <div className="bg-orange-50 p-4 rounded-xl border border-orange-100 text-[11px] text-orange-850 font-bold space-y-1.5">
-              <span className="block uppercase tracking-wider rtl:tracking-normal text-[9px] text-orange-600 font-black">
+              <span className="block uppercase tracking-wider rtl:tracking-normal text-[9px] text-orange-600 font-kinder">
                 {t("ℹ️ Recommandation Connectée (IA)")}
               </span>
               <p>
@@ -650,15 +650,15 @@ export const HomepageBuilder: React.FC = () => {
           <div className="lg:col-span-8 bg-white rounded-2xl border border-zinc-200 p-6 sm:p-8 shadow-sm space-y-6">
             <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
               <div>
-                <span className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-orange-600">
+                <span className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-orange-600">
                   {t("Configuration du Catalogue")}
                 </span>
-                <h3 className="text-xl font-black text-zinc-950">{selectedCategory}</h3>
+                <h3 className="text-xl font-kinder text-zinc-950">{selectedCategory}</h3>
               </div>
               <button
                 onClick={handleSaveCategory}
                 disabled={isSavingCategory}
-                className="flex items-center gap-2 px-5 py-2.5 bg-orange-600 hover:bg-orange-700 disabled:bg-zinc-300 text-white font-black text-[10px] uppercase tracking-widest rtl:tracking-normal transition-colors rounded-xl shadow-md border-none cursor-pointer"
+                className="flex items-center gap-2 px-5 py-2.5 bg-orange-600 hover:bg-orange-700 disabled:bg-zinc-300 text-white font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal transition-colors rounded-xl shadow-md border-none cursor-pointer"
               >
                 <Save className="w-4 h-4" />
                 {isSavingCategory ? "Enregistrement..." : "Enregistrer"}
@@ -669,7 +669,7 @@ export const HomepageBuilder: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-500 mb-1.5">
+                  <label className="block text-[10px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-500 mb-1.5">
                     {t("Titre personnalisé du Widget")}
                   </label>
                   <input
@@ -681,7 +681,7 @@ export const HomepageBuilder: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-500 mb-1.5">
+                  <label className="block text-[10px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-500 mb-1.5">
                     {t("Sous-titre accrocheur")}
                   </label>
                   <input
@@ -693,7 +693,7 @@ export const HomepageBuilder: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-500 mb-1.5">
+                  <label className="block text-[10px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-500 mb-1.5">
                     {t("Image (Média Importé ou URL)")}
                   </label>
                   <div className="space-y-2">
@@ -732,7 +732,7 @@ export const HomepageBuilder: React.FC = () => {
 
               {/* Preview image cover */}
               <div className="space-y-2">
-                <span className="block text-[10px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-500">
+                <span className="block text-[10px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-500">
                   {t("Rendu visuel (Aperçu)")}
                 </span>
                 <div className="relative h-[200px] rounded-2xl overflow-hidden shadow-inner bg-zinc-100 flex items-center justify-center border border-zinc-200">
@@ -750,7 +750,7 @@ export const HomepageBuilder: React.FC = () => {
                         <span className="bg-orange-600 inline-block text-[8px] font-bold text-white px-2 py-0.5 rounded-full mb-1">
                           {t("PRÉFÉRÉ POUR VOUS ⭐")}
                         </span>
-                        <h4 className="text-sm font-black text-white">{catTitle || selectedCategory}</h4>
+                        <h4 className="text-sm font-kinder text-white">{catTitle || selectedCategory}</h4>
                         <p className="text-[10px] text-zinc-200 mt-0.5">
                           {catSubtitle || "L'excellence à votre portée"}
                         </p>
@@ -769,7 +769,7 @@ export const HomepageBuilder: React.FC = () => {
             {/* Subcategories Editor */}
             <div className="space-y-4 pt-6 border-t border-zinc-100">
               <div className="flex flex-col gap-1">
-                <h4 className="font-black text-xs text-zinc-950 uppercase tracking-wider rtl:tracking-normal flex items-center gap-2">
+                <h4 className="font-kinder text-xs text-zinc-950 uppercase tracking-wider rtl:tracking-normal flex items-center gap-2">
                   <ImageIcon className="w-4 h-4 text-orange-500" />
                   {t("Images des Sous-Catégories")}
                 </h4>
@@ -833,7 +833,7 @@ export const HomepageBuilder: React.FC = () => {
             <div className="space-y-4 pt-4 border-t border-zinc-100">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h4 className="font-black text-xs text-zinc-950 uppercase tracking-wider rtl:tracking-normal flex items-center gap-2">
+                  <h4 className="font-kinder text-xs text-zinc-950 uppercase tracking-wider rtl:tracking-normal flex items-center gap-2">
                     <Star className="w-4 h-4 text-orange-500 fill-current" />
                     {t("Produits en Vedette (")}
                     {catFeaturedIds.length})
@@ -920,7 +920,7 @@ export const HomepageBuilder: React.FC = () => {
             <div className="bg-white rounded-[2rem] border border-zinc-200/85 shadow-2xl max-w-md w-full max-h-[92vh] flex flex-col overflow-hidden">
               <div className="p-4 px-5 border-b border-zinc-200/60 flex items-center justify-between bg-zinc-50/40 shrink-0">
                 <div>
-                  <span className="text-[9px] font-black uppercase tracking-widest rtl:tracking-normal text-orange-600">
+                  <span className="text-[9px] font-kinder uppercase tracking-widest rtl:tracking-normal text-orange-600">
                     {editItem ? "Modification" : "Nouvel Élément"}
                   </span>
                   <h3 className="font-extrabold text-[12px] text-zinc-950 uppercase tracking-wide">
@@ -963,7 +963,7 @@ export const HomepageBuilder: React.FC = () => {
                     {activeModalStep === 1 && (
                       <div className="space-y-3 animate-in fade-in slide-in-from-end-4 duration-300">
                         <div>
-                          <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
+                          <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
                             {t("Nom technique interne (Admin)")}
                           </label>
                           <input
@@ -977,7 +977,7 @@ export const HomepageBuilder: React.FC = () => {
                         </div>
 
                         <div>
-                          <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
+                          <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
                             {t("Type de composant")}
                           </label>
                           <select
@@ -996,7 +996,7 @@ export const HomepageBuilder: React.FC = () => {
 
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
+                            <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
                               {t("Agencement (Coupe)")}
                             </label>
                             <select
@@ -1010,7 +1010,7 @@ export const HomepageBuilder: React.FC = () => {
                             </select>
                           </div>
                           <div>
-                            <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
+                            <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
                               {t("Couleur fond (Optionnelle)")}
                             </label>
                             <div className="flex items-center gap-1.5">
@@ -1027,7 +1027,7 @@ export const HomepageBuilder: React.FC = () => {
                           </div>
 
                           <div>
-                            <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
+                            <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
                               {t("Style Visuel")}
                             </label>
                             <select
@@ -1043,7 +1043,7 @@ export const HomepageBuilder: React.FC = () => {
                           </div>
 
                           <div>
-                            <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
+                            <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
                               {t("Limite d'Affichage")}
                             </label>
                             <input
@@ -1058,7 +1058,7 @@ export const HomepageBuilder: React.FC = () => {
 
                           {/* Seasonal design - very snug */}
                           <div className="col-span-2 p-2.5 bg-stone-50/70 border border-stone-200/50 rounded-xl space-y-2 mt-0.5">
-                            <span className="text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950 flex items-center gap-1 shrink-0">
+                            <span className="text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950 flex items-center gap-1 shrink-0">
                               <Sparkles className="w-3 h-3 text-orange-600" />
                               {t("Design Saisonnier (Optionnel)")}
                             </span>
@@ -1084,7 +1084,7 @@ export const HomepageBuilder: React.FC = () => {
                                   <div className="flex gap-1.5 w-full">
                                     <label className="flex items-center justify-center gap-1.5 px-3 py-1.5 w-full bg-zinc-50 border border-dashed border-zinc-200 hover:border-orange-600/80 rounded-lg cursor-pointer transition-all active:scale-95 shadow-sm">
                                       <ImageIcon className="w-3.5 h-3.5 text-orange-600/80" />
-                                      <span className="text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-stone-700">
+                                      <span className="text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-stone-700">
                                         {t("Téléverser Image")}
                                       </span>
                                       <input
@@ -1112,7 +1112,7 @@ export const HomepageBuilder: React.FC = () => {
                                           referrerPolicy="no-referrer"
                                         />
                                       </div>
-                                      <span className="text-[8px] font-black text-zinc-950 truncate max-w-[50px]">
+                                      <span className="text-[8px] font-kinder text-zinc-950 truncate max-w-[50px]">
                                         {secThemeName || "Ambiance"}
                                       </span>
                                     </div>
@@ -1136,7 +1136,7 @@ export const HomepageBuilder: React.FC = () => {
 
                           {/* Target Category Selector */}
                           <div className="col-span-2 bg-stone-50/70 p-2.5 border border-stone-200/50 rounded-xl space-y-1">
-                            <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/80 flex items-center gap-1 shrink-0">
+                            <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/80 flex items-center gap-1 shrink-0">
                               {t("Catégorie ciblée (Mode, Auto & Moto...)")}
                             </label>
                             <select
@@ -1164,7 +1164,7 @@ export const HomepageBuilder: React.FC = () => {
 
                           {/* Refined Tag - small & sleek */}
                           <div className="col-span-2 bg-stone-50/70 p-2.5 border border-stone-200/50 rounded-xl space-y-1">
-                            <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/80 flex items-center gap-1 shrink-0">
+                            <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/80 flex items-center gap-1 shrink-0">
                               {t("L'Élément Tag (Lien dynamique des produits)")}
                             </label>
                             <input
@@ -1185,7 +1185,7 @@ export const HomepageBuilder: React.FC = () => {
                     {activeModalStep === 2 && (
                       <div className="space-y-3 animate-in fade-in slide-in-from-end-4 duration-300">
                         <div>
-                          <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
+                          <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
                             {t("Titre d'affichage (Optionnel)")}
                           </label>
                           <input
@@ -1198,7 +1198,7 @@ export const HomepageBuilder: React.FC = () => {
                         </div>
 
                         <div>
-                          <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
+                          <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
                             {t("Sous-titre d'affichage (Optionnel)")}
                           </label>
                           <input
@@ -1218,11 +1218,11 @@ export const HomepageBuilder: React.FC = () => {
                             id="secIsActive"
                             checked={secIsActive}
                             onChange={(e) => setSecIsActive(e.target.checked)}
-                            className="w-3.5 h-3.5 text-orange-600 focus:ring-[#F37021] border-stone-300 rounded"
+                            className="w-3.5 h-3.5 text-orange-600 focus:ring-[#FF5C00] border-stone-300 rounded"
                           />
                           <label
                             htmlFor="secIsActive"
-                            className="text-[10px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950 select-none cursor-pointer"
+                            className="text-[10px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950 select-none cursor-pointer"
                           >
                             {t("Activer immédiatement la section sur l'accueil")}
                           </label>
@@ -1230,12 +1230,12 @@ export const HomepageBuilder: React.FC = () => {
 
                         {/* Ciblage d'Audience & de Wilayas pour la Section */}
                         <div className="border-t border-stone-100 pt-3 mt-3 space-y-3">
-                          <h4 className="text-[10px] font-black text-zinc-950 uppercase tracking-[0.1em] flex items-center gap-1.5">
+                          <h4 className="text-[10px] font-kinder text-zinc-950 uppercase tracking-[0.1em] flex items-center gap-1.5">
                             {t("🎯 Ciblage d'Audience & d'Audimat (58 Wilayas)")}
                           </h4>
                           <div className="grid grid-cols-2 gap-3 text-start">
                             <div>
-                              <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
+                              <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
                                 {t("Audience Cible")}
                               </label>
                               <select
@@ -1250,7 +1250,7 @@ export const HomepageBuilder: React.FC = () => {
                               </select>
                             </div>
                             <div>
-                              <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
+                              <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
                                 {t("Wilayas Cibles (")}
                                 {secTargetRegions.length})
                               </label>
@@ -1278,13 +1278,13 @@ export const HomepageBuilder: React.FC = () => {
                               {secTargetRegions.map((w) => (
                                 <span
                                   key={w}
-                                  className="inline-flex items-center gap-1 bg-zinc-950/5 text-zinc-950 border border-zinc-950/15 px-2 py-0.5 rounded-md text-[8px] font-black"
+                                  className="inline-flex items-center gap-1 bg-zinc-950/5 text-zinc-950 border border-zinc-950/15 px-2 py-0.5 rounded-md text-[8px] font-kinder"
                                 >
                                   {w}
                                   <button
                                     type="button"
                                     onClick={() => setSecTargetRegions(secTargetRegions.filter((item) => item !== w))}
-                                    className="hover:text-red-600 text-[8px] font-black leading-none ms-1 bg-transparent border-none p-0 cursor-pointer"
+                                    className="hover:text-red-600 text-[8px] font-kinder leading-none ms-1 bg-transparent border-none p-0 cursor-pointer"
                                   >
                                     ✕
                                   </button>
@@ -1309,7 +1309,7 @@ export const HomepageBuilder: React.FC = () => {
                           {/* Search Area */}
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2 bg-zinc-50/80 p-2 rounded-xl border border-zinc-200/60">
                             <div>
-                              <label className="block text-[9.5px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950">
+                              <label className="block text-[9.5px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950">
                                 {t("Sélection manuelle (")}
                                 {secManualLinks.filter((l) => l).length}/18)
                               </label>
@@ -1405,7 +1405,7 @@ export const HomepageBuilder: React.FC = () => {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-center gap-1">
-                                        <span className="text-[7px] font-black text-orange-600 uppercase tracking-wide bg-orange-100/60 px-1 rounded">
+                                        <span className="text-[7px] font-kinder text-orange-600 uppercase tracking-wide bg-orange-100/60 px-1 rounded">
                                           {prod.category}
                                         </span>
                                       </div>
@@ -1432,7 +1432,7 @@ export const HomepageBuilder: React.FC = () => {
 
                           {secManualLinks.filter((l) => l).length > 0 && (
                             <div className="mt-2.5 p-2 bg-zinc-50/60 rounded-xl border border-zinc-200/60">
-                              <span className="block text-[8px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
+                              <span className="block text-[8px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
                                 {t("Produits Sélectionnés (")}
                                 {secManualLinks.filter((l) => l).length})
                               </span>
@@ -1472,7 +1472,7 @@ export const HomepageBuilder: React.FC = () => {
                   // --- BANNER FORM ---
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
+                      <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
                         {t("Nom technique interne")}
                       </label>
                       <input
@@ -1487,7 +1487,7 @@ export const HomepageBuilder: React.FC = () => {
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
+                        <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
                           {t("Type de bannière")}
                         </label>
                         <select
@@ -1501,7 +1501,7 @@ export const HomepageBuilder: React.FC = () => {
                       </div>
 
                       <div>
-                        <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
+                        <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
                           {t("Position")}
                         </label>
                         <select
@@ -1522,7 +1522,7 @@ export const HomepageBuilder: React.FC = () => {
 
                     {banPosition === "intermediate" && (
                       <div>
-                        <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
+                        <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
                           {t("Format (Taille)")}
                         </label>
                         <select
@@ -1538,7 +1538,7 @@ export const HomepageBuilder: React.FC = () => {
 
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <label className="text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60">
+                        <label className="text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60">
                           {t("Bannière Ordinateur (HD)")}
                         </label>
                       </div>
@@ -1546,7 +1546,7 @@ export const HomepageBuilder: React.FC = () => {
                         <div className="flex gap-2 w-full">
                           <label className="flex items-center justify-center gap-1.5 px-4 py-2 w-full bg-white border border-dashed border-zinc-200 hover:border-orange-600 rounded-lg cursor-pointer transition-all active:scale-95 shadow-xs">
                             <ImageIcon className="w-4 h-4 text-orange-600" />
-                            <span className="text-[10px] font-black text-stone-700 uppercase">
+                            <span className="text-[10px] font-kinder text-stone-700 uppercase">
                               {t("Téléverser Image")}
                             </span>
                             <input
@@ -1574,14 +1574,14 @@ export const HomepageBuilder: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60">
+                      <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60">
                         {t("Bannière Mobile (Optionnel)")}
                       </label>
                       {!banMobileImageUrl ? (
                         <div className="flex gap-2 w-full">
                           <label className="flex items-center justify-center gap-1.5 px-4 py-2 w-full bg-white border border-dashed border-zinc-200 hover:border-orange-600 rounded-lg cursor-pointer transition-all active:scale-95 shadow-xs">
                             <ImageIcon className="w-4 h-4 text-orange-600" />
-                            <span className="text-[10px] font-black text-stone-700 uppercase">
+                            <span className="text-[10px] font-kinder text-stone-700 uppercase">
                               {t("Téléverser Image")}
                             </span>
                             <input
@@ -1620,7 +1620,7 @@ export const HomepageBuilder: React.FC = () => {
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
+                        <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
                           {t("Titre (Optionnel)")}
                         </label>
                         <input
@@ -1633,7 +1633,7 @@ export const HomepageBuilder: React.FC = () => {
                       </div>
 
                       <div>
-                        <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
+                        <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
                           {t("Sous-titre (Optionnel)")}
                         </label>
                         <input
@@ -1648,7 +1648,7 @@ export const HomepageBuilder: React.FC = () => {
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
+                        <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
                           {t("Texte Bouton (CTA)")}
                         </label>
                         <input
@@ -1661,7 +1661,7 @@ export const HomepageBuilder: React.FC = () => {
                       </div>
 
                       <div>
-                        <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
+                        <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
                           {t("Lien d'action")}
                         </label>
                         <input
@@ -1675,7 +1675,7 @@ export const HomepageBuilder: React.FC = () => {
                     </div>
 
                     <div className="pt-2">
-                      <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
+                      <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
                         {t("Produits associés à la campagne (")}
                         {banLinkedProductIds.length})
                       </label>
@@ -1758,11 +1758,11 @@ export const HomepageBuilder: React.FC = () => {
                         id="banIsActive"
                         checked={banIsActive}
                         onChange={(e) => setBanIsActive(e.target.checked)}
-                        className="w-3.5 h-3.5 text-orange-600 focus:ring-[#F37021] border-stone-300 rounded"
+                        className="w-3.5 h-3.5 text-orange-600 focus:ring-[#FF5C00] border-stone-300 rounded"
                       />
                       <label
                         htmlFor="banIsActive"
-                        className="text-[10px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950 select-none cursor-pointer"
+                        className="text-[10px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950 select-none cursor-pointer"
                       >
                         {t("Activer immédiatement cette bannière")}
                       </label>
@@ -1770,7 +1770,7 @@ export const HomepageBuilder: React.FC = () => {
 
                     <div className="border-t border-stone-100 pt-3 mt-2 grid grid-cols-1 md:grid-cols-3 gap-3">
                       <div>
-                        <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
+                        <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
                           {t("Date & Heure de début")}
                         </label>
                         <input
@@ -1781,7 +1781,7 @@ export const HomepageBuilder: React.FC = () => {
                         />
                       </div>
                       <div>
-                        <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
+                        <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
                           {t("Date & Heure de fin")}
                         </label>
                         <input
@@ -1792,7 +1792,7 @@ export const HomepageBuilder: React.FC = () => {
                         />
                       </div>
                       <div>
-                        <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
+                        <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
                           {t("Sponsor (Vendeur ID)")}
                         </label>
                         <input
@@ -1807,12 +1807,12 @@ export const HomepageBuilder: React.FC = () => {
 
                     {/* Ciblage d me de Wilayas pour la Bannière */}
                     <div className="border-t border-stone-100 pt-3 mt-2 space-y-3">
-                      <h4 className="text-[10px] font-black text-zinc-950 uppercase tracking-[0.1em] flex items-center gap-1.5">
+                      <h4 className="text-[10px] font-kinder text-zinc-950 uppercase tracking-[0.1em] flex items-center gap-1.5">
                         {t("🎯 Ciblage de la Bannière (Ciblage Fin)")}
                       </h4>
                       <div className="grid grid-cols-2 gap-3 text-start">
                         <div>
-                          <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
+                          <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
                             {t("Audience Visée")}
                           </label>
                           <select
@@ -1826,7 +1826,7 @@ export const HomepageBuilder: React.FC = () => {
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
+                          <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-950/60 mb-1">
                             {t("Wilayas Cibles (")}
                             {banTargetRegions.length})
                           </label>
@@ -1854,13 +1854,13 @@ export const HomepageBuilder: React.FC = () => {
                           {banTargetRegions.map((w) => (
                             <span
                               key={w}
-                              className="inline-flex items-center gap-1 bg-zinc-950/5 text-zinc-950 border border-zinc-950/15 px-2 py-0.5 rounded-md text-[8px] font-black"
+                              className="inline-flex items-center gap-1 bg-zinc-950/5 text-zinc-950 border border-zinc-950/15 px-2 py-0.5 rounded-md text-[8px] font-kinder"
                             >
                               {w}
                               <button
                                 type="button"
                                 onClick={() => setBanTargetRegions(banTargetRegions.filter((item) => item !== w))}
-                                className="hover:text-red-600 text-[8px] font-black leading-none ms-1 bg-transparent border-none p-0 cursor-pointer"
+                                className="hover:text-red-600 text-[8px] font-kinder leading-none ms-1 bg-transparent border-none p-0 cursor-pointer"
                               >
                                 ✕
                               </button>
@@ -1888,7 +1888,7 @@ export const HomepageBuilder: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setActiveModalStep((p) => p - 1)}
-                      className="px-3.5 py-2 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-lg font-black text-[9px] uppercase tracking-wider rtl:tracking-normal border-none cursor-pointer transition-all active:scale-95"
+                      className="px-3.5 py-2 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-lg font-kinder text-[9px] uppercase tracking-wider rtl:tracking-normal border-none cursor-pointer transition-all active:scale-95"
                     >
                       {t("Précédent")}
                     </button>
@@ -1897,7 +1897,7 @@ export const HomepageBuilder: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setActiveModalStep((p) => p + 1)}
-                      className="px-5 py-2 bg-zinc-950 hover:bg-slate-800 text-white rounded-lg font-black text-[9px] uppercase tracking-widest rtl:tracking-normal shadow-md border-none cursor-pointer transition-all active:scale-95"
+                      className="px-5 py-2 bg-zinc-950 hover:bg-slate-800 text-white rounded-lg font-kinder text-[9px] uppercase tracking-widest rtl:tracking-normal shadow-md border-none cursor-pointer transition-all active:scale-95"
                     >
                       {t("Suivant")}
                     </button>
@@ -1906,13 +1906,13 @@ export const HomepageBuilder: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setIsModalOpen(false)}
-                        className="px-3.5 py-2 bg-stone-100 hover:bg-stone-200 text-zinc-950 rounded-lg font-black text-[9px] uppercase border-none cursor-pointer transition-all active:scale-95 ms-auto"
+                        className="px-3.5 py-2 bg-stone-100 hover:bg-stone-200 text-zinc-950 rounded-lg font-kinder text-[9px] uppercase border-none cursor-pointer transition-all active:scale-95 ms-auto"
                       >
                         {t("Annuler")}
                       </button>
                       <button
                         type="submit"
-                        className="px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-black text-[9px] uppercase tracking-widest rtl:tracking-normal shadow-md border-none cursor-pointer transition-all active:scale-95"
+                        className="px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-kinder text-[9px] uppercase tracking-widest rtl:tracking-normal shadow-md border-none cursor-pointer transition-all active:scale-95"
                       >
                         {t("Sauvegarder")}
                       </button>

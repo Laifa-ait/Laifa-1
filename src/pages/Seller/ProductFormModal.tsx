@@ -1005,9 +1005,9 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   {/* FICHE TECHNIQUE & SPÉCIFICATIONS TECHNIQUES DE L’ARTICLE */}
                   <div className="space-y-6 bg-white border border-slate-200/80 p-6 rounded-2xl shadow-sm">
                      <div className="flex items-center gap-2 border-b border-slate-100 pb-3 mb-4">
-                        <FileText className="w-4 h-4 text-[#F37021]" />
+                        <FileText className="w-4 h-4 text-[#FF5C00]" />
                         <div>
-                           <h4 className="text-sm font-black text-[#121315] uppercase tracking-wider rtl:tracking-normal">{t("Fiche Technique OLMART")}</h4>
+                           <h4 className="text-sm font-kinder text-[#3C2B22] uppercase tracking-wider rtl:tracking-normal">{t("Fiche Technique OLMART")}</h4>
                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider rtl:tracking-normal">{t("Configurez la référence, les matières premières et l'affichage saisonnier")}</p>
                         </div>
                      </div>
@@ -1027,7 +1027,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                               <button 
                                  type="button" 
                                  onClick={handleGenerateSku}
-                                 className="px-4 py-2.5 bg-[#121315] hover:bg-[#F37021] text-white text-xs font-black uppercase tracking-wider rtl:tracking-normal rounded-xl transition-all shadow-sm active:scale-95 flex items-center gap-1 shrink-0 cursor-pointer"
+                                 className="px-4 py-2.5 bg-[#3C2B22] hover:bg-[#FF5C00] text-white text-xs font-kinder uppercase tracking-wider rtl:tracking-normal rounded-xl transition-all shadow-sm active:scale-95 flex items-center gap-1 shrink-0 cursor-pointer"
                               >
                                  <Sparkles className="w-3.5 h-3.5 animate-pulse" />
                                  {t("Générer")}</button>
@@ -1095,7 +1095,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                                     }}
                                     className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
                                        isSelected 
-                                          ? 'bg-[#121315] border-[#121315] text-white shadow-sm' 
+                                          ? 'bg-[#3C2B22] border-[#3C2B22] text-white shadow-sm' 
                                           : 'bg-stone-50 border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-stone-100'
                                     }`}
                                  >
@@ -1107,7 +1107,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
                         {formData.materials.includes("Autre") && (
                            <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="pt-2">
-                              <label className="block text-[10px] font-black text-[#121315]/60 uppercase tracking-wider rtl:tracking-normal mb-1">{t("Précisez l'autre matière")}</label>
+                              <label className="block text-[10px] font-kinder text-[#3C2B22]/60 uppercase tracking-wider rtl:tracking-normal mb-1">{t("Précisez l'autre matière")}</label>
                               <input 
                                  type="text" 
                                  placeholder={t("Ex: Céramique fine de Kabylie, Laiton martelé...") || "Ex: Céramique fine de Kabylie, Laiton martelé..."} 
@@ -1215,7 +1215,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   {formData.variants.length > 0 ? (
                     <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-sm">
                         <table className="w-full text-start text-sm whitespace-nowrap">
-                          <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-widest rtl:tracking-normal text-[10px] font-black">
+                          <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-widest rtl:tracking-normal text-[10px] font-kinder">
                               <tr>
                                 <th className="px-5 py-4 w-12">{t("Actif")}</th>
                                 <th className="px-5 py-4">{t("Variante")}</th>
@@ -1400,13 +1400,13 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     <div className="grid md:grid-cols-2 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-200">
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-2">{t("Prix de vente base (DA) *")}</label>
-                        <input required type="number" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none text-xl font-black focus:border-blue-900 text-slate-900 transition-colors" placeholder="0.00" value={formData.price || ''} onChange={(e) => setFormData({...formData, price: e.target.value})} />
+                        <input required type="number" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none text-xl font-kinder focus:border-blue-900 text-slate-900 transition-colors" placeholder="0.00" value={formData.price || ''} onChange={(e) => setFormData({...formData, price: e.target.value})} />
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-2 flex justify-between items-center">
                           {t("Prix comparé / Promo (DA)")}<span className="text-[9px] font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded">{t("Optionnel")}</span>
                         </label>
-                        <input type="number" className="w-full px-4 py-3 bg-white border border-orange-200 rounded-xl outline-none text-xl font-black text-orange-600 focus:border-orange-500 placeholder:text-orange-200 transition-colors" placeholder="0.00" value={formData.promoPrice || ''} onChange={(e) => setFormData({...formData, promoPrice: e.target.value})} />
+                        <input type="number" className="w-full px-4 py-3 bg-white border border-orange-200 rounded-xl outline-none text-xl font-kinder text-orange-600 focus:border-orange-500 placeholder:text-orange-200 transition-colors" placeholder="0.00" value={formData.promoPrice || ''} onChange={(e) => setFormData({...formData, promoPrice: e.target.value})} />
                       </div>
                     </div>
                     
@@ -1424,7 +1424,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                                 <div className="flex justify-between items-center">
                                    <span className="text-xs font-semibold">{t("Marge Estimée")}</span>
                                    <div className="text-end">
-                                      <span className="block text-lg font-black">{mg.val} {t("DA")}</span>
+                                      <span className="block text-lg font-kinder">{mg.val} {t("DA")}</span>
                                       <span className="block text-[10px] font-bold uppercase tracking-widest rtl:tracking-normal">{mg.perc}{t("% de marge nette")}</span>
                                    </div>
                                 </div>
@@ -1464,7 +1464,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                              <input 
                                 disabled={!formData.flashSaleActive}
                                 type="number" 
-                                className="w-full px-4 py-3 bg-white border border-blue-200 rounded-xl outline-none text-lg font-black text-blue-900 focus:border-blue-500 transition-colors" 
+                                className="w-full px-4 py-3 bg-white border border-blue-200 rounded-xl outline-none text-lg font-kinder text-blue-900 focus:border-blue-500 transition-colors" 
                                 placeholder={t("Doit être < prix de base") || "Doit être < prix de base"} 
                                 value={formData.flashPrice || ''} 
                                 onChange={(e) => setFormData({...formData, flashPrice: e.target.value})} 
@@ -1626,7 +1626,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                           <h5 className="font-extrabold text-slate-900 text-lg truncate">{formData.name || "Sans nom"}</h5>
                           <p className="text-sm font-bold text-blue-900 mt-1">{formData.category} {formData.subcategory ? `> ${formData.subcategory}` : ''}</p>
                           <div className="flex items-center gap-3 mt-3">
-                             <div className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-lg font-black text-slate-900">
+                             <div className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-lg font-kinder text-slate-900">
                                 {formData.price} <span className="text-xs">{t("DA")}</span>
                              </div>
                           </div>
@@ -1635,22 +1635,22 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
                     <div className="p-6 grid grid-cols-2 sm:grid-cols-3 gap-6">
                        <div>
-                          <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest rtl:tracking-normal mb-1">{t("Stock Total")}</p>
+                          <p className="text-[10px] font-kinder uppercase text-slate-400 tracking-widest rtl:tracking-normal mb-1">{t("Stock Total")}</p>
                           <p className="text-sm font-extrabold text-slate-900">
                              {formData.variants && formData.variants.length > 0 
                                ? formData.variants.reduce((acc, curr) => acc + (parseInt(curr.stock) || 0), 0) 
                                : (formData.stock || 0)} {t("unités")}</p>
                        </div>
                        <div>
-                          <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest rtl:tracking-normal mb-1">{t("SKU")}</p>
+                          <p className="text-[10px] font-kinder uppercase text-slate-400 tracking-widest rtl:tracking-normal mb-1">{t("SKU")}</p>
                           <p className="text-sm font-mono font-bold text-slate-700">{formData.sku || "-"}</p>
                        </div>
                        <div>
-                          <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest rtl:tracking-normal mb-1">{t("Expédition")}</p>
+                          <p className="text-[10px] font-kinder uppercase text-slate-400 tracking-widest rtl:tracking-normal mb-1">{t("Expédition")}</p>
                           <p className="text-sm font-bold text-slate-900">{formData.wilaya} ({formData.deliveryPrice || "Défaut"} {t("DA)")}</p>
                        </div>
                        <div className="col-span-full">
-                          <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest rtl:tracking-normal mb-1">{t("Description")}</p>
+                          <p className="text-[10px] font-kinder uppercase text-slate-400 tracking-widest rtl:tracking-normal mb-1">{t("Description")}</p>
                           <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed font-medium">
                              {formData.description || "Aucune description fournie."}
                           </p>

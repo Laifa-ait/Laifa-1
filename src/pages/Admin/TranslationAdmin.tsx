@@ -740,7 +740,7 @@ export const TranslationAdmin: React.FC = () => {
                             <Languages className="w-7 h-7" />
                         </div>
                         <div>
-                            <h1 className="text-4xl font-black text-zinc-950 tracking-tighter rtl:tracking-normal uppercase italic">{t("Audit Translation")}</h1>
+                            <h1 className="text-4xl font-kinder text-zinc-950 tracking-tighter rtl:tracking-normal uppercase italic">{t("Audit Translation")}</h1>
                             <p className="text-zinc-500 font-bold text-sm flex items-center gap-2">
                                 <ShieldCheck className="w-4 h-4 text-emerald-500" /> {t("Control Layer v2.0 • Multilingue")}</p>
                         </div>
@@ -785,33 +785,33 @@ export const TranslationAdmin: React.FC = () => {
                             <div className="bg-white p-10 rounded-[3rem] border border-zinc-100 shadow-2xl shadow-zinc-200/40 relative overflow-hidden group">
                                 <div className="absolute top-0 end-0 w-32 h-32 bg-orange-500/5 rounded-full  -me-10 -mt-10 group-hover:bg-orange-500/10 transition-colors" />
                                 <div className="space-y-6 relative">
-                                    <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em]">{t("Static Content (UI)")}</h3>
+                                    <h3 className="text-[10px] font-kinder text-zinc-400 uppercase tracking-[0.3em]">{t("Static Content (UI)")}</h3>
                                     <div className="flex items-center justify-between">
                                         <div className="space-y-1">
-                                            <span className="text-5xl font-black text-zinc-950">{auditState.static.total}</span>
-                                            <p className="text-[10px] font-black text-zinc-400 uppercase">{t("Keys found in Source (FR)")}</p>
+                                            <span className="text-5xl font-kinder text-zinc-950">{auditState.static.total}</span>
+                                            <p className="text-[10px] font-kinder text-zinc-400 uppercase">{t("Keys found in Source (FR)")}</p>
                                         </div>
                                         <div className="w-20 h-20 rounded-full border-4 border-emerald-50 content-center flex items-center justify-center">
-                                            <span className="text-xl font-black text-emerald-500">100%</span>
+                                            <span className="text-xl font-kinder text-emerald-500">100%</span>
                                         </div>
                                     </div>
                                     <div className="pt-6 border-t border-zinc-50 grid grid-cols-2 gap-4">
                                         <div>
-                                            <p className="text-[9px] font-black text-zinc-400 uppercase mb-2">{t("Completion AR")}</p>
+                                            <p className="text-[9px] font-kinder text-zinc-400 uppercase mb-2">{t("Completion AR")}</p>
                                             <div className="flex items-center gap-2">
                                                 <div className="flex-1 h-2 bg-zinc-100 rounded-full overflow-hidden">
                                                     <div className="h-full bg-orange-500 transition-all duration-1000" style={{ width: `${completenessAr}%` }} />
                                                 </div>
-                                                <span className="text-[10px] font-black text-zinc-950">{completenessAr}%</span>
+                                                <span className="text-[10px] font-kinder text-zinc-950">{completenessAr}%</span>
                                             </div>
                                         </div>
                                         <div>
-                                            <p className="text-[9px] font-black text-zinc-400 uppercase mb-2">{t("Completion EN")}</p>
+                                            <p className="text-[9px] font-kinder text-zinc-400 uppercase mb-2">{t("Completion EN")}</p>
                                             <div className="flex items-center gap-2">
                                                 <div className="flex-1 h-2 bg-zinc-100 rounded-full overflow-hidden">
                                                     <div className="h-full bg-zinc-950 transition-all duration-1000" style={{ width: `${completenessEn}%` }} />
                                                 </div>
-                                                <span className="text-[10px] font-black text-zinc-950">{completenessEn}%</span>
+                                                <span className="text-[10px] font-kinder text-zinc-950">{completenessEn}%</span>
                                             </div>
                                         </div>
                                     </div>
@@ -820,30 +820,30 @@ export const TranslationAdmin: React.FC = () => {
 
                             <div className="bg-white p-10 rounded-[3rem] border border-zinc-100 shadow-2xl shadow-zinc-200/40 relative overflow-hidden group">
                                 <div className="space-y-6 relative">
-                                    <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em]">{t("Catalog Health")}</h3>
+                                    <h3 className="text-[10px] font-kinder text-zinc-400 uppercase tracking-[0.3em]">{t("Catalog Health")}</h3>
                                     <div className="flex items-center justify-between">
                                         <div className="space-y-1">
-                                            <span className="text-5xl font-black text-zinc-950">{auditState.products.total}</span>
-                                            <p className="text-[10px] font-black text-zinc-400 uppercase">{t("Products Audited")}</p>
+                                            <span className="text-5xl font-kinder text-zinc-950">{auditState.products.total}</span>
+                                            <p className="text-[10px] font-kinder text-zinc-400 uppercase">{t("Products Audited")}</p>
                                         </div>
                                         <div className="w-20 h-20 rounded-full border-4 border-orange-50 content-center flex items-center justify-center">
-                                            <span className="text-xl font-black text-orange-500 group-hover:scale-110 transition-transform">{auditState.products.ar + auditState.products.en}</span>
+                                            <span className="text-xl font-kinder text-orange-500 group-hover:scale-110 transition-transform">{auditState.products.ar + auditState.products.en}</span>
                                         </div>
                                     </div>
                                     <div className="pt-6 border-t border-zinc-50 space-y-4">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-2 h-2 rounded-full bg-red-500" />
-                                                <span className="text-[10px] font-black uppercase text-zinc-600">{t("Missing AR (Arabe)")}</span>
+                                                <span className="text-[10px] font-kinder uppercase text-zinc-600">{t("Missing AR (Arabe)")}</span>
                                             </div>
-                                            <span className="text-[10px] font-black text-zinc-950">{auditState.products.ar} {t("Items")}</span>
+                                            <span className="text-[10px] font-kinder text-zinc-950">{auditState.products.ar} {t("Items")}</span>
                                         </div>
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-2 h-2 rounded-full bg-orange-400" />
-                                                <span className="text-[10px] font-black uppercase text-zinc-600">{t("Missing EN (Anglais)")}</span>
+                                                <span className="text-[10px] font-kinder uppercase text-zinc-600">{t("Missing EN (Anglais)")}</span>
                                             </div>
-                                            <span className="text-[10px] font-black text-zinc-950">{auditState.products.en} {t("Items")}</span>
+                                            <span className="text-[10px] font-kinder text-zinc-950">{auditState.products.en} {t("Items")}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -855,8 +855,8 @@ export const TranslationAdmin: React.FC = () => {
                                     <Wand2 className="w-24 h-24 rotate-12" />
                                 </div>
                                 <div className="space-y-3">
-                                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-200">{t("One-Click Global Fix")}</h3>
-                                    <h2 className="text-2xl font-black tracking-tight rtl:tracking-normal leading-tight">{t("Traduire l'Écosystème par IA")}</h2>
+                                    <h3 className="text-[10px] font-kinder uppercase tracking-[0.3em] text-orange-200">{t("One-Click Global Fix")}</h3>
+                                    <h2 className="text-2xl font-kinder tracking-tight rtl:tracking-normal leading-tight">{t("Traduire l'Écosystème par IA")}</h2>
                                     <p className="text-[11px] text-orange-100 opacity-90 leading-relaxed font-medium">
                                         {t("Analyse et traduit automatiquement toutes les fiches produits, mais aussi l'intégralité des")}<strong>{t("Catégories")}</strong>, <strong>{t("Sous-catégories")}</strong>, <strong>{t("Sous-sous-catégories")}</strong>{t(", et")}<strong>{t("Bannières/Sections promotionnelles")}</strong> {t("ajoutées par l'administrateur.")}</p>
                                 </div>
@@ -864,14 +864,14 @@ export const TranslationAdmin: React.FC = () => {
                                     <button 
                                         onClick={handleAutoTranslateProducts}
                                         disabled={isTranslating}
-                                        className="w-full bg-white text-zinc-950 py-4 max-lg:py-5 rounded-2xl font-black text-xs uppercase tracking-widest rtl:tracking-normal flex items-center justify-center gap-3 hover:bg-zinc-50 active:scale-95 transition-all shadow-xl disabled:opacity-50"
+                                        className="w-full bg-white text-zinc-950 py-4 max-lg:py-5 rounded-2xl font-kinder text-xs uppercase tracking-widest rtl:tracking-normal flex items-center justify-center gap-3 hover:bg-zinc-50 active:scale-95 transition-all shadow-xl disabled:opacity-50"
                                     >
                                         <Wand2 className={`w-4 h-4 ${isTranslating ? 'animate-spin' : ''}`} /> {isTranslating ? (t("admin.translation.processing") !== "admin.translation.processing" ? t("admin.translation.processing") : 'Traitement...') : (t("admin.translation.fix_catalog") !== "admin.translation.fix_catalog" ? t("admin.translation.fix_catalog") : 'Réparer le Catalogue')}
                                     </button>
                                     <button 
                                         onClick={handleTranslateUI}
                                         disabled={isTranslating}
-                                        className="w-full bg-orange-800 text-white py-4 max-lg:py-5 rounded-2xl font-black text-xs uppercase tracking-widest rtl:tracking-normal flex items-center justify-center gap-3 hover:bg-orange-900 active:scale-95 transition-all disabled:opacity-50 border border-orange-700/50"
+                                        className="w-full bg-orange-800 text-white py-4 max-lg:py-5 rounded-2xl font-kinder text-xs uppercase tracking-widest rtl:tracking-normal flex items-center justify-center gap-3 hover:bg-orange-900 active:scale-95 transition-all disabled:opacity-50 border border-orange-700/50"
                                     >
                                         <Globe className={`w-4 h-4 ${isTranslating ? 'animate-spin' : ''}`} /> {isTranslating ? (t("admin.translation.in_progress") !== "admin.translation.in_progress" ? t("admin.translation.in_progress") : 'En cours...') : (t("admin.translation.translate_ui") !== "admin.translation.translate_ui" ? t("admin.translation.translate_ui") : "Traduire l'UI & Contenu d'Admin")}
                                     </button>
@@ -883,7 +883,7 @@ export const TranslationAdmin: React.FC = () => {
                         <div className="bg-white rounded-[3.5rem] border border-zinc-100 shadow-sm p-12 space-y-8">
                             <div className="flex items-center justify-between border-b border-zinc-50 pb-8">
                                 <div>
-                                    <h4 className="text-xl font-black text-zinc-950 italic">{t("admin.translation.report_title") !== "admin.translation.report_title" ? t("admin.translation.report_title") : "Rapport de Conformité Linguistique"}</h4>
+                                    <h4 className="text-xl font-kinder text-zinc-950 italic">{t("admin.translation.report_title") !== "admin.translation.report_title" ? t("admin.translation.report_title") : "Rapport de Conformité Linguistique"}</h4>
                                     <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest rtl:tracking-normal mt-1">{t("admin.translation.report_subtitle") !== "admin.translation.report_subtitle" ? t("admin.translation.report_subtitle") : "Analyse détaillée des fichiers .json locaux"}</p>
                                 </div>
                                 <Globe className="w-8 h-8 text-zinc-200" />
@@ -902,8 +902,8 @@ export const TranslationAdmin: React.FC = () => {
                                                                             <div className="flex items-center gap-4">
                                                                                 <span className="text-2xl">{l.icon}</span>
                                                                                 <div>
-                                                                                    <p className="font-black text-sm text-zinc-950">{l.lang}</p>
-                                                                                    <p className="text-[10px] font-black text-zinc-400">{t("STATUS:")}{l.score === 100 ? 'OPÉRATIONNEL' : 'INCOMPLET'}</p>
+                                                                                    <p className="font-kinder text-sm text-zinc-950">{l.lang}</p>
+                                                                                    <p className="text-[10px] font-kinder text-zinc-400">{t("STATUS:")}{l.score === 100 ? 'OPÉRATIONNEL' : 'INCOMPLET'}</p>
                                                                                 </div>
                                                                             </div>
                                                                             <span className={`px-4 py-1.5 rounded-full text-[10px] font-black ${l.score === 100 ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'}`}>{l.score}%</span>
@@ -914,7 +914,7 @@ export const TranslationAdmin: React.FC = () => {
                                                                         {l.score < 100 && (
                                                                             <div className="bg-zinc-50 p-4 rounded-2xl flex items-center gap-3">
                                                                                 <AlertCircle className="w-4 h-4 text-orange-500 shrink-0" />
-                                                                                <p className="text-[10px] font-black text-zinc-500 uppercase leading-relaxed">
+                                                                                <p className="text-[10px] font-kinder text-zinc-500 uppercase leading-relaxed">
                                                                                     {l.lang} {t("possède")}{l.code === 'AR' ? auditState.static.ar : auditState.static.en} {t("clés vides ou identiques au français.")}</p>
                                                                             </div>
                                                                         )}
@@ -939,14 +939,14 @@ export const TranslationAdmin: React.FC = () => {
                                     <Plus className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h4 className="text-xl font-black text-zinc-950">{t("Enregistrer une Mise à Jour Mensuelle")}</h4>
+                                    <h4 className="text-xl font-kinder text-zinc-950">{t("Enregistrer une Mise à Jour Mensuelle")}</h4>
                                     <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest rtl:tracking-normal mt-1">{t("Générez automatiquement les versions AR/EN pour Olma")}</p>
                                 </div>
                             </div>
 
                             <div className="bg-zinc-50 rounded-[2.5rem] p-10 space-y-8">
                                 <div className="space-y-4">
-                                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-2">{t("Texte Source (Généralement en Arabe ou Français)")}</label>
+                                    <label className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-2">{t("Texte Source (Généralement en Arabe ou Français)")}</label>
                                     <textarea 
                                         rows={5}
                                         value={newMonthlyText}
@@ -958,7 +958,7 @@ export const TranslationAdmin: React.FC = () => {
                                 <div className="flex justify-end">
                                     <button 
                                         onClick={registerMonthlyContent}
-                                        className="px-12 py-5 bg-zinc-950 text-white rounded-3xl font-black text-xs uppercase tracking-widest rtl:tracking-normal flex items-center gap-4 hover:scale-[1.02] active:scale-95 transition-all shadow-xl"
+                                        className="px-12 py-5 bg-zinc-950 text-white rounded-3xl font-kinder text-xs uppercase tracking-widest rtl:tracking-normal flex items-center gap-4 hover:scale-[1.02] active:scale-95 transition-all shadow-xl"
                                     >
                                         <Globe className="w-4 h-4 text-orange-500" /> {t("Déployer & Traduire")}</button>
                                 </div>
@@ -967,10 +967,10 @@ export const TranslationAdmin: React.FC = () => {
 
                         {/* History of Monthly Updates */}
                         <div className="space-y-6">
-                            <h4 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em] ms-6">{t("Archive des Mises à Jour Mensuelles")}</h4>
+                            <h4 className="text-[10px] font-kinder text-zinc-400 uppercase tracking-[0.3em] ms-6">{t("Archive des Mises à Jour Mensuelles")}</h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 {monthlyContent.length === 0 ? (
-                                    <div className="col-span-full p-20 text-center border-2 border-dashed border-zinc-100 rounded-[3rem] text-zinc-300 font-black uppercase tracking-widest rtl:tracking-normal">
+                                    <div className="col-span-full p-20 text-center border-2 border-dashed border-zinc-100 rounded-[3rem] text-zinc-300 font-kinder uppercase tracking-widest rtl:tracking-normal">
                                         {t("Aucun historique de mise à jour mensuelle enregistré.")}</div>
                                 ) : (
                                     monthlyContent.map((item) => {
@@ -981,23 +981,23 @@ export const TranslationAdmin: React.FC = () => {
                                                                                     <FileText className="w-10 h-10" />
                                                                                 </div>
                                                                                 <div className="flex items-center justify-between">
-                                                                                    <span className="px-4 py-1.5 bg-orange-50 text-orange-600 rounded-full text-[10px] font-black uppercase tracking-widest rtl:tracking-normal">{item.month}</span>
-                                                                                    <span className="text-[9px] font-black text-zinc-400 uppercase font-mono">{new Date(item.createdAt || item.updatedAt).toLocaleDateString()}</span>
+                                                                                    <span className="px-4 py-1.5 bg-orange-50 text-orange-600 rounded-full text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal">{item.month}</span>
+                                                                                    <span className="text-[9px] font-kinder text-zinc-400 uppercase font-mono">{new Date(item.createdAt || item.updatedAt).toLocaleDateString()}</span>
                                                                                 </div>
                                                                                 
                                                                                 <div className="space-y-4">
                                                                                     <div className="p-5 bg-zinc-50 rounded-2xl border border-zinc-100">
-                                                                                        <p className="text-[9px] font-black text-zinc-400 uppercase mb-2">{t("VERSION FRANÇAISE")}</p>
+                                                                                        <p className="text-[9px] font-kinder text-zinc-400 uppercase mb-2">{t("VERSION FRANÇAISE")}</p>
                                                                                         <p className="text-xs font-bold text-zinc-950 line-clamp-3 leading-relaxed">{item.text_fr}</p>
                                                                                     </div>
                                                                                     <div className="grid grid-cols-2 gap-4">
                                                                                         <div className="p-5 bg-zinc-950 text-white rounded-2xl">
-                                                                                            <p className="text-[9px] font-black text-white/40 uppercase mb-2">{t("VERSION ARABE")}</p>
-                                                                                            <p className="text-[11px] font-black text-white line-clamp-2 leading-relaxed text-end">{item.text_ar}</p>
+                                                                                            <p className="text-[9px] font-kinder text-white/40 uppercase mb-2">{t("VERSION ARABE")}</p>
+                                                                                            <p className="text-[11px] font-kinder text-white line-clamp-2 leading-relaxed text-end">{item.text_ar}</p>
                                                                                         </div>
                                                                                         <div className="p-5 bg-orange-600 text-white rounded-2xl shadow-xl shadow-orange-500/10">
-                                                                                            <p className="text-[9px] font-black text-white/40 uppercase mb-2">{t("VERSION ANGLAISE")}</p>
-                                                                                            <p className="text-[11px] font-black text-white line-clamp-2 leading-relaxed italic">{item.text_en}</p>
+                                                                                            <p className="text-[9px] font-kinder text-white/40 uppercase mb-2">{t("VERSION ANGLAISE")}</p>
+                                                                                            <p className="text-[11px] font-kinder text-white line-clamp-2 leading-relaxed italic">{item.text_en}</p>
                                                                                         </div>
                                                                                     </div>
                                                                                 </div>
@@ -1034,14 +1034,14 @@ export const TranslationAdmin: React.FC = () => {
                                     <button
                                         onClick={handleCleanFictive}
                                         disabled={isCleaningFictive}
-                                        className="px-6 py-4 bg-orange-500 hover:bg-orange-600 active:scale-95 text-white rounded-2xl font-black text-xs uppercase tracking-widest rtl:tracking-normal flex items-center gap-2 transition-all shadow-md shrink-0 disabled:opacity-50"
+                                        className="px-6 py-4 bg-orange-500 hover:bg-orange-600 active:scale-95 text-white rounded-2xl font-kinder text-xs uppercase tracking-widest rtl:tracking-normal flex items-center gap-2 transition-all shadow-md shrink-0 disabled:opacity-50"
                                         title={t("Traduit automatiquement tous les termes restant qui contiennent (AR) ou (EN) via l'IA Mabrouk.") || "Traduit automatiquement tous les termes restant qui contiennent (AR) ou (EN) via l'IA Mabrouk."}
                                     >
                                         <Wand2 className={`w-4 h-4 ${isCleaningFictive ? 'animate-spin' : 'animate-pulse text-white'}`} /> {t("Traduire Fictifs (IA)")}</button>
 
                                     <button
                                         onClick={() => setShowNewKeyModal(true)}
-                                        className="px-6 py-4 bg-zinc-950 text-white rounded-2xl font-black text-xs uppercase tracking-widest rtl:tracking-normal flex items-center gap-2 hover:bg-zinc-800 active:scale-95 transition-all shadow-md shrink-0"
+                                        className="px-6 py-4 bg-zinc-950 text-white rounded-2xl font-kinder text-xs uppercase tracking-widest rtl:tracking-normal flex items-center gap-2 hover:bg-zinc-800 active:scale-95 transition-all shadow-md shrink-0"
                                     >
                                         <Plus className="w-4 h-4 text-orange-500" /> {t("Ajouter une Clé")}</button>
                                 </div>
@@ -1049,7 +1049,7 @@ export const TranslationAdmin: React.FC = () => {
 
                             {/* State/Status Filter Pills */}
                             <div className="flex flex-wrap items-center gap-3 border-t border-zinc-50 pt-5">
-                                <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal me-2">{t("Filtrer par état :")}</span>
+                                <span className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal me-2">{t("Filtrer par état :")}</span>
                                 {[
                                     { id: 'all', label: 'Tous les termes', count: Object.keys(dictFr).length },
                                     { 
@@ -1110,8 +1110,8 @@ export const TranslationAdmin: React.FC = () => {
                                 >
                                     <div className="flex items-center justify-between border-b border-zinc-50 pb-6">
                                         <div>
-                                            <h4 className="text-lg font-black text-zinc-950">{t("Nouvelle Clé de Traduction")}</h4>
-                                            <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mt-1">{t("Saisie manuelle pour l'UI d'Olma Marketplace")}</p>
+                                            <h4 className="text-lg font-kinder text-zinc-950">{t("Nouvelle Clé de Traduction")}</h4>
+                                            <p className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mt-1">{t("Saisie manuelle pour l'UI d'Olma Marketplace")}</p>
                                         </div>
                                         <button 
                                             onClick={() => setShowNewKeyModal(false)}
@@ -1123,7 +1123,7 @@ export const TranslationAdmin: React.FC = () => {
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="space-y-2 col-span-full">
-                                            <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-2">{t("ID de la clé (Unique, ex: header.title)")}</label>
+                                            <label className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-2">{t("ID de la clé (Unique, ex: header.title)")}</label>
                                             <input 
                                                 type="text"
                                                 value={newKeyData.key}
@@ -1133,7 +1133,7 @@ export const TranslationAdmin: React.FC = () => {
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-2">{t("Texte Français (Source)")}</label>
+                                            <label className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-2">{t("Texte Français (Source)")}</label>
                                             <input 
                                                 type="text"
                                                 value={newKeyData.fr}
@@ -1143,7 +1143,7 @@ export const TranslationAdmin: React.FC = () => {
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-2">{t("Texte Anglais")}</label>
+                                            <label className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-2">{t("Texte Anglais")}</label>
                                             <input 
                                                 type="text"
                                                 value={newKeyData.en}
@@ -1153,12 +1153,12 @@ export const TranslationAdmin: React.FC = () => {
                                             />
                                         </div>
                                         <div className="space-y-2 col-span-full">
-                                            <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-2">{t("Texte Arabe (RTL)")}</label>
+                                            <label className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-2">{t("Texte Arabe (RTL)")}</label>
                                             <input 
                                                 type="text"
                                                 value={newKeyData.ar}
                                                 onChange={(e) => setNewKeyData(prev => ({ ...prev, ar: e.target.value }))}
-                                                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-4 font-black text-zinc-800 text-end outline-none focus:border-orange-500 text-xs transition-all"
+                                                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl p-4 font-kinder text-zinc-800 text-end outline-none focus:border-orange-500 text-xs transition-all"
                                                 dir="rtl"
                                                 placeholder="الأثاث والديكور"
                                             />
@@ -1173,7 +1173,7 @@ export const TranslationAdmin: React.FC = () => {
                                             {t("Annuler")}</button>
                                         <button 
                                             onClick={handleAddNewKey}
-                                            className="px-8 py-3 bg-zinc-950 text-white hover:bg-zinc-800 rounded-xl font-black text-xs uppercase tracking-widest rtl:tracking-normal transition-all shadow-md"
+                                            className="px-8 py-3 bg-zinc-950 text-white hover:bg-zinc-800 rounded-xl font-kinder text-xs uppercase tracking-widest rtl:tracking-normal transition-all shadow-md"
                                         >
                                             {t("Créer la Clé")}</button>
                                     </div>
@@ -1184,9 +1184,9 @@ export const TranslationAdmin: React.FC = () => {
                         {/* Dictionary Grid List */}
                         <div className="bg-white rounded-[3rem] border border-zinc-100 shadow-sm overflow-hidden p-8 space-y-6">
                             <div className="flex items-center justify-between border-b border-zinc-50 pb-4">
-                                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">
+                                <span className="text-[10px] font-kinder text-zinc-400 uppercase tracking-[0.2em]">
                                     {getFilteredKeys().length} {t("Termes Trouvés")}</span>
-                                <span className="text-[10px] font-black text-zinc-500 uppercase flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> {t("Statut Direct")}</span>
+                                <span className="text-[10px] font-kinder text-zinc-500 uppercase flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> {t("Statut Direct")}</span>
                             </div>
 
                             <div className="divide-y divide-zinc-100/60 max-h-[600px] overflow-y-auto pe-2">
@@ -1236,7 +1236,7 @@ export const TranslationAdmin: React.FC = () => {
                                                 {isEditing ? (
                                                     <div className="bg-zinc-50/80 p-6 rounded-2xl border border-zinc-100 space-y-4">
                                                         <div className="flex items-center justify-between border-b border-zinc-100/60 pb-3 mb-2">
-                                                            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-wider rtl:tracking-normal">{t("Édition de Clé")}</span>
+                                                            <span className="text-[10px] font-kinder text-zinc-500 uppercase tracking-wider rtl:tracking-normal">{t("Édition de Clé")}</span>
                                                             <button
                                                                 type="button"
                                                                 onClick={() => handleTranslateSingleKey(key, editForm.fr)}
@@ -1248,7 +1248,7 @@ export const TranslationAdmin: React.FC = () => {
 
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                             <div className="space-y-1">
-                                                                <span className="text-[9px] font-black text-zinc-400 uppercase">{t("Français (Source) :")}</span>
+                                                                <span className="text-[9px] font-kinder text-zinc-400 uppercase">{t("Français (Source) :")}</span>
                                                                 <input 
                                                                     type="text"
                                                                     value={editForm.fr}
@@ -1257,7 +1257,7 @@ export const TranslationAdmin: React.FC = () => {
                                                                 />
                                                             </div>
                                                             <div className="space-y-1">
-                                                                <span className="text-[9px] font-black text-zinc-400 uppercase">{t("Anglais (EN) :")}</span>
+                                                                <span className="text-[9px] font-kinder text-zinc-400 uppercase">{t("Anglais (EN) :")}</span>
                                                                 <input 
                                                                     type="text"
                                                                     value={editForm.en}
@@ -1266,13 +1266,13 @@ export const TranslationAdmin: React.FC = () => {
                                                                 />
                                                             </div>
                                                             <div className="space-y-1 col-span-full">
-                                                                <span className="text-[9px] font-black text-zinc-400 uppercase">{t("Arabe (AR - RTL) :")}</span>
+                                                                <span className="text-[9px] font-kinder text-zinc-400 uppercase">{t("Arabe (AR - RTL) :")}</span>
                                                                 <input 
                                                                     type="text"
                                                                     dir="rtl"
                                                                     value={editForm.ar}
                                                                     onChange={(e) => setEditForm(prev => ({ ...prev, ar: e.target.value }))}
-                                                                    className="w-full bg-white border border-zinc-200 rounded-xl p-3 font-black text-xs text-zinc-800 text-end outline-none"
+                                                                    className="w-full bg-white border border-zinc-200 rounded-xl p-3 font-kinder text-xs text-zinc-800 text-end outline-none"
                                                                 />
                                                             </div>
                                                         </div>
@@ -1286,7 +1286,7 @@ export const TranslationAdmin: React.FC = () => {
                                                             <button 
                                                                 onClick={() => handleSaveTranslation(key)}
                                                                 disabled={isSavingKey === key}
-                                                                className="px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider rtl:tracking-normal transition-all disabled:opacity-50"
+                                                                className="px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-[10px] font-kinder uppercase tracking-wider rtl:tracking-normal transition-all disabled:opacity-50"
                                                             >
                                                                 {isSavingKey === key ? "Sauvegarde..." : "Sauvegarder"}
                                                             </button>
@@ -1295,15 +1295,15 @@ export const TranslationAdmin: React.FC = () => {
                                                 ) : (
                                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-medium">
                                                         <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100/50">
-                                                            <p className="text-[8px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1">{t("🇫🇷 FR (SOURCE)")}</p>
+                                                            <p className="text-[8px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1">{t("🇫🇷 FR (SOURCE)")}</p>
                                                             <p className="text-zinc-800 font-bold">{frVal || <span className="italic text-zinc-300">{t("Aucun")}</span>}</p>
                                                         </div>
                                                         <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100/50">
-                                                            <p className="text-[8px] font-black text-zinc-400 tracking-widest rtl:tracking-normal mb-1">{t("🇬🇧 EN (ANGLAIS)")}</p>
+                                                            <p className="text-[8px] font-kinder text-zinc-400 tracking-widest rtl:tracking-normal mb-1">{t("🇬🇧 EN (ANGLAIS)")}</p>
                                                             <p className="text-zinc-800 font-bold italic">{enVal || <span className="italic text-zinc-300">{t("Aucun")}</span>}</p>
                                                         </div>
                                                         <div className="p-3 bg-zinc-950 text-white rounded-xl border border-zinc-900 shadow-sm">
-                                                            <p className="text-[8px] font-black text-white/40 tracking-widest rtl:tracking-normal mb-1">{t("🇩🇿 AR (ARABE)")}</p>
+                                                            <p className="text-[8px] font-kinder text-white/40 tracking-widest rtl:tracking-normal mb-1">{t("🇩🇿 AR (ARABE)")}</p>
                                                             <p className="text-white font-bold text-end" dir="rtl">{arVal || <span className="italic text-white/30">{t("la translation")}</span>}</p>
                                                         </div>
                                                     </div>
@@ -1331,12 +1331,12 @@ export const TranslationAdmin: React.FC = () => {
                                         <Wand2 className="w-8 h-8" />
                                     </div>
                                     <div>
-                                        <h4 className="text-2xl font-black text-zinc-950 tracking-tight rtl:tracking-normal italic">{t("Mabrouk — Agent de Traduction")}</h4>
-                                        <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mt-1 flex items-center gap-1.5 matches-rtl">
+                                        <h4 className="text-2xl font-kinder text-zinc-950 tracking-tight rtl:tracking-normal italic">{t("Mabrouk — Agent de Traduction")}</h4>
+                                        <p className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mt-1 flex items-center gap-1.5 matches-rtl">
                                             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block animate-pulse" /> {t("Système Local • 100% Souple & Gratuit")}</p>
                                     </div>
                                 </div>
-                                <div className="flex bg-zinc-100 p-1.5 rounded-2xl gap-2 font-black text-[10px] uppercase">
+                                <div className="flex bg-zinc-100 p-1.5 rounded-2xl gap-2 font-kinder text-[10px] uppercase">
                                     <button 
                                         onClick={() => setAgentTargetLang('ar')}
                                         className={`px-5 py-2.5 rounded-xl transition-all ${agentTargetLang === 'ar' ? 'bg-orange-500 text-white shadow-md' : 'text-zinc-400 hover:text-zinc-600'}`}
@@ -1377,7 +1377,7 @@ export const TranslationAdmin: React.FC = () => {
                                                                                         navigator.clipboard.writeText(msg.translation);
                                                                                         toast.success("Traduction copiée ");
                                                                                     }}
-                                                                                    className="px-4 py-2 bg-zinc-950 text-white hover:bg-zinc-800 active:scale-95 text-[10px] font-black uppercase tracking-widest rtl:tracking-normal rounded-xl transition-all flex items-center gap-2"
+                                                                                    className="px-4 py-2 bg-zinc-950 text-white hover:bg-zinc-800 active:scale-95 text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal rounded-xl transition-all flex items-center gap-2"
                                                                                 >
                                                                                     <Globe className="w-3 h-3 text-orange-500" /> {t("Copier Traduction")}</button>
                                                                             </div>
@@ -1396,7 +1396,7 @@ export const TranslationAdmin: React.FC = () => {
                                         <span className="w-2 h-2 rounded-full bg-orange-400 animate-bounce" style={{ animationDelay: '0ms' }} />
                                         <span className="w-2 h-2 rounded-full bg-orange-400 animate-bounce" style={{ animationDelay: '150ms' }} />
                                         <span className="w-2 h-2 rounded-full bg-orange-400 animate-bounce" style={{ animationDelay: '300ms' }} />
-                                        <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-1">{t("L'Agent rédige...")}</span>
+                                        <span className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-1">{t("L'Agent rédige...")}</span>
                                     </div>
                                 )}
                             </div>
@@ -1417,7 +1417,7 @@ export const TranslationAdmin: React.FC = () => {
                                 />
                                 <button 
                                     onClick={handleSendAgentMessage}
-                                    className="px-8 py-4 bg-orange-500 text-white hover:bg-orange-600 rounded-2xl font-black text-xs uppercase tracking-widest rtl:tracking-normal transition-all shadow-md shrink-0"
+                                    className="px-8 py-4 bg-orange-500 text-white hover:bg-orange-600 rounded-2xl font-kinder text-xs uppercase tracking-widest rtl:tracking-normal transition-all shadow-md shrink-0"
                                 >
                                     {t("Traduire")}</button>
                             </div>

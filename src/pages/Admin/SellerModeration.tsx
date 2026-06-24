@@ -27,6 +27,7 @@ interface Seller {
   nifNumber?: string;
   rib?: string;
   createdAt: Timestamp;
+  [key: string]: any;
 }
 
 export const SellerModeration: React.FC = () => {
@@ -59,28 +60,33 @@ export const SellerModeration: React.FC = () => {
     setLoading(true);
     try {
       let allSellers: any[] = [];
+      
+      // Fetch all potential sellers, applicants and statuses in parallel using simple single-field queries
+      // to avoid composite index requirements in Firestore and to merge all records in-memory.
+      const [sellersSnap, pendingSnap, pendingVerifSnap, rejectedSnap, suspendedSnap] = await Promise.all([
+        getDocs(query(collection(db, 'users'), where('role', '==', 'seller'), limit(300))),
+        getDocs(query(collection(db, 'users'), where('status', '==', 'pending'), limit(150))),
+        getDocs(query(collection(db, 'users'), where('status', '==', 'pending_verification'), limit(150))),
+        getDocs(query(collection(db, 'users'), where('status', '==', 'rejected'), limit(150))),
+        getDocs(query(collection(db, 'users'), where('status', '==', 'suspended'), limit(150)))
+      ]);
+
+      const mergedMap = new Map<string, any>();
+      sellersSnap.docs.forEach((doc: any) => mergedMap.set(doc.id, { id: doc.id, ...doc.data() }));
+      pendingSnap.docs.forEach((doc: any) => mergedMap.set(doc.id, { id: doc.id, ...doc.data() }));
+      pendingVerifSnap.docs.forEach((doc: any) => mergedMap.set(doc.id, { id: doc.id, ...doc.data() }));
+      rejectedSnap.docs.forEach((doc: any) => mergedMap.set(doc.id, { id: doc.id, ...doc.data() }));
+      suspendedSnap.docs.forEach((doc: any) => mergedMap.set(doc.id, { id: doc.id, ...doc.data() }));
+
+      allSellers = Array.from(mergedMap.values());
+
+      // Filter in memory by status if requested
       if (statusUrl) {
          if (statusUrl === 'pending') {
-            const q = query(collection(db, 'users'), where('status', 'in', ['pending', 'pending_verification']), limit(300));
-            const snap = await getDocs(q);
-            allSellers = snap.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+            allSellers = allSellers.filter(s => s.status === 'pending' || s.status === 'pending_verification');
          } else {
-            const q = query(collection(db, 'users'), where('role', '==', 'seller'), where('status', '==', statusUrl), limit(300));
-            const snap = await getDocs(q);
-            allSellers = snap.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+            allSellers = allSellers.filter(s => s.status === statusUrl);
          }
-      } else {
-         // High-scale union query
-         const [sellersSnap, pendingSnap, pendingVerifSnap] = await Promise.all([
-           getDocs(query(collection(db, 'users'), where('role', '==', 'seller'), limit(300))),
-           getDocs(query(collection(db, 'users'), where('status', '==', 'pending'), limit(100))),
-           getDocs(query(collection(db, 'users'), where('status', '==', 'pending_verification'), limit(100)))
-         ]);
-         const mergedMap = new Map<string, any>();
-         sellersSnap.docs.forEach((doc: any) => mergedMap.set(doc.id, { id: doc.id, ...doc.data() }));
-         pendingSnap.docs.forEach((doc: any) => mergedMap.set(doc.id, { id: doc.id, ...doc.data() }));
-         pendingVerifSnap.docs.forEach((doc: any) => mergedMap.set(doc.id, { id: doc.id, ...doc.data() }));
-         allSellers = Array.from(mergedMap.values());
       }
 
       if (searchUrl) {
@@ -195,7 +201,6 @@ export const SellerModeration: React.FC = () => {
         setRejectReasons([]);
         setRejectComment('');
       } else if (status === 'active') {
-        const userSnap = await getDocs(query(collection(db, 'users'), where('uid', '==', sellerId))); // simpler to fetch from context or just update
         await updateDoc(userRef, {
           role: 'seller',
           status: 'active',
@@ -324,12 +329,12 @@ export const SellerModeration: React.FC = () => {
     <div className="space-y-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-4xl font-black tracking-tight rtl:tracking-normal text-zinc-950">{t("Validation & Annuaire")}</h2>
+          <h2 className="text-4xl font-kinder tracking-tight rtl:tracking-normal text-zinc-950">{t("Validation & Annuaire")}</h2>
           <p className="text-zinc-500 font-medium">{t("Approuvez les nouveaux vendeurs et modérez la plateforme.")}</p>
         </div>
         <button 
           onClick={() => fetchSellersApi(pageParam, statusParam, searchParam, sortByParam, sortOrderParam)}
-          className="px-6 py-4 bg-zinc-100 text-zinc-600 rounded-2xl font-black text-[10px] uppercase tracking-widest rtl:tracking-normal hover:bg-zinc-200 transition-all cursor-pointer border-none"
+          className="px-6 py-4 bg-zinc-100 text-zinc-600 rounded-2xl font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal hover:bg-zinc-200 transition-all cursor-pointer border-none"
         >
           {t("Actualiser la liste")}</button>
       </div>
@@ -340,7 +345,7 @@ export const SellerModeration: React.FC = () => {
           <input 
             type="text" 
             placeholder={t("Rechercher par nom de boutique ou vendeur...") || "Rechercher par nom de boutique ou vendeur..."} 
-            className="w-full ps-16 pe-8 rtl:pe-16 rtl:ps-8 py-5 bg-white border border-zinc-100 rounded-[2rem] outline-none font-black text-sm tracking-tight rtl:tracking-normal focus:ring-4 ring-orange-500/5 transition-all"
+            className="w-full ps-16 pe-8 rtl:pe-16 rtl:ps-8 py-5 bg-white border border-zinc-100 rounded-[2rem] outline-none font-kinder text-sm tracking-tight rtl:tracking-normal focus:ring-4 ring-orange-500/5 transition-all"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -363,18 +368,18 @@ export const SellerModeration: React.FC = () => {
             <table className="w-full text-start">
                 <thead>
                   <tr className="bg-zinc-50/50 border-b border-zinc-100">
-                     <th className="px-10 py-8 text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">{t("Boutique / Vendeur")}</th>
-                     <th className="px-10 py-8 text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">{t("Wilaya")}</th>
-                     <th className="px-10 py-8 text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">{t("Statut Profil")}</th>
-                     <th className="px-10 py-8 text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal cursor-pointer hover:text-zinc-950 transition-colors" onClick={() => {
+                     <th className="px-10 py-8 text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">{t("Boutique / Vendeur")}</th>
+                     <th className="px-10 py-8 text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">{t("Wilaya")}</th>
+                     <th className="px-10 py-8 text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">{t("Statut Profil")}</th>
+                     <th className="px-10 py-8 text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal cursor-pointer hover:text-zinc-950 transition-colors" onClick={() => {
                         const nextOrder = sortByParam === 'createdAt' && sortOrderParam === 'desc' ? 'asc' : 'desc';
                         setSearchParams(prev => {
                              prev.set('sortBy', 'createdAt'); prev.set('sortOrder', nextOrder); return prev; });
                      }}>
                         {t("Date d'inscription")}{sortByParam === 'createdAt' && (sortOrderParam === 'desc' ? '↓' : '↑')}
                      </th>
-                     <th className="px-10 py-8 text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">{t("Commission")}</th>
-                     <th className="px-10 py-8 text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">{t("Actions")}</th>
+                     <th className="px-10 py-8 text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">{t("Commission")}</th>
+                     <th className="px-10 py-8 text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">{t("Actions")}</th>
                   </tr>
                </thead>
                <tbody className="divide-y divide-zinc-50">
@@ -386,13 +391,13 @@ export const SellerModeration: React.FC = () => {
                                 <img loading="lazy" src={s.logoUrl || `https://ui-avatars.com/api/?name=${s.shopName || s.displayName}&background=random`} className="w-full h-full object-cover" alt="" />
                              </div>
                              <div>
-                                <h4 className="font-black text-lg text-zinc-950 leading-none mb-1.5">{s.shopName || s.displayName}</h4>
-                                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">{s.email}</p>
+                                <h4 className="font-kinder text-lg text-zinc-950 leading-none mb-1.5">{s.shopName || s.displayName}</h4>
+                                <p className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">{s.email}</p>
                              </div>
                           </div>
                        </td>
                        <td className="px-10 py-10">
-                          <span className="text-[11px] font-black text-zinc-900 uppercase tracking-widest rtl:tracking-normal">{s.wilaya}</span>
+                          <span className="text-[11px] font-kinder text-zinc-900 uppercase tracking-widest rtl:tracking-normal">{s.wilaya}</span>
                        </td>
                        <td className="px-10 py-10">
                           <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest rtl:tracking-normal ${
@@ -405,10 +410,10 @@ export const SellerModeration: React.FC = () => {
                           </div>
                        </td>
                        <td className="px-10 py-10">
-                          <span className="text-sm font-black text-zinc-900">{s.createdAt ? new Date(s.createdAt._seconds ? s.createdAt._seconds * 1000 : s.createdAt).toLocaleDateString() : 'N/A'}</span>
+                          <span className="text-sm font-kinder text-zinc-900">{s.createdAt ? new Date(s.createdAt.seconds ? s.createdAt.seconds * 1000 : (s.createdAt as any)._seconds ? (s.createdAt as any)._seconds * 1000 : (s.createdAt.toMillis ? s.createdAt.toMillis() : Date.now())).toLocaleDateString() : 'N/A'}</span>
                        </td>
                        <td className="px-10 py-10">
-                          <span className="text-sm font-black text-zinc-950">{s.commissionRate || 10}%</span>
+                          <span className="text-sm font-kinder text-zinc-950">{s.commissionRate || 10}%</span>
                        </td>
                        <td className="px-10 py-10">
                           <button onClick={() => setSelectedSeller(s)} className="p-4 bg-zinc-100 rounded-2xl text-zinc-600 hover:bg-zinc-950 hover:text-white transition-all shadow-sm">
@@ -457,7 +462,7 @@ export const SellerModeration: React.FC = () => {
                            <img loading="lazy" src={selectedSeller.logoUrl} className="w-full h-full object-cover" alt="" />
                         </div>
                         <div>
-                           <h3 className="text-3xl font-black tracking-tight rtl:tracking-normal mb-2">{selectedSeller.shopName}</h3>
+                           <h3 className="text-3xl font-kinder tracking-tight rtl:tracking-normal mb-2">{selectedSeller.shopName}</h3>
                            <p className="text-zinc-500 font-medium">{t("Inscrit le")}{selectedSeller.createdAt ? new Date(selectedSeller.createdAt._seconds ? selectedSeller.createdAt._seconds * 1000 : selectedSeller.createdAt).toLocaleDateString() : 'N/A'}</p>
                         </div>
                      </div>
@@ -466,22 +471,22 @@ export const SellerModeration: React.FC = () => {
                         {/* Profil Artistique - Nouvelle Section */}
                         <div className="md:col-span-2 space-y-8">
                            <div className="bg-orange-50/50 rounded-[2.5rem] p-10 border border-orange-100">
-                              <h4 className="text-[10px] font-black text-orange-600 uppercase tracking-widest rtl:tracking-normal mb-6 flex items-center gap-2">
+                              <h4 className="text-[10px] font-kinder text-orange-600 uppercase tracking-widest rtl:tracking-normal mb-6 flex items-center gap-2">
                                  <Store className="w-4 h-4" /> {t("Profil Artistique & Identité")}</h4>
                               <div className="grid md:grid-cols-2 gap-6">
                                  <div className="space-y-4">
                                     <div className="flex flex-col gap-1">
-                                       <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">{t("Nom de la Marque")}</span>
-                                       <span className="text-sm font-black text-zinc-950">{selectedSeller.brandName || selectedSeller.shopName || "N/A"}</span>
+                                       <span className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">{t("Nom de la Marque")}</span>
+                                       <span className="text-sm font-kinder text-zinc-950">{selectedSeller.brandName || selectedSeller.shopName || "N/A"}</span>
                                     </div>
                                     <div className="flex flex-col gap-1">
-                                       <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">{t("Style de Design")}</span>
+                                       <span className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">{t("Style de Design")}</span>
                                        <span className="inline-flex items-center self-start px-3 py-1 bg-white border border-orange-200 rounded-full text-[10px] font-bold text-orange-800 uppercase tracking-wider rtl:tracking-normal">{selectedSeller.designStyle || "Non spécifié"}</span>
                                     </div>
                                  </div>
                                  {selectedSeller.brandStory && (
                                     <div className="flex flex-col gap-2">
-                                       <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">{t("Histoire de la Marque")}</span>
+                                       <span className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">{t("Histoire de la Marque")}</span>
                                        <p className="text-sm text-zinc-600 italic leading-relaxed whitespace-pre-wrap">{selectedSeller.brandStory}</p>
                                     </div>
                                  )}
@@ -491,33 +496,33 @@ export const SellerModeration: React.FC = () => {
 
                         <div className="space-y-8">
                            <div className="bg-zinc-50 rounded-[2.5rem] p-10 border border-zinc-100">
-                              <h4 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-6 flex items-center gap-2">
+                              <h4 className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-6 flex items-center gap-2">
                                  <FileText className="w-4 h-4" /> {t("Documents Légaux")}</h4>
                               <div className="space-y-6">
                                  <div className="flex items-center justify-between">
-                                    <span className="text-xs font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">{t("RC N°")}</span>
-                                    <span className="text-sm font-black text-zinc-950">{selectedSeller.rcNumber || "N/A"}</span>
+                                    <span className="text-xs font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">{t("RC N°")}</span>
+                                    <span className="text-sm font-kinder text-zinc-950">{selectedSeller.rcNumber || "N/A"}</span>
                                  </div>
                                  <div className="flex items-center justify-between">
-                                    <span className="text-xs font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">{t("NIF N°")}</span>
-                                    <span className="text-sm font-black text-zinc-950">{selectedSeller.nifNumber || "N/A"}</span>
+                                    <span className="text-xs font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">{t("NIF N°")}</span>
+                                    <span className="text-sm font-kinder text-zinc-950">{selectedSeller.nifNumber || "N/A"}</span>
                                  </div>
                                  <div className="space-y-4 pt-4 border-t border-zinc-200">
                                     {selectedSeller.documents?.fileRC && (
-                                       <button onClick={() => forceDownload(selectedSeller.documents.fileRC, `RC_${selectedSeller.shopName || selectedSeller.displayName}.jpg`)} className="bg-transparent border-none p-0 cursor-pointer flex items-center gap-3 text-emerald-600 font-black text-[10px] uppercase tracking-widest rtl:tracking-normal hover:translate-x-2 transition-transform">
+                                       <button onClick={() => forceDownload(selectedSeller.documents.fileRC, `RC_${selectedSeller.shopName || selectedSeller.displayName}.jpg`)} className="bg-transparent border-none p-0 cursor-pointer flex items-center gap-3 text-emerald-600 font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal hover:translate-x-2 transition-transform">
                                           <Download className="w-4 h-4" /> {t("Registre de Commerce (RC)")}</button>
                                     )}
                                     {selectedSeller.documents?.fileId && (
-                                       <button onClick={() => forceDownload(selectedSeller.documents.fileId, `ID_${selectedSeller.shopName || selectedSeller.displayName}.jpg`)} className="bg-transparent border-none p-0 cursor-pointer flex items-center gap-3 text-emerald-600 font-black text-[10px] uppercase tracking-widest rtl:tracking-normal hover:translate-x-2 transition-transform">
+                                       <button onClick={() => forceDownload(selectedSeller.documents.fileId, `ID_${selectedSeller.shopName || selectedSeller.displayName}.jpg`)} className="bg-transparent border-none p-0 cursor-pointer flex items-center gap-3 text-emerald-600 font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal hover:translate-x-2 transition-transform">
                                           <Download className="w-4 h-4" /> {t("Pièce d'Identité")}</button>
                                     )}
                                     {selectedSeller.documents?.fileRib && (
-                                       <button onClick={() => forceDownload(selectedSeller.documents.fileRib, `RIB_${selectedSeller.shopName || selectedSeller.displayName}.jpg`)} className="bg-transparent border-none p-0 cursor-pointer flex items-center gap-3 text-emerald-600 font-black text-[10px] uppercase tracking-widest rtl:tracking-normal hover:translate-x-2 transition-transform">
+                                       <button onClick={() => forceDownload(selectedSeller.documents.fileRib, `RIB_${selectedSeller.shopName || selectedSeller.displayName}.jpg`)} className="bg-transparent border-none p-0 cursor-pointer flex items-center gap-3 text-emerald-600 font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal hover:translate-x-2 transition-transform">
                                           <Download className="w-4 h-4" /> {t("Attestation RIB")}</button>
                                     )}
                                     {(!selectedSeller.documents || Object.keys(selectedSeller.documents).length === 0) && (
                                        <div className="space-y-4">
-                                          <p className="text-[10px] font-black text-red-500 uppercase tracking-widest rtl:tracking-normal">{t("Aucun document chargé")}</p>
+                                          <p className="text-[10px] font-kinder text-red-500 uppercase tracking-widest rtl:tracking-normal">{t("Aucun document chargé")}</p>
                                           <details className="mt-2 text-[8px] font-mono bg-zinc-100 p-2 rounded">
                                              <summary className="cursor-pointer text-zinc-400">{t("Voir data brute (Debug)")}</summary>
                                              <pre className="mt-1 overflow-auto max-h-40">{JSON.stringify(selectedSeller, null, 2)}</pre>
@@ -531,11 +536,11 @@ export const SellerModeration: React.FC = () => {
 
                         <div className="space-y-8">
                            <div className="bg-zinc-950 rounded-[2.5rem] p-10 text-white border border-white/10 shadow-2xl">
-                              <h4 className="text-[10px] font-black text-white uppercase tracking-widest rtl:tracking-normal mb-6 flex items-center gap-2">
+                              <h4 className="text-[10px] font-kinder text-white uppercase tracking-widest rtl:tracking-normal mb-6 flex items-center gap-2">
                                  <Landmark className="w-4 h-4" /> {t("Coordonnées Bancaires")}</h4>
                               <div className="space-y-4">
-                                 <p className="text-[10px] font-black text-white uppercase tracking-widest rtl:tracking-normal">{t("RIB / RIP ALGÉRIE")}</p>
-                                 <p className="text-2xl font-black text-white tracking-tighter rtl:tracking-normal break-all">{selectedSeller.rib || "NON FOURNI"}</p>
+                                 <p className="text-[10px] font-kinder text-white uppercase tracking-widest rtl:tracking-normal">{t("RIB / RIP ALGÉRIE")}</p>
+                                 <p className="text-2xl font-kinder text-white tracking-tighter rtl:tracking-normal break-all">{selectedSeller.rib || "NON FOURNI"}</p>
                               </div>
                            </div>
                         </div>
@@ -546,7 +551,7 @@ export const SellerModeration: React.FC = () => {
                   <div className="w-full md:w-96 bg-zinc-50 p-12 flex flex-col justify-between border-l border-zinc-100">
                      <div className="space-y-10">
                         <div>
-                           <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-4">{t("Statut Actuel")}</p>
+                           <p className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-4">{t("Statut Actuel")}</p>
                            <h5 className={`text-2xl font-black uppercase tracking-tighter rtl:tracking-normal ${
                               selectedSeller.status === 'active' ? 'text-emerald-500' : 'text-amber-500'
                            }`}>
@@ -555,42 +560,42 @@ export const SellerModeration: React.FC = () => {
                         </div>
 
                         <div className="space-y-4">
-                           <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2">{t("Actions de Modération")}</p>
+                           <p className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2">{t("Actions de Modération")}</p>
                            
                            {/* Plannifier Entretien Meet */}
                            <button 
                              onClick={() => handleScheduleMeet(selectedSeller.id, selectedSeller.email)} 
-                             className="w-full bg-blue-600 text-white py-5 rounded-[2rem] font-black uppercase tracking-widest rtl:tracking-normal text-[11px] shadow-xl shadow-blue-500/20 active:scale-95 transition-all flex items-center justify-center gap-3"
+                             className="w-full bg-blue-600 text-white py-5 rounded-[2rem] font-kinder uppercase tracking-widest rtl:tracking-normal text-[11px] shadow-xl shadow-blue-500/20 active:scale-95 transition-all flex items-center justify-center gap-3"
                            >
                               <Video className="w-5 h-5" /> {t("Planifier Meet (Vérif.)")}
                            </button>
 
                            <button 
                              onClick={() => handleUpdateStatus(selectedSeller.id, 'active')} 
-                             className="w-full bg-emerald-500 text-white py-5 rounded-[2rem] font-black uppercase tracking-widest rtl:tracking-normal text-[11px] shadow-xl shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-3"
+                             className="w-full bg-emerald-500 text-white py-5 rounded-[2rem] font-kinder uppercase tracking-widest rtl:tracking-normal text-[11px] shadow-xl shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-3"
                            >
                               <ShieldCheck className="w-5 h-5" /> {t("Valider le partenaire")}</button>
                            <button 
                              onClick={() => setRejectModalOpen(true)} 
-                             className="w-full bg-white text-red-600 border border-red-100 py-5 rounded-[2rem] font-black uppercase tracking-widest rtl:tracking-normal text-[11px] shadow-xl shadow-red-500/5 active:scale-95 transition-all flex items-center justify-center gap-3"
+                             className="w-full bg-white text-red-600 border border-red-100 py-5 rounded-[2rem] font-kinder uppercase tracking-widest rtl:tracking-normal text-[11px] shadow-xl shadow-red-500/5 active:scale-95 transition-all flex items-center justify-center gap-3"
                            >
                               <XCircle className="w-5 h-5" /> {t("Rejeter Dossier")}</button>
                            <button 
                              onClick={() => handleUpdateStatus(selectedSeller.id, 'suspended')} 
-                             className="w-full bg-zinc-950 text-white py-5 rounded-[2rem] font-black uppercase tracking-widest rtl:tracking-normal text-[11px] shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3"
+                             className="w-full bg-zinc-950 text-white py-5 rounded-[2rem] font-kinder uppercase tracking-widest rtl:tracking-normal text-[11px] shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3"
                            >
                               <ShieldOff className="w-5 h-5" /> {t("Suspendre Compte")}</button>
                         </div>
                      </div>
 
-                     <button onClick={() => { setSelectedSeller(null); setRejectModalOpen(false); }} className="mt-12 text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal hover:text-zinc-950 transition-colors cursor-pointer border-none bg-transparent">
+                     <button onClick={() => { setSelectedSeller(null); setRejectModalOpen(false); }} className="mt-12 text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal hover:text-zinc-950 transition-colors cursor-pointer border-none bg-transparent">
                         {t("Fermer le Panel")}</button>
                   </div>
                </motion.div>
 
                {rejectModalOpen && (
                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="absolute z-50 bg-white w-full max-w-lg rounded-[2rem] p-8 shadow-2xl">
-                   <h4 className="text-xl font-black text-zinc-950 flex items-center gap-2 mb-6">
+                   <h4 className="text-xl font-kinder text-zinc-950 flex items-center gap-2 mb-6">
                       <XCircle className="w-6 h-6 text-red-500" /> {t("Raison du Rejet")}</h4>
                    <div className="space-y-4 mb-6">
                      {[t("Document illisible"), t("Extrait RC expiré"), t("NIF incorrect"), t("Autre")].map(reason => (
@@ -605,8 +610,8 @@ export const SellerModeration: React.FC = () => {
                    </div>
                    <textarea placeholder={t("Commentaire optionnel pour le vendeur...") || "Commentaire optionnel pour le vendeur..."} value={rejectComment} onChange={e => setRejectComment(e.target.value)} className="w-full bg-zinc-50 border border-zinc-100 rounded-2xl p-4 font-bold text-sm outline-none resize-none mb-6" rows={3}></textarea>
                    <div className="flex items-center gap-4">
-                     <button onClick={() => handleUpdateStatus(selectedSeller.id, 'rejected')} className="flex-1 bg-red-600 text-white py-4 rounded-xl font-black text-[11px] uppercase tracking-widest rtl:tracking-normal shadow-xl shadow-red-500/20">{t("Confirmer Rejet")}</button>
-                     <button onClick={() => setRejectModalOpen(false)} className="px-6 py-4 bg-zinc-100 text-zinc-600 rounded-xl font-black text-[11px] uppercase tracking-widest rtl:tracking-normal">{t("Annuler")}</button>
+                     <button onClick={() => handleUpdateStatus(selectedSeller.id, 'rejected')} className="flex-1 bg-red-600 text-white py-4 rounded-xl font-kinder text-[11px] uppercase tracking-widest rtl:tracking-normal shadow-xl shadow-red-500/20">{t("Confirmer Rejet")}</button>
+                     <button onClick={() => setRejectModalOpen(false)} className="px-6 py-4 bg-zinc-100 text-zinc-600 rounded-xl font-kinder text-[11px] uppercase tracking-widest rtl:tracking-normal">{t("Annuler")}</button>
                    </div>
                  </motion.div>
                )}

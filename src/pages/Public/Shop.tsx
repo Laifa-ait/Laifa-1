@@ -338,7 +338,7 @@ export const Shop: React.FC = () => {
   }, [urlCategory, activeCategory, urlSubcategory]);
 
   return (
-    <div className="bg-[#faf8f5] min-h-screen pb-32">
+    <div className="bg-[#FDF9EC] min-h-screen pb-32">
       <Helmet>
         <title>{pageTitle}</title>
         <meta name="description" content={pageDescription} />
@@ -348,19 +348,20 @@ export const Shop: React.FC = () => {
         <meta property="og:description" content={pageDescription} />
       </Helmet>
       {/* Header / Search: White-Lit Premium Architecture */}
-      <div className="bg-[#FAF8F5] border-b border-[#EBE5DF]/30 pt-20 sm:pt-24 lg:pt-32 pb-8 sm:pb-10 px-4 sm:px-6">
+      <div className="bg-[#FDF9EC] border-b-[3px] border-[#FF5C00]/20 pt-20 sm:pt-24 lg:pt-32 pb-8 sm:pb-10 px-4 sm:px-6 relative shadow-sm">
+         <div className="absolute top-0 inset-x-0 h-1 bg-[#FF5C00] z-10" />
          <div className="max-w-[1850px] mx-auto space-y-6">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                <div className="space-y-1">
                  {/* Breadcrumbs */}
-                 <nav className="flex items-center gap-1.5 text-[9px] font-bold text-[#121315]/40 uppercase tracking-widest rtl:tracking-normal flex-wrap">
-                    <span className="cursor-pointer hover:text-[#121315]" onClick={() => navigate('/')}>{t('shop_home_breadcrumb', 'Accueil')}</span>
+                 <nav className="flex items-center gap-1.5 text-[9px] font-bold text-[#3C2B22]/60 uppercase tracking-widest rtl:tracking-normal flex-wrap">
+                    <span className="cursor-pointer hover:text-[#3C2B22]" onClick={() => navigate('/')}>{t('shop_home_breadcrumb', 'Accueil')}</span>
                     <span>/</span>
-                    <span className="cursor-pointer hover:text-[#121315]" onClick={() => { setActiveCategory("Tous"); setSearchParams({}); }}>{t('shop_breadcrumb', 'Boutique')}</span>
+                    <span className="cursor-pointer hover:text-[#3C2B22]" onClick={() => { setActiveCategory("Tous"); setSearchParams({}); }}>{t('shop_breadcrumb', 'Boutique')}</span>
                     {activeCategory && activeCategory !== "Tous" && (
                       <>
                         <span>/</span>
-                        <span className={urlSubcategory ? "cursor-pointer hover:text-[#121315]" : "text-[#121315]"} onClick={() => { setSearchParams({ category: activeCategory }); }}>
+                        <span className={urlSubcategory ? "cursor-pointer hover:text-[#3C2B22]" : "text-[#3C2B22]"} onClick={() => { setSearchParams({ category: activeCategory }); }}>
                           {getCategoryTranslation(activeCategory, t)}
                         </span>
                       </>
@@ -368,7 +369,7 @@ export const Shop: React.FC = () => {
                     {urlSubcategory && (
                       <>
                         <span>/</span>
-                        <span className={urlSubsubcategory ? "cursor-pointer hover:text-[#121315]" : "text-[#121315]"} onClick={() => { setSearchParams({ category: activeCategory, subcategory: urlSubcategory }); }}>
+                        <span className={urlSubsubcategory ? "cursor-pointer hover:text-[#3C2B22]" : "text-[#3C2B22]"} onClick={() => { setSearchParams({ category: activeCategory, subcategory: urlSubcategory }); }}>
                           {getCategoryTranslation(urlSubcategory, t)}
                         </span>
                       </>
@@ -376,29 +377,29 @@ export const Shop: React.FC = () => {
                     {urlSubsubcategory && (
                       <>
                         <span>/</span>
-                        <span className="text-[#121315]">{getCategoryTranslation(urlSubsubcategory, t)}</span>
+                        <span className="text-[#3C2B22]">{getCategoryTranslation(urlSubsubcategory, t)}</span>
                       </>
                     )}
                  </nav>
 
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight rtl:tracking-normal text-[#121315] uppercase">
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-kinder tracking-tight rtl:tracking-normal text-[#3C2B22] uppercase drop-shadow-sm">
                     {urlTag ? `Tag: ${urlTag}` : (urlSubsubcategory ? getCategoryTranslation(urlSubsubcategory, t) : urlSubcategory ? getCategoryTranslation(urlSubcategory, t) : activeCategory === "Tous" ? t("shop_collections", "Collections") : getCategoryTranslation(activeCategory, t))}
                   </h1>
-                  <p className="text-stone-400 font-bold text-[10px] uppercase tracking-widest rtl:tracking-normal">{t('shop_explore_treasures', "Explorez les trésors uniques des 58 Wilayas d'Algérie.")}</p>
+                  <p className="text-[#3C2B22]/60 font-bold text-[10px] uppercase tracking-widest rtl:tracking-normal">{t('shop_explore_treasures', "Explorez les trésors uniques des 58 Wilayas d'Algérie.")}</p>
                </div>
 
                {/* Right side: Modern Unified Compact Actions */}
-               <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full lg:max-w-xl shrink-0">
+               <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:max-w-xl shrink-0">
                   <div className="relative w-full">
-                     <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#121315]/40 pointer-events-none" />
+                     <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#3C2B22]/40 pointer-events-none" />
                      <button 
                        onClick={() => setIsSearchOpen(true)}
-                       className="w-full bg-white border border-[#EBE5DF]/60 rounded-full ps-11 pe-4 py-3 text-xs font-bold text-left rtl:text-right text-stone-400 hover:border-[#F37021] hover:ring-1 hover:ring-[#F37021]/25 transition-all shadow-xs hover:shadow-md cursor-pointer"
+                       className="w-full bg-white border-2 border-white rounded-full ps-11 pe-4 py-3 text-xs font-bold text-left rtl:text-right text-[#3C2B22]/60 hover:border-[#FF5C00]/40 transition-all shadow-sm hover:shadow-md cursor-pointer"
                      >
                        {searchQuery || t('search_placeholder_olma', 'Rechercher une création Olma...')}
                      </button>
                      {searchQuery && (
-                       <button onClick={(e) => { e.stopPropagation(); setSearchQuery(""); }} className="absolute end-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-[#F37021] cursor-pointer" title={t("Effacer la recherche") || "Effacer la recherche"}>
+                       <button onClick={(e) => { e.stopPropagation(); setSearchQuery(""); }} className="absolute end-4 top-1/2 -translate-y-1/2 text-[#3C2B22]/40 hover:text-[#FF5C00] cursor-pointer" title={t("Effacer la recherche") || "Effacer la recherche"}>
                          <X className="w-3.5 h-3.5" />
                        </button>
                      )}
@@ -407,23 +408,23 @@ export const Shop: React.FC = () => {
 
                   <button 
                     onClick={() => setShowFilters(!showFilters)} 
-                    className="w-full sm:w-auto px-6 py-3 rounded-full bg-[#121315] hover:bg-[#F37021] text-white font-black text-[10px] uppercase tracking-widest rtl:tracking-normal flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:scale-[0.98] shrink-0"
+                    className="w-full sm:w-auto px-6 py-3 rounded-full bg-[#3C2B22] hover:bg-[#FF5C00] text-white font-kinder text-sm uppercase tracking-widest rtl:tracking-normal flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md active:scale-95 shrink-0"
                   >
-                     <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />
+                     <SlidersHorizontal className="w-4 h-4 shrink-0" />
                      <span>{t("filter_filters", "Filtres")}</span>
                   </button>
                </div>
             </div>
 
             {/* Unified Control Box: Double-Decker categories & express tags */}
-            <div className="bg-white border border-[#EBE5DF]/55 rounded-2xl p-4 sm:p-5 shadow-xs space-y-4">
+            <div className="bg-[#FDF9EC] border-4 border-white rounded-[2rem] p-4 sm:p-6 shadow-sm space-y-4">
                {/* Deck 1: Main Categories */}
                <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                     <span className="text-[9px] font-black uppercase text-stone-400 tracking-wider rtl:tracking-normal flex items-center gap-1.5 h-6">
+                     <span className="text-[10px] font-bold uppercase text-[#3C2B22]/60 tracking-wider flex items-center gap-2 h-6">
                         <span>{t('nav_categories', 'Catégories')}</span>
-                        <span className="text-stone-300">•</span>
-                        <span className="text-[#121315] font-extrabold bg-[#121315]/5 px-2 py-0.5 rounded-md text-[10px]">
+                        <span className="text-[#3C2B22]/30">•</span>
+                        <span className="text-[#3C2B22] font-kinder bg-white px-3 py-0.5 rounded-full text-[11px] border border-white shadow-sm">
                            {getCategoryTranslation(activeCategory, t)}
                         </span>
                      </span>
@@ -442,21 +443,21 @@ export const Shop: React.FC = () => {
                              setActiveCategory(cat);
                              setSearchParams({});
                            }}
-                           className={`group relative w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 shrink-0 select-none cursor-pointer border hover:-translate-y-1 active:translate-y-0 active:scale-[0.98] ${
+                           className={`group relative w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 shrink-0 select-none cursor-pointer border-2 hover:-translate-y-1 active:translate-y-0 active:scale-95 ${
                              isSelected 
-                               ? 'text-white border-transparent bg-[#F37021] shadow-md shadow-[#F37021]/25 ring-2 ring-transparent hover:ring-[#F37021]/10' 
-                               : 'bg-white text-stone-600 border-[#EBE5DF]/55 hover:border-[#121315]/30 hover:bg-[#FAF8F5]/80 hover:text-[#121315]'
+                               ? 'text-white border-transparent bg-[#FF5C00] shadow-md' 
+                               : 'bg-white text-[#3C2B22] border-white hover:border-[#FF5C00]/30 shadow-sm'
                            }`}
                          >
                             {isSelected && (
                               <motion.div 
                                 layoutId="activeCategoryCircleShop" 
-                                className="absolute inset-0 bg-[#F37021] rounded-full -z-10" 
+                                className="absolute inset-0 bg-[#FF5C00] rounded-full -z-10" 
                                 transition={{ type: "spring", stiffness: 380, damping: 30 }}
                               />
                             )}
                             {IconComponent && (
-                              <IconComponent className={`w-5 h-5 transition-transform duration-300 group-hover:scale-115 ${isSelected ? 'text-white' : 'text-[#F37021]'}`} />
+                              <IconComponent className={`w-5 h-5 transition-transform duration-300 group-hover:scale-115 ${isSelected ? 'text-white' : 'text-[#FF5C00]'}`} />
                             )}
                          </button>
                        );
@@ -485,54 +486,54 @@ export const Shop: React.FC = () => {
          {/* Products Grid */}
          <main className="flex-1">
             {/* Elegant Results & Sorter Toolbar */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#EBE5DF]/35 pb-5 mb-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b-[3px] border-[#FF5C00]/20 pb-5 mb-8">
                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                  <span className="text-[10px] font-black text-[#121315] uppercase tracking-widest rtl:tracking-normal">{filteredProducts.length} {t('articles_found', 'ARTICLES TROUVÉS')}</span>
-                  <div className="hidden sm:block w-1 h-4 bg-[#EBE5DF]/55" />
+                  <span className="text-[10px] font-bold text-[#3C2B22] uppercase tracking-widest rtl:tracking-normal bg-white px-3 py-1 rounded-full border border-white shadow-sm">{filteredProducts.length} {t('articles_found', 'ARTICLES TROUVÉS')}</span>
+                  <div className="hidden sm:block w-1.5 h-1.5 rounded-full bg-[#FF5C00]/60" />
                   
                   {/* Dynamic Active Badges aligned neatly within summary */}
                   <div className="flex flex-wrap gap-1.5">
                      {(activeCategory !== "Tous" || activeWilaya !== "Tous" || searchQuery || urlSubcategory || urlSubsubcategory || urlTag) ? (
                         <>
                            {activeCategory !== "Tous" && !urlSubcategory && !urlSubsubcategory && !urlTag && (
-                              <span className="inline-flex items-center gap-1 bg-[#121315]/5 text-[#121315] px-2.5 py-1 rounded-full text-[9px] font-bold border border-[#EBE5DF]/20">
+                              <span className="inline-flex items-center gap-1 bg-[#FDF9EC] text-[#3C2B22] px-3 py-1 rounded-full text-[10px] font-bold border-2 border-white shadow-sm">
                                  {getCategoryTranslation(activeCategory, t)}
                                  <button onClick={() => {setActiveCategory("Tous"); setSearchParams({});}} className="hover:text-red-500 ml-1 cursor-pointer"><X className="w-2.5 h-2.5"/></button>
                               </span>
                            )}
                            {urlSubcategory && !urlSubsubcategory && (
-                              <span className="inline-flex items-center gap-1 bg-[#121315]/5 text-[#121315] px-2.5 py-1 rounded-full text-[9px] font-bold border border-[#EBE5DF]/20">
+                              <span className="inline-flex items-center gap-1 bg-[#FDF9EC] text-[#3C2B22] px-3 py-1 rounded-full text-[10px] font-bold border-2 border-white shadow-sm">
                                  {getCategoryTranslation(urlSubcategory, t)}
                                  <button onClick={() => setSearchParams({ category: activeCategory })} className="hover:text-red-500 ml-1 cursor-pointer"><X className="w-2.5 h-2.5"/></button>
                               </span>
                            )}
                            {urlSubsubcategory && (
-                              <span className="inline-flex items-center gap-1 bg-[#121315]/5 text-[#121315] px-2.5 py-1 rounded-full text-[9px] font-bold border border-[#EBE5DF]/20">
+                              <span className="inline-flex items-center gap-1 bg-[#FDF9EC] text-[#3C2B22] px-3 py-1 rounded-full text-[10px] font-bold border-2 border-white shadow-sm">
                                  {getCategoryTranslation(urlSubsubcategory, t)}
                                  <button onClick={() => setSearchParams({ category: activeCategory, subcategory: urlSubcategory! })} className="hover:text-red-500 ml-1 cursor-pointer"><X className="w-2.5 h-2.5"/></button>
                               </span>
                            )}
                            {urlTag && (
-                              <span className="inline-flex items-center gap-1 bg-[#121315]/5 text-[#121315] px-2.5 py-1 rounded-full text-[9px] font-bold border border-[#EBE5DF]/20">
+                              <span className="inline-flex items-center gap-1 bg-[#FDF9EC] text-[#3C2B22] px-3 py-1 rounded-full text-[10px] font-bold border-2 border-white shadow-sm">
                                  #{urlTag}
                                  <button onClick={() => setSearchParams({})} className="hover:text-red-500 ml-1 cursor-pointer"><X className="w-2.5 h-2.5"/></button>
                               </span>
                            )}
                            {activeWilaya !== "Tous" && (
-                              <span className="inline-flex items-center gap-1 bg-[#121315]/5 text-[#121315] px-2.5 py-1 rounded-full text-[9px] font-bold border border-[#EBE5DF]/20">
+                              <span className="inline-flex items-center gap-1 bg-[#FDF9EC] text-[#3C2B22] px-3 py-1 rounded-full text-[10px] font-bold border-2 border-white shadow-sm">
                                  {t("Wilaya:")}{activeWilaya}
                                  <button onClick={() => setActiveWilaya("Tous")} className="hover:text-red-500 ml-1 cursor-pointer"><X className="w-2.5 h-2.5"/></button>
                               </span>
                            )}
                            {searchQuery && (
-                              <span className="inline-flex items-center gap-1 bg-[#121315]/5 text-[#121315] px-2.5 py-1 rounded-full text-[9px] font-bold border border-[#EBE5DF]/20">
+                              <span className="inline-flex items-center gap-1 bg-[#FDF9EC] text-[#3C2B22] px-3 py-1 rounded-full text-[10px] font-bold border-2 border-white shadow-sm">
                                  {t("Recherche: \"")}{searchQuery}"
                                  <button onClick={() => setSearchQuery("")} className="hover:text-red-500 ml-1 cursor-pointer"><X className="w-2.5 h-2.5"/></button>
                               </span>
                            )}
                         </>
                      ) : (
-                        <span className="text-[9px] text-stone-400 font-bold uppercase tracking-wider rtl:tracking-normal">{t('all_catalog', 'Tout le catalogue')}</span>
+                        <span className="text-[9px] text-[#3C2B22]/60 font-bold uppercase tracking-wider">{t('all_catalog', 'Tout le catalogue')}</span>
                      )}
                   </div>
                </div>
@@ -541,7 +542,7 @@ export const Shop: React.FC = () => {
                   {/* Sorting dropdown integrated cleanly */}
                   <div className="relative font-sans min-w-[170px]">
                      <select 
-                       className="w-full pl-3 pr-8 py-2 bg-white border border-[#EBE5DF]/55 hover:border-[#121315]/30 rounded-full outline-none font-bold text-[10.5px] uppercase appearance-none cursor-pointer text-[#121315] transition-all"
+                       className="w-full pl-4 pr-10 py-2.5 bg-white border-2 border-white hover:border-[#FF5C00]/30 rounded-full outline-none font-bold text-[11px] uppercase appearance-none cursor-pointer text-[#3C2B22] shadow-sm transition-all"
                        value={sortOption}
                        onChange={(e) => setSortOption(e.target.value)}
                      >
@@ -550,12 +551,12 @@ export const Shop: React.FC = () => {
                         <option value="price-asc">{t('price_asc', 'Prix Croissant')}</option>
                         <option value="price-desc">{t('price_desc', 'Prix Décroissant')}</option>
                      </select>
-                     <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#F37021] pointer-events-none" />
+                     <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#FF5C00] pointer-events-none" />
                   </div>
 
-                  <div className="flex gap-1.5">
-                     <button className="w-8 h-8 rounded-full bg-zinc-950 text-white flex items-center justify-center transition-all"><Grid className="w-4 h-4" /></button>
-                     <button className="w-8 h-8 rounded-full bg-white text-zinc-450 hover:text-[#121315] border border-[#EBE5DF]/40 flex items-center justify-center transition-all"><List className="w-4 h-4" /></button>
+                  <div className="flex gap-2">
+                     <button className="w-10 h-10 rounded-full bg-[#3C2B22] text-white flex items-center justify-center shadow-md"><Grid className="w-4 h-4" /></button>
+                     <button className="w-10 h-10 rounded-full bg-white text-[#3C2B22]/60 hover:text-[#3C2B22] hover:bg-[#FDF9EC] border-2 border-white flex items-center justify-center shadow-sm transition-all"><List className="w-4 h-4" /></button>
                   </div>
                </div>
             </div>
@@ -571,7 +572,7 @@ export const Shop: React.FC = () => {
                   <div className="w-24 h-24 bg-red-50 rounded-[2rem] border border-red-100 flex items-center justify-center text-red-500">
                      <SlidersHorizontal className="w-10 h-10" />
                   </div>
-                  <h3 className="text-2xl font-black text-zinc-900">{t('filters_not_applicable', 'Filtres non applicables')}</h3>
+                  <h3 className="text-2xl font-kinder text-zinc-900">{t('filters_not_applicable', 'Filtres non applicables')}</h3>
                   <p className="text-zinc-500 max-w-md font-medium">
                      {t('filters_not_applicable_desc', 'Nous rencontrons des difficultés à appliquer ces filtres précis (Index manquant). Le reste du catalogue est accessible.')}
                   </p>
@@ -579,12 +580,12 @@ export const Shop: React.FC = () => {
                     <div className="mt-4 p-5 bg-orange-50 border border-orange-200 rounded-xl text-left w-full max-w-lg">
                       <p className="text-xs font-bold text-orange-800 mb-2 uppercase tracking-wide">{t("⚠️ Action Requise (Dev Only)")}</p>
                       <p className="text-sm text-orange-900 mb-4">{t("Un index composite Firestore est requis pour cette combinaison de filtres et de tris.")}</p>
-                      <a href={queryError.indexLink} target="_blank" rel="noreferrer" className="inline-block bg-orange-600 hover:bg-orange-700 text-white px-5 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest rtl:tracking-normal transition-colors">{t("Créer l'index Firestore")}</a>
+                      <a href={queryError.indexLink} target="_blank" rel="noreferrer" className="inline-block bg-orange-600 hover:bg-orange-700 text-white px-5 py-3 rounded-xl text-[11px] font-kinder uppercase tracking-widest rtl:tracking-normal transition-colors">{t("Créer l'index Firestore")}</a>
                     </div>
                   )}
                   <button 
                     onClick={() => { setActiveCategory("Tous"); setActiveWilaya("Tous"); setSortOption("recent"); setSearchQuery(""); setSearchParams({}); }}
-                    className="px-8 py-4 bg-zinc-950 hover:bg-zinc-800 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest rtl:tracking-normal mt-4 transition-colors"
+                    className="px-8 py-4 bg-zinc-950 hover:bg-zinc-800 text-white rounded-2xl font-kinder text-[11px] uppercase tracking-widest rtl:tracking-normal mt-4 transition-colors"
                   >
                      {t('clear_filters', 'Effacer les filtres')}
                   </button>
@@ -601,19 +602,19 @@ export const Shop: React.FC = () => {
                   
                   {/* Infinite Scroll / Load More */}
                   {lastVisible && !searchQuery && (
-                     <div ref={products.length < 36 ? loaderRef : undefined} className="flex justify-center pt-8 border-t border-zinc-100 min-h-[100px] items-center">
+                     <div ref={products.length < 36 ? loaderRef : undefined} className="flex justify-center pt-8 border-t-[3px] border-[#FF5C00]/20 min-h-[100px] items-center">
                         {loadingMore ? (
                            <div className="flex gap-2">
-                             <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                             <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                             <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce"></div>
+                             <div className="w-2.5 h-2.5 bg-[#FF5C00] rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                             <div className="w-2.5 h-2.5 bg-[#FF5C00] rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                             <div className="w-2.5 h-2.5 bg-[#FF5C00] rounded-full animate-bounce"></div>
                            </div>
                         ) : products.length >= 36 ? (
-                           <button onClick={loadMoreProducts} className="border-2 border-[#121315]/20 text-[#121315] rounded-full px-8 py-3 hover:bg-[#121315] hover:text-white transition-all font-bold uppercase tracking-widest rtl:tracking-normal text-[10px]">
+                           <button onClick={loadMoreProducts} className="border-2 border-white bg-[#FDF9EC] text-[#3C2B22] rounded-full px-8 py-3 hover:bg-[#FF5C00] hover:text-white transition-all font-kinder uppercase tracking-widest text-[11px] shadow-sm">
                               {t('discover_more_articles', "Découvrir plus d'articles")}
                            </button>
                         ) : (
-                           <span className="text-xs font-bold text-zinc-300 uppercase tracking-widest rtl:tracking-normal">{t('scroll_to_see_more', 'Faites défiler pour voir plus')}</span>
+                           <span className="text-xs font-bold text-[#3C2B22]/40 uppercase tracking-widest rtl:tracking-normal">{t('scroll_to_see_more', 'Faites défiler pour voir plus')}</span>
                         )}
                      </div>
                   )}
@@ -621,19 +622,19 @@ export const Shop: React.FC = () => {
             ) : (
                 <div className="py-12 space-y-10 w-full">
                    {/* Warm alert banner */}
-                   <div className="bg-amber-50/60 border border-amber-200/60 rounded-[2.5rem] p-6 sm:p-8 text-left space-y-3 flex flex-col relative overflow-hidden backdrop-blur-md">
-                      <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[#F37021]/5 rounded-full blur-[80px] pointer-events-none" />
-                      <span className="text-[10px] font-black uppercase text-[#F37021] tracking-[0.15em]">{t('friction_economy_recommendations', 'Économie de friction & Recommandations')}</span>
-                      <h3 className="font-extrabold text-[#121315] text-lg uppercase">{t('no_exact_creation_available', 'Aucune création exacte disponible')}</h3>
-                      <p className="text-xs sm:text-sm font-medium text-stone-600 leading-relaxed max-w-3xl">
-                         {t('dear_customer_no_exact_match', "Chère cliente, cher client, il n'y a pas d'article exact correspondant à vos critères de recherche ou de filtre actuels. Nous avons élargi la sélection pour vous proposer d'autres inspirations d'exception de la catégorie")} <span className="font-bold">"{activeCategory}"</span> :
+                   <div className="bg-[#FDF9EC] border-4 border-white shadow-sm rounded-[3rem] p-6 sm:p-8 text-left space-y-3 flex flex-col relative overflow-hidden backdrop-blur-md">
+                      <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[#FF5C00]/5 rounded-full blur-[80px] pointer-events-none" />
+                      <span className="text-[10px] font-bold uppercase text-[#FF5C00] tracking-widest">{t('friction_economy_recommendations', 'Économie de friction & Recommandations')}</span>
+                      <h3 className="font-kinder text-[#3C2B22] text-xl uppercase">{t('no_exact_creation_available', 'Aucune création exacte disponible')}</h3>
+                      <p className="text-xs sm:text-sm font-bold text-[#3C2B22]/70 leading-relaxed max-w-3xl">
+                         {t('dear_customer_no_exact_match', "Chère cliente, cher client, il n'y a pas d'article exact correspondant à vos critères de recherche ou de filtre actuels. Nous avons élargi la sélection pour vous proposer d'autres inspirations d'exception de la catégorie")} <span className="font-kinder text-[#FF5C00]">"{activeCategory}"</span> :
                       </p>
                    </div>
 
                    {/* Fallback Grid Content */}
                    {products.length > 0 ? (
                       <div className="space-y-6">
-                         <h4 className="text-xs font-black uppercase tracking-widest rtl:tracking-normal text-[#121315] border-b border-[#EBE5DF]/30 pb-3">{t('no_exact_match_but_bestsellers', "Nous n'avons pas de correspondance exacte, mais vous allez adorer ces best-sellers")}</h4>
+                         <h4 className="text-xs font-bold uppercase tracking-widest rtl:tracking-normal text-[#3C2B22]/60 border-b-[3px] border-[#FF5C00]/20 pb-3">{t('no_exact_match_but_bestsellers', "Nous n'avons pas de correspondance exacte, mais vous allez adorer ces best-sellers")}</h4>
                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-6 md:gap-8">
                             {products.slice(0, 12).map((product, i) => (
                               <ProductCard key={product.id} product={product} index={i} />
@@ -641,7 +642,7 @@ export const Shop: React.FC = () => {
                          </div>
                       </div>
                    ) : (
-                      <div className="text-center py-10 font-bold text-[#121315]">
+                      <div className="text-center py-10 font-kinder text-[#3C2B22]">
                          {t('no_products_listed', "Aucun produit n'est répertorié pour le moment dans cette catégorie.")}
                       </div>
                    )}

@@ -60,32 +60,37 @@ export const Overview: React.FC = () => {
     };
 
     const fetchData = async () => {
-      // 1. Aggregations (No full document fetch)
+      // 1. Fetch products simply (single-field filter, no index issues)
       const pQ = query(collection(db, "products"), where("sellerId", "==", currentUser.uid));
-      const oQ = query(collection(db, "orders"), where("sellerIds", "array-contains", currentUser.uid));
-      const returnQ = query(collection(db, "orders"), where("sellerIds", "array-contains", currentUser.uid), where("status", "==", "RETURN_REQUESTED"));
-      
-      const productCountSnap = await safeFetch(() => getCountFromServer(pQ), { data: () => ({ count: 0 }) } as any);
-      const orderCountSnap = await safeFetch(() => getCountFromServer(oQ), { data: () => ({ count: 0 }) } as any);
-      const returnSnap = await safeFetch(() => getCountFromServer(returnQ), { data: () => ({ count: 0 }) } as any);
+      const productsSnap = await safeFetch(() => getDocs(pQ), { docs: [] } as any);
+      const productCount = productsSnap.docs.length;
 
-      // Global Sales All Time
-      const salesAggSnap = await safeFetch(() => getAggregateFromServer(oQ, { totalSales: sum('total') }), { data: () => ({ totalSales: 0 }) } as any);
+      // 2. Fetch orders simply (single-field filter, no index issues)
+      const oQ = query(collection(db, "orders"), where("sellerIds", "array-contains", currentUser.uid), limit(250));
+      const ordersSnap = await safeFetch(() => getDocs(oQ), { docs: [] } as any);
+      const allOrders = ordersSnap.docs.map((d: any) => ({ id: d.id, ...d.data() })) as any[];
 
-      // 2. Out of stock alert
-      const outOfStockQ = query(collection(db, "products"), where("sellerId", "==", currentUser.uid), where("stock", "<=", 0), limit(100));
-      const outOfStockVariantsQ = query(collection(db, "products"), where("sellerId", "==", currentUser.uid), where("hasOutOfStockVariants", "==", true), limit(100));
-      
-      const outOfStockSnap = await safeFetch(() => getDocs(outOfStockQ), { docs: [] } as any);
-      const outOfStockVariantsSnap = await safeFetch(() => getDocs(outOfStockVariantsQ), { docs: [] } as any);
+      // Count out of stock in memory
+      let outOfStock = 0;
+      productsSnap.docs.forEach((doc: any) => {
+        const p = doc.data();
+        if ((p.stock !== undefined && p.stock <= 0) || p.hasOutOfStockVariants === true) {
+          outOfStock++;
+        }
+      });
+      if (!cancelled) setOutOfStockCount(outOfStock);
 
-      const outOfStockProductIds = new Set<string>();
-      outOfStockSnap.docs.forEach((d: any) => outOfStockProductIds.add(d.id));
-      outOfStockVariantsSnap.docs.forEach((d: any) => outOfStockProductIds.add(d.id));
+      // Compute Global Stats In Memory
+      let totalSales = 0;
+      let pendingReturns = 0;
+      allOrders.forEach((o: any) => {
+        totalSales += (o.total || 0);
+        if (o.status === "RETURN_REQUESTED") {
+          pendingReturns++;
+        }
+      });
 
-      if (!cancelled) setOutOfStockCount(outOfStockProductIds.size);
-
-      // 3. True Growth and Sales Calculation
+      // 3. True Growth and Sales Calculation from the retrieved list of orders
       const now = new Date();
       
       // This Week
@@ -96,23 +101,25 @@ export const Overview: React.FC = () => {
       // Last Week
       const startOfLastWeek = new Date(startOfWeek);
       startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
-      const endOfLastWeek = new Date(startOfWeek);
-      endOfLastWeek.setMilliseconds(-1);
-
-      const thisWeekQ = query(collection(db, "orders"), where("sellerIds", "array-contains", currentUser.uid), where("createdAt", ">=", startOfWeek));
-      const lastWeekQ = query(collection(db, "orders"), where("sellerIds", "array-contains", currentUser.uid), where("createdAt", ">=", startOfLastWeek), where("createdAt", "<", startOfWeek));
-      
-      const thisWeekSnap = await safeFetch(() => getDocs(thisWeekQ), { docs: [] } as any);
-      const lastWeekSnap = await safeFetch(() => getDocs(lastWeekQ), { docs: [] } as any);
-      
-      const thisWeekOrders = thisWeekSnap.docs.map((d: any) => d.data());
-      const lastWeekOrders = lastWeekSnap.docs.map((d: any) => d.data());
       
       let currentWeekTotal = 0;
-      thisWeekOrders.forEach((o: any) => currentWeekTotal += (o.total || 0));
-
       let lastWeekTotal = 0;
-      lastWeekOrders.forEach((o: any) => lastWeekTotal += (o.total || 0));
+
+      const thisWeekOrders: any[] = [];
+      const lastWeekOrders: any[] = [];
+
+      allOrders.forEach((o: any) => {
+        if (o.createdAt) {
+          const createdDate = o.createdAt.toDate();
+          if (createdDate >= startOfWeek) {
+            currentWeekTotal += (o.total || 0);
+            thisWeekOrders.push(o);
+          } else if (createdDate >= startOfLastWeek && createdDate < startOfWeek) {
+            lastWeekTotal += (o.total || 0);
+            lastWeekOrders.push(o);
+          }
+        }
+      });
 
       let growthCalc = 'N/A';
       if (lastWeekTotal > 0) {
@@ -122,24 +129,26 @@ export const Overview: React.FC = () => {
 
       if (!cancelled) {
         setStats({
-          totalSales: salesAggSnap.data().totalSales || 0,
-          orderCount: orderCountSnap.data().count,
-          productCount: productCountSnap.data().count,
+          totalSales,
+          orderCount: allOrders.length,
+          productCount,
           growth: growthCalc,
-          pendingReturns: returnSnap.data().count
+          pendingReturns
         });
       }
 
-      // 4. Fetch recent orders for Activity Feed
-      const recentOQ = query(collection(db, "orders"), where("sellerIds", "array-contains", currentUser.uid), orderBy("createdAt", "desc"), limit(10));
-      const recentOSnap = await safeFetch(() => getDocs(recentOQ), { docs: [] } as any);
-      const fetchedOrders = recentOSnap.docs.map((d: any) => ({ id: d.id, ...d.data() } as SellerOrder));
-      
-      if (!cancelled) setRecentOrders(fetchedOrders.slice(0, 5));
+      // 4. Sort and fetch recent orders in memory
+      const sortedOrders = [...allOrders].sort((a: any, b: any) => {
+        const tA = a.createdAt?.seconds || 0;
+        const tB = b.createdAt?.seconds || 0;
+        return tB - tA;
+      });
+
+      if (!cancelled) setRecentOrders(sortedOrders.slice(0, 5));
 
       // Wilaya Stats Calculation
       const wStats: Record<string, number> = {};
-      fetchedOrders.forEach((o: SellerOrder) => {
+      sortedOrders.forEach((o: any) => {
         const w = o.shippingAddress?.wilaya;
         if (w) wStats[w] = (wStats[w] || 0) + 1;
       });
@@ -158,7 +167,9 @@ export const Overview: React.FC = () => {
           if (order.createdAt) {
             const date = order.createdAt.toDate();
             const dayName = days[date.getDay()];
-            chartMap[dayName as keyof typeof chartMap] += (order.total || 0);
+            if (chartMap[dayName as keyof typeof chartMap] !== undefined) {
+              chartMap[dayName as keyof typeof chartMap] += (order.total || 0);
+            }
           }
       });
       
@@ -177,27 +188,22 @@ export const Overview: React.FC = () => {
       // 6. Top Products & Payout Simulation
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const topOQ = query(
-        collection(db, "orders"), 
-        where("sellerIds", "array-contains", currentUser.uid),
-        where("createdAt", ">=", thirtyDaysAgo),
-        limit(20)
-      );
-      const topOSnap = await safeFetch(() => getDocs(topOQ), { docs: [] } as any);
       
       const productFreq: Record<string, {name: string, count: number, total: number, image: string}> = {};
       
-      topOSnap.docs.forEach((doc: any) => {
-        const o = doc.data();
-        (o.items || []).forEach((item: any) => {
-          if (item.sellerId === currentUser.uid) {
-              if (!productFreq[item.id]) {
-                productFreq[item.id] = { name: item.name, count: 0, total: 0, image: item.image };
-              }
-              productFreq[item.id].count += item.quantity;
-              productFreq[item.id].total += (item.price * item.quantity);
-          }
-        });
+      allOrders.forEach((o: any) => {
+        const createdDate = o.createdAt ? o.createdAt.toDate() : null;
+        if (createdDate && createdDate >= thirtyDaysAgo) {
+          (o.items || []).forEach((item: any) => {
+            if (item.sellerId === currentUser.uid) {
+                if (!productFreq[item.id]) {
+                  productFreq[item.id] = { name: item.name, count: 0, total: 0, image: item.image };
+                }
+                productFreq[item.id].count += item.quantity;
+                productFreq[item.id].total += (item.price * item.quantity);
+            }
+          });
+        }
       });
 
       const sortedTopProducts: TopProduct[] = Object.entries(productFreq)
@@ -208,7 +214,7 @@ export const Overview: React.FC = () => {
       if (!cancelled) setTopProducts(sortedTopProducts);
 
       // Simulation de paiements
-      const availablePayout = Math.floor((salesAggSnap.data().totalSales || 0) * 0.72);
+      const availablePayout = Math.floor(totalSales * 0.72);
       const nextDate = new Date();
       nextDate.setDate(nextDate.getDate() + (7 - nextDate.getDay() % 7)); // Prochain Lundi
       
@@ -228,7 +234,7 @@ export const Overview: React.FC = () => {
     <div className="space-y-8 sm:space-y-12 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-3xl font-black tracking-tight rtl:tracking-normal text-zinc-950">{t("seller.overview.hello", "Bonjour, ")}{userProfile?.shopName || userProfile?.displayName}</h2>
+          <h2 className="text-3xl font-kinder tracking-tight rtl:tracking-normal text-zinc-950">{t("seller.overview.hello", "Bonjour, ")}{userProfile?.shopName || userProfile?.displayName}</h2>
           <p className="text-zinc-500 font-medium">{t("seller.overview.welcome_desc", "Voici ce qui se passe dans votre boutique aujourd'hui.")}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -241,7 +247,7 @@ export const Overview: React.FC = () => {
                    <ShieldCheck className="w-5 h-5" />
                 </span>
                 <div className="pe-4 py-2 text-start">
-                   <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal leading-none mb-1">{t("seller.overview.trust_score", "Trust Score")}</p>
+                   <p className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal leading-none mb-1">{t("seller.overview.trust_score", "Trust Score")}</p>
                    <p className={`text-[10px] font-black uppercase tracking-wider rtl:tracking-normal ${userProfile.trustScore >= 80 ? 'text-emerald-700' : userProfile.trustScore >= 50 ? 'text-amber-700' : 'text-red-700'}`}>
                       {userProfile.trustScore} / 100
                    </p>
@@ -254,8 +260,8 @@ export const Overview: React.FC = () => {
                   <AlertCircle className="w-5 h-5" />
                </span>
                <div className="pr-4 py-2">
-                  <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal leading-none mb-1">{t("seller.overview.stock_alert", "Alerte Stock")}</p>
-                  <p className="text-[10px] font-black text-zinc-900 uppercase">{outOfStockCount} {t("seller.overview.item", "Article")}{outOfStockCount > 1 ? 's ' : ' '}{t("seller.overview.out_of_stock", "en rupture")}</p>
+                  <p className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal leading-none mb-1">{t("seller.overview.stock_alert", "Alerte Stock")}</p>
+                  <p className="text-[10px] font-kinder text-zinc-900 uppercase">{outOfStockCount} {t("seller.overview.item", "Article")}{outOfStockCount > 1 ? 's ' : ' '}{t("seller.overview.out_of_stock", "en rupture")}</p>
                </div>
             </div>
           )}
@@ -278,7 +284,7 @@ export const Overview: React.FC = () => {
                <div className={`w-12 h-12 rounded-2xl ${action.bg} ${action.color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
                   <action.icon className="w-6 h-6" />
                </div>
-               <span className="text-xs font-black text-zinc-950 text-center">{action.label}</span>
+               <span className="text-xs font-kinder text-zinc-950 text-center">{action.label}</span>
             </button>
          ))}
       </div>
@@ -302,8 +308,8 @@ export const Overview: React.FC = () => {
               <s.icon className="w-6 h-6 sm:w-7 sm:h-7" />
             </div>
             <div>
-              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-0.5 sm:mb-1">{s.label}</p>
-              <p className="text-lg sm:text-2xl font-black text-zinc-950 tracking-tighter rtl:tracking-normal">{s.value}</p>
+              <p className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-0.5 sm:mb-1">{s.label}</p>
+              <p className="text-lg sm:text-2xl font-kinder text-zinc-950 tracking-tighter rtl:tracking-normal">{s.value}</p>
             </div>
           </motion.div>
         ))}
@@ -314,16 +320,16 @@ export const Overview: React.FC = () => {
         <div className="lg:col-span-2 space-y-8">
            <div className="bg-white rounded-[2.5rem] sm:rounded-[3rem] border border-zinc-100 shadow-sm p-6 sm:p-10 overflow-hidden relative">
               <div className="flex items-center justify-between mb-8 sm:mb-10">
-                 <h4 className="text-lg sm:text-xl font-black flex items-center gap-3">
+                 <h4 className="text-lg sm:text-xl font-kinder flex items-center gap-3">
                     <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-[#ea580c]" />
                     {t("seller.overview.weekly_sales", "Ventes de la Semaine")}</h4>
                  <div className="flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full">
                     <TrendingUp className="w-4 h-4" />
-                    <span className="text-[10px] font-black uppercase tracking-wider rtl:tracking-normal">{stats.growth}</span>
+                    <span className="text-[10px] font-kinder uppercase tracking-wider rtl:tracking-normal">{stats.growth}</span>
                  </div>
               </div>
               <div className="h-[250px] sm:h-[300px] w-full">
-                    <ResponsiveContainer width="99%" height="99%">
+                    <ResponsiveContainer width="100%" height="100%" minHeight={250}>
                        <AreaChart data={chartData}>
                        <defs>
                           <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
@@ -347,10 +353,10 @@ export const Overview: React.FC = () => {
            {/* Top Selling Products */}
            <div className="bg-white rounded-[2.5rem] border border-zinc-100 shadow-sm p-8">
               <div className="flex items-center justify-between mb-8">
-                 <h4 className="text-md font-black flex items-center gap-3 text-zinc-950">
+                 <h4 className="text-md font-kinder flex items-center gap-3 text-zinc-950">
                     <Zap className="w-5 h-5 text-blue-600" />
                     {t("seller.overview.top_products", "Produits les plus vendus")}</h4>
-                 <button onClick={() => navigate('/dashboard/seller/catalog')} className="text-[10px] font-black text-blue-600 uppercase tracking-widest rtl:tracking-normal hover:underline">
+                 <button onClick={() => navigate('/dashboard/seller/catalog')} className="text-[10px] font-kinder text-blue-600 uppercase tracking-widest rtl:tracking-normal hover:underline">
                     {t("seller.overview.manage_inventory", "Gérer Inventaire")}</button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -362,7 +368,7 @@ export const Overview: React.FC = () => {
                                           <img loading="lazy" src={getOptimizedImageUrl(p.image, 200) || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop"} alt={p.name} className="w-full h-full object-cover" />
                                        </div>
                                        <div className="flex-1 overflow-hidden">
-                                          <p className="text-xs font-black text-zinc-950 truncate mb-1">{p.name}</p>
+                                          <p className="text-xs font-kinder text-zinc-950 truncate mb-1">{p.name}</p>
                                           <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest rtl:tracking-normal">{p.count} {t("seller.overview.sales_separators", "Ventes • ")}{formatPrice(p.total)}</p>
                                        </div>
                                        <button className="p-2 rounded-xl bg-white border border-zinc-100 text-zinc-400 hover:text-blue-600 transition-colors">
@@ -381,14 +387,14 @@ export const Overview: React.FC = () => {
          <div className="space-y-8 flex flex-col">
             {/* Wilaya Stats */}
             <div className="bg-white rounded-[2.5rem] border border-zinc-100 shadow-sm p-8">
-               <h4 className="text-sm font-black text-zinc-950 uppercase tracking-widest rtl:tracking-normal mb-8">{t("seller.overview.flash_delivery_zones", "Zones de Livraison Flash")}</h4>
+               <h4 className="text-sm font-kinder text-zinc-950 uppercase tracking-widest rtl:tracking-normal mb-8">{t("seller.overview.flash_delivery_zones", "Zones de Livraison Flash")}</h4>
                <div className="space-y-6">
                   {wilayaStats.map((w, i) => {
                     
                     return (
                                       <div key={i} className="flex flex-col gap-2">
                                          <div className="flex justify-between items-center">
-                                            <span className="text-xs font-black text-zinc-700">{w.name}</span>
+                                            <span className="text-xs font-kinder text-zinc-700">{w.name}</span>
                                             <span className="text-[10px] font-bold text-zinc-400">{w.count} {t("seller.overview.order", "Commande")}{w.count > 1 ? 's' : ''}</span>
                                          </div>
                                          <div className="h-1.5 w-full bg-zinc-50 rounded-full overflow-hidden">
@@ -413,13 +419,13 @@ export const Overview: React.FC = () => {
                   <CreditCard className="w-32 h-32 rotate-12" />
                </div>
                <div className="relative z-10">
-                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-4">{t("seller.overview.balance_to_payout", "Solde à verser")}</p>
-                  <h2 className="text-4xl font-black tracking-tighter rtl:tracking-normal mb-2">{formatPrice(payoutStats.available)}</h2>
+                  <p className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-4">{t("seller.overview.balance_to_payout", "Solde à verser")}</p>
+                  <h2 className="text-4xl font-kinder tracking-tighter rtl:tracking-normal mb-2">{formatPrice(payoutStats.available)}</h2>
                   <div className="flex items-center gap-2 mb-8">
                      <Clock className="w-3 h-3 text-emerald-400" />
                      <p className="text-[10px] font-bold text-zinc-400">{t("seller.overview.next_payout_date", "Prochain virement le ")}{payoutStats.nextPaymentDate}</p>
                   </div>
-                  <button onClick={() => navigate('/dashboard/seller/wallet')} className="w-full py-3 bg-white text-zinc-950 rounded-2xl text-[10px] font-black uppercase tracking-widest rtl:tracking-normal hover:bg-orange-500 hover:text-white transition-all">
+                  <button onClick={() => navigate('/dashboard/seller/wallet')} className="w-full py-3 bg-white text-zinc-950 rounded-2xl text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal hover:bg-orange-500 hover:text-white transition-all">
                      {t("seller.overview.payout_details", "Détails des virements")}</button>
                </div>
             </div>
@@ -429,7 +435,7 @@ export const Overview: React.FC = () => {
                <div className="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center mb-4">
                   <ShieldCheck className="w-8 h-8 text-emerald-500" />
                </div>
-               <h4 className="text-sm font-black text-zinc-950 uppercase tracking-widest rtl:tracking-normal mb-1">{t("seller.overview.account_health", "Santé du Compte")}</h4>
+               <h4 className="text-sm font-kinder text-zinc-950 uppercase tracking-widest rtl:tracking-normal mb-1">{t("seller.overview.account_health", "Santé du Compte")}</h4>
                <p className="text-[10px] font-bold text-zinc-400 uppercase mb-6">{t("seller.overview.excellent", "Excellente")}</p>
                
                <div className="w-full space-y-4">
@@ -459,7 +465,7 @@ export const Overview: React.FC = () => {
          {/* Activity Feed */}
          <div className="lg:col-span-3 bg-white rounded-[2.5rem] sm:rounded-[3rem] border border-zinc-100 shadow-sm overflow-hidden">
            <div className="p-6 sm:p-8 border-b border-zinc-50">
-              <h4 className="text-md sm:text-lg font-black flex items-center gap-3">
+              <h4 className="text-md sm:text-lg font-kinder flex items-center gap-3">
                  <Activity className="w-5 h-5 text-[#ea580c]" />
                  {t("seller.overview.latest_activities", "Dernières Activités")}</h4>
            </div>
@@ -472,13 +478,13 @@ export const Overview: React.FC = () => {
                                     <ShoppingBag className="w-5 h-5" />
                                  </div>
                                  <div className="flex-1 overflow-hidden">
-                                    <p className="text-xs font-black text-zinc-950 truncate">{t("seller.overview.new_order_prefix", "Nouvelle Commande #")}{o.id.substring(0, 6)}</p>
+                                    <p className="text-xs font-kinder text-zinc-950 truncate">{t("seller.overview.new_order_prefix", "Nouvelle Commande #")}{o.id.substring(0, 6)}</p>
                                     <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest rtl:tracking-normal">
                                        {o.createdAt && typeof o.createdAt.toDate === 'function' ? o.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : t("seller.overview.recent", "Récent")}
                                     </p>
                                  </div>
                                  <div className="text-end">
-                                    <p className="text-sm font-black text-zinc-950">{formatPrice(o.total)}</p>
+                                    <p className="text-sm font-kinder text-zinc-950">{formatPrice(o.total)}</p>
                                  </div>
                               </div>
                             );
@@ -489,7 +495,7 @@ export const Overview: React.FC = () => {
               )}
            </div>
            {recentOrders.length > 0 && (
-             <button className="w-full py-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal hover:text-orange-600 hover:bg-zinc-50 transition-all border-t border-zinc-50">
+             <button className="w-full py-4 text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal hover:text-orange-600 hover:bg-zinc-50 transition-all border-t border-zinc-50">
                 {t("Voir tous les journaux")}</button>
            )}
         </div>

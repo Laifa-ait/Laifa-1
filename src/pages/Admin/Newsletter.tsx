@@ -319,7 +319,7 @@ export const Newsletter: React.FC = () => {
     <div className="space-y-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-4xl font-black tracking-tight rtl:tracking-normal text-zinc-950">
+          <h2 className="text-4xl font-kinder tracking-tight rtl:tracking-normal text-zinc-950">
             {t("Newsletter 2.0")}
           </h2>
           <p className="text-zinc-500 font-medium">{t("Éditeur visuel intelligent alimenté par Gemini AI.")}</p>
@@ -327,14 +327,14 @@ export const Newsletter: React.FC = () => {
         <div className="flex items-center gap-4">
           <button
             onClick={() => setPreviewOpen(true)}
-            className="px-8 py-5 bg-white border border-zinc-100 rounded-[2rem] flex items-center gap-4 font-black text-[11px] uppercase tracking-widest rtl:tracking-normal text-zinc-500 hover:text-zinc-900 transition-all shadow-sm"
+            className="px-8 py-5 bg-white border border-zinc-100 rounded-[2rem] flex items-center gap-4 font-kinder text-[11px] uppercase tracking-widest rtl:tracking-normal text-zinc-500 hover:text-zinc-900 transition-all shadow-sm"
           >
             <Eye className="w-5 h-5" /> {t("Prévisualiser")}
           </button>
           <button
             onClick={handleSendCampaign}
             disabled={isSending}
-            className="px-10 py-5 bg-[#ea580c] text-white rounded-[2rem] flex items-center gap-4 font-black text-[11px] uppercase tracking-widest rtl:tracking-normal shadow-xl shadow-orange-500/20 hover:bg-orange-600 disabled:opacity-50 active:scale-95 transition-all"
+            className="px-10 py-5 bg-[#ea580c] text-white rounded-[2rem] flex items-center gap-4 font-kinder text-[11px] uppercase tracking-widest rtl:tracking-normal shadow-xl shadow-orange-500/20 hover:bg-orange-600 disabled:opacity-50 active:scale-95 transition-all"
           >
             {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}{" "}
             {t("Envoyer la campagne")}
@@ -346,7 +346,7 @@ export const Newsletter: React.FC = () => {
         {/* Sidebar Editor */}
         <div className="lg:col-span-3 space-y-8">
           <div className="bg-white rounded-[2.5rem] border border-zinc-100 shadow-sm p-8">
-            <h4 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-6">
+            <h4 className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-6">
               {t("Blocs Disponibles")}
             </h4>
             <div className="grid grid-cols-2 gap-3">
@@ -362,7 +362,7 @@ export const Newsletter: React.FC = () => {
                   className="flex flex-col items-center justify-center gap-3 p-6 bg-zinc-50 rounded-2xl border border-zinc-100 hover:border-orange-500 hover:bg-orange-50 transition-all group"
                 >
                   <b.icon className="w-6 h-6 text-zinc-400 group-hover:text-orange-500 transition-colors" />
-                  <span className="text-[9px] font-black uppercase text-zinc-400 group-hover:text-orange-700">
+                  <span className="text-[9px] font-kinder uppercase text-zinc-400 group-hover:text-orange-700">
                     {b.label}
                   </span>
                 </button>
@@ -372,7 +372,7 @@ export const Newsletter: React.FC = () => {
 
           <div className="bg-zinc-950 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl">
             <div className="absolute top-0 end-0 w-32 h-32 bg-orange-500/20 rounded-full  -me-10 -mt-10" />
-            <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest rtl:tracking-normal mb-4 flex items-center gap-2">
+            <h4 className="text-[10px] font-kinder text-zinc-500 uppercase tracking-widest rtl:tracking-normal mb-4 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-orange-500" /> {t("Assistant IA Gemini")}
             </h4>
             <textarea
@@ -387,7 +387,7 @@ export const Newsletter: React.FC = () => {
             <button
               onClick={generateWithAi}
               disabled={generating}
-              className="w-full bg-white text-zinc-950 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest rtl:tracking-normal hover:bg-orange-500 hover:text-white transition-all disabled:opacity-50"
+              className="w-full bg-white text-zinc-950 py-4 rounded-xl font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal hover:bg-orange-500 hover:text-white transition-all disabled:opacity-50"
             >
               {generating ? "IA en cours..." : "Rédiger la Newsletter"}
             </button>
@@ -399,13 +399,13 @@ export const Newsletter: React.FC = () => {
           <div className="bg-white border border-zinc-100 rounded-[3.5rem] shadow-sm overflow-hidden flex flex-col min-h-[800px]">
             <div className="p-8 bg-zinc-50/50 border-b border-zinc-100 flex items-center justify-between">
               <div className="flex-1 max-w-lg">
-                <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5 ms-1">
+                <p className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5 ms-1">
                   {t("Objet de l'e-mail")}
                 </p>
                 <input
                   type="text"
                   placeholder={t("Ex: Prêts pour l'été ?") || "Ex: Prêts pour l'été ?"}
-                  className="w-full bg-white border border-zinc-200 rounded-xl px-5 py-3 font-black text-zinc-950 outline-none focus:border-orange-500 transition-colors"
+                  className="w-full bg-white border border-zinc-200 rounded-xl px-5 py-3 font-kinder text-zinc-950 outline-none focus:border-orange-500 transition-colors"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                 />
@@ -432,7 +432,7 @@ export const Newsletter: React.FC = () => {
               >
                 {/* Template Header */}
                 <div className="p-10 border-b border-zinc-50 flex flex-col items-center">
-                  <h1 className="text-2xl font-black tracking-tighter rtl:tracking-normal text-zinc-950">
+                  <h1 className="text-2xl font-kinder tracking-tighter rtl:tracking-normal text-zinc-950">
                     {t("OLMA MARKETPLACE")}
                   </h1>
                 </div>
@@ -442,7 +442,7 @@ export const Newsletter: React.FC = () => {
                   {blocks.length === 0 && (
                     <div className="py-20 text-center border-2 border-dashed border-zinc-200 rounded-3xl w-full">
                       <Plus className="w-10 h-10 text-zinc-300 mx-auto mb-4 animate-bounce" />
-                      <p className="text-zinc-500 font-black uppercase text-[10px] tracking-widest rtl:tracking-normal">
+                      <p className="text-zinc-500 font-kinder uppercase text-[10px] tracking-widest rtl:tracking-normal">
                         {t("Ajoutez des blocs pour commencer")}
                       </p>
                       <p className="text-zinc-400 text-[9px] font-bold uppercase tracking-widest rtl:tracking-normal mt-1">
@@ -469,13 +469,13 @@ export const Newsletter: React.FC = () => {
                         {b.type === "title" && (
                           <div className="space-y-4">
                             <input
-                              className="w-full text-3xl font-black text-center tracking-tighter rtl:tracking-normal outline-none mb-1 text-zinc-900 placeholder-zinc-300 bg-transparent"
+                              className="w-full text-3xl font-kinder text-center tracking-tighter rtl:tracking-normal outline-none mb-1 text-zinc-900 placeholder-zinc-300 bg-transparent"
                               value={b.content}
                               placeholder={t("Titre de section...") || "Titre de section..."}
                               onChange={(e) => updateBlock(b.id, e.target.value)}
                             />
                             <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-zinc-50/50 border border-zinc-150 p-2.5 rounded-2xl flex items-center justify-between gap-4">
-                              <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider rtl:tracking-normal">
+                              <span className="text-[9px] font-kinder text-zinc-400 uppercase tracking-wider rtl:tracking-normal">
                                 {t("Largeur")}
                               </span>
                               <div className="flex bg-white rounded-lg p-0.5 border border-zinc-200 w-48 shrink-0">
@@ -506,7 +506,7 @@ export const Newsletter: React.FC = () => {
                               onChange={(e) => updateBlock(b.id, e.target.value)}
                             />
                             <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-zinc-50/50 border border-zinc-150 p-2.5 rounded-2xl flex items-center justify-between gap-4">
-                              <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider rtl:tracking-normal">
+                              <span className="text-[9px] font-kinder text-zinc-400 uppercase tracking-wider rtl:tracking-normal">
                                 {t("Largeur")}
                               </span>
                               <div className="flex bg-white rounded-lg p-0.5 border border-zinc-200 w-48 shrink-0">
@@ -537,7 +537,7 @@ export const Newsletter: React.FC = () => {
                                       setSelectedBlockIdForImage(b.id);
                                       setMediaModalOpen(true);
                                     }}
-                                    className="text-[9px] font-black text-orange-600 uppercase tracking-widest rtl:tracking-normal flex items-center gap-1.5 hover:text-orange-700"
+                                    className="text-[9px] font-kinder text-orange-600 uppercase tracking-widest rtl:tracking-normal flex items-center gap-1.5 hover:text-orange-700"
                                   >
                                     <ImageIcon className="w-3.5 h-3.5" /> {t("Changer d'image")}
                                   </button>
@@ -584,12 +584,12 @@ export const Newsletter: React.FC = () => {
                                 className="aspect-video bg-zinc-50 rounded-[2.5rem] flex flex-col items-center justify-center p-8 border-2 border-zinc-200 border-dashed hover:border-orange-500 hover:bg-orange-50/40 transition-all cursor-pointer group/placeholder"
                               >
                                 <div className="w-16 h-16 rounded-2xl bg-white text-zinc-350 group-hover/placeholder:text-orange-500 group-hover/placeholder:scale-110 flex items-center justify-center border border-zinc-250 shadow-sm transition-all duration-300 animate-pulse">
-                                  <ImageIcon className="w-8 h-8 font-black" />
+                                  <ImageIcon className="w-8 h-8 font-kinder" />
                                 </div>
-                                <p className="text-zinc-700 font-black text-xs uppercase tracking-widest rtl:tracking-normal mt-4">
+                                <p className="text-zinc-700 font-kinder text-xs uppercase tracking-widest rtl:tracking-normal mt-4">
                                   {t("Aucune image configurée")}
                                 </p>
-                                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mt-1">
+                                <p className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mt-1">
                                   {t("Sélectionner depuis la médiathèque →")}
                                 </p>
                               </div>
@@ -600,7 +600,7 @@ export const Newsletter: React.FC = () => {
                               <div className="grid md:grid-cols-2 gap-4">
                                 {/* Width Controls */}
                                 <div className="space-y-2">
-                                  <label className="text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal block font-mono">
+                                  <label className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal block font-mono">
                                     {t("Largeur dans le Mail (Dim.)")}
                                   </label>
                                   <div className="flex bg-white rounded-xl p-1 border border-zinc-200">
@@ -619,7 +619,7 @@ export const Newsletter: React.FC = () => {
 
                                 {/* Alignment Controls */}
                                 <div className="space-y-2">
-                                  <label className="text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal block font-mono">
+                                  <label className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal block font-mono">
                                     {t("Alignement de l'Image")}
                                   </label>
                                   <div className="flex bg-white rounded-xl p-1 border border-zinc-200">
@@ -645,13 +645,13 @@ export const Newsletter: React.FC = () => {
                               <div className="grid md:grid-cols-2 gap-4">
                                 {/* Aspect Ratio Sizer */}
                                 <div className="space-y-1.5">
-                                  <label className="text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal block font-mono">
+                                  <label className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal block font-mono">
                                     {t("Format & Proportion (Ratios)")}
                                   </label>
                                   <select
                                     value={b.aspectRatio || "auto"}
                                     onChange={(e) => updateBlockProperty(b.id, "aspectRatio", e.target.value)}
-                                    className="w-full px-3 py-2 bg-white border border-zinc-200 text-zinc-800 rounded-xl outline-none font-black text-[9px] uppercase tracking-widest rtl:tracking-normal cursor-pointer"
+                                    className="w-full px-3 py-2 bg-white border border-zinc-200 text-zinc-800 rounded-xl outline-none font-kinder text-[9px] uppercase tracking-widest rtl:tracking-normal cursor-pointer"
                                   >
                                     <option value="auto">{t("Proportion d'Origine")}</option>
                                     <option value="1/1">{t("Carré (1:1)")}</option>
@@ -662,13 +662,13 @@ export const Newsletter: React.FC = () => {
 
                                 {/* Borders Rounding */}
                                 <div className="space-y-1.5">
-                                  <label className="text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal block font-mono">
+                                  <label className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal block font-mono">
                                     {t("Arrondi d'angles")}
                                   </label>
                                   <select
                                     value={b.rounded || "rounded-2xl"}
                                     onChange={(e) => updateBlockProperty(b.id, "rounded", e.target.value)}
-                                    className="w-full px-3 py-2 bg-white border border-zinc-200 text-zinc-800 rounded-xl outline-none font-black text-[9px] uppercase tracking-widest rtl:tracking-normal cursor-pointer"
+                                    className="w-full px-3 py-2 bg-white border border-zinc-200 text-zinc-800 rounded-xl outline-none font-kinder text-[9px] uppercase tracking-widest rtl:tracking-normal cursor-pointer"
                                   >
                                     <option value="rounded-none">{t("Carré (0px)")}</option>
                                     <option value="rounded-lg">{t("Léger (rounded-lg)")}</option>
@@ -681,10 +681,10 @@ export const Newsletter: React.FC = () => {
                               {/* Hyperlink Destination URL */}
                               <div className="space-y-1.5 pt-1">
                                 <div className="flex items-center justify-between">
-                                  <label className="text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal block font-mono">
+                                  <label className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal block font-mono">
                                     {t("Url de redirection au clic (Lien)")}
                                   </label>
-                                  <span className="text-[8px] font-black text-zinc-300 uppercase tracking-wider rtl:tracking-normal font-mono">
+                                  <span className="text-[8px] font-kinder text-zinc-300 uppercase tracking-wider rtl:tracking-normal font-mono">
                                     {t("Rend l'image liquide")}
                                   </span>
                                 </div>
@@ -705,7 +705,7 @@ export const Newsletter: React.FC = () => {
                                       setSelectedBlockIdForImage(b.id);
                                       setMediaModalOpen(true);
                                     }}
-                                    className="px-4 bg-white border border-zinc-200 hover:border-orange-500 hover:bg-orange-50/50 rounded-xl flex items-center justify-center gap-1.5 transition-all text-[9.5px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-650 hover:text-orange-700"
+                                    className="px-4 bg-white border border-zinc-200 hover:border-orange-500 hover:bg-orange-50/50 rounded-xl flex items-center justify-center gap-1.5 transition-all text-[9.5px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-650 hover:text-orange-700"
                                   >
                                     <FolderOpen className="w-4 h-4 text-orange-500 shrink-0" /> {t("Médias")}
                                   </button>
@@ -727,7 +727,7 @@ export const Newsletter: React.FC = () => {
                                         setMediaTab("product_catalog");
                                         setMediaModalOpen(true);
                                       }}
-                                      className="text-[9px] font-black text-orange-600 uppercase tracking-widest rtl:tracking-normal flex items-center gap-1 hover:text-orange-700"
+                                      className="text-[9px] font-kinder text-orange-600 uppercase tracking-widest rtl:tracking-normal flex items-center gap-1 hover:text-orange-700"
                                     >
                                       <ShoppingBag className="w-3.5 h-3.5" /> {t("Changer")}
                                     </button>
@@ -740,19 +740,19 @@ export const Newsletter: React.FC = () => {
                                     className="w-full h-full object-cover"
                                   />
                                   {b.productCategory && (
-                                    <span className="absolute top-3 start-3 bg-zinc-950 text-white text-[8px] font-black uppercase tracking-wider rtl:tracking-normal px-2 py-1 rounded">
+                                    <span className="absolute top-3 start-3 bg-zinc-950 text-white text-[8px] font-kinder uppercase tracking-wider rtl:tracking-normal px-2 py-1 rounded">
                                       {b.productCategory}
                                     </span>
                                   )}
                                 </div>
-                                <h4 className="text-zinc-950 text-sm font-black tracking-tight rtl:tracking-normal line-clamp-2 text-start">
+                                <h4 className="text-zinc-950 text-sm font-kinder tracking-tight rtl:tracking-normal line-clamp-2 text-start">
                                   {b.productName}
                                 </h4>
                                 <div className="mt-2 flex items-center justify-between">
-                                  <span className="text-xs font-mono font-black text-orange-600">
+                                  <span className="text-xs font-mono font-kinder text-orange-600">
                                     {formatPrice(b.productPrice)}
                                   </span>
-                                  <span className="text-[9px] font-black uppercase text-zinc-400">{t("Olma.dz")}</span>
+                                  <span className="text-[9px] font-kinder uppercase text-zinc-400">{t("Olma.dz")}</span>
                                 </div>
 
                                 {/* Click Redirect Link indicator */}
@@ -773,12 +773,12 @@ export const Newsletter: React.FC = () => {
                                 className="aspect-square max-w-xs mx-auto bg-zinc-50 rounded-[2.5rem] flex flex-col items-center justify-center p-8 border-2 border-zinc-200 border-dashed hover:border-orange-500 hover:bg-orange-50/40 transition-all cursor-pointer group/placeholder animate-pulse"
                               >
                                 <div className="w-16 h-16 rounded-2xl bg-white text-zinc-350 group-hover/placeholder:text-orange-500 group-hover/placeholder:scale-110 flex items-center justify-center border border-zinc-250 shadow-sm transition-all duration-300">
-                                  <ShoppingBag className="w-8 h-8 font-black" />
+                                  <ShoppingBag className="w-8 h-8 font-kinder" />
                                 </div>
-                                <p className="text-zinc-700 font-black text-xs uppercase tracking-widest rtl:tracking-normal mt-4">
+                                <p className="text-zinc-700 font-kinder text-xs uppercase tracking-widest rtl:tracking-normal mt-4">
                                   {t("Aucun produit configuré")}
                                 </p>
-                                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mt-1">
+                                <p className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mt-1">
                                   {t("Sélectionner depuis le catalogue d'Olma →")}
                                 </p>
                               </div>
@@ -788,7 +788,7 @@ export const Newsletter: React.FC = () => {
                             <div className="bg-zinc-50/80 border border-zinc-200 p-5 rounded-[2rem] space-y-4 text-start transition-all">
                               <div className="grid md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                  <label className="text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal block font-mono">
+                                  <label className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal block font-mono">
                                     {t("Largeur du Produit (Dim.)")}
                                   </label>
                                   <div className="flex bg-white rounded-xl p-1 border border-zinc-200">
@@ -812,7 +812,7 @@ export const Newsletter: React.FC = () => {
                                       setMediaTab("product_catalog");
                                       setMediaModalOpen(true);
                                     }}
-                                    className="w-full py-3 bg-white border border-zinc-200 hover:border-orange-500 hover:bg-orange-50 rounded-xl flex items-center justify-center gap-1.5 transition-all text-[9.5px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-650 hover:text-orange-700"
+                                    className="w-full py-3 bg-white border border-zinc-200 hover:border-orange-500 hover:bg-orange-50 rounded-xl flex items-center justify-center gap-1.5 transition-all text-[9.5px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-650 hover:text-orange-700"
                                   >
                                     <FolderOpen className="w-4 h-4 text-orange-500 shrink-0" />{" "}
                                     {t("Changer de Produit")}
@@ -820,7 +820,7 @@ export const Newsletter: React.FC = () => {
                                 </div>
                               </div>
                               <div className="space-y-1.5">
-                                <label className="text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal block font-mono">
+                                <label className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal block font-mono">
                                   {t("Lien hypertexte personnalisé (optionnel)")}
                                 </label>
                                 <div className="bg-white border border-zinc-200 rounded-xl px-4 py-2 flex items-center gap-2">
@@ -844,7 +844,7 @@ export const Newsletter: React.FC = () => {
 
                 {/* Template Footer */}
                 <div className="p-10 bg-zinc-50 border-t border-zinc-100 text-center">
-                  <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal leading-relaxed">
+                  <p className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal leading-relaxed">
                     {t("© 2026 Olma Marketplace Algérie.")}
                     <br />
                     {t("Vous recevez ce mail car vous êtes inscrit sur Olma.")}
@@ -872,7 +872,7 @@ export const Newsletter: React.FC = () => {
               {/* Modal Header */}
               <div className="p-8 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
                 <div>
-                  <h3 className="text-xl font-black text-zinc-950 flex items-center gap-2.5">
+                  <h3 className="text-xl font-kinder text-zinc-950 flex items-center gap-2.5">
                     <FolderOpen className="w-6 h-6 text-orange-500" />
                     {t("Médiathèque de la Plateforme Olma")}
                   </h3>
@@ -952,10 +952,10 @@ export const Newsletter: React.FC = () => {
                     ) : productsList.length === 0 ? (
                       <div className="py-20 text-center border-2 border-dashed border-zinc-200 rounded-[2.5rem] bg-white space-y-4">
                         <ShoppingBag className="w-12 h-12 text-zinc-200 mx-auto animate-bounce" />
-                        <p className="text-zinc-500 font-black text-xs uppercase tracking-widest rtl:tracking-normal">
+                        <p className="text-zinc-500 font-kinder text-xs uppercase tracking-widest rtl:tracking-normal">
                           {t("Aucun produit actif détecté")}
                         </p>
-                        <p className="text-[10px] font-black text-zinc-300 uppercase tracking-widest rtl:tracking-normal">
+                        <p className="text-[10px] font-kinder text-zinc-300 uppercase tracking-widest rtl:tracking-normal">
                           {t("Les vendeurs n'ont pas encore mis d'image en ligne.")}
                         </p>
                       </div>
@@ -993,15 +993,15 @@ export const Newsletter: React.FC = () => {
                                     referrerPolicy="no-referrer"
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                   />
-                                  <span className="absolute top-2 start-2 bg-zinc-900/80 text-white text-[8px] font-black uppercase tracking-wider rtl:tracking-normal px-2 py-1 rounded">
+                                  <span className="absolute top-2 start-2 bg-zinc-900/80 text-white text-[8px] font-kinder uppercase tracking-wider rtl:tracking-normal px-2 py-1 rounded">
                                     {prod.category}
                                   </span>
                                 </div>
                                 <div className="mt-3 space-y-1">
-                                  <h4 className="text-zinc-950 text-xs font-black tracking-tight rtl:tracking-normal line-clamp-1 group-hover:text-orange-600 transition-colors">
+                                  <h4 className="text-zinc-950 text-xs font-kinder tracking-tight rtl:tracking-normal line-clamp-1 group-hover:text-orange-600 transition-colors">
                                     {prod.name}
                                   </h4>
-                                  <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500 font-black">
+                                  <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500 font-kinder">
                                     <span>{formatPrice(prod.price)}</span>
                                     <span className="text-[8px] uppercase font-sans font-extrabold bg-zinc-100 text-zinc-650 px-2 py-0.5 rounded-full">
                                       {t("Sélectionner")}
@@ -1039,20 +1039,20 @@ export const Newsletter: React.FC = () => {
                               referrerPolicy="no-referrer"
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
-                            <span className="absolute top-3 start-3 bg-orange-600 text-white text-[8px] font-black uppercase tracking-widest rtl:tracking-normal px-2.5 py-1 rounded-full shadow-md">
+                            <span className="absolute top-3 start-3 bg-orange-600 text-white text-[8px] font-kinder uppercase tracking-widest rtl:tracking-normal px-2.5 py-1 rounded-full shadow-md">
                               {banner.category}
                             </span>
                           </div>
                           <div className="p-4 flex items-center justify-between bg-zinc-50/40">
                             <div>
-                              <h4 className="text-zinc-950 text-xs font-black tracking-tight rtl:tracking-normal">
+                              <h4 className="text-zinc-950 text-xs font-kinder tracking-tight rtl:tracking-normal">
                                 {banner.title}
                               </h4>
-                              <p className="text-[8px] font-black text-zinc-400 uppercase tracking-wider rtl:tracking-normal mt-1">
+                              <p className="text-[8px] font-kinder text-zinc-400 uppercase tracking-wider rtl:tracking-normal mt-1">
                                 {t("Haute Définition (HD)")}
                               </p>
                             </div>
-                            <span className="text-[9px] font-black uppercase text-orange-600 bg-orange-50 px-3 py-1.5 rounded-xl border border-orange-100 group-hover:bg-orange-600 group-hover:text-white transition-all shrink-0">
+                            <span className="text-[9px] font-kinder uppercase text-orange-600 bg-orange-50 px-3 py-1.5 rounded-xl border border-orange-100 group-hover:bg-orange-600 group-hover:text-white transition-all shrink-0">
                               {t("Choisir")}
                             </span>
                           </div>
@@ -1068,7 +1068,7 @@ export const Newsletter: React.FC = () => {
                       <Link2 className="w-6 h-6" />
                     </div>
                     <div className="space-y-2">
-                      <h4 className="text-sm font-black text-zinc-900 uppercase tracking-wider rtl:tracking-normal">
+                      <h4 className="text-sm font-kinder text-zinc-900 uppercase tracking-wider rtl:tracking-normal">
                         {t("Importer depuis un lien direct")}
                       </h4>
                       <p className="text-zinc-400 text-xs font-semibold">
@@ -1076,7 +1076,7 @@ export const Newsletter: React.FC = () => {
                       </p>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal block font-mono">
+                      <label className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal block font-mono">
                         {t("Lien Web de l'Image (URL)")}
                       </label>
                       <input
@@ -1096,7 +1096,7 @@ export const Newsletter: React.FC = () => {
                         }
                       }}
                       disabled={!customImageUrl.trim()}
-                      className="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white font-black text-[10px] uppercase tracking-widest rtl:tracking-normal rounded-xl disabled:opacity-50 transition-colors shadow-lg shadow-orange-500/10"
+                      className="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal rounded-xl disabled:opacity-50 transition-colors shadow-lg shadow-orange-500/10"
                     >
                       {t("Valider et appliquer l'image")}
                     </button>
@@ -1109,7 +1109,7 @@ export const Newsletter: React.FC = () => {
                       <Upload className="w-8 h-8" />
                     </div>
                     <div className="space-y-2">
-                      <h4 className="text-sm font-black text-zinc-900 uppercase tracking-wider rtl:tracking-normal">
+                      <h4 className="text-sm font-kinder text-zinc-900 uppercase tracking-wider rtl:tracking-normal">
                         {t("Téléverser une image de votre appareil")}
                       </h4>
                       <p className="text-zinc-400 text-xs font-semibold">
@@ -1133,7 +1133,7 @@ export const Newsletter: React.FC = () => {
                         ) : (
                           <ImageIcon className="w-6 h-6 text-zinc-400" />
                         )}
-                        <span className="text-xs font-black uppercase tracking-widest rtl:tracking-normal text-zinc-500">
+                        <span className="text-xs font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-500">
                           {isUploadingImage ? "Téléchargement..." : "Cliquer pour sélectionner"}
                         </span>
                       </div>
@@ -1163,7 +1163,7 @@ export const Newsletter: React.FC = () => {
                     <Eye className="w-5 h-5" />
                   </div>
                   <div className="text-start">
-                    <h3 className="text-base font-black text-zinc-950">{t("Aperçu Réaliste de la Newsletter")}</h3>
+                    <h3 className="text-base font-kinder text-zinc-950">{t("Aperçu Réaliste de la Newsletter")}</h3>
                     <p className="text-[11px] font-semibold text-zinc-500 mt-0.5">{t("Rendu final de l'e-mail.")}</p>
                   </div>
                 </div>
@@ -1210,12 +1210,12 @@ export const Newsletter: React.FC = () => {
                         {t("Olma Marketplace &lt;newsletter@olma.dz&gt;")}
                       </span>
                       <span>{t("Objet :")}</span>
-                      <span className="text-zinc-950 font-black">{subject || "(Aucun objet configuré)"}</span>
+                      <span className="text-zinc-950 font-kinder">{subject || "(Aucun objet configuré)"}</span>
                     </div>
                   </div>
 
                   <div className="p-10 border-b border-zinc-50 flex flex-col items-center">
-                    <h1 className="text-2xl font-black tracking-tighter rtl:tracking-normal text-zinc-950">
+                    <h1 className="text-2xl font-kinder tracking-tighter rtl:tracking-normal text-zinc-950">
                       {t("OLMA MARKETPLACE")}
                     </h1>
                   </div>
@@ -1231,7 +1231,7 @@ export const Newsletter: React.FC = () => {
                         return (
                           <div key={b.id} className={`shrink-0 ${getWidthClass(b.width)}`}>
                             {b.type === "title" && (
-                              <h2 className="text-3xl font-black text-center tracking-tighter rtl:tracking-normal text-zinc-900 my-4">
+                              <h2 className="text-3xl font-kinder text-center tracking-tighter rtl:tracking-normal text-zinc-900 my-4">
                                 {b.content}
                               </h2>
                             )}
@@ -1284,19 +1284,19 @@ export const Newsletter: React.FC = () => {
                                     className="w-full h-full object-cover"
                                   />
                                   {b.productCategory && (
-                                    <span className="absolute top-2.5 start-2.5 bg-zinc-950 text-white text-[8px] font-black uppercase tracking-wider rtl:tracking-normal px-2 py-1 rounded">
+                                    <span className="absolute top-2.5 start-2.5 bg-zinc-950 text-white text-[8px] font-kinder uppercase tracking-wider rtl:tracking-normal px-2 py-1 rounded">
                                       {b.productCategory}
                                     </span>
                                   )}
                                 </div>
-                                <h4 className="text-zinc-950 text-xs font-black tracking-tight rtl:tracking-normal line-clamp-2">
+                                <h4 className="text-zinc-950 text-xs font-kinder tracking-tight rtl:tracking-normal line-clamp-2">
                                   {b.productName}
                                 </h4>
                                 <div className="mt-2.5 flex items-center justify-between">
-                                  <span className="text-xs font-mono font-black text-orange-600">
+                                  <span className="text-xs font-mono font-kinder text-orange-600">
                                     {formatPrice(b.productPrice)}
                                   </span>
-                                  <span className="text-[9px] font-black text-white bg-orange-600 px-3.5 py-1.5 rounded-xl uppercase tracking-wider rtl:tracking-normal transition-all hover:bg-orange-700 shadow-md shadow-orange-500/10 cursor-pointer">
+                                  <span className="text-[9px] font-kinder text-white bg-orange-600 px-3.5 py-1.5 rounded-xl uppercase tracking-wider rtl:tracking-normal transition-all hover:bg-orange-700 shadow-md shadow-orange-500/10 cursor-pointer">
                                     {t("Acheter")}
                                   </span>
                                 </div>
@@ -1309,7 +1309,7 @@ export const Newsletter: React.FC = () => {
                   </div>
 
                   <div className="p-10 bg-zinc-50 border-t border-zinc-100 text-center">
-                    <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal leading-relaxed">
+                    <p className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal leading-relaxed">
                       {t("© 2026 Olma Marketplace Algérie.")}
                       <br />
                       {t("Vous recevez ce mail car vous êtes inscrit sur Olma.")}

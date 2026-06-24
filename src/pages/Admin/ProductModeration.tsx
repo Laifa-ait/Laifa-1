@@ -50,6 +50,7 @@ interface ModerationProduct {
   createdAt: Timestamp;
   rejectionReason?: string;
   moderationType?: 'new' | 'update';
+  [key: string]: any;
 }
 
 export const ProductModeration: React.FC = () => {
@@ -324,7 +325,7 @@ export const ProductModeration: React.FC = () => {
       {/* Title Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-stone-200">
         <div>
-          <h1 className="text-3xl font-black tracking-tight rtl:tracking-normal text-zinc-900 uppercase">
+          <h1 className="text-3xl font-kinder tracking-tight rtl:tracking-normal text-zinc-900 uppercase">
             {t("Modération des Produits")}
           </h1>
           <p className="text-xs text-zinc-500 font-semibold tracking-wider rtl:tracking-normal mt-1 uppercase">
@@ -335,7 +336,7 @@ export const ProductModeration: React.FC = () => {
           {activeTab === "active" && (
             <button
               onClick={handleRecalculateScores}
-              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-amber-50 border border-amber-200 hover:bg-amber-100/70 text-amber-800 text-[10px] font-black uppercase tracking-wider rtl:tracking-normal transition-all cursor-pointer shadow-sm"
+              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-amber-50 border border-amber-200 hover:bg-amber-100/70 text-amber-800 text-[10px] font-kinder uppercase tracking-wider rtl:tracking-normal transition-all cursor-pointer shadow-sm"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               {t("Recalculer les Scores de Pertinence")}
@@ -409,7 +410,7 @@ export const ProductModeration: React.FC = () => {
       ) : filteredProducts.length === 0 ? (
         <div className="bg-white border border-stone-200/60 rounded-2xl p-16 text-center shadow-sm">
           <ShieldAlert className="w-12 h-12 text-zinc-300 mx-auto mb-4" />
-          <h2 className="text-sm font-black text-zinc-800 uppercase tracking-wider rtl:tracking-normal">
+          <h2 className="text-sm font-kinder text-zinc-800 uppercase tracking-wider rtl:tracking-normal">
             {t("Aucun produit trouvé")}
           </h2>
           <p className="text-xs text-zinc-400 mt-1 max-w-md mx-auto">
@@ -461,32 +462,32 @@ export const ProductModeration: React.FC = () => {
                     <div className="absolute top-4 start-4 flex flex-col gap-2">
                       {p.status === "pending" && (
                         <>
-                          <span className="px-3 py-1.5 w-fit rounded-lg bg-orange-100 text-orange-800 text-[9px] font-black uppercase tracking-wider rtl:tracking-normal">
+                          <span className="px-3 py-1.5 w-fit rounded-lg bg-orange-100 text-orange-800 text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal">
                             {t("⏳ En attente de modération")}
                           </span>
                           {p.moderationType === "update" ? (
-                            <span className="px-3 py-1.5 w-fit rounded-lg bg-blue-100 text-blue-800 border border-blue-500/20 text-[9px] font-black uppercase tracking-wider rtl:tracking-normal shadow-sm flex items-center gap-1.5">
+                            <span className="px-3 py-1.5 w-fit rounded-lg bg-blue-100 text-blue-800 border border-blue-500/20 text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal shadow-sm flex items-center gap-1.5">
                               <RefreshCw size={12} className="inline-block" /> {t("Produit Modifié")}
                             </span>
                           ) : (
-                            <span className="px-3 py-1.5 w-fit rounded-lg bg-purple-100 text-purple-800 border border-purple-500/20 text-[9px] font-black uppercase tracking-wider rtl:tracking-normal shadow-sm flex items-center gap-1.5">
+                            <span className="px-3 py-1.5 w-fit rounded-lg bg-purple-100 text-purple-800 border border-purple-500/20 text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal shadow-sm flex items-center gap-1.5">
                               <Sparkles size={12} className="inline-block" /> {t("Nouveau Produit")}
                             </span>
                           )}
                         </>
                       )}
                       {p.status === "active" && (
-                        <span className="px-3 py-1.5 w-fit rounded-lg bg-emerald-100 text-emerald-800 text-[9px] font-black uppercase tracking-wider rtl:tracking-normal">
+                        <span className="px-3 py-1.5 w-fit rounded-lg bg-emerald-100 text-emerald-800 text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal">
                           {t("✅ Actif")}
                         </span>
                       )}
                       {p.status === "rejected" && (
-                        <span className="px-3 py-1.5 w-fit rounded-lg bg-red-100 text-red-800 text-[9px] font-black uppercase tracking-wider rtl:tracking-normal">
+                        <span className="px-3 py-1.5 w-fit rounded-lg bg-red-100 text-red-800 text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal">
                           {t("❌ Refusé")}
                         </span>
                       )}
                       {p.status === "pending_deletion" && (
-                        <span className="px-3 py-1.5 w-fit rounded-lg bg-red-100 text-red-800 text-[9px] font-black uppercase tracking-wider rtl:tracking-normal animate-pulse">
+                        <span className="px-3 py-1.5 w-fit rounded-lg bg-red-100 text-red-800 text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal animate-pulse">
                           {t("🗑️ Suppression Demandée")}
                         </span>
                       )}
@@ -497,19 +498,19 @@ export const ProductModeration: React.FC = () => {
                   <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
                     <div>
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest rtl:tracking-normal leading-none">
+                        <span className="text-[10px] font-kinder text-stone-400 uppercase tracking-widest rtl:tracking-normal leading-none">
                           {p.category || "Sans catégorie"}
                         </span>
                         <span className="text-[10px] font-bold text-[#E55B3C] font-mono">{p.wilaya || "N/A"}</span>
                       </div>
 
-                      <h2 className="text-base font-black text-zinc-950 mt-1 lines-clamp-2 leading-tight uppercase font-sans tracking-tight rtl:tracking-normal">
+                      <h2 className="text-base font-kinder text-zinc-950 mt-1 lines-clamp-2 leading-tight uppercase font-sans tracking-tight rtl:tracking-normal">
                         {p.name}
                       </h2>
 
                       <div className="flex items-center gap-2 mt-2">
                         {p.brand && (
-                          <span className="text-[9px] font-black px-2 py-1 rounded bg-[#F8F5F1] text-zinc-650 uppercase tracking-wide border border-stone-250">
+                          <span className="text-[9px] font-kinder px-2 py-1 rounded bg-[#F8F5F1] text-zinc-650 uppercase tracking-wide border border-stone-250">
                             {p.brand}
                           </span>
                         )}
@@ -530,19 +531,19 @@ export const ProductModeration: React.FC = () => {
                     {/* Stats metric drawer */}
                     <div className="grid grid-cols-2 gap-2 bg-[#FAF8F6] p-3 rounded-xl border border-stone-200/50">
                       <div className="text-center">
-                        <span className="text-[8px] font-black text-stone-400 uppercase tracking-wide">
+                        <span className="text-[8px] font-kinder text-stone-400 uppercase tracking-wide">
                           {t("Score de Qualité")}
                         </span>
-                        <p className="text-xs font-black text-stone-800 flex items-center justify-center gap-1 mt-0.5">
+                        <p className="text-xs font-kinder text-stone-800 flex items-center justify-center gap-1 mt-0.5">
                           <Sparkles className="w-3.5 h-3.5 text-orange-500 fill-orange-500" />
                           {score}
                         </p>
                       </div>
                       <div className="text-center border-l border-stone-300/40">
-                        <span className="text-[8px] font-black text-stone-400 uppercase tracking-wide">
+                        <span className="text-[8px] font-kinder text-stone-400 uppercase tracking-wide">
                           {t("Prix de Vente")}
                         </span>
-                        <p className="text-xs font-black text-zinc-900 mt-0.5">{formatPrice(p.price)}</p>
+                        <p className="text-xs font-kinder text-zinc-900 mt-0.5">{formatPrice(p.price)}</p>
                       </div>
                     </div>
 
@@ -551,14 +552,14 @@ export const ProductModeration: React.FC = () => {
                       <div className="grid grid-cols-2 gap-3 shrink-0 pt-2 border-t border-stone-100">
                         <button
                           onClick={() => handleOpenRejectModal(p)}
-                          className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-red-200 hover:bg-red-50 text-red-700 text-[10px] font-black uppercase tracking-wider rtl:tracking-normal transition-all cursor-pointer bg-white"
+                          className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-red-200 hover:bg-red-50 text-red-700 text-[10px] font-kinder uppercase tracking-wider rtl:tracking-normal transition-all cursor-pointer bg-white"
                         >
                           <XCircle className="w-3.5 h-3.5" />
                           {t("Rejeter")}
                         </button>
                         <button
                           onClick={() => handleApprove(p)}
-                          className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-zinc-950 text-white hover:bg-zinc-800 text-[10px] font-black uppercase tracking-wider rtl:tracking-normal transition-all cursor-pointer"
+                          className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-zinc-950 text-white hover:bg-zinc-800 text-[10px] font-kinder uppercase tracking-wider rtl:tracking-normal transition-all cursor-pointer"
                         >
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           {t("Approuver")}
@@ -570,14 +571,14 @@ export const ProductModeration: React.FC = () => {
                       <div className="grid grid-cols-2 gap-3 shrink-0 pt-2 border-t border-stone-100">
                         <button
                           onClick={() => handleDenyDelete(p)}
-                          className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-stone-200 hover:bg-zinc-50 text-stone-700 text-[10px] font-black uppercase tracking-wider rtl:tracking-normal transition-all cursor-pointer bg-white"
+                          className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-stone-200 hover:bg-zinc-50 text-stone-700 text-[10px] font-kinder uppercase tracking-wider rtl:tracking-normal transition-all cursor-pointer bg-white"
                         >
                           <ArrowLeft className="w-3.5 h-3.5" />
                           {t("Refuser (Garder)")}
                         </button>
                         <button
                           onClick={() => handleConfirmDelete(p)}
-                          className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-red-600 text-white hover:bg-red-700 text-[10px] font-black uppercase tracking-wider rtl:tracking-normal transition-all cursor-pointer"
+                          className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-red-600 text-white hover:bg-red-700 text-[10px] font-kinder uppercase tracking-wider rtl:tracking-normal transition-all cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                           {t("Supprimer")}
@@ -593,7 +594,7 @@ export const ProductModeration: React.FC = () => {
             <div className="flex justify-center mt-12 mb-8">
               <button
                 onClick={loadMore}
-                className="px-8 py-3 bg-white border border-stone-200 text-stone-900 rounded-full font-black text-xs uppercase tracking-widest hover:border-orange-500 hover:text-orange-500 transition-all flex items-center gap-2 shadow-sm"
+                className="px-8 py-3 bg-white border border-stone-200 text-stone-900 rounded-full font-kinder text-xs uppercase tracking-widest hover:border-orange-500 hover:text-orange-500 transition-all flex items-center gap-2 shadow-sm"
               >
                 {t("Afficher plus de produits")}
               </button>
@@ -621,7 +622,7 @@ export const ProductModeration: React.FC = () => {
               className="relative bg-white w-full max-w-md rounded-2xl overflow-hidden shadow-2xl p-6"
             >
               <div className="flex items-center justify-between pb-4 border-b border-stone-100">
-                <h3 className="text-sm font-black text-zinc-900 uppercase tracking-wider rtl:tracking-normal flex items-center gap-2">
+                <h3 className="text-sm font-kinder text-zinc-900 uppercase tracking-wider rtl:tracking-normal flex items-center gap-2">
                   <ShieldAlert className="w-4 h-4 text-red-500" />
                   {t("Sélectionner un motif de rejet")}
                 </h3>
@@ -635,7 +636,7 @@ export const ProductModeration: React.FC = () => {
 
               <div className="space-y-4 mt-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest rtl:tracking-normal">
+                  <label className="text-[10px] font-kinder text-stone-400 uppercase tracking-widest rtl:tracking-normal">
                     {t("Raisons fréquentes :")}
                   </label>
                   {preconfiguredReasons.map((reason, i) => (
@@ -667,7 +668,7 @@ export const ProductModeration: React.FC = () => {
 
                 {rejectReason === "Autre reason" && (
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest rtl:tracking-normal">
+                    <label className="text-[10px] font-kinder text-stone-400 uppercase tracking-widest rtl:tracking-normal">
                       {t("Saisir le motif :")}
                     </label>
                     <textarea
@@ -688,14 +689,14 @@ export const ProductModeration: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setRejectModalOpen(false)}
-                  className="px-4 py-3 rounded-xl border border-stone-200 hover:bg-stone-50 text-[10px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-600 transition-all cursor-pointer bg-white"
+                  className="px-4 py-3 rounded-xl border border-stone-200 hover:bg-stone-50 text-[10px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-600 transition-all cursor-pointer bg-white"
                 >
                   {t("Annuler")}
                 </button>
                 <button
                   type="button"
                   onClick={handleRejectSubmit}
-                  className="px-4 py-3 rounded-xl bg-red-650 text-white hover:bg-red-700 text-[10px] font-black uppercase tracking-wider rtl:tracking-normal transition-all cursor-pointer"
+                  className="px-4 py-3 rounded-xl bg-red-650 text-white hover:bg-red-700 text-[10px] font-kinder uppercase tracking-wider rtl:tracking-normal transition-all cursor-pointer"
                 >
                   {t("Confirmer le rejet")}
                 </button>

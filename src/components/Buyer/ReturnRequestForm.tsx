@@ -117,7 +117,7 @@ export const ReturnRequestForm: React.FC<ReturnRequestProps> = ({ orderId, onClo
         <button type="button" onClick={onClose} className="absolute top-4 end-4 p-2 text-zinc-400 hover:text-zinc-600">
           <X className="w-5 h-5" />
         </button>
-        <h2 className="text-xl font-black text-[#121315] mb-6">{t("Demander un retour")}</h2>
+        <h2 className="text-xl font-kinder text-[#3C2B22] mb-6">{t("Demander un retour")}</h2>
 
         <div className="space-y-4">
           <div>
@@ -204,7 +204,7 @@ export const ReturnRequestForm: React.FC<ReturnRequestProps> = ({ orderId, onClo
 
         <button
           disabled={loading}
-          className="w-full mt-6 py-4 flex items-center justify-center gap-2 bg-[#F37021] text-white rounded-2xl font-bold hover:bg-[#A94320] transition-colors disabled:opacity-50"
+          className="w-full mt-6 py-4 flex items-center justify-center gap-2 bg-[#FF5C00] text-white rounded-2xl font-bold hover:bg-[#A94320] transition-colors disabled:opacity-50"
         >
           {loading && <Loader2 className="w-5 h-5 animate-spin" />}
           {loading ? "Envoi en cours..." : "Envoyer la demande"}

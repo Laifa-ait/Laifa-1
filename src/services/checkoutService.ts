@@ -1,10 +1,17 @@
 import { auth } from '../lib/firebase';
 
+const MIN_ORDER_AMOUNT = 100;
+
 export const processCheckout = async (payload: any) => {
   try {
     const user = auth.currentUser;
     if (!user) throw new Error("Veuillez vous connecter pour passer commande.");
     
+    // Client-side minimum order validation
+    if (payload.total && payload.total < MIN_ORDER_AMOUNT) {
+      throw new Error(`Montant minimum de commande : ${MIN_ORDER_AMOUNT} DA`);
+    }
+
     // Refresh token to ensure we have the latest claims and valid session
     let token = await user.getIdToken();
     

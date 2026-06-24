@@ -38,9 +38,9 @@ export const WishlistDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> 
         {wishlistProducts.length === 0 ? (
           <div className="h-[75vh] flex flex-col items-center justify-center text-center py-12 px-4">
             <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mb-5">
-              <Heart className="w-8 h-8 text-[#F37021] animate-pulse" fill="#F37021" />
+              <Heart className="w-8 h-8 text-[#FF5C00] animate-pulse" fill="#FF5C00" />
             </div>
-            <h3 className="text-sm font-black text-[#121315] tracking-tight rtl:tracking-normal mb-2 uppercase">
+            <h3 className="text-sm font-kinder text-[#3C2B22] tracking-tight rtl:tracking-normal mb-2 uppercase">
               {t("empty_wishlist_title") || "Votre liste est vide"}
             </h3>
             <p className="text-xs rtl:text-sm text-zinc-400 font-bold max-w-[240px] leading-relaxed mb-8">
@@ -52,7 +52,7 @@ export const WishlistDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> 
                 onClose();
                 navigate("/shop");
               }}
-              className="px-6 py-3.5 bg-[#F37021] hover:bg-[#b04f30]/90 text-white font-black text-xs rtl:text-sm uppercase tracking-widest rtl:tracking-normal rounded-2xl flex items-center gap-2 shadow-sm hover:shadow-md transition-all cursor-pointer border-none"
+              className="px-6 py-3.5 bg-[#FF5C00] hover:bg-[#b04f30]/90 text-white font-kinder text-xs rtl:text-sm uppercase tracking-widest rtl:tracking-normal rounded-2xl flex items-center gap-2 shadow-sm hover:shadow-md transition-all cursor-pointer border-none"
             >
               <Package className="w-4 h-4" />
               {t("go_to_shop") || "Découvrir la boutique"}

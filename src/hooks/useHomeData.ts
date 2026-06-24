@@ -55,7 +55,9 @@ export const useHomeData = () => {
           );
           if (!cacheDocSnap.empty) {
             const data = cacheDocSnap.docs[0].data();
-            return { sections: data.sections || [], banners: data.banners || [], tags: data.tags || [] };
+            if (data && Array.isArray(data.banners) && data.banners.length > 0) {
+              return { sections: data.sections || [], banners: data.banners || [], tags: data.tags || [] };
+            }
           }
         } catch (e) {
           console.error("fetchCarousel public cache error:", e);

@@ -12,8 +12,8 @@ interface ErrorInfo {
 }
 
 const sanitizeErrorInfo = (info: Omit<ErrorInfo, 'timestamp' | 'url' | 'userAgent'>) => {
-  const scrubText = (text: string | undefined): string | undefined => {
-    if (!text) return undefined;
+  const scrubText = (text: string | undefined): string => {
+    if (!text) return "";
     // Scrub workspace root structures, node_modules, complex paths, and sensitive files
     return text
       .replace(/(?:\/[^\/\s]+)*\/src\/[^\s\)]+/g, '[internal_code]')

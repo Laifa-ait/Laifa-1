@@ -15,8 +15,8 @@ export const NeoCategoryGrid: React.FC<{
   const { setActiveCategory } = useShop();
 
   return (
-    <section className="w-full max-w-[90rem] mx-auto px-4 sm:px-6 md:px-8 mb-16">
-      <div className="flex flex-nowrap md:grid md:grid-cols-3 gap-4 md:gap-6 overflow-x-auto md:overflow-visible scrollbar-hide snap-x snap-mandatory pb-4 md:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0">
+    <section className="w-full max-w-[90rem] mx-auto px-4 sm:px-6 md:px-8 mb-16 pt-8">
+      <div className="flex flex-nowrap md:grid md:grid-cols-3 gap-6 md:gap-8 overflow-x-auto md:overflow-visible scrollbar-hide snap-x snap-mandatory pb-4 md:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0">
         {categories.map((card, index) => (
           <motion.div
             key={card.key}
@@ -30,7 +30,7 @@ export const NeoCategoryGrid: React.FC<{
               setActiveCategory(card.key);
               navigate("/shop");
             }}
-            className={`relative shrink-0 snap-center w-[85vw] sm:w-[400px] md:w-auto rounded-3xl overflow-hidden cursor-pointer shadow-[0_12px_25px_rgba(30,67,86,0.05)] border border-[#EBE5DF]/60 group ${
+            className={`relative shrink-0 snap-center w-[85vw] sm:w-[400px] md:w-auto rounded-[3rem] overflow-hidden cursor-pointer shadow-[0_16px_48px_rgba(26,20,16,0.10)] border border-[#E5DED4]/30 group ${
               index === 0 ? "md:col-span-2 md:row-span-2 h-[260px] md:h-[624px]" : "h-[260px] md:h-[300px]"
             }`}
           >
@@ -41,18 +41,20 @@ export const NeoCategoryGrid: React.FC<{
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 ease-out"
               referrerPolicy="no-referrer"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#FAF8F5] via-[#FAF8F5]/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity duration-500" />
+            
+            {/* Playful color gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#1A1410]/80 via-[#1A1410]/20 to-transparent opacity-90 group-hover:opacity-100 transition-opacity duration-500" />
 
-            <div className="absolute inset-x-0 bottom-0 p-6 flex flex-col justify-end items-start z-10">
+            <div className="absolute inset-x-0 bottom-0 p-8 flex flex-col justify-end items-start z-10">
               {card.key === favoriteCategory && (
-                <span className="mb-4 bg-[#121315] px-3 py-1 rounded-sm font-mono text-[10px] rtl:text-[12px] font-black uppercase tracking-widest rtl:tracking-normal text-white shadow-xl">
-                  [ {t("home.category.recommended_star") || "RECOMMANDÉ ⭐"} ]
+                <span className="mb-4 bg-[#D4A574]/20 px-4 py-1.5 rounded-full font-sans text-[11px] rtl:text-[12px] font-serif uppercase tracking-widest rtl:tracking-normal text-[#D4A574] border border-[#D4A574]/30 backdrop-blur-sm">
+                  {t("home.category.recommended_star")} 
                 </span>
               )}
-              <h3 className="text-3xl md:text-5xl font-sans font-bold text-[#121315] tracking-tighter rtl:tracking-normal mb-2 uppercase drop-shadow-xl">
+              <h3 className="text-4xl md:text-6xl font-serif text-white tracking-tighter rtl:tracking-normal mb-2 uppercase drop-shadow-sm group-hover:text-[#F5F0E8] transition-colors leading-none">
                 {card.title}
               </h3>
-              <span className="font-mono text-stone-500 text-xs rtl:text-sm tracking-widest rtl:tracking-normal uppercase">
+              <span className="font-sans font-bold text-[#F5F0E8] text-xs rtl:text-sm tracking-widest rtl:tracking-normal uppercase mt-1">
                 {card.subtitle}
               </span>
             </div>

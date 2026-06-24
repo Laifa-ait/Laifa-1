@@ -36,7 +36,7 @@ export const AuditLogsAdmin: React.FC = () => {
           <ShieldCheck className="w-5 h-5" />
         </div>
         <div>
-          <h2 className="text-xl font-black tracking-tight rtl:tracking-normal text-zinc-900">
+          <h2 className="text-xl font-kinder tracking-tight rtl:tracking-normal text-zinc-900">
             {t("Journaux d'Audit & Sécurité")}
           </h2>
           <p className="text-sm text-zinc-500 font-medium">{t("Historique des modifications du système.")}</p>
@@ -69,7 +69,7 @@ export const AuditLogsAdmin: React.FC = () => {
                     className="hover:bg-zinc-50/50 transition-colors"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 text-zinc-800 font-black text-[10px] uppercase tracking-widest rtl:tracking-normal">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 text-zinc-800 font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal">
                         {log.action}
                       </span>
                     </td>

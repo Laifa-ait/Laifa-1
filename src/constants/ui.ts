@@ -443,3 +443,7 @@ export const PRESET_AVATARS = [
     </svg>`,
   },
 ];
+
+export const BUYER_ORDERS_PER_PAGE = 5;
+export const CART_RESERVATION_MINUTES = 15;
+

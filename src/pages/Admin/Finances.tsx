@@ -23,6 +23,7 @@ import { WithdrawalRequest } from "../../types";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
+import * as XLSX from "xlsx";
 
 export const Finances: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -221,14 +222,14 @@ export const Finances: React.FC = () => {
     <div className="space-y-12 relative">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-4xl font-black tracking-tight rtl:tracking-normal text-zinc-950">
+          <h2 className="text-4xl font-kinder tracking-tight rtl:tracking-normal text-zinc-950">
             {t("Portefeuille & Litiges")}
           </h2>
           <p className="text-zinc-500 font-medium">{t("Gérez les flux financiers et les paiements vendeurs.")}</p>
         </div>
         <button
           onClick={exportToCSV}
-          className="px-8 py-5 bg-[#ea580c] text-white rounded-[2rem] flex items-center gap-4 font-black text-[11px] uppercase tracking-widest rtl:tracking-normal shadow-xl shadow-orange-500/20"
+          className="px-8 py-5 bg-[#ea580c] text-white rounded-[2rem] flex items-center gap-4 font-kinder text-[11px] uppercase tracking-widest rtl:tracking-normal shadow-xl shadow-orange-500/20"
         >
           <FileSpreadsheet className="w-5 h-5" />
           {t("Export Comptable (Excel)")}
@@ -240,10 +241,10 @@ export const Finances: React.FC = () => {
           <div>
             <div className="flex items-start justify-between mb-2">
               <div>
-                <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest rtl:tracking-normal mb-2">
+                <h4 className="text-[10px] font-kinder text-zinc-500 uppercase tracking-widest rtl:tracking-normal mb-2">
                   {t("Commission Globale")}
                 </h4>
-                <h3 className="text-xl font-black text-zinc-950 tracking-tight rtl:tracking-normal">
+                <h3 className="text-xl font-kinder text-zinc-950 tracking-tight rtl:tracking-normal">
                   {t("Taux appliqué par défaut aux vendeurs")}
                 </h3>
               </div>
@@ -264,14 +265,14 @@ export const Finances: React.FC = () => {
                 min="0"
                 value={globalCommission}
                 onChange={(e) => setGlobalCommission(Number(e.target.value))}
-                className="w-full bg-zinc-50 text-xl font-black rounded-3xl py-4 ps-6 pe-12 outline-none border border-transparent focus:border-zinc-200 focus:bg-white transition-all focus:shadow-sm"
+                className="w-full bg-zinc-50 text-xl font-kinder rounded-3xl py-4 ps-6 pe-12 outline-none border border-transparent focus:border-zinc-200 focus:bg-white transition-all focus:shadow-sm"
               />
-              <div className="absolute top-1/2 end-6 -translate-y-1/2 text-zinc-400 font-black">%</div>
+              <div className="absolute top-1/2 end-6 -translate-y-1/2 text-zinc-400 font-kinder">%</div>
             </div>
             <button
               onClick={handleSaveCommission}
               disabled={isSavingCommission}
-              className="px-8 py-4 bg-zinc-950 text-white rounded-[2rem] font-black text-xs uppercase tracking-widest rtl:tracking-normal flex items-center gap-3 hover:bg-zinc-800 transition-colors shadow-xl disabled:opacity-50"
+              className="px-8 py-4 bg-zinc-950 text-white rounded-[2rem] font-kinder text-xs uppercase tracking-widest rtl:tracking-normal flex items-center gap-3 hover:bg-zinc-800 transition-colors shadow-xl disabled:opacity-50"
             >
               {isSavingCommission ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               {t("Sauvegarder")}
@@ -281,15 +282,15 @@ export const Finances: React.FC = () => {
 
         <div className="bg-zinc-950 rounded-[3rem] p-10 text-white relative overflow-hidden border border-white/10 shadow-2xl">
           <div className="absolute top-0 end-0 w-48 h-48 bg-[#ea580c]/20 rounded-full  -me-16 -mt-16" />
-          <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest rtl:tracking-normal mb-2 relative z-10">
+          <h4 className="text-[10px] font-kinder text-zinc-500 uppercase tracking-widest rtl:tracking-normal mb-2 relative z-10">
             {t("En attente de virement")}
           </h4>
-          <h3 className="text-4xl font-black text-[#ffffff] tracking-tighter rtl:tracking-normal mb-4 relative z-10">
+          <h3 className="text-4xl font-kinder text-[#ffffff] tracking-tighter rtl:tracking-normal mb-4 relative z-10">
             {formatPrice(totalPendingAmount)}
           </h3>
           <div className="flex items-center gap-2 relative z-10">
             <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
+            <span className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
               {pendingCount} {t("demandes en cours")}
             </span>
           </div>
@@ -298,7 +299,7 @@ export const Finances: React.FC = () => {
 
       <div className="bg-white rounded-[3.5rem] border border-zinc-100 shadow-sm overflow-hidden">
         <div className="p-10 border-b border-zinc-50">
-          <h4 className="text-xl font-black flex items-center gap-4">
+          <h4 className="text-xl font-kinder flex items-center gap-4">
             <Clock className="w-7 h-7 text-orange-500" />
             {t("Demandes de Retrait")}
           </h4>
@@ -325,15 +326,15 @@ export const Finances: React.FC = () => {
                       <Landmark className="w-8 h-8" />
                     </div>
                     <div>
-                      <h4 className="text-2xl font-black text-zinc-950 tracking-tighter rtl:tracking-normal mb-1">
+                      <h4 className="text-2xl font-kinder text-zinc-950 tracking-tighter rtl:tracking-normal mb-1">
                         {formatPrice(w.amount)}
                       </h4>
                       <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
+                        <span className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
                           {w.shopName || (w as any).sellerName || "Boutique"}
                         </span>
                         <span className="w-1 h-1 bg-zinc-200 rounded-full" />
-                        <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
+                        <span className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
                           {t("RIB/CCP:")}
                           {w.accountDetails || (w as any).rib}
                         </span>
@@ -343,10 +344,10 @@ export const Finances: React.FC = () => {
 
                   <div className="flex items-center gap-6">
                     <div className="text-end hidden lg:block">
-                      <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1">
+                      <p className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1">
                         {t("Date Demande")}
                       </p>
-                      <p className="text-sm font-black text-zinc-950">{w.createdAt?.toDate().toLocaleDateString()}</p>
+                      <p className="text-sm font-kinder text-zinc-950">{w.createdAt?.toDate().toLocaleDateString()}</p>
                     </div>
                     {w.status?.toLowerCase() === "pending" ? (
                       <button
@@ -354,12 +355,12 @@ export const Finances: React.FC = () => {
                           setSelectedWithdrawal(w);
                           setReceiptValue("");
                         }}
-                        className="px-8 py-4 bg-zinc-950 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest rtl:tracking-normal flex items-center gap-3 shadow-xl hover:scale-105 active:scale-95 transition-all"
+                        className="px-8 py-4 bg-zinc-950 text-white rounded-2xl font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal flex items-center gap-3 shadow-xl hover:scale-105 active:scale-95 transition-all"
                       >
                         <CheckCircle2 className="w-4 h-4" /> {t("Traiter Virement")}
                       </button>
                     ) : (
-                      <div className="flex items-center gap-3 px-8 py-4 bg-emerald-50 text-emerald-600 rounded-2xl font-black text-[10px] uppercase tracking-widest rtl:tracking-normal border border-emerald-100">
+                      <div className="flex items-center gap-3 px-8 py-4 bg-emerald-50 text-emerald-600 rounded-2xl font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal border border-emerald-100">
                         <CheckCircle2 className="w-4 h-4" /> {t("Virement Effectué")}
                       </div>
                     )}
@@ -395,17 +396,17 @@ export const Finances: React.FC = () => {
                 <X className="w-6 h-6" />
               </button>
 
-              <h3 className="text-2xl font-black text-zinc-900 tracking-tight rtl:tracking-normal mb-2">
+              <h3 className="text-2xl font-kinder text-zinc-900 tracking-tight rtl:tracking-normal mb-2">
                 {t("Confirmer le paiement")}
               </h3>
               <p className="text-zinc-500 text-sm mb-6">{t("Entrez le N° de reçu du virement.")}</p>
 
               <div className="bg-zinc-50 rounded-2xl p-4 mb-6 border border-zinc-100">
-                <p className="text-[10px] font-black uppercase text-zinc-400 tracking-widest rtl:tracking-normal mb-1">
+                <p className="text-[10px] font-kinder uppercase text-zinc-400 tracking-widest rtl:tracking-normal mb-1">
                   {t("Montant à transférer")}
                 </p>
-                <p className="text-2xl font-black text-zinc-900 mb-2">{formatPrice(selectedWithdrawal.amount)}</p>
-                <p className="text-[10px] font-black uppercase text-zinc-400 tracking-widest rtl:tracking-normal mb-1">
+                <p className="text-2xl font-kinder text-zinc-900 mb-2">{formatPrice(selectedWithdrawal.amount)}</p>
+                <p className="text-[10px] font-kinder uppercase text-zinc-400 tracking-widest rtl:tracking-normal mb-1">
                   {t("Coordonnées (")}
                   {(selectedWithdrawal.method || "").replace("_", " ")})
                 </p>
@@ -430,7 +431,7 @@ export const Finances: React.FC = () => {
                   <button
                     type="submit"
                     disabled={processing || !receiptValue}
-                    className="w-full bg-[#ea580c] hover:bg-orange-600 text-white py-5 rounded-[2rem] font-black text-xs uppercase tracking-widest rtl:tracking-normal flex justify-center items-center gap-2 shadow-xl shadow-orange-500/20 disabled:opacity-50 transition-all"
+                    className="w-full bg-[#ea580c] hover:bg-orange-600 text-white py-5 rounded-[2rem] font-kinder text-xs uppercase tracking-widest rtl:tracking-normal flex justify-center items-center gap-2 shadow-xl shadow-orange-500/20 disabled:opacity-50 transition-all"
                   >
                     {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : "Marquer comme Payé"}
                   </button>
@@ -438,7 +439,7 @@ export const Finances: React.FC = () => {
                     type="button"
                     onClick={handleRejectWithdrawal}
                     disabled={processing}
-                    className="w-full bg-white border border-red-200 text-red-600 hover:bg-red-50 py-5 rounded-[2rem] font-black text-xs uppercase tracking-widest rtl:tracking-normal flex justify-center items-center gap-2 transition-all disabled:opacity-50"
+                    className="w-full bg-white border border-red-200 text-red-600 hover:bg-red-50 py-5 rounded-[2rem] font-kinder text-xs uppercase tracking-widest rtl:tracking-normal flex justify-center items-center gap-2 transition-all disabled:opacity-50"
                   >
                     {t("Échec du Virement / Rejeter")}
                   </button>

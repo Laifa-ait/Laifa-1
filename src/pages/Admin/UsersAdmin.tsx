@@ -66,7 +66,7 @@ export const UsersAdmin: React.FC = () => {
       {/* Header */}
       <div className="bg-white rounded-[2.5rem] p-8 md:p-10 border border-zinc-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-zinc-950 uppercase tracking-tight rtl:tracking-normal">
+          <h1 className="text-2xl sm:text-3xl font-kinder text-zinc-950 uppercase tracking-tight rtl:tracking-normal">
             {t("Gestion des")}<span className="text-indigo-600">{t("Clients")}</span>
           </h1>
           <p className="text-zinc-500 font-medium mt-2">
@@ -77,10 +77,10 @@ export const UsersAdmin: React.FC = () => {
             <Users className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-2xl font-black text-indigo-900">
+            <div className="text-2xl font-kinder text-indigo-900">
               {users.length}
             </div>
-            <div className="text-[10px] font-black text-indigo-700 uppercase tracking-widest rtl:tracking-normal">
+            <div className="text-[10px] font-kinder text-indigo-700 uppercase tracking-widest rtl:tracking-normal">
               {t("Utilisateurs")}</div>
           </div>
         </div>
@@ -106,13 +106,13 @@ export const UsersAdmin: React.FC = () => {
           <table className="w-full text-start border-collapse">
             <thead>
               <tr className="border-b border-zinc-100 bg-zinc-50/50">
-                <th className="p-6 text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-500">
+                <th className="p-6 text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-500">
                   {t("Utilisateur")}</th>
-                <th className="p-6 text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-500">
+                <th className="p-6 text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-500">
                   {t("Email")}</th>
-                <th className="p-6 text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-500">
+                <th className="p-6 text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-500">
                   {t("Rôle Base")}</th>
-                <th className="p-6 text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-500">
+                <th className="p-6 text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-500">
                   {t("Privilège VIP (Client Type)")}</th>
               </tr>
             </thead>
@@ -143,7 +143,7 @@ export const UsersAdmin: React.FC = () => {
                                   >
                                     <td className="p-6">
                                       <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center font-black uppercase shadow-inner">
+                                        <div className="w-10 h-10 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center font-kinder uppercase shadow-inner">
                                           {user.displayName?.charAt(0) || user.email?.charAt(0)}
                                         </div>
                                         <span className="font-bold text-zinc-900">
@@ -155,7 +155,7 @@ export const UsersAdmin: React.FC = () => {
                                       {user.email}
                                     </td>
                                     <td className="p-6">
-                                      <span className="px-3 py-1 bg-zinc-100 text-zinc-700 text-[10px] font-black uppercase tracking-widest rtl:tracking-normal rounded-lg border border-zinc-200">
+                                      <span className="px-3 py-1 bg-zinc-100 text-zinc-700 text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal rounded-lg border border-zinc-200">
                                         {user.role || "buyer"}
                                       </span>
                                     </td>

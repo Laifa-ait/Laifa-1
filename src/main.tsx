@@ -60,7 +60,6 @@ import { useTranslation } from "react-i18next";
 setupErrorAgent();
 
 const I18nLoader = () => {
-  const { t } = useTranslation();
   return (
     <div
       style={{
@@ -69,17 +68,16 @@ const I18nLoader = () => {
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: "#f9f4e8",
-        color: "#121315",
+        color: "#3C2B22",
         fontWeight: 600,
       }}
     >
-      {t("Initialisation des langues...")}
+      Initialisation...
     </div>
   );
 };
 
 const ErrorFallback = ({ error, resetErrorBoundary }: any) => {
-  const { t } = useTranslation();
   return (
     <div
       style={{
@@ -89,26 +87,26 @@ const ErrorFallback = ({ error, resetErrorBoundary }: any) => {
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: "#f9f4e8",
-        color: "#121315",
+        color: "#3C2B22",
         fontWeight: 600,
         padding: "20px",
         textAlign: "center",
       }}
     >
-      <h2 style={{ fontSize: "24px", marginBottom: "16px" }}>{t("Oups, une erreur est survenue")}</h2>
+      <h2 style={{ fontSize: "24px", marginBottom: "16px" }}>Erreur inattendue</h2>
       <p style={{ marginBottom: "24px", opacity: 0.8 }}>{error.message}</p>
       <button
         onClick={resetErrorBoundary}
         style={{
           padding: "10px 24px",
-          backgroundColor: "#121315",
+          backgroundColor: "#3C2B22",
           color: "white",
           border: "none",
           borderRadius: "8px",
           cursor: "pointer",
         }}
       >
-        {t("Rafraîchir")}
+        Rafraîchir
       </button>
     </div>
   );

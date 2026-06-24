@@ -367,7 +367,7 @@ export const CustomerPreferences: React.FC<CustomerPreferencesProps> = ({ curren
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="max-w-xl space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/15 border border-amber-500/35 rounded-full text-amber-400 text-[10px] font-black tracking-widest uppercase mb-1">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/15 border border-amber-500/35 rounded-full text-amber-400 text-[10px] font-kinder tracking-widest uppercase mb-1">
               <Sparkles className="w-3 h-3 animate-pulse" />
               <span>{isArabic ? "إعدادات الأسلوب المخصص" : "ENGAGEMENT PERSONNALISÉ"}</span>
             </div>
@@ -385,10 +385,10 @@ export const CustomerPreferences: React.FC<CustomerPreferencesProps> = ({ curren
           {/* Real-time stats pill */}
           <div className="flex items-center md:flex-col gap-3 justify-end flex-shrink-0 bg-zinc-900/70 backdrop-blur border border-zinc-850 px-5 py-4 rounded-2xl">
             <div className="text-start md:text-center">
-              <span className="block text-[10px] font-black text-zinc-400 tracking-wider">
+              <span className="block text-[10px] font-kinder text-zinc-400 tracking-wider">
                 {isArabic ? "الفئات الفرعية النشطة" : "SÉLECTIONNÉES"}
               </span>
-              <span className="block text-2xl font-black text-amber-400 mt-0.5">{selectedInterests.length}</span>
+              <span className="block text-2xl font-kinder text-amber-400 mt-0.5">{selectedInterests.length}</span>
             </div>
             {selectedInterests.length > 0 && (
               <button
@@ -524,7 +524,7 @@ export const CustomerPreferences: React.FC<CustomerPreferencesProps> = ({ curren
                     >
                       <div className="bg-zinc-50/70 p-5 md:p-6 space-y-4">
                         <div className="flex items-center justify-between">
-                          <p className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">
+                          <p className="text-[10px] font-kinder uppercase text-zinc-400 tracking-wider">
                             {isArabic
                               ? `تخصيص الفئات الفرعية لـ ${translateKey(parentCat)} :`
                               : `Affiner les rubriques de ${translateKey(parentCat)} :`}
@@ -607,7 +607,7 @@ export const CustomerPreferences: React.FC<CustomerPreferencesProps> = ({ curren
         {/* Dynamic Sticky Bottom Options Board */}
         <div className="bg-white border border-zinc-150 shadow-xl rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 sticky bottom-4 z-40">
           <div className="text-start">
-            <span className="block text-[10px] font-black text-zinc-400 tracking-wider">
+            <span className="block text-[10px] font-kinder text-zinc-400 tracking-wider">
               {isArabic ? "تقييم التخصيص التلقائي :" : "MOTEUR D'AFFINITÉ"}
             </span>
             <span className="text-xs font-extrabold text-zinc-700">

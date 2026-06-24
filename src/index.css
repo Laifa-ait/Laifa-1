@@ -1,23 +1,29 @@
-@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700&family=Cairo:wght@400;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;700;800;900&display=swap");
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Space Grotesk", "Tajawal", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk", "Cairo", sans-serif;
-  --font-mono:
-    "JetBrains Mono", "Tajawal", ui-monospace, SFMono-Regular, monospace;
-
+  --font-sans: "Nunito", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fredoka", ui-sans-serif, system-ui, sans-serif;
+  
   /* Premium soft shadow definitions to create elevated, modern depth */
-  --shadow-sm: 0 2px 8px rgba(30, 67, 86, 0.04);
-  --shadow-md: 0 8px 24px rgba(30, 67, 86, 0.08);
-  --shadow-lg: 0 16px 40px rgba(30, 67, 86, 0.12);
-  --shadow-xl: 0 24px 60px rgba(30, 67, 86, 0.16);
-  --shadow-2xl: 0 32px 80px rgba(30, 67, 86, 0.2);
+  --shadow-sm: 0 4px 10px rgba(60, 43, 34, 0.05);
+  --shadow-md: 0 8px 24px rgba(60, 43, 34, 0.08);
+  --shadow-lg: 0 16px 40px rgba(60, 43, 34, 0.12);
+  --shadow-xl: 0 24px 60px rgba(60, 43, 34, 0.16);
+  --shadow-2xl: 0 32px 80px rgba(60, 43, 34, 0.2);
 }
 
 body {
-  background-color: #faf8f5 !important;
-  color: #121315 !important;
+  background-color: #FDF9EC !important; /* Kinder Cream */
+  color: #3C2B22 !important; /* Deep Cocoa Brown */
+  font-family: var(--font-sans);
+}
+
+/* Rounded typography classes for playful Kinder feel */
+.font-kinder {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 @layer utilities {
@@ -53,15 +59,17 @@ body {
   }
 }
 
-/* Hide scrollbars globally but allow scrolling */
+/* Keep standard scrollbars or customize them minimally without hiding entirely */
 ::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
+  width: 8px; /* Give it a standard size instead of 0 */
+  height: 8px;
 }
-* {
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
+::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 @keyframes marquee {

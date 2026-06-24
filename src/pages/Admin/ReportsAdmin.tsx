@@ -163,7 +163,7 @@ export const ReportsAdmin: React.FC = () => {
   return (
     <div className="space-y-8">
       <div className="flex flex-col justify-between gap-2">
-        <h2 className="text-3xl font-black tracking-tight rtl:tracking-normal text-zinc-950 uppercase">{t("Exports & Rapports")}</h2>
+        <h2 className="text-3xl font-kinder tracking-tight rtl:tracking-normal text-zinc-950 uppercase">{t("Exports & Rapports")}</h2>
         <p className="text-zinc-500 font-medium">{t("Générez des rapports CSV/Excel pour la comptabilité, le marketing et l'analytique globale.")}</p>
       </div>
 
@@ -181,7 +181,7 @@ export const ReportsAdmin: React.FC = () => {
                 <report.icon className="w-6 h-6" />
               </div>
               <div className="min-h-[72px]">
-                <h3 className="font-black text-lg text-zinc-900">{t(report.title)}</h3>
+                <h3 className="font-kinder text-lg text-zinc-900">{t(report.title)}</h3>
                 <p className="text-xs text-zinc-500 font-medium mt-1">{t(report.desc)}</p>
               </div>
               <button 

@@ -19,7 +19,8 @@ const router = Router();
 const aiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 20, // Limite à 20 requêtes par fenêtre par utilisateur
-  keyGenerator: (req: any) => req.user?.uid || req.ip,
+  standardHeaders: true,
+  legacyHeaders: false,
   handler: (req: AuthenticatedRequest, res: Response) => {
     res.status(429).end("Trop de requêtes. Veuillez patienter avant de renvoyer un message.");
   }
@@ -29,7 +30,8 @@ const aiLimiter = rateLimit({
 const chatLimiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 minutes
   max: 15, // Limite spécifique à 15 requêtes
-  keyGenerator: (req: any) => req.user?.uid || req.ip,
+  standardHeaders: true,
+  legacyHeaders: false,
   handler: (req: AuthenticatedRequest, res: Response) => {
     res.status(429).end("Trop de messages envoyés à l'assistant. Veuillez patienter quelques minutes pour préserver les ressources.");
   }
@@ -56,7 +58,7 @@ router.post(
 
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-3.5-flash",
         contents: `Générez une description marketing courte (3-4 phrases), luxueuse et professionnelle pour un produit nommé "${productName}" dans la catégorie "${category || "Général"}". La description doit refléter l'excellence de l'artisanat ou du design algérien de Olma Marketplace. Répondez uniquement avec la description en Français.`,
       });
       const desc = response.text || "";
@@ -83,7 +85,7 @@ router.post(
 
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-3.5-flash",
         contents: `Translate the following product information from French to Arabic and English. Return ONLY a pure JSON object. Format strictly as: { "name": {"ar": "...", "en": "..."}, "description": {"ar": "...", "en": "..."} }\n\n{"name": "${name}", "description": "${description}"}`,
         config: { responseMimeType: "application/json" }
       });
@@ -121,7 +123,7 @@ router.post(
 
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-3.5-flash",
         contents: `Générez une newsletter de luxe pour Olma Marketplace basée sur ceci: "${prompt}". 
     Répondez au format JSON strict:
     {
@@ -170,7 +172,7 @@ router.post("/chat", authenticateToken, chatLimiter, async (req: AuthenticatedRe
     ];
 
     const stream = await ai.models.generateContentStream({
-      model: "gemini-1.5-flash",
+      model: "gemini-3.5-flash",
       contents: contents,
       config: {
         systemInstruction:

@@ -115,16 +115,16 @@ export const LiveChatDrawer: React.FC<LiveChatDrawerProps> = ({ isOpen, onClose,
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: "100%", opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 bottom-0 w-full sm:w-[400px] bg-[#faf8f5] z-[210] shadow-2xl flex flex-col border-l border-zinc-200"
+            className="fixed top-0 right-0 bottom-0 w-full sm:w-[400px] bg-[#FDF9EC] z-[210] shadow-2xl flex flex-col border-l border-zinc-200"
           >
             {/* Header */}
             <div className="bg-white px-6 py-5 border-b border-zinc-100 flex items-center justify-between shadow-sm z-10 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-orange-100 text-[#F37021] rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-orange-100 text-[#FF5C00] rounded-full flex items-center justify-center">
                   <MessageCircle className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-black text-[#121315] text-base">{otherPartyName}</h3>
+                  <h3 className="font-kinder text-[#3C2B22] text-base">{otherPartyName}</h3>
                   <p className="text-xs rtl:text-sm font-bold text-stone-400 uppercase tracking-wider rtl:tracking-normal">
                     {t("Discussion relative à la commande #")}
                     {orderId.substring(0, 8)}
@@ -180,7 +180,7 @@ export const LiveChatDrawer: React.FC<LiveChatDrawerProps> = ({ isOpen, onClose,
             {/* Input Area */}
             <div className="p-4 bg-white border-t border-zinc-100 shrink-0">
               {error && (
-                <div className="mb-3 px-4 py-3 bg-red-100/40 border border-red-200/50 rounded-2xl flex items-center gap-2 text-red-600 text-[10px] rtl:text-[12px] font-black uppercase tracking-wider rtl:tracking-normal">
+                <div className="mb-3 px-4 py-3 bg-red-100/40 border border-red-200/50 rounded-2xl flex items-center gap-2 text-red-600 text-[10px] rtl:text-[12px] font-kinder uppercase tracking-wider rtl:tracking-normal">
                   <AlertTriangle className="w-4 h-4 shrink-0 text-red-500" />
                   <span>{error}</span>
                 </div>

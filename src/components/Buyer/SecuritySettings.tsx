@@ -99,7 +99,7 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ currentUser 
   return (
     <div className="space-y-8" id="security-settings-module">
       <div>
-        <h3 className="font-black text-xl text-zinc-900 tracking-tight rtl:tracking-normal">
+        <h3 className="font-kinder text-xl text-zinc-900 tracking-tight rtl:tracking-normal">
           {t("Configuration de Sécurité")}
         </h3>
         <p className="text-zinc-500 text-xs rtl:text-sm font-medium">
@@ -117,7 +117,7 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ currentUser 
             <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
               <Mail className="w-4 h-4" />
             </div>
-            <h4 className="font-black text-xs rtl:text-sm uppercase tracking-wider rtl:tracking-normal text-zinc-900">
+            <h4 className="font-kinder text-xs rtl:text-sm uppercase tracking-wider rtl:tracking-normal text-zinc-900">
               {t("Adresse de Connexion")}
             </h4>
           </div>
@@ -139,7 +139,7 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ currentUser 
           <div className="pt-2">
             <button
               type="submit"
-              className="w-full py-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 rounded-2xl font-black text-[10px] rtl:text-[12px] uppercase tracking-widest rtl:tracking-normal transition-all focus:scale-95 text-center min-h-[44px]"
+              className="w-full py-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 rounded-2xl font-kinder text-[10px] rtl:text-[12px] uppercase tracking-widest rtl:tracking-normal transition-all focus:scale-95 text-center min-h-[44px]"
             >
               {t("Mettre à jour l'e-mail")}
             </button>
@@ -155,7 +155,7 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ currentUser 
             <div className="w-8 h-8 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600">
               <Key className="w-4 h-4" />
             </div>
-            <h4 className="font-black text-xs rtl:text-sm uppercase tracking-wider rtl:tracking-normal text-zinc-900">
+            <h4 className="font-kinder text-xs rtl:text-sm uppercase tracking-wider rtl:tracking-normal text-zinc-900">
               {t("Changer de Mot de passe")}
             </h4>
           </div>
@@ -200,7 +200,7 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ currentUser 
           <div className="pt-2">
             <button
               type="submit"
-              className="w-full py-4 bg-zinc-900 hover:bg-zinc-800 text-white rounded-2xl font-black text-[10px] rtl:text-[12px] uppercase tracking-widest rtl:tracking-normal transition-all focus:scale-95 text-center min-h-[44px]"
+              className="w-full py-4 bg-zinc-900 hover:bg-zinc-800 text-white rounded-2xl font-kinder text-[10px] rtl:text-[12px] uppercase tracking-widest rtl:tracking-normal transition-all focus:scale-95 text-center min-h-[44px]"
             >
               {t("Changer mon mot de passe")}
             </button>
@@ -238,7 +238,7 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ currentUser 
 
             <div className="space-y-4 pt-2">
               <div className="space-y-2">
-                <label className="text-[10px] rtl:text-[12px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal block leading-none">
+                <label className="text-[10px] rtl:text-[12px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal block leading-none">
                   {t("Votre mot de passe actuel")}
                 </label>
                 <input

@@ -98,12 +98,17 @@ export const Orders: React.FC = () => {
           const q = query(
             collection(db, "orders"),
             where("sellerIds", "array-contains", currentUser.uid),
-            orderBy("createdAt", "desc"),
-            limit(ORDERS_PER_PAGE)
+            limit(250)
           );
           const snap = await getDocs(q);
-          setOrders(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-          setLastVisible(snap.docs[snap.docs.length - 1]);
+          const fetched = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          fetched.sort((a: any, b: any) => {
+            const tA = a.createdAt?.seconds || 0;
+            const tB = b.createdAt?.seconds || 0;
+            return tB - tA;
+          });
+          setOrders(fetched);
+          setLastVisible(null);
         } catch (err) {
           console.error(err);
         }
@@ -128,25 +133,8 @@ export const Orders: React.FC = () => {
   }, [searchTerm, currentUser, refreshTrigger]);
 
   const loadMoreOrders = async () => {
-    if (!currentUser || !lastVisible) return;
-    setLoadingMore(true);
-    try {
-      const q = query(
-        collection(db, "orders"),
-        where("sellerIds", "array-contains", currentUser.uid),
-        orderBy("createdAt", "desc"),
-        startAfter(lastVisible),
-        limit(ORDERS_PER_PAGE)
-      );
-      const snap = await getDocs(q);
-      const newOrders = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setOrders(prev => [...prev, ...newOrders]);
-      setLastVisible(snap.docs[snap.docs.length - 1]);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingMore(false);
-    }
+    // No-op as all orders up to limit are pre-fetched
+    return;
   };
 
   const handleUpdateStatus = async (orderId: string, newStatus: string) => {
@@ -408,7 +396,6 @@ export const Orders: React.FC = () => {
       const q = query(
         collection(db, 'orders'),
         where('sellerIds', 'array-contains', currentUser.uid),
-        orderBy('createdAt', 'desc'),
         limit(150)
       );
       const ordersSnap = await getDocs(q);
@@ -422,6 +409,11 @@ export const Orders: React.FC = () => {
       const commissionRate = userProfile?.commissionRate || 10;
 
       const rawOrders = ordersSnap.docs.map(d => ({id: d.id, ...d.data()})) as any[];
+      rawOrders.sort((a: any, b: any) => {
+        const tA = a.createdAt?.seconds || 0;
+        const tB = b.createdAt?.seconds || 0;
+        return tB - tA;
+      });
       const token = await currentUser?.getIdToken();
       const calcRes = await fetch('/api/calculate-commissions', {
          method: 'POST',
@@ -448,8 +440,8 @@ export const Orders: React.FC = () => {
         sellerItems.forEach((item: any) => {
           const lineTotal = item.price * item.quantity;
           // Extract percentage based on server calculation ratio, or fallback
-          const serverComm = calcMap[orderId]?.commissionCalc || 0;
-          const serverNet = calcMap[orderId]?.netPayout || 0;
+          const serverComm = calcMap[orderId]?.commissionAmount || 0;
+          const serverNet = calcMap[orderId]?.netRevenue || 0;
           const orderTotal = order.total || 1;
           const commission = lineTotal * (serverComm / orderTotal);
           const net = lineTotal - commission;
@@ -577,28 +569,28 @@ export const Orders: React.FC = () => {
     <div className="space-y-10">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-3xl font-black tracking-tight rtl:tracking-normal text-zinc-950">{t("Commandes Reçues")}</h2>
+          <h2 className="text-3xl font-kinder tracking-tight rtl:tracking-normal text-zinc-950">{t("Commandes Reçues")}</h2>
           <p className="text-zinc-500 font-medium">{t("Suivez et expédiez vos ventes à travers l'Algérie.")}</p>
         </div>
         <div className="flex items-center gap-3">
            {!showGuide && (
               <button 
                 onClick={handleToggleGuide}
-                className="flex items-center gap-2 px-6 py-3 bg-orange-50 text-orange-600 font-black text-xs uppercase tracking-widest rtl:tracking-normal rounded-2xl hover:bg-orange-100 transition-colors shrink-0"
+                className="flex items-center gap-2 px-6 py-3 bg-orange-50 text-orange-600 font-kinder text-xs uppercase tracking-widest rtl:tracking-normal rounded-2xl hover:bg-orange-100 transition-colors shrink-0"
               >
                 <BookOpen className="w-4 h-4" />
                 {t("Afficher le Guide")}</button>
            )}
            <button 
              onClick={exportToCSV}
-             className="flex items-center gap-2 px-6 py-3 bg-zinc-950 text-white font-black text-xs uppercase tracking-widest rtl:tracking-normal rounded-2xl hover:bg-zinc-800 transition-colors shrink-0"
+             className="flex items-center gap-2 px-6 py-3 bg-zinc-950 text-white font-kinder text-xs uppercase tracking-widest rtl:tracking-normal rounded-2xl hover:bg-zinc-800 transition-colors shrink-0"
            >
              <Download className="w-4 h-4" />
              {t("Exporter Excel")}</button>
            <button 
              onClick={handleExportPremium}
              disabled={loadingSheets}
-             className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white font-black text-xs uppercase tracking-widest rtl:tracking-normal rounded-2xl hover:bg-emerald-700 disabled:opacity-50 transition-colors shrink-0"
+             className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white font-kinder text-xs uppercase tracking-widest rtl:tracking-normal rounded-2xl hover:bg-emerald-700 disabled:opacity-50 transition-colors shrink-0"
            >
              <DownloadCloud className="w-4 h-4" />
              {loadingSheets ? t("Exportation...") : t("Bilan Premium (Sheets)")}</button>
@@ -632,7 +624,7 @@ export const Orders: React.FC = () => {
                     <Info className="w-6 h-6 text-[#ea580c]" />
                   </div>
                   <div>
-                    <h3 className="font-black text-orange-900 text-lg">{t("Comment gérer vos commandes sur Olmart ?")}</h3>
+                    <h3 className="font-kinder text-orange-900 text-lg">{t("Comment gérer vos commandes sur Olmart ?")}</h3>
                     <p className="text-[#ea580c] text-xs font-bold mt-1">{t("Un processus ultra-simple en 4 étapes pour garantir la satisfaction client")}</p>
                   </div>
                 </div>
@@ -641,10 +633,10 @@ export const Orders: React.FC = () => {
                   {/* Etape 1 */}
                   <div className="bg-white/80 p-5 rounded-2xl border border-orange-100 shadow-sm relative">
                     <div className="flex items-center justify-between mb-4">
-                      <span className="text-[10px] font-black tracking-widest rtl:tracking-normal text-white bg-[#ea580c] px-3 py-1.5 rounded-lg">{t("ÉTAPE 1")}</span>
+                      <span className="text-[10px] font-kinder tracking-widest rtl:tracking-normal text-white bg-[#ea580c] px-3 py-1.5 rounded-lg">{t("ÉTAPE 1")}</span>
                       <CheckSquare className="w-5 h-5 text-orange-400" />
                     </div>
-                    <h4 className="font-black text-sm text-zinc-950 mb-2 uppercase tracking-wide rtl:tracking-normal">{t("Confirmation")}</h4>
+                    <h4 className="font-kinder text-sm text-zinc-950 mb-2 uppercase tracking-wide rtl:tracking-normal">{t("Confirmation")}</h4>
                     <p className="text-xs text-zinc-600 font-medium">{t("Vérifiez la disponibilité de votre stock. Une fois certain de pouvoir honorer la commande, cliquez sur \"Confirmer\".")}</p>
                   </div>
                   
@@ -654,10 +646,10 @@ export const Orders: React.FC = () => {
                       <ArrowRight className="w-6 h-6" />
                     </div>
                     <div className="flex items-center justify-between mb-4">
-                      <span className="text-[10px] font-black tracking-widest rtl:tracking-normal text-white bg-[#ea580c] px-3 py-1.5 rounded-lg">{t("ÉTAPE 2")}</span>
+                      <span className="text-[10px] font-kinder tracking-widest rtl:tracking-normal text-white bg-[#ea580c] px-3 py-1.5 rounded-lg">{t("ÉTAPE 2")}</span>
                       <PackageCheck className="w-5 h-5 text-orange-400" />
                     </div>
-                    <h4 className="font-black text-sm text-zinc-950 mb-2 uppercase tracking-wide rtl:tracking-normal">{t("Préparation")}</h4>
+                    <h4 className="font-kinder text-sm text-zinc-950 mb-2 uppercase tracking-wide rtl:tracking-normal">{t("Préparation")}</h4>
                     <p className="text-xs text-zinc-600 font-medium">{t("Emballez soigneusement le produit. Utilisez le bouton \"Étiquettes/PDF\" pour générer et imprimer le bordereau.")}</p>
                   </div>
 
@@ -667,10 +659,10 @@ export const Orders: React.FC = () => {
                       <ArrowRight className="w-6 h-6" />
                     </div>
                     <div className="flex items-center justify-between mb-4">
-                      <span className="text-[10px] font-black tracking-widest rtl:tracking-normal text-white bg-[#ea580c] px-3 py-1.5 rounded-lg">{t("ÉTAPE 3")}</span>
+                      <span className="text-[10px] font-kinder tracking-widest rtl:tracking-normal text-white bg-[#ea580c] px-3 py-1.5 rounded-lg">{t("ÉTAPE 3")}</span>
                       <Truck className="w-5 h-5 text-orange-400" />
                     </div>
-                    <h4 className="font-black text-sm text-zinc-950 mb-2 uppercase tracking-wide rtl:tracking-normal">{t("Expédition")}</h4>
+                    <h4 className="font-kinder text-sm text-zinc-950 mb-2 uppercase tracking-wide rtl:tracking-normal">{t("Expédition")}</h4>
                     <p className="text-xs text-zinc-600 font-medium">{t("Collez l'étiquette sur votre colis et remettez-le au transporteur. Changez alors le statut en \"Expédiée\".")}</p>
                   </div>
 
@@ -680,10 +672,10 @@ export const Orders: React.FC = () => {
                       <ArrowRight className="w-6 h-6" />
                     </div>
                     <div className="flex items-center justify-between mb-4">
-                      <span className="text-[10px] font-black tracking-widest rtl:tracking-normal text-[#ea580c] bg-orange-100 border border-[#ea580c]/20 px-3 py-1.5 rounded-lg">{t("ÉTAPE 4")}</span>
+                      <span className="text-[10px] font-kinder tracking-widest rtl:tracking-normal text-[#ea580c] bg-orange-100 border border-[#ea580c]/20 px-3 py-1.5 rounded-lg">{t("ÉTAPE 4")}</span>
                       <HandCoins className="w-5 h-5 text-emerald-500" />
                     </div>
-                    <h4 className="font-black text-sm text-emerald-950 mb-2 uppercase tracking-wide rtl:tracking-normal">{t("Paiement Garanti")}</h4>
+                    <h4 className="font-kinder text-sm text-emerald-950 mb-2 uppercase tracking-wide rtl:tracking-normal">{t("Paiement Garanti")}</h4>
                     <p className="text-xs text-zinc-600 font-medium">{t("Une fois l'article livré par le transporteur, l'argent est crédité automatiquement sur votre \"Portefeuille\".")}</p>
                   </div>
                 </div>
@@ -712,9 +704,9 @@ export const Orders: React.FC = () => {
                <span className="text-sm font-bold text-zinc-700">{selectedIds.length} {t("sélectionnée(s)")}</span>
                <div className="h-6 w-[1px] bg-zinc-200" />
                <div className="flex gap-2">
-                  <button onClick={() => handleBulkUpdateStatus('confirmed')} className="px-4 py-2 bg-blue-50 text-blue-700 text-xs font-black uppercase rounded-xl hover:bg-blue-100 transition-colors">{t("Confirmer")}</button>
-                  <button onClick={handleBulkGenerateTracking} className="px-4 py-2 bg-zinc-950 text-white text-xs font-black uppercase rounded-xl hover:bg-zinc-800 transition-colors">{t("Étiquettes(PDF)")}</button>
-                  <button onClick={() => handleBulkUpdateStatus('shipped')} className="px-4 py-2 bg-indigo-50 text-indigo-700 text-xs font-black uppercase rounded-xl hover:bg-indigo-100 transition-colors">{t("Expédiée")}</button>
+                  <button onClick={() => handleBulkUpdateStatus('confirmed')} className="px-4 py-2 bg-blue-50 text-blue-700 text-xs font-kinder uppercase rounded-xl hover:bg-blue-100 transition-colors">{t("Confirmer")}</button>
+                  <button onClick={handleBulkGenerateTracking} className="px-4 py-2 bg-zinc-950 text-white text-xs font-kinder uppercase rounded-xl hover:bg-zinc-800 transition-colors">{t("Étiquettes(PDF)")}</button>
+                  <button onClick={() => handleBulkUpdateStatus('shipped')} className="px-4 py-2 bg-indigo-50 text-indigo-700 text-xs font-kinder uppercase rounded-xl hover:bg-indigo-100 transition-colors">{t("Expédiée")}</button>
                </div>
             </motion.div>
           )}
@@ -741,7 +733,7 @@ export const Orders: React.FC = () => {
                                        </button>
                                        <div className="space-y-4">
                                           <div className="flex items-center gap-4">
-                                             <span className="text-[10px] font-black bg-zinc-950 text-white px-4 py-1.5 rounded-full tracking-widest rtl:tracking-normal">#{o.id.substring(0, 8).toUpperCase()}</span>
+                                             <span className="text-[10px] font-kinder bg-zinc-950 text-white px-4 py-1.5 rounded-full tracking-widest rtl:tracking-normal">#{o.id.substring(0, 8).toUpperCase()}</span>
                                              <span className={`text-[9px] font-black uppercase tracking-widest rtl:tracking-normal px-4 py-1.5 rounded-full border ${getStatusColor(o.status)}`}>
                                                 {getStatusLabel(o.status)}
                                              </span>
@@ -751,8 +743,8 @@ export const Orders: React.FC = () => {
                                                 <User className="w-6 h-6" />
                                              </div>
                                              <div>
-                                                <p className="font-black text-zinc-950">{o.shippingAddress?.name}</p>
-                                                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal leading-none mt-1">{o.shippingAddress?.wilaya} • {o.shippingAddress?.commune}</p>
+                                                <p className="font-kinder text-zinc-950">{o.shippingAddress?.name}</p>
+                                                <p className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal leading-none mt-1">{o.shippingAddress?.wilaya} • {o.shippingAddress?.commune}</p>
                                              </div>
                                           </div>
                                        </div>
@@ -760,14 +752,14 @@ export const Orders: React.FC = () => {
 
                                     <div className="flex flex-wrap items-center gap-10 lg:text-end">
                                        <div>
-                                          <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5">{t("Montant Total")}</p>
-                                          <p className="text-2xl font-black text-zinc-950 tracking-tighter rtl:tracking-normal">{formatPrice(o.total)}</p>
+                                          <p className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5">{t("Montant Total")}</p>
+                                          <p className="text-2xl font-kinder text-zinc-950 tracking-tighter rtl:tracking-normal">{formatPrice(o.total)}</p>
                                        </div>
                                        <div className="h-10 w-[1px] bg-zinc-100 hidden lg:block" />
                                        <div className="flex items-center gap-3">
                                           <button 
                                             onClick={() => setSelectedOrder(o)}
-                                            className="px-6 py-3.5 bg-zinc-950 text-white rounded-xl font-black text-[10px] uppercase tracking-widest rtl:tracking-normal shadow-xl hover:bg-zinc-800 transition-all flex items-center gap-2"
+                                            className="px-6 py-3.5 bg-zinc-950 text-white rounded-xl font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal shadow-xl hover:bg-zinc-800 transition-all flex items-center gap-2"
                                           >
                                              {t("Détails")}<ChevronRight className="w-4 h-4" />
                                           </button>
@@ -801,13 +793,13 @@ export const Orders: React.FC = () => {
                   <div className="flex-1 p-10 overflow-y-auto scrollbar-hide">
                      <div className="flex items-center justify-between mb-10">
                         <div>
-                           <h3 className="text-2xl font-black tracking-tight rtl:tracking-normal">{t("Commande #")}{selectedOrder.id.substring(0, 8).toUpperCase()}</h3>
+                           <h3 className="text-2xl font-kinder tracking-tight rtl:tracking-normal">{t("Commande #")}{selectedOrder.id.substring(0, 8).toUpperCase()}</h3>
                            <p className="text-zinc-500 font-medium">{t("Reçu le")}{selectedOrder.createdAt?.toDate().toLocaleDateString()}</p>
                         </div>
                         <div className="flex flex-col items-end gap-2">
                            <button 
                              onClick={() => handleGenerateTracking(selectedOrder.id)}
-                             className="flex items-center gap-2 text-orange-600 font-black text-[10px] uppercase tracking-widest rtl:tracking-normal hover:text-orange-700 transition-colors"
+                             className="flex items-center gap-2 text-orange-600 font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal hover:text-orange-700 transition-colors"
                            >
                               <Truck className="w-4 h-4" />
                               {selectedOrder.trackingId ? `Suivi: ${selectedOrder.trackingId}` : "Préparer l'expédition"}
@@ -817,7 +809,7 @@ export const Orders: React.FC = () => {
                                setPrintingOrder(selectedOrder);
                                setSelectedOrder(null);
                              }}
-                             className="flex items-center gap-2 bg-[#ea580c] hover:bg-orange-600 px-4 py-2.5 rounded-xl text-white transition-colors text-[10px] uppercase tracking-widest rtl:tracking-normal font-[#F37021] font-black shadow-md cursor-pointer border-none"
+                             className="flex items-center gap-2 bg-[#ea580c] hover:bg-orange-600 px-4 py-2.5 rounded-xl text-white transition-colors text-[10px] uppercase tracking-widest rtl:tracking-normal font-[#FF5C00] font-kinder shadow-md cursor-pointer border-none"
                            >
                               <Printer className="w-3.5 h-3.5" />
                               {t("Bordereau / Ticket d'Expédition")}</button>
@@ -826,7 +818,7 @@ export const Orders: React.FC = () => {
                                 href={selectedOrder.labelUrl} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-2 bg-zinc-100 px-4 py-2 rounded-lg text-zinc-700 hover:text-zinc-950 hover:bg-zinc-200 transition-colors text-[10px] uppercase tracking-widest rtl:tracking-normal font-black"
+                                className="flex items-center gap-2 bg-zinc-100 px-4 py-2 rounded-lg text-zinc-700 hover:text-zinc-950 hover:bg-zinc-200 transition-colors text-[10px] uppercase tracking-widest rtl:tracking-normal font-kinder"
                               >
                                  <Printer className="w-3 h-3" />
                                  {t("Label Transporteur (PDF)")}</a>
@@ -837,13 +829,13 @@ export const Orders: React.FC = () => {
                      <div className="grid md:grid-cols-2 gap-10">
                         <div className="space-y-8">
                            <div className="bg-zinc-50 rounded-3xl p-8 border border-zinc-100">
-                              <h4 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-6 flex items-center gap-2">
+                              <h4 className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-6 flex items-center gap-2">
                                  <Truck className="w-4 h-4" /> {t("Destination")}</h4>
                               <div className="space-y-4">
                                  <div className="flex items-center gap-4">
                                     <MapPin className="w-5 h-5 text-zinc-300" />
                                     <div>
-                                       <p className="text-sm font-black text-zinc-950">
+                                       <p className="text-sm font-kinder text-zinc-950">
                                           {['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'IN_TRANSIT', 'PICKED_UP'].includes((selectedOrder.status || 'NEW').toUpperCase())
                                               ? selectedOrder.shippingAddress?.street || selectedOrder.shippingAddress?.address || selectedOrder.shippingAddress?.streetAddress || 'N/A'
                                               : '*** Adresse Masquée (Confirmer d\'abord) ***'}
@@ -853,7 +845,7 @@ export const Orders: React.FC = () => {
                                  </div>
                                  <div className="flex items-center gap-4">
                                     <Phone className="w-5 h-5 text-zinc-300" />
-                                    <p className="text-sm font-black text-zinc-950">
+                                    <p className="text-sm font-kinder text-zinc-950">
                                        {['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'IN_TRANSIT', 'PICKED_UP'].includes((selectedOrder.status || 'NEW').toUpperCase()) 
                                           ? selectedOrder.shippingAddress?.phone 
                                           : selectedOrder.shippingAddress?.phone?.replace(/(\d{3})\d{4}(\d{3})/, '$1 **** $2') || 'N/A'}
@@ -863,7 +855,7 @@ export const Orders: React.FC = () => {
                            </div>
 
                            <div className="space-y-4">
-                              <h4 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-4 ml-1">{t("Items Commandés")}</h4>
+                              <h4 className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-4 ml-1">{t("Items Commandés")}</h4>
                               {selectedOrder.items?.map((item: any, i: number) => {
                                 
                                 return (
@@ -872,7 +864,7 @@ export const Orders: React.FC = () => {
                                                                      <img loading="lazy" src={getOptimizedImageUrl(item.image, 200)} className="w-full h-full object-cover" alt="" />
                                                                   </div>
                                                                   <div>
-                                                                     <p className="text-sm font-black text-zinc-950">{item.name}</p>
+                                                                     <p className="text-sm font-kinder text-zinc-950">{item.name}</p>
                                                                      {item.selectedVariant && (
                                                                        <p className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full inline-block mt-0.5 mb-1 uppercase tracking-widest">{item.selectedVariant}</p>
                                                                      )}
@@ -892,20 +884,20 @@ export const Orders: React.FC = () => {
                         <div className="space-y-8 text-center md:text-start">
                            <div className="bg-white border-2 border-zinc-950 rounded-[2.5rem] p-8 flex flex-col items-center justify-between h-fit">
                               <div className="w-full space-y-4 mb-4">
-                                 <div className="flex justify-between items-center text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
+                                 <div className="flex justify-between items-center text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
                                     <span>{t("Total Client")}</span>
                                     <span>{formatPrice(selectedOrder.total)}</span>
                                  </div>
-                                 <div className="flex justify-between items-center text-[10px] font-black text-rose-500 uppercase tracking-widest rtl:tracking-normal">
+                                 <div className="flex justify-between items-center text-[10px] font-kinder text-rose-500 uppercase tracking-widest rtl:tracking-normal">
                                     <span>{t("Commission OLMART (")}{userProfile?.commissionRate || 10}%)</span>
-                                    <span>-{formatPrice(calculatedOrdersMap[selectedOrder?.id]?.commissionCalc || 0)}</span>
+                                    <span>-{formatPrice(calculatedOrdersMap[selectedOrder?.id]?.commissionAmount || 0)}</span>
                                  </div>
                                  <div className="h-[1px] bg-zinc-100 w-full" />
                               </div>
-                              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2">{t("Net à Percevoir")}</p>
-                              <h4 className="text-4xl font-black tracking-tighter rtl:tracking-normal text-zinc-950 mb-8">{formatPrice(calculatedOrdersMap[selectedOrder?.id]?.netPayout || 0)}</h4>
+                              <p className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2">{t("Net à Percevoir")}</p>
+                              <h4 className="text-4xl font-kinder tracking-tighter rtl:tracking-normal text-zinc-950 mb-8">{formatPrice(calculatedOrdersMap[selectedOrder?.id]?.netRevenue || 0)}</h4>
                               <div className="w-full space-y-3">
-                                 <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal text-center mb-1">{t("Mettre à jour l'état")}</p>
+                                 <p className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal text-center mb-1">{t("Mettre à jour l'état")}</p>
                                  <div className="grid grid-cols-2 gap-2">
                                     {['processing', 'picked_up', 'in_transit', 'delivered'].map((s) => {
                                        const getNextValidStatus = (currentStatus: string): string | null => {

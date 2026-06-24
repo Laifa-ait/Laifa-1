@@ -143,7 +143,7 @@ export const PromotionsAdmin: React.FC = () => {
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-3xl font-black tracking-tight rtl:tracking-normal text-zinc-950 uppercase">
+          <h2 className="text-3xl font-kinder tracking-tight rtl:tracking-normal text-zinc-950 uppercase">
             {t("Codes Promo & Campagnes")}
           </h2>
           <p className="text-zinc-500 font-medium">
@@ -152,7 +152,7 @@ export const PromotionsAdmin: React.FC = () => {
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="px-6 py-3 bg-zinc-950 text-white rounded-2xl font-black text-xs uppercase tracking-widest rtl:tracking-normal flex items-center gap-2 hover:bg-zinc-800 transition-colors shadow-lg"
+          className="px-6 py-3 bg-zinc-950 text-white rounded-2xl font-kinder text-xs uppercase tracking-widest rtl:tracking-normal flex items-center gap-2 hover:bg-zinc-800 transition-colors shadow-lg"
         >
           <Plus className="w-4 h-4" /> {t("Créer un Coupon")}
         </button>
@@ -165,7 +165,7 @@ export const PromotionsAdmin: React.FC = () => {
       ) : coupons.length === 0 ? (
         <div className="bg-white rounded-[2rem] border border-zinc-100 shadow-sm overflow-hidden p-12 text-center text-zinc-500">
           <Tag className="w-12 h-12 text-zinc-300 mx-auto mb-4" />
-          <h3 className="text-lg font-black text-zinc-900 mb-2">{t("Aucun code promo créé")}</h3>
+          <h3 className="text-lg font-kinder text-zinc-900 mb-2">{t("Aucun code promo créé")}</h3>
           <p className="text-sm">{t("Créez votre première campagne promotionnelle pour stimuler les ventes.")}</p>
         </div>
       ) : (
@@ -182,7 +182,7 @@ export const PromotionsAdmin: React.FC = () => {
 
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <div className="bg-zinc-100 px-3 py-1 rounded-lg text-lg font-black text-zinc-900 tracking-widest rtl:tracking-normal mb-2 inline-block">
+                  <div className="bg-zinc-100 px-3 py-1 rounded-lg text-lg font-kinder text-zinc-900 tracking-widest rtl:tracking-normal mb-2 inline-block">
                     {coupon.code}
                   </div>
                   <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-wider rtl:tracking-normal">
@@ -218,7 +218,7 @@ export const PromotionsAdmin: React.FC = () => {
               <div className="space-y-3 mb-4">
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-zinc-500 font-medium">{t("Valeur")}</span>
-                  <span className="font-black text-zinc-900 text-lg">
+                  <span className="font-kinder text-zinc-900 text-lg">
                     {coupon.discountType === "percentage"
                       ? `${coupon.discountValue}%`
                       : `${coupon.discountValue} ${t("DA")}`}
@@ -243,7 +243,7 @@ export const PromotionsAdmin: React.FC = () => {
               <div className="bg-zinc-50 rounded-2xl p-4 flex justify-between items-center text-sm">
                 <div>
                   <p className="text-zinc-500 font-medium text-xs mb-1">{t("Utilisations")}</p>
-                  <p className="font-black text-zinc-900">
+                  <p className="font-kinder text-zinc-900">
                     {coupon.usedCount} / {coupon.usageLimit || "∞"}
                   </p>
                 </div>
@@ -266,7 +266,7 @@ export const PromotionsAdmin: React.FC = () => {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl w-full max-w-xl overflow-hidden shadow-2xl">
             <div className="p-6 border-b border-zinc-100 flex justify-between items-center">
-              <h3 className="font-black text-xl text-zinc-900 uppercase">{t("Nouveau Coupon")}</h3>
+              <h3 className="font-kinder text-xl text-zinc-900 uppercase">{t("Nouveau Coupon")}</h3>
               <button
                 onClick={() => {
                   setIsModalOpen(false);
@@ -381,7 +381,7 @@ export const PromotionsAdmin: React.FC = () => {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-6 py-3 bg-zinc-950 text-white font-black text-sm uppercase tracking-widest rounded-xl hover:bg-zinc-800 transition-colors shadow-lg flex items-center gap-2 disabled:opacity-50"
+                  className="px-6 py-3 bg-zinc-950 text-white font-kinder text-sm uppercase tracking-widest rounded-xl hover:bg-zinc-800 transition-colors shadow-lg flex items-center gap-2 disabled:opacity-50"
                 >
                   {submitting ? (
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

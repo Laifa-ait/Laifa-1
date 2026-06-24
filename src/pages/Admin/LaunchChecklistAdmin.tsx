@@ -99,11 +99,11 @@ export const LaunchChecklistAdmin: React.FC = () => {
         <div className="space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-orange-50 rounded-full border border-orange-100">
             <Rocket className="w-4 h-4 text-orange-500" />
-            <span className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-orange-600">
+            <span className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-orange-600">
               {t("Go-Live Readiness")}
             </span>
           </div>
-          <h2 className="text-3xl md:text-4xl font-black tracking-tight rtl:tracking-normal uppercase">
+          <h2 className="text-3xl md:text-4xl font-kinder tracking-tight rtl:tracking-normal uppercase">
             {t("Checklist de")}
             <span className="text-orange-500">{t("Lancement")}</span>
           </h2>
@@ -115,11 +115,11 @@ export const LaunchChecklistAdmin: React.FC = () => {
         </div>
 
         <div className="bg-zinc-50 p-6 rounded-3xl border border-zinc-200 text-center min-w-[200px]">
-          <div className="text-5xl font-black text-zinc-950 mb-2">{progress}%</div>
+          <div className="text-5xl font-kinder text-zinc-950 mb-2">{progress}%</div>
           <div className="w-full bg-zinc-200 h-2 rounded-full overflow-hidden mb-2">
             <div className="h-full bg-orange-500 transition-all duration-500" style={{ width: `${progress}%` }} />
           </div>
-          <span className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-500">
+          <span className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-500">
             {t("Progression")}
           </span>
         </div>
@@ -144,7 +144,7 @@ export const LaunchChecklistAdmin: React.FC = () => {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <task.icon className="w-3 h-3 text-zinc-400" />
-                  <span className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-500">
+                  <span className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-500">
                     {task.category}
                   </span>
                 </div>

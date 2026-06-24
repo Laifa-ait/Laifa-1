@@ -9,7 +9,6 @@ lerna-debug.log*
 
 node_modules
 *.local
-build/
 *.tgz
 
 # Editor directories and files

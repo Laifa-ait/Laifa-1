@@ -98,7 +98,7 @@ export const DisputeManagement: React.FC = () => {
 
   return (
     <div className="space-y-6 px-4 md:px-0">
-      <h2 className="text-2xl font-black text-zinc-900">{t("Litiges et Retours Admin")}</h2>
+      <h2 className="text-2xl font-kinder text-zinc-900">{t("Litiges et Retours Admin")}</h2>
       <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-zinc-100">
         {cases.length === 0 ? (
           <div className="py-12 text-center text-zinc-600 font-medium">
@@ -118,11 +118,11 @@ export const DisputeManagement: React.FC = () => {
                     </div>
                     <div className="space-y-1 flex-1">
                       <div className="flex items-center gap-3">
-                        <p className="font-black text-zinc-900">
+                        <p className="font-kinder text-zinc-900">
                           {t("Commande #")}
                           {c.id.substring(0, 8)}
                         </p>
-                        <span className="text-[10px] bg-zinc-200 text-zinc-700 font-black px-2 py-0.5 rounded-md uppercase tracking-wider rtl:tracking-normal">
+                        <span className="text-[10px] bg-zinc-200 text-zinc-700 font-kinder px-2 py-0.5 rounded-md uppercase tracking-wider rtl:tracking-normal">
                           {c.status}
                         </span>
                       </div>
@@ -157,23 +157,23 @@ export const DisputeManagement: React.FC = () => {
 
                       <div className="pt-2 flex items-center gap-2">
                         <Package className="w-3.5 h-3.5 text-zinc-600" />
-                        <span className="text-xs font-black text-emerald-600">
-                          {formatPrice(c.total || 0)} {t("DZD")}
+                        <span className="text-xs font-kinder text-emerald-600">
+                          {formatPrice(c.total)} {t("DZD")}
                         </span>
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 w-full md:w-auto">
                     <button
-                      onClick={() => resolveDispute(c.id, "approved", c.total || 0)}
-                      className="flex-1 md:flex-none px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest rtl:tracking-normal transition-all shadow-lg shadow-emerald-500/20"
+                      onClick={() => resolveDispute(c.id, "approved", c.total)}
+                      className="flex-1 md:flex-none px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-kinder text-xs uppercase tracking-widest rtl:tracking-normal transition-all shadow-lg shadow-emerald-500/20"
                     >
                       {t("Rembourser (")}
-                      {formatPrice(c.total || 0)})
+                      {formatPrice(c.total)})
                     </button>
                     <button
                       onClick={() => resolveDispute(c.id, "rejected", 0)}
-                      className="flex-1 md:flex-none px-6 py-3.5 bg-zinc-900 hover:bg-black text-white rounded-2xl font-black text-xs uppercase tracking-widest rtl:tracking-normal transition-all shadow-lg shadow-zinc-900/20"
+                      className="flex-1 md:flex-none px-6 py-3.5 bg-zinc-900 hover:bg-black text-white rounded-2xl font-kinder text-xs uppercase tracking-widest rtl:tracking-normal transition-all shadow-lg shadow-zinc-900/20"
                     >
                       {t("Fin de litige")}
                     </button>

@@ -274,7 +274,7 @@ export const AdminDashboardLayout: React.FC = () => {
     <div className="space-y-6">
       {navGroups.map((group, idx) => (
         <div key={idx}>
-          <h4 className="px-5 mb-3 text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-500 rtl:tracking-normal">
+          <h4 className="px-5 mb-3 text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-500 rtl:tracking-normal">
             {group.title}
           </h4>
           <div className="space-y-1">
@@ -319,7 +319,7 @@ export const AdminDashboardLayout: React.FC = () => {
             <div className="w-8 h-8 rounded-lg bg-[#ea580c] flex items-center justify-center text-white">
               <Database className="w-4 h-4" />
             </div>
-            <span className="text-sm font-black tracking-tighter rtl:tracking-normal uppercase">{t("OLMA ADMIN")}</span>
+            <span className="text-sm font-kinder tracking-tighter rtl:tracking-normal uppercase">{t("OLMA ADMIN")}</span>
           </div>
         </div>
 
@@ -361,10 +361,10 @@ export const AdminDashboardLayout: React.FC = () => {
                     <Database className="w-5 h-5" />
                   </div>
                   <div>
-                    <h1 className="text-base font-black tracking-tighter rtl:tracking-normal text-zinc-950">
+                    <h1 className="text-base font-kinder tracking-tighter rtl:tracking-normal text-zinc-950">
                       {t("OLMA ADMIN")}
                     </h1>
-                    <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest rtl:tracking-normal leading-none">
+                    <p className="text-[9px] font-kinder text-zinc-500 uppercase tracking-widest rtl:tracking-normal leading-none">
                       {t("Core Control")}
                     </p>
                   </div>
@@ -408,10 +408,10 @@ export const AdminDashboardLayout: React.FC = () => {
               <Database className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-xl font-black tracking-tighter rtl:tracking-normal text-zinc-950">
+              <h1 className="text-xl font-kinder tracking-tighter rtl:tracking-normal text-zinc-950">
                 {t("OLMA ADMIN")}
               </h1>
-              <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest rtl:tracking-normal leading-none">
+              <p className="text-[10px] font-kinder text-zinc-500 uppercase tracking-widest rtl:tracking-normal leading-none">
                 {t("Core Control")}
               </p>
             </div>
@@ -446,7 +446,7 @@ export const AdminDashboardLayout: React.FC = () => {
         <header className="hidden lg:flex h-20 bg-white border-b border-zinc-200 px-10 items-center justify-between sticky top-0 z-20">
           <div className="flex items-center gap-4">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">
+            <span className="text-[10px] font-kinder uppercase tracking-[0.2em] text-zinc-400">
               {t("Système Live • Algérie")}
             </span>
           </div>
@@ -454,7 +454,7 @@ export const AdminDashboardLayout: React.FC = () => {
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-3 bg-zinc-100 rounded-full px-4 py-2 border border-zinc-200">
               <Monitor className="w-3.5 h-3.5 text-zinc-400" />
-              <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest rtl:tracking-normal">
+              <span className="text-[10px] font-kinder text-zinc-600 uppercase tracking-widest rtl:tracking-normal">
                 {auth.currentUser?.email}
               </span>
             </div>

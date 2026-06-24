@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MapPin, Phone, CreditCard, CheckCircle, Package, ArrowLeft, Truck, ShieldCheck, Ticket } from 'lucide-react';
+import { CheckCircle, Package, ShieldCheck, Ticket } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
@@ -10,37 +10,64 @@ import { formatPrice } from '../../utils/format';
 import { PremiumLayout } from '../../components/Layout/PremiumLayout';
 import { ALGERIA_WILAYAS, ALGERIA_SHIPPING_DATA } from '../../constants';
 import { ALGERIA_REGIONS } from '../../data/algeriaRegions';
-import { db, auth } from '../../lib/firebase';
+import { db } from '../../lib/firebase';
 import { processCheckout } from '../../services/checkoutService';
-import { getDoc, doc, collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { getDoc, doc, collection, query, where, getDocs } from 'firebase/firestore';
 import { Shop } from '../../types';
 import { analyticsEngine } from '../../utils/analyticsEngine';
 
-const getCommunes = (wilaya: string) => {
-  const wilayaData = ALGERIA_REGIONS[wilaya];
+export interface CouponData {
+  id: string;
+  code: string;
+  isActive: boolean;
+  expiresAt?: any;
+  expiryDate?: any;
+  minOrderValue?: number;
+  usageLimit?: number;
+  usedCount?: number;
+  discountType: 'percentage' | 'fixed';
+  discountValue: number;
+}
+
+// Memory Cache for communes to prevent re-computations
+const communesCache: Record<string, string[]> = {};
+
+const getCommunes = (wilaya: string): string[] => {
+  if (communesCache[wilaya]) {
+    return communesCache[wilaya];
+  }
+
+  // Try direct match from ALGERIA_REGIONS
+  let wilayaData = ALGERIA_REGIONS[wilaya];
+  
+  if (!wilayaData) {
+    // Try matching key by starting code or name
+    const cleanInput = wilaya.replace(/^\d+\s*-\s*/, '').trim().replace(/^\d+\s+/, '').trim().toLowerCase();
+    const matchKey = Object.keys(ALGERIA_REGIONS).find(k => {
+      const cleanKey = k.replace(/^\d+\s+/, '').trim().toLowerCase();
+      return cleanKey === cleanInput || k.startsWith(wilaya);
+    });
+    if (matchKey) {
+      wilayaData = ALGERIA_REGIONS[matchKey];
+    }
+  }
+
   if (wilayaData && wilayaData.dairas) {
     const allCommunes = new Set<string>();
     Object.values(wilayaData.dairas).forEach(communes => {
       communes.forEach(c => allCommunes.add(c));
     });
-    return Array.from(allCommunes).sort((a, b) => a.localeCompare(b));
+    const result = Array.from(allCommunes).sort((a, b) => a.localeCompare(b));
+    communesCache[wilaya] = result;
+    return result;
   }
   
-  // Fallback to older mechanism if not found
   const cleanWilaya = wilaya.replace(/^\d+\s*-\s*/, '').trim().replace(/^\d+\s+/, '').trim();
-  const dict: Record<string, string[]> = {
-    'Alger': ["Alger Centre", "Bab El Oued", "Sidi M'Hamed", "El Harrach", "Zéralda", "Douera", "Chéraga", "Dar El Beïda", "Kouba", "Bordj El Kiffan", "Rouïba", "Hydra", "Bir Mourad Raïs"],
-    'Oran': ["Oran Centre", "Bir El Djir", "Es Senia", "Arzew", "Mers El Kébir", "Gdyel", "Oued Tlelat"],
-    'Sétif': ["Sétif Ville", "El Eulma", "Aïn Oulmene", "Aïn Arnat", "Bouandas", "Aïn Azel", "Bougaa"],
-    'Blida': ["Blida", "Boufarik", "Ouled Yaïch", "Beni Mered", "Larbaâ", "Meftah", "Mouzaïa"],
-    'Constantine': ["Constantine", "Khroub", "Hamma Bouziane", "Didouche Mourad", "Aïn Smara"],
-    'Annaba': ["Annaba", "El Bouni", "Seraïdi", "Berrahal", "El Hadjar"],
-    'Tlemcen': ["Tlemcen", "Maghnia", "Ghazaouet", "Remchi", "Sebdou", "Hennaya"],
-    'Tizi Ouzou': ["Tizi Ouzou", "Azeffoun", "Larbaâ Nath Irathen", "Tigzirt", "Draâ El Mizan", "Azazga"],
-    'Béjaïa': ["Béjaïa Ville", "Akbou", "Sidi Aïch", "Amizour", "Kherrata", "El Kseur"]
-  };
-  return dict[cleanWilaya] || [`${cleanWilaya} Chef-lieu`];
+  const fallback = [`${cleanWilaya} Chef-lieu`];
+  communesCache[wilaya] = fallback;
+  return fallback;
 };
+
 
 export const Checkout: React.FC = () => {
   const navigate = useNavigate();
@@ -50,6 +77,16 @@ export const Checkout: React.FC = () => {
   const { cart, clearCart, getCartItemPrice, revalidateCart } = useCart();
   const { currentUser, userProfile } = useAuth();
   
+  const [formData, setFormData] = useState({
+    fullName: currentUser?.displayName || '',
+    phone: '',
+    wilaya: localStorage.getItem("olma_default_wilaya") || '16 Alger',
+    commune: '',
+    address: '', // point of reference
+  });
+
+  const isValidPhone = !!formData.phone.replace(/\s+/g, '').match(/^(05|06|07|02|03|04|09)\d{8}$/);
+
   const [step, setStep] = useState('checkout'); // 'checkout' | 'success'
   const [activeAccordion, setActiveAccordion] = useState(1);
   const [successNotifPrompted, setSuccessNotifPrompted] = useState(false);
@@ -59,8 +96,22 @@ export const Checkout: React.FC = () => {
   }, [currentUser]);
 
   useEffect(() => {
-     revalidateCart().catch(err => console.error("Checkout cart hydration error:", err));
+     let cancelled = false;
+     revalidateCart().catch(err => {
+        if (!cancelled) console.error("Checkout cart hydration error:", err);
+     });
+     return () => { cancelled = true; };
   }, [revalidateCart]);
+
+  // Pre-select commune by default when wilaya changes for smooth UX & no empty selection
+  useEffect(() => {
+    if (formData.wilaya) {
+      const comms = getCommunes(formData.wilaya);
+      if (comms.length > 0 && (!formData.commune || !comms.includes(formData.commune))) {
+        setFormData(prev => ({ ...prev, commune: comms[0] }));
+      }
+    }
+  }, [formData.wilaya]);
 
   useEffect(() => {
      if (step === 'success' && !successNotifPrompted) {
@@ -76,7 +127,8 @@ export const Checkout: React.FC = () => {
         }, 1500);
      }
   }, [step, successNotifPrompted, t]);
-  
+
+
   const activeCart = useMemo(() => {
     if (!filterSellerId) return cart;
     return cart.filter(item => item.sellerId === filterSellerId);
@@ -85,13 +137,6 @@ export const Checkout: React.FC = () => {
   const [useCashbackPoints, setUseCashbackPoints] = useState(false);
   const [useWallet, setUseWallet] = useState(false);
   const [deliveryMethod, setDeliveryMethod] = useState<'domicile' | 'stopdesk'>('domicile');
-  const [formData, setFormData] = useState({
-    fullName: currentUser?.displayName || '',
-    phone: '',
-    wilaya: localStorage.getItem("olma_default_wilaya") || '16 Alger',
-    commune: '',
-    address: '', // point of reference
-  });
 
   // Watch currentUser and update name if it arrives late
   useEffect(() => {
@@ -103,8 +148,6 @@ export const Checkout: React.FC = () => {
   const [shops, setShops] = useState<Record<string, Shop>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSummary, setOrderSummary] = useState<any>(null);
-
-  const isValidPhone = !!formData.phone.replace(/\s+/g, '').match(/^(05|06|07|02|03|04|09)\d{8}$/);
 
   const groupedCart = useMemo(() => {
     const groups: Record<string, { items: any[], total: number, sellerName: string }> = {};
@@ -355,9 +398,9 @@ export const Checkout: React.FC = () => {
 
   if (activeCart.length === 0 && step !== 'success') {
     return (
-      <div className="min-h-screen bg-[#faf8f5] flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen bg-[#FDF9EC] flex flex-col items-center justify-center p-6 text-center">
          <Package className="w-16 h-16 text-zinc-200 mb-8" />
-         <h2 className="text-3xl font-black tracking-tight rtl:tracking-normal mb-4 text-zinc-950">{t("empty_cart") || "Panier vide"}</h2>
+         <h2 className="text-3xl font-kinder tracking-tight rtl:tracking-normal mb-4 text-zinc-950">{t("empty_cart") || "Panier vide"}</h2>
          <button onClick={() => navigate('/shop')} className="btn-premium-orange">{t("to_shop") || "Vers la Boutique"}</button>
       </div>
     );
@@ -369,7 +412,7 @@ export const Checkout: React.FC = () => {
           {step === 'checkout' && (
              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 max-w-7xl mx-auto px-4 lg:px-8">
                 <div className="col-span-1 lg:col-span-12 mb-8">
-                   <h1 className="text-4xl md:text-5xl font-black text-[#121315] tracking-tighter rtl:tracking-normal">{t("checkout") || "Validation"}</h1>
+                   <h1 className="text-4xl md:text-5xl font-kinder text-[#3C2B22] tracking-tighter rtl:tracking-normal">{t("checkout") || "Validation"}</h1>
                 </div>
 
                 <div className="col-span-1 lg:col-span-7 space-y-6">
@@ -381,8 +424,8 @@ export const Checkout: React.FC = () => {
                         className="w-full flex items-center justify-between text-start"
                       >
                          <div className="flex items-center gap-4">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs ${activeAccordion === 1 ? 'bg-[#F37021] text-white shadow-lg' : 'bg-stone-100 text-stone-500'}`}>1</div>
-                            <h3 className="text-lg sm:text-xl font-black text-[#121315]">{t("checkout.identity") || "Identité (Qui ?)"}</h3>
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs ${activeAccordion === 1 ? 'bg-[#FF5C00] text-white shadow-lg' : 'bg-stone-100 text-stone-500'}`}>1</div>
+                            <h3 className="text-lg sm:text-xl font-kinder text-[#3C2B22]">{t("checkout.identity") || "Identité (Qui ?)"}</h3>
                          </div>
                          {isValidPhone && activeAccordion !== 1 && <CheckCircle className="w-6 h-6 text-emerald-500" />}
                       </button>
@@ -392,18 +435,18 @@ export const Checkout: React.FC = () => {
                             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                                <div className="pt-8 space-y-6">
                                   <div className="space-y-3">
-                                     <label className="text-xs font-black text-stone-400 uppercase tracking-widest rtl:tracking-normal ms-1">{t("full_name") || "Nom Complet"}</label>
+                                     <label className="text-xs font-kinder text-stone-400 uppercase tracking-widest rtl:tracking-normal ms-1">{t("full_name") || "Nom Complet"}</label>
                                      <input 
                                         type="text" 
                                         required 
                                         value={formData.fullName}
                                         onChange={e => setFormData({ ...formData, fullName: e.target.value })}
                                         placeholder={t("full_name_placeholder") || "Ex: Selma Laifa"}
-                                        className="w-full px-6 py-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none font-bold text-sm focus:ring-2 ring-[#F37021]/20 transition-all"
+                                        className="w-full px-6 py-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none font-bold text-sm focus:ring-2 ring-[#FF5C00]/20 transition-all"
                                      />
                                   </div>
                                   <div className="space-y-3">
-                                     <label className="text-xs font-black text-stone-400 uppercase tracking-widest rtl:tracking-normal ms-1">{t("phone_number") || "Numéro de téléphone"}</label>
+                                     <label className="text-xs font-kinder text-stone-400 uppercase tracking-widest rtl:tracking-normal ms-1">{t("phone_number") || "Numéro de téléphone"}</label>
                                      <div className="relative">
                                         <input 
                                            type="tel" 
@@ -411,7 +454,7 @@ export const Checkout: React.FC = () => {
                                            value={formData.phone}
                                            onChange={e => setFormData({ ...formData, phone: e.target.value })}
                                            placeholder={t("phone_placeholder") || "Ex: 0550 12 34 56"}
-                                           className={`w-full px-6 py-4 bg-stone-50 border rounded-2xl outline-none font-bold text-sm transition-all focus:ring-2 ${isValidPhone ? 'border-emerald-500 ring-emerald-500/20 bg-emerald-50/10' : 'border-stone-200 ring-[#F37021]/20'}`}
+                                           className={`w-full px-6 py-4 bg-stone-50 border rounded-2xl outline-none font-bold text-sm transition-all focus:ring-2 ${isValidPhone ? 'border-emerald-500 ring-emerald-500/20 bg-emerald-50/10' : 'border-stone-200 ring-[#FF5C00]/20'}`}
                                         />
                                         {isValidPhone && (
                                            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute end-4 top-1/2 -translate-y-1/2">
@@ -442,8 +485,8 @@ export const Checkout: React.FC = () => {
                         className="w-full flex items-center justify-between text-start"
                       >
                          <div className="flex items-center gap-4">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs ${activeAccordion === 2 ? 'bg-[#F37021] text-white shadow-lg' : 'bg-stone-100 text-stone-500'}`}>2</div>
-                            <h3 className="text-lg sm:text-xl font-black text-[#121315]">{t("checkout.shipping") || "Expédition (Où ?)"}</h3>
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs ${activeAccordion === 2 ? 'bg-[#FF5C00] text-white shadow-lg' : 'bg-stone-100 text-stone-500'}`}>2</div>
+                            <h3 className="text-lg sm:text-xl font-kinder text-[#3C2B22]">{t("checkout.shipping") || "Expédition (Où ?)"}</h3>
                          </div>
                          {formData.commune && formData.address && activeAccordion !== 2 && <CheckCircle className="w-6 h-6 text-emerald-500" />}
                       </button>
@@ -454,24 +497,24 @@ export const Checkout: React.FC = () => {
                                <div className="pt-8 space-y-6">
                                   <div className="grid sm:grid-cols-2 gap-6">
                                      <div className="space-y-3">
-                                        <label className="text-xs font-black text-stone-400 uppercase tracking-widest rtl:tracking-normal ms-1">{t("wilaya") || "Wilaya"}</label>
+                                        <label className="text-xs font-kinder text-stone-400 uppercase tracking-widest rtl:tracking-normal ms-1">{t("wilaya") || "Wilaya"}</label>
                                         <select 
                                            value={formData.wilaya}
                                            onChange={e => {
                                               setFormData({ ...formData, wilaya: e.target.value, commune: '' });
                                               localStorage.setItem("olma_default_wilaya", e.target.value);
                                            }}
-                                           className="w-full px-6 py-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none font-bold text-sm cursor-pointer focus:ring-2 ring-[#F37021]/20"
+                                           className="w-full px-6 py-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none font-bold text-sm cursor-pointer focus:ring-2 ring-[#FF5C00]/20"
                                         >
                                            {ALGERIA_WILAYAS.map(w => <option key={w} value={w}>{w}</option>)}
                                         </select>
                                      </div>
                                      <div className="space-y-3">
-                                        <label className="text-xs font-black text-stone-400 uppercase tracking-widest rtl:tracking-normal ms-1">{t("commune") || "Commune"}</label>
+                                        <label className="text-xs font-kinder text-stone-400 uppercase tracking-widest rtl:tracking-normal ms-1">{t("commune") || "Commune"}</label>
                                         <select 
                                            value={formData.commune}
                                            onChange={e => setFormData({ ...formData, commune: e.target.value })}
-                                           className="w-full px-6 py-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none font-bold text-sm cursor-pointer focus:ring-2 ring-[#F37021]/20"
+                                           className="w-full px-6 py-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none font-bold text-sm cursor-pointer focus:ring-2 ring-[#FF5C00]/20"
                                         >
                                            <option value="">-- {t("choose_commune") || "Choisissez la commune"} --</option>
                                            {getCommunes(formData.wilaya).map(c => <option key={c} value={c}>{c}</option>)}
@@ -481,23 +524,23 @@ export const Checkout: React.FC = () => {
                                   </div>
                                   {formData.commune === 'Autre' && (
                                      <div className="space-y-3">
-                                        <label className="text-xs font-black text-stone-400 uppercase tracking-widest rtl:tracking-normal ms-1">{t("enter_commune_name") || "Saisir le nom de la Commune"}</label>
+                                        <label className="text-xs font-kinder text-stone-400 uppercase tracking-widest rtl:tracking-normal ms-1">{t("enter_commune_name") || "Saisir le nom de la Commune"}</label>
                                         <input 
                                            type="text"
                                            placeholder={t("Ex: Hydra, Hussein Dey") || "Ex: Hydra, Hussein Dey"}
                                            onChange={e => setFormData({ ...formData, commune: e.target.value })}
-                                           className="w-full px-6 py-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none font-bold focus:ring-2 ring-[#F37021]/20"
+                                           className="w-full px-6 py-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none font-bold focus:ring-2 ring-[#FF5C00]/20"
                                         />
                                      </div>
                                   )}
                                   <div className="space-y-3">
-                                     <label className="text-xs font-black text-stone-400 uppercase tracking-widest rtl:tracking-normal ms-1">{t("landmark") || "Point de repère (ex: près de la pharmacie)"}</label>
+                                     <label className="text-xs font-kinder text-stone-400 uppercase tracking-widest rtl:tracking-normal ms-1">{t("landmark") || "Point de repère (ex: près de la pharmacie)"}</label>
                                      <textarea 
                                         rows={3}
                                         value={formData.address}
                                         onChange={e => setFormData({ ...formData, address: e.target.value })}
                                         placeholder={t("landmark_placeholder") || "Pas de code postal. Indiquez plutôt un lieu connu, quartier, ou particularité de votre bâtiment."}
-                                        className="w-full px-6 py-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none font-bold text-sm resize-none focus:ring-2 ring-[#F37021]/20"
+                                        className="w-full px-6 py-4 bg-stone-50 border border-stone-200 rounded-2xl outline-none font-bold text-sm resize-none focus:ring-2 ring-[#FF5C00]/20"
                                      />
                                   </div>
                                   <button 
@@ -523,8 +566,8 @@ export const Checkout: React.FC = () => {
                        className="w-full flex items-center justify-between text-start"
                      >
                         <div className="flex items-center gap-4">
-                           <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs ${activeAccordion === 3 ? 'bg-[#F37021] text-white shadow-lg' : 'bg-stone-100 text-stone-500'}`}>3</div>
-                           <h3 className="text-lg sm:text-xl font-black text-[#121315]">{t("checkout.review_and_pay") || "Paiement & Confirmation"}</h3>
+                           <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs ${activeAccordion === 3 ? 'bg-[#FF5C00] text-white shadow-lg' : 'bg-stone-100 text-stone-500'}`}>3</div>
+                           <h3 className="text-lg sm:text-xl font-kinder text-[#3C2B22]">{t("checkout.review_and_pay") || "Paiement & Confirmation"}</h3>
                         </div>
                      </button>
 
@@ -532,12 +575,12 @@ export const Checkout: React.FC = () => {
                         {activeAccordion === 3 && (
                            <motion.div initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:'auto' }} className="mt-8 space-y-6 overflow-hidden">
                               <div className="bg-stone-50 rounded-2xl p-6 border border-stone-200">
-                                 <h4 className="font-bold text-sm text-[#121315] mb-4 uppercase tracking-widest rtl:tracking-normal">{t("checkout.delivery_info") || "Vos Informations de Livraison"}</h4>
+                                 <h4 className="font-bold text-sm text-[#3C2B22] mb-4 uppercase tracking-widest rtl:tracking-normal">{t("checkout.delivery_info") || "Vos Informations de Livraison"}</h4>
                                  <div className="text-sm font-medium text-stone-600 space-y-2">
                                     <p className="flex gap-2"><span className="font-bold text-stone-900 w-24 shrink-0">{t("checkout.client", "Client :")}</span> <span className="flex-1 break-words">{formData.fullName} ({formData.phone})</span></p>
                                     <p className="flex gap-2"><span className="font-bold text-stone-900 w-24 shrink-0">{t("checkout.destination", "Destination :")}</span> <span className="flex-1 break-words">{formData.wilaya} • {formData.commune}</span></p>
                                     <p className="flex gap-2"><span className="font-bold text-stone-900 w-24 shrink-0">{t("checkout.reference", "Repère :")}</span> <span className="flex-1 break-words">{formData.address}</span></p>
-                                    <p className="flex gap-2 items-center"><span className="font-bold text-stone-900 w-24 shrink-0">{t("checkout.mode", "Mode :")}</span> <span className="bg-[#121315] text-white px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest shrink-0">{deliveryMethod === 'stopdesk' ? t("checkout.stopdesk", "📦 Point Relais StopDesk") : t("checkout.door_delivery", "🚚 À Domicile")}</span></p>
+                                    <p className="flex gap-2 items-center"><span className="font-bold text-stone-900 w-24 shrink-0">{t("checkout.mode", "Mode :")}</span> <span className="bg-[#3C2B22] text-white px-2 py-0.5 rounded text-[10px] font-kinder uppercase tracking-widest shrink-0">{deliveryMethod === 'stopdesk' ? t("checkout.stopdesk", "📦 Point Relais StopDesk") : t("checkout.door_delivery", "🚚 À Domicile")}</span></p>
                                  </div>
                               </div>
 
@@ -568,13 +611,13 @@ export const Checkout: React.FC = () => {
                 {/* Order Summary sidebar */}
                 <div className="col-span-1 lg:col-span-5 space-y-6">
                    <div className="surface-card p-6 sm:p-8 sticky top-28">
-                      <h3 className="text-sm font-black text-[#121315] uppercase tracking-widest rtl:tracking-normal mb-6 border-b border-stone-100 pb-4">{t("order_summary") || "Résumé de la commande"}</h3>
+                      <h3 className="text-sm font-kinder text-[#3C2B22] uppercase tracking-widest rtl:tracking-normal mb-6 border-b border-stone-100 pb-4">{t("order_summary") || "Résumé de la commande"}</h3>
                       
                       <div className="space-y-6 max-h-[350px] overflow-y-auto mb-6 pr-2 custom-scrollbar">
                           {Object.values(groupedCart).map((group: any, idx) => (
                              <div key={idx} className="bg-stone-50/50 rounded-xl p-4 border border-stone-100">
                                 <div className="flex items-center gap-2 mb-3 pb-2 border-b border-stone-200/50">
-                                   <span className="bg-[#121315] text-white text-[9px] font-black uppercase tracking-widest rtl:tracking-normal px-2 py-0.5 rounded-full">
+                                   <span className="bg-[#3C2B22] text-white text-[9px] font-kinder uppercase tracking-widest rtl:tracking-normal px-2 py-0.5 rounded-full">
                                       {t("checkout.subpackage") || "Sous-colis"} {idx + 1}
                                    </span>
                                    <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest rtl:tracking-normal">{group.sellerName}</span>
@@ -588,13 +631,13 @@ export const Checkout: React.FC = () => {
                                                                                   <img loading="lazy" src={item.image} alt={item.name} className="w-full h-full object-cover" />
                                                                               </div>
                                                                               <div className="flex-1 flex flex-col justify-center">
-                                                                                  <p className="text-[11px] font-bold text-[#121315] line-clamp-2 leading-tight">{item.name}</p>
+                                                                                  <p className="text-[11px] font-bold text-[#3C2B22] line-clamp-2 leading-tight">{item.name}</p>
                                                                                   {item.selectedVariant && (
                                                                                       <p className="text-[9px] font-medium text-stone-500 mt-0.5 uppercase tracking-wider">{item.selectedVariant}</p>
                                                                                   )}
                                                                                   <div className="flex justify-between items-center mt-2 text-stone-500">
                                                                                       <span className="text-[10px] font-bold">{t("checkout.qty", "Qté:")} {item.quantity || 1}</span>
-                                                                                      <span className="text-[10px] font-black text-[#F37021] tracking-wider rtl:tracking-normal">{formatPrice(getCartItemPrice(item) * (item.quantity||1))}</span>
+                                                                                      <span className="text-[10px] font-kinder text-[#FF5C00] tracking-wider rtl:tracking-normal">{formatPrice(getCartItemPrice(item) * (item.quantity||1))}</span>
                                                                                   </div>
                                                                               </div>
                                                                           </div>
@@ -609,7 +652,7 @@ export const Checkout: React.FC = () => {
                       <div className="py-4 border-t border-b border-stone-100/80 my-4 space-y-3 animate-fade-in text-start">
                          <div className="flex items-center gap-2 mb-1">
                             <Ticket className="w-4 h-4 text-orange-600" />
-                            <span className="text-[10px] font-black text-[#121315] uppercase tracking-widest rtl:tracking-normal">{t("Code Promotionnel")}</span>
+                            <span className="text-[10px] font-kinder text-[#3C2B22] uppercase tracking-widest rtl:tracking-normal">{t("Code Promotionnel")}</span>
                          </div>
                          {appliedCoupon ? (
                             <div className="flex items-center justify-between p-3.5 bg-emerald-50/60 border border-emerald-100 rounded-2xl">
@@ -618,13 +661,13 @@ export const Checkout: React.FC = () => {
                                      <CheckCircle className="w-4 h-4 text-emerald-600" />
                                   </div>
                                   <div>
-                                     <p className="text-[10px] font-black uppercase text-emerald-800 tracking-wider rtl:tracking-normal font-mono">{appliedCoupon.code}</p>
+                                     <p className="text-[10px] font-kinder uppercase text-emerald-800 tracking-wider rtl:tracking-normal font-mono">{appliedCoupon.code}</p>
                                      <p className="text-[9px] font-semibold text-emerald-600">{t("checkout.discount_applied", "Coupon appliqué : -{{amount}}", { amount: appliedCoupon.discountType === 'percentage' ? `${appliedCoupon.discountValue}%` : formatPrice(appliedCoupon.discountValue) })}</p>
                                   </div>
                                </div>
                                <button 
                                   onClick={handleRemoveCoupon}
-                                  className="text-[10px] font-black uppercase tracking-wider rtl:tracking-normal text-red-500 hover:text-red-700 transition-colors p-1"
+                                  className="text-[10px] font-kinder uppercase tracking-wider rtl:tracking-normal text-red-500 hover:text-red-700 transition-colors p-1"
                                >
                                   {t("remove") || "Retirer"}
                                </button>
@@ -641,7 +684,7 @@ export const Checkout: React.FC = () => {
                                <button 
                                   onClick={handleApplyCoupon}
                                   disabled={isValidatingCoupon || !couponInput.trim()}
-                                  className="px-4 py-2.5 bg-[#121315] hover:bg-[#0a0b0c] text-white rounded-xl text-[10px] font-black uppercase tracking-widest rtl:tracking-normal transition-colors disabled:opacity-50"
+                                  className="px-4 py-2.5 bg-[#3C2B22] hover:bg-[#0a0b0c] text-white rounded-xl text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal transition-colors disabled:opacity-50"
                                >
                                   {isValidatingCoupon ? (t("checking") || "Vérif...") : (t("apply") || "Valider")}
                                </button>
@@ -652,11 +695,11 @@ export const Checkout: React.FC = () => {
                       <div className="space-y-3 pt-2">
                          <div className="flex justify-between items-center text-sm font-bold text-stone-500">
                             <span>{t("Sous-total")}</span>
-                            <span className="text-[#121315]">{formatPrice(subtotal)}</span>
+                            <span className="text-[#3C2B22]">{formatPrice(subtotal)}</span>
                          </div>
                          {couponDiscount > 0 && (
                             <div className="flex justify-between items-center text-sm font-bold text-emerald-600 animate-fade-in py-1">
-                               <span className="flex items-center gap-1.5 font-black uppercase text-xs">{t("checkout.discount", "🎟️ Remise :")} {appliedCoupon?.code}</span>
+                               <span className="flex items-center gap-1.5 font-kinder uppercase text-xs">{t("checkout.discount", "🎟️ Remise :")} {appliedCoupon?.code}</span>
                                <span className="font-extrabold text-xs">- {formatPrice(couponDiscount)}</span>
                             </div>
                          )}
@@ -664,7 +707,7 @@ export const Checkout: React.FC = () => {
                          </div>
                          <div className="flex justify-between items-center text-sm font-bold text-stone-500">
                             <span>{t("Livraison estimée")}</span>
-                            <span className="text-[#121315]">{formatPrice(totalShipping)}</span>
+                            <span className="text-[#3C2B22]">{formatPrice(totalShipping)}</span>
                          </div>
                          
                          {(userProfile?.cashbackBalance || 0) > 0 && (
@@ -673,7 +716,7 @@ export const Checkout: React.FC = () => {
                                  <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${useCashbackPoints ? 'bg-orange-500' : 'bg-stone-200 group-hover:bg-stone-300'}`}>
                                     {useCashbackPoints && <CheckCircle className="w-3 h-3 text-white" />}
                                  </div>
-                                 <span className="text-sm font-bold text-[#121315]">{t("checkout.use_cashback", "Utiliser mes points de fidélité (")}{formatPrice(userProfile?.cashbackBalance || 0)})</span>
+                                 <span className="text-sm font-bold text-[#3C2B22]">{t("checkout.use_cashback", "Utiliser mes points de fidélité (")}{formatPrice(userProfile?.cashbackBalance || 0)})</span>
                                  <input type="checkbox" className="hidden" checked={useCashbackPoints} onChange={e => setUseCashbackPoints(e.target.checked)} />
                                </label>
                                {useCashbackPoints && (
@@ -689,7 +732,7 @@ export const Checkout: React.FC = () => {
                                     {useWallet && <CheckCircle className="w-3.5 h-3.5 text-white" />}
                                  </div>
                                  <div>
-                                    <span className="text-sm font-bold text-[#121315] block">{t("checkout.use_wallet", "Utiliser mon solde Wallet")}</span>
+                                    <span className="text-sm font-bold text-[#3C2B22] block">{t("checkout.use_wallet", "Utiliser mon solde Wallet")}</span>
                                     <span className="text-[10px] text-stone-500 font-bold block">{t("checkout.wallet_balance", "Solde disponible :")} {formatPrice(userProfile?.walletBalance || 0)}</span>
                                  </div>
                                  <input type="checkbox" className="hidden" checked={useWallet} onChange={e => setUseWallet(e.target.checked)} />
@@ -702,14 +745,14 @@ export const Checkout: React.FC = () => {
 
                          <div className="flex justify-between items-center pt-4 mt-4 border-t border-stone-100">
                             <div>
-                                <span className="text-xs font-black text-[#121315] uppercase tracking-widest rtl:tracking-normal block font-sans">{t("checkout.total", "Total à payer")}</span>
+                                <span className="text-xs font-kinder text-[#3C2B22] uppercase tracking-widest rtl:tracking-normal block font-sans">{t("checkout.total", "Total à payer")}</span>
                                 {walletAmountUsed > 0 && (
                                    <span className="text-[10px] text-stone-500 font-bold block mt-0.5">({formatPrice(grandTotalBeforeWallet)} {t("checkout.order_minus", "commande -")} {formatPrice(walletAmountUsed)} {t("checkout.wallet", "Wallet")})</span>
                                 )}
                              </div>
                             <div className="text-end">
-                                <span className="text-xl font-black text-[#F37021] block">{formatPrice(grandTotal)}</span>
-                                <span className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-orange-600 block mt-0.5 animate-pulse">
+                                <span className="text-xl font-kinder text-[#FF5C00] block">{formatPrice(grandTotal)}</span>
+                                <span className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-orange-600 block mt-0.5 animate-pulse">
                                    {grandTotal === 0 ? t("checkout.fully_paid_wallet", "✨ Payé à 100% par Wallet") : t("checkout.remaining_cod", "Reste à payer en COD")}
                                 </span>
                              </div>
@@ -744,10 +787,10 @@ export const Checkout: React.FC = () => {
                    <CheckCircle className="w-16 h-16 animate-pulse" />
                 </motion.div>
                 <div className="space-y-4">
-                   <h2 className="text-4xl md:text-5xl font-black text-[#121315] tracking-tighter rtl:tracking-normal">{t("congratulations") || "Félicitations !"}</h2>
+                   <h2 className="text-4xl md:text-5xl font-kinder text-[#3C2B22] tracking-tighter rtl:tracking-normal">{t("congratulations") || "Félicitations !"}</h2>
                    <p className="text-stone-500 text-lg font-bold max-w-lg mx-auto">
-                      {t("order_confirmed_msg") || "Commande"} <span className="text-[#121315]">#{orderSummary?.id?.substring(0, 8)}</span> {t("confirmed_suffix") || "confirmée."}<br/> 
-                      {t("payment_due_delivery") || "Paiement de"} <span className="text-[#F37021]">{formatPrice(orderSummary?.total || 0)}</span> {t("to_be_expected_on_delivery") || "à prévoir à la livraison."}
+                      {t("order_confirmed_msg") || "Commande"} <span className="text-[#3C2B22]">#{orderSummary?.id?.substring(0, 8)}</span> {t("confirmed_suffix") || "confirmée."}<br/> 
+                      {t("payment_due_delivery") || "Paiement de"} <span className="text-[#FF5C00]">{formatPrice(orderSummary?.total || 0)}</span> {t("to_be_expected_on_delivery") || "à prévoir à la livraison."}
                    </p>
                 </div>
 
@@ -755,7 +798,7 @@ export const Checkout: React.FC = () => {
                    <div className="w-14 h-14 bg-white rounded-2xl shadow-sm text-orange-500 flex items-center justify-center mx-auto mb-6">
                       <Ticket className="w-6 h-6" />
                    </div>
-                   <h3 className="text-2xl font-black text-[#121315] mb-4">{t("earn_points_title") || "Gagnez 100 Olma Points !"}</h3>
+                   <h3 className="text-2xl font-kinder text-[#3C2B22] mb-4">{t("earn_points_title") || "Gagnez 100 Olma Points !"}</h3>
                    <p className="text-sm font-bold text-stone-500 max-w-sm mx-auto leading-relaxed">
                       {t("validate_delivery_points_desc") || "Validez la réception de votre colis sur l'application dans les 24h suivant l'arrivée du livreur pour débloquer vos points."}
                    </p>

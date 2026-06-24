@@ -37,14 +37,14 @@ export const CartDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
       title={t("Mon Panier") || "Mon Panier"}
       icon={<ShoppingBag className="w-5 h-5" />}
     >
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-8 bg-[#FAF8F5]">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-8 bg-[#FDF9EC]">
         {cart.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center space-y-6 px-4">
-            <div className="w-24 h-24 bg-[#F37021]/10 rounded-full flex items-center justify-center text-[#F37021] mb-2">
+            <div className="w-24 h-24 bg-[#FF5C00]/10 rounded-full flex items-center justify-center text-[#FF5C00] mb-2">
               <Package className="w-10 h-10" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-xl font-black text-[#121315]">{t("Votre panier est curieusement léger...")}</h3>
+              <h3 className="text-xl font-kinder text-[#3C2B22]">{t("Votre panier est curieusement léger...")}</h3>
               <p className="text-stone-500 font-semibold text-sm">{t("Remplissons-le avec des trésors uniques !")}</p>
             </div>
             <button
@@ -73,11 +73,11 @@ export const CartDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                 <div className="flex flex-col gap-2 border-b border-stone-100 pb-3">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <span className="bg-[#121315] text-white text-[9px] rtl:text-[11px] font-black uppercase tracking-widest rtl:tracking-normal px-2 py-0.5 rounded-full">
+                      <span className="bg-[#3C2B22] text-white text-[9px] rtl:text-[11px] font-kinder uppercase tracking-widest rtl:tracking-normal px-2 py-0.5 rounded-full">
                         {t("Sous-colis")}
                         {groupIdx + 1}
                       </span>
-                      <h3 className="font-black text-sm text-[#121315] uppercase tracking-widest rtl:tracking-normal leading-none">
+                      <h3 className="font-kinder text-sm text-[#3C2B22] uppercase tracking-widest rtl:tracking-normal leading-none">
                         {group.sellerName}
                       </h3>
                     </div>
@@ -91,12 +91,12 @@ export const CartDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                     <div className="space-y-1.5">
                       <p className="text-[10px] rtl:text-[12px] sm:text-xs rtl:text-sm font-bold text-stone-500">
                         {t("Ajoutez encore")}
-                        <span className="text-[#F37021]">{formatPrice(remaining)}</span>{" "}
+                        <span className="text-[#FF5C00]">{formatPrice(remaining)}</span>{" "}
                         {t("pour amortir la livraison !")}
                       </p>
                       <div className="h-1.5 w-full bg-stone-100 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-[#F37021] transition-all duration-500"
+                          className="h-full bg-[#FF5C00] transition-all duration-500"
                           style={{ width: `${progress}%` }}
                         />
                       </div>
@@ -128,7 +128,7 @@ export const CartDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                       <div className="flex-1 flex flex-col justify-between py-1">
                         <div>
                           <div className="flex justify-between items-start gap-2">
-                            <h4 className="font-bold text-xs rtl:text-sm sm:text-sm text-[#121315] line-clamp-2">
+                            <h4 className="font-bold text-xs rtl:text-sm sm:text-sm text-[#3C2B22] line-clamp-2">
                               {getTranslatedField(item, "name", lang)}
                             </h4>
                             <button
@@ -143,7 +143,7 @@ export const CartDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                               {item.selectedVariant}
                             </p>
                           )}
-                          <p className="text-[10px] rtl:text-[12px] font-bold text-[#F37021] uppercase tracking-widest rtl:tracking-normal mt-1">
+                          <p className="text-[10px] rtl:text-[12px] font-bold text-[#FF5C00] uppercase tracking-widest rtl:tracking-normal mt-1">
                             {formatPrice(getCartItemPrice(item))}
                           </p>
                         </div>
@@ -154,21 +154,21 @@ export const CartDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                             <button
                               disabled={item.quantity <= 1}
                               onClick={() => updateQuantity(item.originalIndex, item.quantity - 1)}
-                              className="w-6 h-6 flex items-center justify-center text-[#121315] disabled:text-stone-300 hover:bg-white rounded-full transition-colors"
+                              className="w-6 h-6 flex items-center justify-center text-[#3C2B22] disabled:text-stone-300 hover:bg-white rounded-full transition-colors"
                             >
                               <Minus className="w-3 h-3" />
                             </button>
-                            <span className="text-xs rtl:text-sm font-black min-w-[12px] text-center text-[#121315]">
+                            <span className="text-xs rtl:text-sm font-kinder min-w-[12px] text-center text-[#3C2B22]">
                               {item.quantity}
                             </span>
                             <button
                               onClick={() => updateQuantity(item.originalIndex, item.quantity + 1)}
-                              className="w-6 h-6 flex items-center justify-center text-[#121315] hover:bg-white rounded-full transition-colors"
+                              className="w-6 h-6 flex items-center justify-center text-[#3C2B22] hover:bg-white rounded-full transition-colors"
                             >
                               <Plus className="w-3 h-3" />
                             </button>
                           </div>
-                          <p className="text-sm font-black text-[#121315]">
+                          <p className="text-sm font-kinder text-[#3C2B22]">
                             {formatPrice(getCartItemPrice(item) * item.quantity)}
                           </p>
                         </div>
@@ -188,7 +188,7 @@ export const CartDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
             <span className="text-stone-400 font-bold uppercase tracking-widest rtl:tracking-normal text-[10px] rtl:text-[12px] sm:text-xs rtl:text-sm">
               {t("Sous-total")}
             </span>
-            <span className="text-xl sm:text-2xl font-black text-[#121315]">{formatPrice(totalPrice)}</span>
+            <span className="text-xl sm:text-2xl font-kinder text-[#3C2B22]">{formatPrice(totalPrice)}</span>
           </div>
           <button
             onClick={() => {

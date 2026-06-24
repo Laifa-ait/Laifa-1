@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { Headphones, Package, Heart, LogOut, ChevronRight, Settings, ShoppingBag, Clock, ShieldCheck, ArrowLeft, Store, MapPin, Sparkles, Wallet, RotateCcw, Star, Store as StoreIcon } from 'lucide-react';
+import { Headphones, Package, Heart, LogOut, ChevronRight, Settings, ShoppingBag, Clock, ShieldCheck, ArrowLeft, Store, MapPin, Sparkles, Wallet, RotateCcw, Star } from 'lucide-react';
 import { BuyerSupport } from './BuyerSupport';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../lib/firebase';
-import { collection, query, where, getDocs, orderBy, limit, startAfter } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit, startAfter, DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 import { formatPrice } from '../utils/format';
 import { getRetroAvatar } from '../utils/avatar';
+import { BUYER_ORDERS_PER_PAGE } from '../constants/ui';
 
 // Core Modular Components
 import { AddressManager } from '../components/Buyer/AddressManager';
@@ -20,18 +21,31 @@ import { ReturnManagement } from '../components/Buyer/ReturnManagement';
 import { MyReviews } from '../components/Buyer/MyReviews';
 import { FollowedStores } from '../components/Buyer/FollowedStores';
 
+export interface BuyerOrder {
+  id: string;
+  userId: string;
+  total: number;
+  status: string;
+  createdAt: any;
+  items: Array<{ name: string; quantity: number; price: number; image?: string }>;
+  shippingAddress?: { wilaya: string; communes?: string; commune?: string };
+}
+
 export const BuyerDashboard: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { currentUser, userProfile, logout } = useAuth();
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<BuyerOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [lastVisible, setLastVisible] = useState<any>(null);
-  const ORDERS_PER_PAGE = 5;
+  const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
 
-  // Modern UI multi-tab router (Module 5)
-  const [activeTab, setActiveTab] = useState<'orders' | 'addresses' | 'profile' | 'security' | 'preferences' | 'support' | 'wallet' | 'returns' | 'reviews' | 'following'>('orders');
+  // Modern UI multi-tab router (Module 5) with URL persistence
+  const activeTab = (searchParams.get('tab') || 'orders') as 'orders' | 'addresses' | 'profile' | 'security' | 'preferences' | 'support' | 'wallet' | 'returns' | 'reviews' | 'following';
+  const setActiveTab = (tab: string) => {
+    setSearchParams({ tab });
+  };
 
   useEffect(() => {
     if (!currentUser) {
@@ -39,6 +53,7 @@ export const BuyerDashboard: React.FC = () => {
       return;
     }
 
+    let cancelled = false;
     const fetchOrders = async () => {
       setLoading(true);
       try {
@@ -46,23 +61,33 @@ export const BuyerDashboard: React.FC = () => {
           collection(db, "orders"), 
           where("userId", "==", currentUser.uid),
           orderBy("createdAt", "desc"),
-          limit(ORDERS_PER_PAGE)
+          limit(BUYER_ORDERS_PER_PAGE)
         );
         const snapshot = await getDocs(q);
-        setOrders(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        setLastVisible(snapshot.docs[snapshot.docs.length - 1] || null);
+        if (!cancelled) {
+          const fetched: BuyerOrder[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BuyerOrder));
+          setOrders(fetched);
+          setLastVisible(snapshot.docs[snapshot.docs.length - 1] || null);
+        }
       } catch (err) {
-        console.error("Error fetching orders:", err);
+        if (!cancelled) {
+          console.error("Error fetching orders:", err);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     fetchOrders();
+    return () => {
+      cancelled = true;
+    };
   }, [currentUser, navigate]);
 
   const loadMoreOrders = async () => {
-    if (!currentUser || !lastVisible) return;
+    if (!currentUser || !lastVisible || loadingMore) return;
     setLoadingMore(true);
     try {
       const q = query(
@@ -70,10 +95,10 @@ export const BuyerDashboard: React.FC = () => {
         where("userId", "==", currentUser.uid),
         orderBy("createdAt", "desc"),
         startAfter(lastVisible),
-        limit(ORDERS_PER_PAGE)
+        limit(BUYER_ORDERS_PER_PAGE)
       );
       const snapshot = await getDocs(q);
-      const newOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const newOrders: BuyerOrder[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BuyerOrder));
       setOrders(prev => [...prev, ...newOrders]);
       setLastVisible(snapshot.docs[snapshot.docs.length - 1] || null);
     } catch (err) {
@@ -90,6 +115,7 @@ export const BuyerDashboard: React.FC = () => {
 
   if (!currentUser) return null;
 
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 md:py-10">
       {/* Mobile-first top header navigation tabs */}
@@ -99,7 +125,7 @@ export const BuyerDashboard: React.FC = () => {
           { id: 'wallet', icon: Wallet, label: t("dashboard.tabs.wallet") },
           { id: 'returns', icon: RotateCcw, label: t("dashboard.tabs.returns") },
           { id: 'reviews', icon: Star, label: t("dashboard.tabs.evaluations") || "Mes Avis" },
-          { id: 'following', icon: StoreIcon, label: t("dashboard.tabs.followed_stores") || "Boutiques Suivies" },
+          { id: 'following', icon: Store, label: t("dashboard.tabs.followed_stores") || "Boutiques Suivies" },
           { id: 'profile', icon: Settings, label: t("profile_addresses") },
           { id: 'preferences', icon: Sparkles, label: t("dashboard.tabs.preferences") || "Mes Préférences" },
           { id: 'security', icon: ShieldCheck, label: t("dashboard.tabs.security") || "Sécurité" },
@@ -113,11 +139,11 @@ export const BuyerDashboard: React.FC = () => {
               onClick={() => setActiveTab(item.id as any)}
               className={`flex items-center gap-2 px-5 py-3 rounded-2xl font-black text-xs whitespace-nowrap transition-all duration-250 snap-start border ${
                 isSelected 
-                  ? 'bg-[#121315] text-white border-[#121315] shadow-md' 
+                  ? 'bg-[#3C2B22] text-white border-[#3C2B22] shadow-md' 
                   : 'bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50'
               }`}
             >
-              <Icon className={`w-4 h-4 ${isSelected ? 'text-[#F37021]' : ''}`} />
+              <Icon className={`w-4 h-4 ${isSelected ? 'text-[#FF5C00]' : ''}`} />
               <span>{item.label}</span>
             </button>
           );
@@ -128,7 +154,7 @@ export const BuyerDashboard: React.FC = () => {
         {/* Sidebar */}
         <div className="col-span-1 md:col-span-4 lg:col-span-3 space-y-4 md:space-y-6">
           {/* Compact Profile Card */}
-          <div className="bg-[#FAF8F5] p-5 rounded-3xl border border-[#EBE5DF]/60 shadow-sm flex items-center gap-4 relative overflow-hidden">
+          <div className="bg-[#FDF9EC] p-5 rounded-3xl border border-[#FF5C00]/60 shadow-sm flex items-center gap-4 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-24 h-24 bg-[#ea580c]/5 rounded-full blur-2xl pointer-events-none" />
             <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-white shadow-sm shrink-0">
               <img loading="lazy" 
@@ -139,27 +165,27 @@ export const BuyerDashboard: React.FC = () => {
               />
             </div>
             <div className="flex-1 min-w-0">
-              <h2 className="font-extrabold text-[#121315] truncate text-lg leading-tight">
+              <h2 className="font-extrabold text-[#3C2B22] truncate text-lg leading-tight">
                 {userProfile?.displayName || currentUser.displayName}
               </h2>
-              <p className="text-[#ea580c] text-[10px] font-black uppercase tracking-widest rtl:tracking-normal mt-1 truncate">
+              <p className="text-[#ea580c] text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal mt-1 truncate">
                 {userProfile?.role === 'admin' ? t("common.admin") : (userProfile?.role === 'seller' ? t("common.seller") : t("common.buyer"))}
               </p>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-[#FAF8F5] to-[#EBE5DF]/40 border border-[#EBE5DF]/60 rounded-3xl p-5 shadow-sm text-[#121315] relative overflow-hidden group">
-             <div className="absolute top-0 right-0 w-full h-full bg-[#FAF8F5]/30 opacity-0 group-hover:opacity-100 transition-opacity" />
-             <p className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-stone-500 mb-1">{t("dashboard.wallet.title")}</p>
-             <h3 className="text-2xl font-black tracking-tight rtl:tracking-normal text-[#121315]">{formatPrice(userProfile?.walletBalance || 0)}</h3>
+          <div className="bg-gradient-to-br from-[#FAF8F5] to-[#EBE5DF]/40 border border-[#FF5C00]/60 rounded-3xl p-5 shadow-sm text-[#3C2B22] relative overflow-hidden group">
+             <div className="absolute top-0 right-0 w-full h-full bg-[#FDF9EC]/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+             <p className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-stone-500 mb-1">{t("dashboard.wallet.title")}</p>
+             <h3 className="text-2xl font-kinder tracking-tight rtl:tracking-normal text-[#3C2B22]">{formatPrice(userProfile?.walletBalance || 0)}</h3>
              <p className="text-[9px] font-medium text-stone-500 mt-2 leading-relaxed">
                 {t("dashboard.wallet.desc")}
              </p>
           </div>
 
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-orange-100 rounded-3xl p-5 shadow-sm text-[#121315] relative overflow-hidden">
-             <p className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-stone-500 mb-1">{t("dashboard.loyalty.title")}</p>
-             <h3 className="text-2xl font-black tracking-tight rtl:tracking-normal text-[#F37021]">{formatPrice(userProfile?.cashbackBalance || 0)}</h3>
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-orange-100 rounded-3xl p-5 shadow-sm text-[#3C2B22] relative overflow-hidden">
+             <p className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-stone-500 mb-1">{t("dashboard.loyalty.title")}</p>
+             <h3 className="text-2xl font-kinder tracking-tight rtl:tracking-normal text-[#FF5C00]">{formatPrice(userProfile?.cashbackBalance || 0)}</h3>
              <p className="text-[9px] font-medium text-stone-500 mt-2 leading-relaxed">
                 {t("dashboard.loyalty.desc")}
              </p>
@@ -172,7 +198,7 @@ export const BuyerDashboard: React.FC = () => {
               { id: 'wallet', icon: Wallet, label: t("dashboard.tabs.wallet") },
               { id: 'returns', icon: RotateCcw, label: t("dashboard.tabs.returns") },
               { id: 'reviews', icon: Star, label: t("dashboard.tabs.evaluations") || "Mes Avis" },
-              { id: 'following', icon: StoreIcon, label: t("dashboard.tabs.followed_stores") || "Boutiques Suivies" },
+              { id: 'following', icon: Store, label: t("dashboard.tabs.followed_stores") || "Boutiques Suivies" },
               { id: 'profile', icon: Settings, label: t("profile_addresses") },
               { id: 'preferences', icon: Sparkles, label: t("dashboard.tabs.preferences") || "Mes Préférences" },
               { id: 'security', icon: ShieldCheck, label: t("dashboard.tabs.security") || "Sécurité" },
@@ -185,15 +211,15 @@ export const BuyerDashboard: React.FC = () => {
                   onClick={() => setActiveTab(item.id as any)}
                   className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all border-none ${
                     isActive 
-                      ? 'bg-[#121315] text-white shadow-md' 
-                      : 'bg-transparent text-zinc-600 hover:bg-[#FAF8F5] hover:text-[#121315]'
+                      ? 'bg-[#3C2B22] text-white shadow-md' 
+                      : 'bg-transparent text-zinc-600 hover:bg-[#FDF9EC] hover:text-[#3C2B22]'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <item.icon className={`w-5 h-5 ${isActive ? 'text-[#F37021]' : 'text-zinc-400'}`} />
+                    <item.icon className={`w-5 h-5 ${isActive ? 'text-[#FF5C00]' : 'text-zinc-400'}`} />
                     <span className="font-bold text-sm tracking-tight rtl:tracking-normal">{item.label}</span>
                   </div>
-                  {isActive && <ChevronRight className="w-4 h-4 rtl:rotate-180 text-[#F37021]" />}
+                  {isActive && <ChevronRight className="w-4 h-4 rtl:rotate-180 text-[#FF5C00]" />}
                 </button>
               );
             })}
@@ -208,7 +234,7 @@ export const BuyerDashboard: React.FC = () => {
               <button
                 key={i}
                 onClick={item.onClick}
-                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all text-zinc-600 hover:bg-[#FAF8F5] hover:text-[#121315] border-none bg-transparent"
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all text-zinc-600 hover:bg-[#FDF9EC] hover:text-[#3C2B22] border-none bg-transparent"
               >
                 <item.icon className="w-5 h-5 text-zinc-400" />
                 <span className="font-bold text-sm tracking-tight rtl:tracking-normal">{item.label}</span>
@@ -233,7 +259,7 @@ export const BuyerDashboard: React.FC = () => {
             <>
               <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                  <h1 className="text-2xl md:text-3xl font-black text-[#121315] tracking-tight rtl:tracking-normal">{t("dashboard.title")}</h1>
+                  <h1 className="text-2xl md:text-3xl font-kinder text-[#3C2B22] tracking-tight rtl:tracking-normal">{t("dashboard.title")}</h1>
                   <p className="text-zinc-500 text-sm mt-1">{t("dashboard.subtitle")}</p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -243,7 +269,7 @@ export const BuyerDashboard: React.FC = () => {
                     </div>
                     <div>
                       <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest rtl:tracking-normal leading-none mb-1">{t("dashboard.stats.orders")}</p>
-                      <p className="font-black text-lg text-[#121315] leading-none">{orders.length}</p>
+                      <p className="font-kinder text-lg text-[#3C2B22] leading-none">{orders.length}</p>
                     </div>
                   </div>
                 </div>
@@ -251,7 +277,7 @@ export const BuyerDashboard: React.FC = () => {
 
               <div className="bg-white rounded-3xl border border-zinc-100 shadow-sm overflow-hidden">
                 <div className="p-6 border-b border-zinc-50 flex items-center justify-between">
-                  <h3 className="font-bold flex items-center gap-2 text-[#121315]">
+                  <h3 className="font-bold flex items-center gap-2 text-[#3C2B22]">
                     <Clock className="w-5 h-5 text-zinc-400" />
                     {t("recent_orders")}
                   </h3>
@@ -280,21 +306,21 @@ export const BuyerDashboard: React.FC = () => {
                       ))}
                     </div>
                   ) : orders.length === 0 ? (
-                    <div className="p-8 md:p-12 min-h-[400px] flex flex-col justify-center items-center text-center bg-[#FAF8F5] m-4 md:m-6 rounded-3xl border border-[#EBE5DF]/50 shadow-sm relative overflow-hidden">
+                    <div className="p-8 md:p-12 min-h-[400px] flex flex-col justify-center items-center text-center bg-[#FDF9EC] m-4 md:m-6 rounded-3xl border border-[#FF5C00]/50 shadow-sm relative overflow-hidden">
                       <div className="absolute top-0 right-0 w-32 h-32 bg-orange-200/10 rounded-full blur-3xl pointer-events-none" />
                       
-                      <div className="w-16 h-16 bg-white border border-[#EBE5DF]/60 rounded-full flex items-center justify-center mx-auto text-zinc-400 shadow-sm relative z-10 mb-6">
+                      <div className="w-16 h-16 bg-white border border-[#FF5C00]/60 rounded-full flex items-center justify-center mx-auto text-zinc-400 shadow-sm relative z-10 mb-6">
                         <ShoppingBag className="w-8 h-8 text-[#ea580c]" />
                       </div>
                       
-                      <h4 className="text-xl md:text-2xl font-black text-[#121315] tracking-tight rtl:tracking-normal relative z-10">{t("dashboard.no_purchases")}</h4>
+                      <h4 className="text-xl md:text-2xl font-kinder text-[#3C2B22] tracking-tight rtl:tracking-normal relative z-10">{t("dashboard.no_purchases")}</h4>
                       <p className="text-xs text-zinc-500 mt-3 max-w-md mx-auto font-medium leading-relaxed relative z-10">
                         {t("dashboard.no_purchases_desc") || "Vous n'avez pas encore passé de commande sur notre plateforme. Nos vendeurs des 58 Wilayas proposent des produits uniques."}
                       </p>
                       
                       <button 
                         onClick={() => navigate('/shop')}
-                        className="mt-8 relative z-10 inline-flex items-center gap-2.5 px-8 py-3.5 bg-[#121315] hover:bg-[#0a0b0c] text-white font-extrabold text-[11px] uppercase tracking-widest rtl:tracking-normal rounded-2xl shadow-lg shadow-[#121315]/20 transition-all active:scale-95 border-none cursor-pointer"
+                        className="mt-8 relative z-10 inline-flex items-center gap-2.5 px-8 py-3.5 bg-[#3C2B22] hover:bg-[#0a0b0c] text-white font-extrabold text-[11px] uppercase tracking-widest rtl:tracking-normal rounded-2xl shadow-lg shadow-[#3C2B22]/20 transition-all active:scale-95 border-none cursor-pointer"
                       >
                         {t("dashboard.explore_catalog") || "Explorer le Catalogue"}
                         <ChevronRight className="w-4 h-4 rtl:rotate-180" />
@@ -316,7 +342,7 @@ export const BuyerDashboard: React.FC = () => {
                                                   </div>
                                                   <div>
                                                     <div className="flex items-center gap-2 mb-1">
-                                                      <span className="font-black text-sm tracking-tight rtl:tracking-normal text-[#121315]">{t("dashboard.orders.id_prefix") || "Commande #"} {order.id.substring(0, 8)}</span>
+                                                      <span className="font-kinder text-sm tracking-tight rtl:tracking-normal text-[#3C2B22]">{t("dashboard.orders.id_prefix") || "Commande #"} {order.id.substring(0, 8)}</span>
                                                       <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest rtl:tracking-normal ${
                                                         order.status === 'delivered' ? 'bg-emerald-100 text-emerald-700' :
                                                         order.status === 'pending' ? 'bg-orange-100 text-[#ea580c]' : 'bg-zinc-100 text-zinc-600'
@@ -330,9 +356,9 @@ export const BuyerDashboard: React.FC = () => {
                                                 <div className="flex items-center justify-between md:justify-end gap-6 border-t md:border-none pt-4 md:pt-0">
                                                   <div className="text-right">
                                                     <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1">{t("Total")}</p>
-                                                    <p className="font-black text-lg text-[#121315]">{formatPrice(order.total)}</p>
+                                                    <p className="font-kinder text-lg text-[#3C2B22]">{formatPrice(order.total)}</p>
                                                   </div>
-                                                  <button onClick={() => navigate(`/dashboard/buyer/order/${order.id}`)} className="w-10 h-10 rounded-xl bg-zinc-50 border border-zinc-100 text-zinc-400 flex items-center justify-center group-hover:bg-[#121315] group-hover:border-[#121315] group-hover:text-white transition-all cursor-pointer">
+                                                  <button onClick={() => navigate(`/dashboard/buyer/order/${order.id}`)} className="w-10 h-10 rounded-xl bg-zinc-50 border border-zinc-100 text-zinc-400 flex items-center justify-center group-hover:bg-[#3C2B22] group-hover:border-[#3C2B22] group-hover:text-white transition-all cursor-pointer">
                                                     <ChevronRight className="w-5 h-5 rtl:rotate-180" />
                                                   </button>
                                                 </div>
@@ -366,7 +392,7 @@ export const BuyerDashboard: React.FC = () => {
                   <div className="w-full border-t border-zinc-200/85" />
                 </div>
                 <div className="relative flex justify-center">
-                  <span className="bg-[#FAF8F5] px-4 text-stone-400 font-sans text-[10px] tracking-widest uppercase font-black">
+                  <span className="bg-[#FDF9EC] px-4 text-stone-400 font-sans text-[10px] tracking-widest uppercase font-kinder">
                     {t("addresses_management")}
                   </span>
                 </div>

@@ -82,21 +82,21 @@ export const TagCollectionPage: React.FC = () => {
         <div className="flex-1">
           <button 
             onClick={() => navigate(-1)} 
-            className="text-[#121315]/60 hover:text-[#121315] flex items-center gap-2 text-sm font-bold mb-6 transition-colors w-fit"
+            className="text-[#3C2B22]/60 hover:text-[#3C2B22] flex items-center gap-2 text-sm font-bold mb-6 transition-colors w-fit"
           >
             <ArrowLeft className="w-4 h-4" />
             {t("Retour")}</button>
 
-          <h1 className="text-3xl md:text-5xl font-black tracking-tighter rtl:tracking-normal text-[#121315] flex items-center gap-3">
-            <Tag className="w-8 h-8 md:w-10 md:h-10 text-[#F37021]" />
-            {t("Collection:")}<span className="text-[#F37021] capitalize">{tagId}</span>
+          <h1 className="text-3xl md:text-5xl font-kinder tracking-tighter rtl:tracking-normal text-[#3C2B22] flex items-center gap-3">
+            <Tag className="w-8 h-8 md:w-10 md:h-10 text-[#FF5C00]" />
+            {t("Collection:")}<span className="text-[#FF5C00] capitalize">{tagId}</span>
           </h1>
-          <p className="mt-3 text-[#121315]/70 font-semibold max-w-2xl">
+          <p className="mt-3 text-[#3C2B22]/70 font-semibold max-w-2xl">
             {t("Découvrez tous les produits associés à cette sélection spéciale.")}</p>
         </div>
         
         {!loading && !error && (
-          <div className="bg-[#FAF8F5] text-[#121315] px-4 py-2 rounded-xl text-xs uppercase tracking-widest rtl:tracking-normal font-black inline-flex items-center shadow-sm w-fit">
+          <div className="bg-[#FDF9EC] text-[#3C2B22] px-4 py-2 rounded-xl text-xs uppercase tracking-widest rtl:tracking-normal font-kinder inline-flex items-center shadow-sm w-fit">
             {products.length} {products.length > 1 ? 'Articles' : 'Article'}
           </div>
         )}
@@ -104,7 +104,7 @@ export const TagCollectionPage: React.FC = () => {
 
       {loading ? (
         <div className="flex justify-center items-center min-h-[40vh]">
-          <Loader2 className="w-10 h-10 text-[#F37021] animate-spin" />
+          <Loader2 className="w-10 h-10 text-[#FF5C00] animate-spin" />
         </div>
       ) : error ? (
         <div className="text-center py-20 bg-red-50 rounded-3xl border border-red-100">

@@ -15,9 +15,18 @@ export let clientApp: any = null;
 export let clientDb: any = null;
 
 try {
-  firebaseConfig = JSON.parse(fs.readFileSync(path.join(process.cwd(), "firebase-applet-config.json"), "utf8"));
-  clientApp = initClientApp(firebaseConfig);
-  clientDb = getClientFirestore(clientApp, firebaseConfig.firestoreDatabaseId || "(default)");
+  const configPath = path.join(process.cwd(), "firebase-applet-config.json");
+  if (fs.existsSync(configPath)) {
+    firebaseConfig = JSON.parse(fs.readFileSync(configPath, "utf8"));
+    if (firebaseConfig && Object.keys(firebaseConfig).length > 0) {
+      clientApp = initClientApp(firebaseConfig);
+      clientDb = getClientFirestore(clientApp, firebaseConfig.firestoreDatabaseId || "(default)");
+    }
+  } else {
+    (process.env.NODE_ENV === "debug" ? console.log : function () {})(
+      "firebase-applet-config.json introuvable, initialisation du client ignorée."
+    );
+  }
 } catch (err) {
   console.error("Impossible de lire firebase-applet-config.json, utilisation des paramètres par défaut", err);
 }

@@ -21,7 +21,6 @@ import { Language } from "../types";
 import { MegaMenu } from "./MegaMenu";
 import { AdvancedSearchbar as Searchbar } from "./Search/AdvancedSearchbar";
 import { NotificationCenter } from "./NotificationCenter";
-import { getRetroAvatar } from "../utils/avatar";
 
 export interface OlmaLogoProps {
   className?: string;
@@ -55,7 +54,7 @@ export const OlmaLogo: React.FC<OlmaLogoProps> = ({ className }) => (
 );
 
 export const Navbar: React.FC = () => {
-  const { currentUser, userProfile } = useAuth();
+  const { currentUser, userProfile, logout } = useAuth();
   const { cart, wishlist } = useCart();
   const { searchQuery, setSearchQuery, setActiveCategory, setIsSaleFilterActive, setActiveTag } = useShop();
   const { setIsCartOpen, setIsWishlistOpen, setIsMobileMenuOpen, setIsSearchOpen } = useUI();
@@ -65,11 +64,12 @@ export const Navbar: React.FC = () => {
 
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
-  const { logout } = useAuth();
   const lang = i18n.language as Language;
 
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const lastScrollYRef = React.useRef(0);
+
+  const cartCount = React.useMemo(() => cart.reduce((acc, i) => acc + i.quantity, 0), [cart]);
 
   useEffect(() => {
     let ticking = false;
@@ -78,14 +78,14 @@ export const Navbar: React.FC = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
+          lastScrollYRef.current = currentScrollY;
 
           if (currentScrollY > 120 && currentScrollY > lastScrollYRef.current) {
-            setIsHeaderVisible((prev) => (prev ? false : prev)); // scrolling down
+            setIsHeaderVisible(false);
           } else {
-            setIsHeaderVisible((prev) => (!prev ? true : prev)); // scrolling up
+            setIsHeaderVisible(true);
           }
 
-          lastScrollYRef.current = currentScrollY;
           ticking = false;
         });
         ticking = true;
@@ -111,12 +111,12 @@ export const Navbar: React.FC = () => {
   return (
     <>
       <div
-        className={`bg-[#121315] text-[9px] rtl:text-[11px] sm:text-[10px] rtl:text-[12px] font-medium px-4 sm:px-6 lg:px-12 gap-4 overflow-x-auto whitespace-nowrap scrollbar-hide justify-between items-center text-[#FAF8F5] ${location.pathname === "/" ? "hidden lg:flex" : "hidden"}`}
+        className={`bg-[#1A1410] text-[9px] rtl:text-[11px] sm:text-[10px] rtl:text-[12px] font-medium px-4 sm:px-6 lg:px-12 gap-4 overflow-x-auto whitespace-nowrap scrollbar-hide justify-between items-center text-[#FAF8F5] ${location.pathname === "/" ? "hidden lg:flex" : "hidden"}`}
       >
         <div className="flex items-center mx-auto w-full max-w-[90rem] justify-between">
           <div className="flex items-center gap-6 py-2">
             <span className="flex items-center gap-2 text-[#FAF8F5] uppercase tracking-[0.2em] rtl:tracking-normal">
-              <span className="w-1 h-1 bg-[#F37021] shrink-0" />
+              <span className="w-1 h-1 bg-[#C75C1A] shrink-0" />
               {t("trust_delivery")}
             </span>
             <span className="text-white/20">|</span>
@@ -135,28 +135,28 @@ export const Navbar: React.FC = () => {
                   navigate("/auth?role=seller");
                 }
               }}
-              className="hover:text-[#F37021] transition-colors flex items-center gap-1.5 uppercase tracking-[0.2em] rtl:tracking-normal text-[#FAF8F5] cursor-pointer bg-transparent border-none"
+              className="hover:text-[#00AEEF] transition-colors flex items-center gap-1.5 uppercase tracking-[0.2em] rtl:tracking-normal text-[#FAF8F5] cursor-pointer bg-transparent border-none"
             >
               {t("sell_on_olma")}
             </button>
             <span className="text-white/20">|</span>
             <button
               onClick={() => navigate("/shipping-calculator")}
-              className="hover:text-[#F37021] transition-colors flex items-center gap-1.5 uppercase tracking-[0.2em] rtl:tracking-normal text-[#FAF8F5] cursor-pointer bg-transparent border-none"
+              className="hover:text-[#00AEEF] transition-colors flex items-center gap-1.5 uppercase tracking-[0.2em] rtl:tracking-normal text-[#FAF8F5] cursor-pointer bg-transparent border-none"
             >
               {t("shipping_calc") || "CALCULATEUR LIVRAISON"}
             </button>
             <span className="text-white/20">|</span>
             <button
               onClick={() => navigate("/delivery-tracking")}
-              className="hover:text-[#F37021] transition-colors flex items-center gap-1.5 uppercase tracking-[0.2em] rtl:tracking-normal text-[#FAF8F5] cursor-pointer bg-transparent border-none"
+              className="hover:text-[#00AEEF] transition-colors flex items-center gap-1.5 uppercase tracking-[0.2em] rtl:tracking-normal text-[#FAF8F5] cursor-pointer bg-transparent border-none"
             >
               {t("track_package") || "SUIVI DE COLIS"}
             </button>
             <span className="text-white/20">|</span>
             <button
-              onClick={() => {}}
-              className="hover:text-[#F37021] transition-colors flex items-center gap-1.5 uppercase tracking-[0.2em] rtl:tracking-normal text-[#FAF8F5] cursor-pointer bg-transparent border-none"
+              onClick={() => navigate("/support")}
+              className="hover:text-[#00AEEF] transition-colors flex items-center gap-1.5 uppercase tracking-[0.2em] rtl:tracking-normal text-[#FAF8F5] cursor-pointer bg-transparent border-none"
             >
               {t("support") || "SUPPORT"}
             </button>
@@ -164,20 +164,20 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      <nav className="sticky top-0 z-[100] bg-[#FAF8F5]/95 backdrop-blur-md border-b border-[#EBE5DF]/80 shadow-[0_4px_24px_rgba(44,30,22,0.03)] transition-all duration-500 py-3 sm:py-5 relative">
-        <div className="absolute top-0 inset-x-0 h-[2px] bg-[#F37021] z-10" />
+      <nav className="sticky top-0 z-[100] bg-[#FDF9EC]/95 backdrop-blur-md border-b-[3px] border-white/10/20 shadow-md transition-all duration-500 py-3 sm:py-5 relative">
+        <div className="absolute top-0 inset-x-0 h-[4px] bg-[#C75C1A] z-10" />
         <div className="flex items-center px-4 sm:px-6 md:px-8 mx-auto w-full max-w-[90rem] justify-between relative">
           {/* Logo on Left */}
           <div className="flex shrink-0 items-center justify-start lg:w-1/4">
             <button
-              onClick={handleLogoClick}
-              className="flex items-center gap-2 shrink-0 select-none cursor-pointer group bg-transparent border-none"
-            >
-              <OlmaLogo className="w-7 h-7 sm:w-9 sm:h-9 text-[#F37021] group-hover:scale-110 transition-transform duration-300" />
-              <span className="font-display font-medium text-2xl sm:text-3xl tracking-tight rtl:tracking-normal text-[#121315] uppercase hidden xs:block">
-                {t("Olma")}
-                <span className="text-[#F37021] font-medium">{t("rt")}</span>
-              </span>
+               onClick={handleLogoClick}
+               className="flex items-center gap-2 shrink-0 select-none cursor-pointer group bg-transparent border-none"
+             >
+               <OlmaLogo className="w-8 h-8 sm:w-10 sm:h-10 text-[#00AEEF] group-hover:scale-110 transition-transform duration-300 drop-shadow-sm" />
+               <span className="font-sans font-bold font-bold text-2xl sm:text-3xl tracking-tight rtl:tracking-normal text-[#C75C1A] uppercase hidden sm:block">
+                 {t("Olma")}
+                 <span className="text-[#00AEEF] drop-shadow-sm">{t("rt")}</span>
+               </span>
             </button>
           </div>
 
@@ -190,7 +190,7 @@ export const Navbar: React.FC = () => {
           <div className="flex items-center justify-end gap-3 sm:gap-6 relative lg:w-1/4 shrink-0">
             <button
               onClick={() => setIsSearchOpen(true)}
-              className="flex items-center justify-center text-[#121315] hover:text-[#F37021] transition-all active:scale-95 cursor-pointer relative bg-transparent border-none p-1"
+              className="flex items-center justify-center text-[#C75C1A] hover:text-[#00AEEF] transition-all active:scale-95 cursor-pointer relative bg-transparent border-none p-1"
               id="global-search-trigger-btn"
               title={t("search_global") || "Recherche globale"}
             >
@@ -203,17 +203,17 @@ export const Navbar: React.FC = () => {
             <div className="hidden lg:block relative">
               <button
                 onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
-                className="flex items-center gap-1.5 text-[11px] font-bold text-[#121315] hover:text-[#F37021] transition-all duration-300 py-1.5 px-3.5 uppercase tracking-widest rtl:tracking-normal bg-white border border-[#EBE5DF]/80 rounded-full hover:shadow-[0_4px_12px_rgba(44,30,22,0.06)] cursor-pointer"
+                className="flex items-center gap-1.5 text-[11px] font-bold text-[#C75C1A] hover:text-[#00AEEF] transition-all duration-300 py-1.5 px-3.5 uppercase tracking-widest rtl:tracking-normal bg-white border border-white/10/80 rounded-full hover:shadow-[0_4px_12px_rgba(44,30,22,0.06)] cursor-pointer"
                 title={t("choose_language") || "Choisir la langue / اختر اللغة"}
                 id="language-select-desktop-btn"
               >
-                <Globe className="w-3.5 h-3.5 text-[#121315]/80" />
+                <Globe className="w-3.5 h-3.5 text-[#C75C1A]/80" />
                 <span>{lang ? lang.split("-")[0] : "fr"}</span>
               </button>
               {isLangDropdownOpen && (
                 <>
                   <div className="fixed inset-0 z-50 cursor-default" onClick={() => setIsLangDropdownOpen(false)} />
-                  <div className="absolute top-full right-0 mt-3 bg-[#FAF8F5] border border-[#EBE5DF]/80 shadow-[0_20px_40px_rgba(44,30,22,0.12)] z-[60] py-1.5 rounded-2xl min-w-[130px] overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
+                  <div className="absolute top-full right-0 mt-3 bg-[#FDF9EC] border border-white/10/80 shadow-[0_20px_40px_rgba(44,30,22,0.12)] z-[60] py-1.5 rounded-2xl min-w-[130px] overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
                     {[
                       { code: "fr", name: "Français" },
                       { code: "ar", name: "العربية" },
@@ -225,12 +225,12 @@ export const Navbar: React.FC = () => {
                           setLang(l.code);
                           setIsLangDropdownOpen(false);
                         }}
-                        className={`w-full text-left rtl:text-right px-4 py-2.5 text-xs rtl:text-sm font-semibold tracking-wide transition-colors bg-transparent border-none cursor-pointer flex items-center justify-between gap-2 border-b border-[#EBE5DF]/30 last:border-b-0 ${
-                          lang === l.code ? "text-[#F37021] bg-[#EBE5DF]/20" : "text-[#121315] hover:bg-[#EBE5DF]/40"
+                        className={`w-full text-left rtl:text-right px-4 py-2.5 text-xs rtl:text-sm font-semibold tracking-wide transition-colors bg-transparent border-none cursor-pointer flex items-center justify-between gap-2 border-b border-white/10/30 last:border-b-0 ${
+                          lang === l.code ? "text-[#00AEEF] bg-[#EBE5DF]/20" : "text-[#C75C1A] hover:bg-[#EBE5DF]/40"
                         }`}
                       >
                         <span>{l.name}</span>
-                        {lang === l.code && <span className="w-1.5 h-1.5 rounded-full bg-[#F37021]" />}
+                        {lang === l.code && <span className="w-1.5 h-1.5 rounded-full bg-[#C75C1A]" />}
                       </button>
                     ))}
                   </div>
@@ -240,11 +240,11 @@ export const Navbar: React.FC = () => {
 
             <button
               onClick={() => setIsWishlistOpen(true)}
-              className="hidden lg:flex items-center justify-center text-[#121315] hover:text-[#F37021] transition-all active:scale-95 cursor-pointer relative bg-transparent border-none p-1"
+              className="hidden lg:flex items-center justify-center text-[#C75C1A] hover:text-[#00AEEF] transition-all active:scale-95 cursor-pointer relative bg-transparent border-none p-1"
             >
               <Heart className="w-5 h-5 sm:w-6 sm:h-6 stroke-[1.5]" />
               {wishlist.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#F37021] text-white flex items-center justify-center text-[9px] rtl:text-[11px] font-bold border-2 border-[#FAF8F5]">
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#C75C1A] text-white flex items-center justify-center text-[9px] rtl:text-[11px] font-bold border-2 border-[#FAF8F5]">
                   {wishlist.length}
                 </span>
               )}
@@ -253,20 +253,28 @@ export const Navbar: React.FC = () => {
             {/* Panier - Signature */}
             <button
               onClick={() => setIsCartOpen(true)}
-              className="flex items-center justify-center text-[#121315] hover:text-[#F37021] transition-all active:scale-95 cursor-pointer relative bg-transparent border-none p-1"
+              className="flex items-center justify-center text-[#C75C1A] hover:text-[#00AEEF] transition-all active:scale-95 cursor-pointer relative bg-transparent border-none p-1"
             >
               <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 stroke-[1.5]" />
-              {cart.reduce((acc, i) => acc + i.quantity, 0) > 0 && (
-                <span className="absolute -top-1 -right-2 w-5 h-5 rounded-full bg-[#F37021] text-white flex items-center justify-center text-[10px] rtl:text-[12px] font-bold border-2 border-[#FAF8F5]">
-                  {cart.reduce((acc, i) => acc + i.quantity, 0)}
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-2 w-5 h-5 rounded-full bg-[#C75C1A] text-white flex items-center justify-center text-[10px] rtl:text-[12px] font-bold border-2 border-[#FAF8F5]">
+                  {cartCount}
                 </span>
               )}
             </button>
 
-            {/* Hamburger on Right - Replaces Profile Icon */}
+            {/* Profile Dropdown Toggle */}
+            <button
+              onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+              className="flex items-center justify-center transition-colors text-[#C75C1A] hover:text-[#00AEEF] active:scale-95 cursor-pointer bg-transparent border-none p-1"
+            >
+              <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 stroke-[1.5]" />
+            </button>
+
+            {/* Hamburger on Right */}
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="flex items-center justify-center transition-colors text-[#121315] hover:text-[#F37021] active:scale-95 cursor-pointer bg-transparent border-none p-1"
+              className="flex items-center justify-center transition-colors text-[#C75C1A] hover:text-[#00AEEF] active:scale-95 cursor-pointer bg-transparent border-none p-1"
             >
               <Menu className="w-5 h-5 sm:w-6 sm:h-6 stroke-[1.5]" />
             </button>
@@ -274,7 +282,7 @@ export const Navbar: React.FC = () => {
             {isUserDropdownOpen && (
               <>
                 <div className="fixed inset-0 z-[60]" onClick={() => setIsUserDropdownOpen(false)} />
-                <div className="absolute top-full right-0 mt-6 bg-[#FAF8F5] border border-[#EBE5DF] shadow-[0_20px_40px_rgba(44,30,22,0.1)] z-[70] overflow-hidden flex flex-col py-2 animate-in fade-in slide-in-from-top-2 duration-300 min-w-[240px]">
+                <div className="absolute top-full right-0 mt-6 bg-[#FDF9EC] border border-white/10 shadow-[0_20px_40px_rgba(44,30,22,0.1)] z-[70] overflow-hidden flex flex-col py-2 animate-in fade-in slide-in-from-top-2 duration-300 min-w-[240px]">
                   {!currentUser ? (
                     <div className="p-4">
                       <button
@@ -282,14 +290,14 @@ export const Navbar: React.FC = () => {
                           navigate("/auth", { replace: true });
                           setIsUserDropdownOpen(false);
                         }}
-                        className="w-full py-3.5 bg-[#121315] text-white font-medium text-[11px] uppercase tracking-[0.2em] transition-colors hover:bg-[#F37021] border-none cursor-pointer"
+                        className="w-full py-3.5 bg-[#1A1410] text-white font-medium text-[11px] uppercase tracking-[0.2em] transition-colors hover:bg-[#C75C1A] border-none cursor-pointer"
                       >
                         {t("auth.signin") || "S'identifier"}
                       </button>
                     </div>
                   ) : (
                     <>
-                      <div className="px-5 py-4 border-b border-[#EBE5DF] flex flex-col gap-1 text-left bg-[#121315] text-[#FAF8F5]">
+                      <div className="px-5 py-4 border-b border-white/10 flex flex-col gap-1 text-left bg-[#1A1410] text-[#FAF8F5]">
                         <p className="text-sm font-serif italic flex items-center gap-2 tracking-wide">
                           <span className="truncate">{userProfile?.displayName || currentUser.email}</span>
                           {userProfile?.clientType === "architect" && (
@@ -318,7 +326,7 @@ export const Navbar: React.FC = () => {
                             navigate("/dashboard/buyer");
                             setIsUserDropdownOpen(false);
                           }}
-                          className="w-full h-11 flex items-center px-5 text-[11px] uppercase tracking-widest rtl:tracking-normal text-[#121315] hover:bg-[#EBE5DF]/50 transition-colors gap-3 bg-transparent border-none cursor-pointer"
+                          className="w-full h-11 flex items-center px-5 text-[11px] uppercase tracking-widest rtl:tracking-normal text-[#C75C1A] hover:bg-[#EBE5DF]/50 transition-colors gap-3 bg-transparent border-none cursor-pointer"
                         >
                           {t("buyer_space") || "ESPACE ACHETEUR"}
                         </button>
@@ -329,7 +337,7 @@ export const Navbar: React.FC = () => {
                               navigate("/dashboard/seller");
                               setIsUserDropdownOpen(false);
                             }}
-                            className="w-full h-11 flex items-center px-5 text-[11px] uppercase tracking-widest rtl:tracking-normal text-[#F37021] hover:bg-[#F37021]/5 transition-colors gap-3 bg-transparent border-none cursor-pointer"
+                            className="w-full h-11 flex items-center px-5 text-[11px] uppercase tracking-widest rtl:tracking-normal text-[#00AEEF] hover:bg-[#C75C1A]/5 transition-colors gap-3 bg-transparent border-none cursor-pointer"
                           >
                             {t("seller_dashboard") || "DASHBOARD VENDEUR"}
                           </button>
@@ -348,13 +356,13 @@ export const Navbar: React.FC = () => {
                         )}
                       </div>
 
-                      <div className="pt-2 border-t border-[#EBE5DF] px-2 mb-2">
+                      <div className="pt-2 border-t border-white/10 px-2 mb-2">
                         <button
                           onClick={() => {
                             logout();
                             setIsUserDropdownOpen(false);
                           }}
-                          className="w-full h-10 flex items-center justify-center text-[10px] rtl:text-[12px] font-normal uppercase tracking-[0.2em] text-[#121315]/60 hover:text-[#F37021] transition-colors bg-transparent border-none cursor-pointer"
+                          className="w-full h-10 flex items-center justify-center text-[10px] rtl:text-[12px] font-normal uppercase tracking-[0.2em] text-[#C75C1A]/60 hover:text-[#00AEEF] transition-colors bg-transparent border-none cursor-pointer"
                         >
                           {t("auth.logout") || "Déconnexion"}
                         </button>

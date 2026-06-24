@@ -204,7 +204,7 @@ export const FollowedStores: React.FC<{ currentUser: any }> = ({ currentUser }) 
       {/* Dynamic Header & Gen-Z Tabs */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-black text-[#121315] tracking-tighter rtl:tracking-normal uppercase">
+          <h2 className="text-3xl font-kinder text-[#3C2B22] tracking-tighter rtl:tracking-normal uppercase">
             {t("Réseau Vendeurs")}
           </h2>
           <p className="text-stone-500 font-medium text-sm">
@@ -217,12 +217,12 @@ export const FollowedStores: React.FC<{ currentUser: any }> = ({ currentUser }) 
           <button
             onClick={() => setActiveTab("followed")}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs rtl:text-sm tracking-wide uppercase transition-all duration-300 ${
-              activeTab === "followed" ? "bg-white text-[#121315] shadow-sm" : "text-stone-500 hover:text-[#121315]"
+              activeTab === "followed" ? "bg-white text-[#3C2B22] shadow-sm" : "text-stone-500 hover:text-[#3C2B22]"
             }`}
           >
             <UserCheck className="w-4 h-4" />
             {t("Abonnements")}
-            <span className="ms-1.5 px-2 py-0.5 text-[10px] rtl:text-[12px] bg-[#121315] text-white rounded-full font-black">
+            <span className="ms-1.5 px-2 py-0.5 text-[10px] rtl:text-[12px] bg-[#3C2B22] text-white rounded-full font-kinder">
               {stores.length}
             </span>
           </button>
@@ -230,7 +230,7 @@ export const FollowedStores: React.FC<{ currentUser: any }> = ({ currentUser }) 
           <button
             onClick={() => setActiveTab("explore")}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs rtl:text-sm tracking-wide uppercase transition-all duration-300 relative ${
-              activeTab === "explore" ? "bg-white text-[#121315] shadow-sm" : "text-stone-500 hover:text-[#121315]"
+              activeTab === "explore" ? "bg-white text-[#3C2B22] shadow-sm" : "text-stone-500 hover:text-[#3C2B22]"
             }`}
           >
             <Sparkles className="w-4 h-4 text-orange-500" />
@@ -256,11 +256,11 @@ export const FollowedStores: React.FC<{ currentUser: any }> = ({ currentUser }) 
               ))}
             </div>
           ) : stores.length === 0 ? (
-            <div className="p-10 md:p-16 flex flex-col items-center justify-center text-center bg-[#FAF8F5] border border-stone-200/50 rounded-3xl">
+            <div className="p-10 md:p-16 flex flex-col items-center justify-center text-center bg-[#FDF9EC] border border-stone-200/50 rounded-3xl">
               <div className="w-20 h-20 bg-white border border-stone-200 rounded-full flex items-center justify-center mb-6 shadow-sm">
                 <Store className="w-8 h-8 text-stone-300" />
               </div>
-              <h3 className="text-xl font-black text-[#121315] mb-2 tracking-tight rtl:tracking-normal">
+              <h3 className="text-xl font-kinder text-[#3C2B22] mb-2 tracking-tight rtl:tracking-normal">
                 {t("Aucun abonnement existant")}
               </h3>
               <p className="text-stone-500 font-medium max-w-sm mb-8 leading-relaxed text-sm">
@@ -270,7 +270,7 @@ export const FollowedStores: React.FC<{ currentUser: any }> = ({ currentUser }) 
               </p>
               <button
                 onClick={() => setActiveTab("explore")}
-                className="px-6 py-3.5 bg-[#121315] text-white hover:bg-[#0a0b0c] rounded-xl font-black text-xs rtl:text-sm uppercase tracking-widest rtl:tracking-normal transition-all shadow-md shadow-stone-900/10 flex items-center gap-2 scale-100 hover:scale-[1.02] active:scale-95"
+                className="px-6 py-3.5 bg-[#3C2B22] text-white hover:bg-[#0a0b0c] rounded-xl font-kinder text-xs rtl:text-sm uppercase tracking-widest rtl:tracking-normal transition-all shadow-md shadow-stone-900/10 flex items-center gap-2 scale-100 hover:scale-[1.02] active:scale-95"
               >
                 <Sparkles className="w-4 h-4 text-orange-300" />
                 {t("Découvrir des pépites")}
@@ -308,7 +308,7 @@ export const FollowedStores: React.FC<{ currentUser: any }> = ({ currentUser }) 
 
                     {/* Details */}
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-black text-[#121315] truncate text-base leading-tight group-hover:text-orange-600 transition-colors">
+                      <h4 className="font-kinder text-[#3C2B22] truncate text-base leading-tight group-hover:text-orange-600 transition-colors">
                         {store.name}
                       </h4>
                       <p className="text-xs rtl:text-sm font-bold text-stone-400 uppercase tracking-wider rtl:tracking-normal flex items-center gap-1.5 mt-1 mb-3">
@@ -319,7 +319,7 @@ export const FollowedStores: React.FC<{ currentUser: any }> = ({ currentUser }) 
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => navigate(`/store/${store.sellerId}`)}
-                          className="px-4 py-2 bg-[#121315] hover:bg-[#0a0b0c] text-white rounded-xl text-[10px] rtl:text-[12px] font-black uppercase tracking-wider rtl:tracking-normal transition-all"
+                          className="px-4 py-2 bg-[#3C2B22] hover:bg-[#0a0b0c] text-white rounded-xl text-[10px] rtl:text-[12px] font-kinder uppercase tracking-wider rtl:tracking-normal transition-all"
                         >
                           {t("Visiter la vitrine")}
                         </button>
@@ -356,7 +356,7 @@ export const FollowedStores: React.FC<{ currentUser: any }> = ({ currentUser }) 
                       t("Rechercher une marque, une friperie ou un artisan...") ||
                       "Rechercher une marque, une friperie ou un artisan..."
                     }
-                    className="w-full bg-stone-50 border border-stone-200/60 rounded-2xl py-3 ps-11 pe-4 text-sm font-medium focus:outline-none focus:border-[#121315] focus:ring-1 focus:ring-[#121315] transition-all"
+                    className="w-full bg-stone-50 border border-stone-200/60 rounded-2xl py-3 ps-11 pe-4 text-sm font-medium focus:outline-none focus:border-[#3C2B22] focus:ring-1 focus:ring-[#3C2B22] transition-all"
                   />
                   {searchQuery && (
                     <button
@@ -401,7 +401,7 @@ export const FollowedStores: React.FC<{ currentUser: any }> = ({ currentUser }) 
                       onClick={() => setSelectedWilaya(wilaya)}
                       className={`px-4 py-2 rounded-xl text-xs rtl:text-sm font-black transition-all ${
                         selectedWilaya === wilaya
-                          ? "bg-[#121315] text-white shadow-md shadow-stone-900/15 scale-102"
+                          ? "bg-[#3C2B22] text-white shadow-md shadow-stone-900/15 scale-102"
                           : "bg-stone-50 text-stone-600 border border-stone-200/50 hover:bg-stone-100 hover:border-stone-300"
                       }`}
                     >
@@ -424,7 +424,7 @@ export const FollowedStores: React.FC<{ currentUser: any }> = ({ currentUser }) 
                 <div className="w-16 h-16 bg-stone-50 border border-stone-200 rounded-2xl flex items-center justify-center mx-auto text-stone-300">
                   <RefreshCw className="w-6 h-6 animate-spin" />
                 </div>
-                <h4 className="font-black text-lg text-[#121315]">{t("Aucune boutique correspondante")}</h4>
+                <h4 className="font-kinder text-lg text-[#3C2B22]">{t("Aucune boutique correspondante")}</h4>
                 <p className="text-zinc-500 text-sm max-w-xs mx-auto">
                   {t("Essayez de modifier vos filtres ou de recherche par nom.")}
                 </p>
@@ -471,7 +471,7 @@ export const FollowedStores: React.FC<{ currentUser: any }> = ({ currentUser }) 
                         )}
 
                         {/* Wilaya Indicator Ribbon */}
-                        <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-[9px] rtl:text-[11px] font-black tracking-widest rtl:tracking-normal text-[#121315] uppercase border border-stone-200/40 shadow-sm flex items-center gap-1">
+                        <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-[9px] rtl:text-[11px] font-kinder tracking-widest rtl:tracking-normal text-[#3C2B22] uppercase border border-stone-200/40 shadow-sm flex items-center gap-1">
                           <MapPin className="w-2.5 h-2.5 text-orange-500 shrink-0" />
                           {seller.wilaya || "Algérie"}
                         </div>
@@ -506,7 +506,7 @@ export const FollowedStores: React.FC<{ currentUser: any }> = ({ currentUser }) 
                             className={`px-4 py-2 rounded-xl font-black text-[10px] rtl:text-[12px] uppercase tracking-wider rtl:tracking-normal transition-all duration-300 flex items-center gap-1.5 ${
                               isUserFollowing
                                 ? "bg-stone-100 text-stone-600 border border-stone-200/60 hover:bg-stone-200 hover:text-red-500"
-                                : "bg-[#121315] text-white hover:bg-stone-800 hover:scale-102 active:scale-95 shadow-sm"
+                                : "bg-[#3C2B22] text-white hover:bg-stone-800 hover:scale-102 active:scale-95 shadow-sm"
                             }`}
                           >
                             {isActioning ? (
@@ -530,7 +530,7 @@ export const FollowedStores: React.FC<{ currentUser: any }> = ({ currentUser }) 
                           <div className="flex items-center gap-1.5">
                             <h4
                               onClick={() => navigate(`/store/${seller.id}`)}
-                              className="font-black text-[#121315] hover:text-orange-600 transition-colors text-base truncate cursor-pointer select-none"
+                              className="font-kinder text-[#3C2B22] hover:text-orange-600 transition-colors text-base truncate cursor-pointer select-none"
                             >
                               {seller.shopName || seller.displayName || "Boutique"}
                             </h4>
@@ -547,7 +547,7 @@ export const FollowedStores: React.FC<{ currentUser: any }> = ({ currentUser }) 
 
                         {/* GEN-Z HIGHLIGHT FEED: Product previews with inline catalog prices link */}
                         <div className="mt-5 pt-4 border-t border-stone-100 shrink-0">
-                          <div className="flex items-center justify-between text-[10px] rtl:text-[12px] font-black text-stone-400 uppercase tracking-widest rtl:tracking-normal mb-3">
+                          <div className="flex items-center justify-between text-[10px] rtl:text-[12px] font-kinder text-stone-400 uppercase tracking-widest rtl:tracking-normal mb-3">
                             <span>{t("Dernières publications")}</span>
                             <span
                               className="text-orange-600 flex items-center gap-0.5 group/link cursor-pointer"
@@ -588,7 +588,7 @@ export const FollowedStores: React.FC<{ currentUser: any }> = ({ currentUser }) 
                                     )}
 
                                     {/* Custom Price overlay inside tag bubbles */}
-                                    <div className="absolute bottom-1 right-1 left-1 bg-white/90 backdrop-blur-md py-0.5 px-1 rounded-lg text-[8px] font-black text-[#121315] text-center truncate border border-stone-200/30">
+                                    <div className="absolute bottom-1 right-1 left-1 bg-white/90 backdrop-blur-md py-0.5 px-1 rounded-lg text-[8px] font-kinder text-[#3C2B22] text-center truncate border border-stone-200/30">
                                       {prod.price || "Contact"} {t("DA")}
                                     </div>
                                   </div>

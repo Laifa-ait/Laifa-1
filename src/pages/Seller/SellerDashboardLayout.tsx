@@ -35,7 +35,7 @@ export const SellerDashboardLayout: React.FC = () => {
                <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-               <p className="text-sm font-black text-[#E3000F] uppercase tracking-widest rtl:tracking-normal">{t("Alerte de Vélocité")}</p>
+               <p className="text-sm font-kinder text-[#E3000F] uppercase tracking-widest rtl:tracking-normal">{t("Alerte de Vélocité")}</p>
                <p className="text-xs text-zinc-600 font-medium mt-1 leading-relaxed">{userProfile?.bgSuspended_reason || "Votre boutique est temporairement mise en pause car vous avez accumulé trop de commandes en attente d'expédition. Veuillez expédier vos commandes pour réactiver votre boutique."}</p>
             </div>
         </div>
@@ -48,7 +48,7 @@ export const SellerDashboardLayout: React.FC = () => {
                <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-               <p className="text-xs font-black text-zinc-950 uppercase tracking-widest rtl:tracking-normal">{t("Compte en Sandbox")}</p>
+               <p className="text-xs font-kinder text-zinc-950 uppercase tracking-widest rtl:tracking-normal">{t("Compte en Sandbox")}</p>
                <p className="text-[10px] text-zinc-500 font-medium">{t("Boutique en attente de vérification.")}</p>
             </div>
         </div>
@@ -69,7 +69,7 @@ export const SellerDashboardLayout: React.FC = () => {
             <div className="w-8 h-8 rounded-lg bg-zinc-950 flex items-center justify-center text-white">
               <Store className="w-4 h-4" />
             </div>
-            <span className="text-sm font-black tracking-tight rtl:tracking-normal text-zinc-950">{t("Espace Vendeur")}</span>
+            <span className="text-sm font-kinder tracking-tight rtl:tracking-normal text-zinc-950">{t("Espace Vendeur")}</span>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -80,7 +80,7 @@ export const SellerDashboardLayout: React.FC = () => {
            >
              <Home className="w-5 h-5" />
            </button>
-           <div className="w-8 h-8 rounded-full bg-zinc-200 flex items-center justify-center font-black text-[10px] text-zinc-600">
+           <div className="w-8 h-8 rounded-full bg-zinc-200 flex items-center justify-center font-kinder text-[10px] text-zinc-600">
               {currentUser?.email?.substring(0, 1).toUpperCase()}
            </div>
         </div>
@@ -139,8 +139,8 @@ export const SellerDashboardLayout: React.FC = () => {
                     <Store className="w-5 h-5" />
                   </div>
                   <div>
-                    <h1 className="text-base font-black tracking-tight rtl:tracking-normal text-zinc-950">{t("OLMA")}</h1>
-                    <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal leading-none">{t("Seller Space")}</p>
+                    <h1 className="text-base font-kinder tracking-tight rtl:tracking-normal text-zinc-950">{t("OLMA")}</h1>
+                    <p className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal leading-none">{t("Seller Space")}</p>
                   </div>
                 </div>
                 <button
@@ -177,7 +177,7 @@ export const SellerDashboardLayout: React.FC = () => {
                     setIsMobileNavOpen(false);
                     if (currentUser) navigate(`/store/${currentUser.uid}`);
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 mt-2 rounded-xl text-xs font-black text-orange-600 bg-orange-50 hover:bg-orange-100 transition-all cursor-pointer border-none text-start"
+                  className="w-full flex items-center gap-3 px-4 py-3.5 mt-2 rounded-xl text-xs font-kinder text-orange-600 bg-orange-50 hover:bg-orange-100 transition-all cursor-pointer border-none text-start"
                 >
                   <Store className="w-4.5 h-4.5" />
                   {t("Voir ma vitrine")}</button>
@@ -185,10 +185,10 @@ export const SellerDashboardLayout: React.FC = () => {
 
               <div className="p-6 border-t border-zinc-50">
                  <div className="bg-zinc-50 rounded-2xl p-4">
-                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2 text-center">{t("Support Vendeur")}</p>
+                    <p className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2 text-center">{t("Support Vendeur")}</p>
                     <button 
                       type="button"
-                      className="w-full bg-white text-zinc-950 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest rtl:tracking-normal shadow-sm hover:bg-zinc-100 transition-colors bg-transparent border-none cursor-pointer"
+                      className="w-full bg-white text-zinc-950 py-2.5 rounded-xl font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal shadow-sm hover:bg-zinc-100 transition-colors bg-transparent border-none cursor-pointer"
                     >
                        {t("Ouvrir un Ticket")}</button>
                  </div>
@@ -206,8 +206,8 @@ export const SellerDashboardLayout: React.FC = () => {
               <Store className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-lg font-black tracking-tight rtl:tracking-normal text-zinc-950">{t("OLMA")}</h1>
-              <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal leading-none">{t("Seller Space")}</p>
+              <h1 className="text-lg font-kinder tracking-tight rtl:tracking-normal text-zinc-950">{t("OLMA")}</h1>
+              <p className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal leading-none">{t("Seller Space")}</p>
             </div>
           </div>
         </div>
@@ -232,14 +232,14 @@ export const SellerDashboardLayout: React.FC = () => {
           ))}
           <button
             onClick={() => currentUser ? navigate(`/store/${currentUser.uid}`) : null}
-            className="w-full flex items-center gap-3 px-5 py-4 mt-2 rounded-2xl text-sm font-black text-orange-600 bg-orange-50 hover:bg-orange-100 hover:text-orange-700 transition-all cursor-pointer border-none text-start"
+            className="w-full flex items-center gap-3 px-5 py-4 mt-2 rounded-2xl text-sm font-kinder text-orange-600 bg-orange-50 hover:bg-orange-100 hover:text-orange-700 transition-all cursor-pointer border-none text-start"
           >
             <Store className="w-5 h-5" />
             {t("Voir ma vitrine")}</button>
           
           <button
             onClick={() => navigate("/")}
-            className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl text-sm font-black text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900 transition-all bg-transparent border-none cursor-pointer text-start focus:outline-none"
+            className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl text-sm font-kinder text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900 transition-all bg-transparent border-none cursor-pointer text-start focus:outline-none"
           >
             <Home className="w-5 h-5" />
             {t("Accueil Olma")}</button>
@@ -247,10 +247,10 @@ export const SellerDashboardLayout: React.FC = () => {
 
         <div className="p-6 border-t border-zinc-50">
            <div className="bg-zinc-50 rounded-2xl p-4">
-              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2 text-center">{t("Support Vendeur")}</p>
+              <p className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2 text-center">{t("Support Vendeur")}</p>
               <button 
                 type="button"
-                className="w-full bg-white text-zinc-950 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest rtl:tracking-normal shadow-sm hover:bg-zinc-100 transition-colors cursor-pointer border-none"
+                className="w-full bg-white text-zinc-950 py-3 rounded-xl font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal shadow-sm hover:bg-zinc-100 transition-colors cursor-pointer border-none"
               >
                  {t("Ouvrir un Ticket")}</button>
            </div>

@@ -100,7 +100,7 @@ export const OrderChatBox: React.FC<{ orderId: string; buyerId: string }> = ({ o
     <div className="flex flex-col h-[400px] bg-zinc-50 rounded-2xl border border-zinc-100 overflow-hidden">
       <div className="bg-zinc-950 p-4 shrink-0 flex items-center justify-between">
         <h4 className="text-white font-bold text-sm">{t("Messagerie Sécurisée")}</h4>
-        <div className="flex items-center gap-2 text-zinc-400 text-[10px] rtl:text-[12px] uppercase font-black tracking-widest rtl:tracking-normal">
+        <div className="flex items-center gap-2 text-zinc-400 text-[10px] rtl:text-[12px] uppercase font-kinder tracking-widest rtl:tracking-normal">
           <AlertTriangle className="w-3 h-3 text-orange-500" />
           {t("Vendeur ↔ Acheteur")}
         </div>

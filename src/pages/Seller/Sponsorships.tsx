@@ -110,7 +110,7 @@ export const SellerSponsorships: React.FC = () => {
     <div className="space-y-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-4xl font-black tracking-tight rtl:tracking-normal text-zinc-950 flex items-center gap-4">
+          <h2 className="text-4xl font-kinder tracking-tight rtl:tracking-normal text-zinc-950 flex items-center gap-4">
             <Megaphone className="w-10 h-10 text-orange-500" />
             {t("Sponsoring & Visibilité")}</h2>
           <p className="text-zinc-500 font-medium font-sans mt-2">{t("Boostez vos ventes en plaçant vos produits en tête de liste sur OLMART.")}</p>
@@ -124,7 +124,7 @@ export const SellerSponsorships: React.FC = () => {
             <HelpCircle className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-lg font-black text-zinc-900 uppercase tracking-widest rtl:tracking-normal leading-none">{t("Comment fonctionne le Sponsoring OLMART ?")}</h3>
+            <h3 className="text-lg font-kinder text-zinc-900 uppercase tracking-widest rtl:tracking-normal leading-none">{t("Comment fonctionne le Sponsoring OLMART ?")}</h3>
             <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider rtl:tracking-normal mt-1.5">{t("Comprendre notre algorithme de mise en avant et notre processus d'approbation")}</p>
           </div>
         </div>
@@ -132,7 +132,7 @@ export const SellerSponsorships: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Les Mécaniques de Visibilité */}
           <div className="space-y-5">
-            <h4 className="text-xs font-black text-zinc-900 uppercase tracking-widest rtl:tracking-normal flex items-center gap-2">
+            <h4 className="text-xs font-kinder text-zinc-900 uppercase tracking-widest rtl:tracking-normal flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-orange-500" /> {t("1. Effets sur la visibilité")}</h4>
             <div className="space-y-4">
               <div className="bg-white/80 backdrop-blur-sm border border-zinc-100 p-4 rounded-2xl flex gap-4">
@@ -141,7 +141,7 @@ export const SellerSponsorships: React.FC = () => {
                 </div>
                 <div>
                   <h5 className="font-extrabold text-sm text-zinc-950">{t("Badge Premium & Mise en Avant")}</h5>
-                  <p className="text-xs text-zinc-500 mt-1">{t("Vos produits reçoivent le badge lumineux")}<strong className="text-orange-600 font-black">{t("\"Sponsorisé\"")}</strong>{t(", augmentant considérablement le taux de clic (CTR).")}</p>
+                  <p className="text-xs text-zinc-500 mt-1">{t("Vos produits reçoivent le badge lumineux")}<strong className="text-orange-600 font-kinder">{t("\"Sponsorisé\"")}</strong>{t(", augmentant considérablement le taux de clic (CTR).")}</p>
                 </div>
               </div>
 
@@ -151,7 +151,7 @@ export const SellerSponsorships: React.FC = () => {
                 </div>
                 <div>
                   <h5 className="font-extrabold text-sm text-zinc-950">{t("Boost de l'Algorithme de Tri")}</h5>
-                  <p className="text-xs text-zinc-500 mt-1">{t("Tous les produits sponsorisés approuvés sont prioritaires et s'affichent")}<strong className="text-orange-600 font-black">{t("systématiquement tout en haut")}</strong> {t("des rayons, des recherches et des collections.")}</p>
+                  <p className="text-xs text-zinc-500 mt-1">{t("Tous les produits sponsorisés approuvés sont prioritaires et s'affichent")}<strong className="text-orange-600 font-kinder">{t("systématiquement tout en haut")}</strong> {t("des rayons, des recherches et des collections.")}</p>
                 </div>
               </div>
 
@@ -169,12 +169,12 @@ export const SellerSponsorships: React.FC = () => {
 
           {/* Les Étapes et Processus */}
           <div className="space-y-5">
-            <h4 className="text-xs font-black text-zinc-900 uppercase tracking-widest rtl:tracking-normal flex items-center gap-2">
+            <h4 className="text-xs font-kinder text-zinc-900 uppercase tracking-widest rtl:tracking-normal flex items-center gap-2">
               <Clock className="w-4 h-4 text-orange-500" /> {t("2. Parcours de validation (étape par étape)")}</h4>
             <div className="space-y-4">
               <div className="flex gap-4 relative">
                 <div className="flex flex-col items-center shrink-0">
-                  <div className="w-8 h-8 rounded-full bg-orange-600 text-white flex items-center justify-center font-black text-xs">1</div>
+                  <div className="w-8 h-8 rounded-full bg-orange-600 text-white flex items-center justify-center font-kinder text-xs">1</div>
                   <div className="w-0.5 h-full bg-orange-100" />
                 </div>
                 <div className="pb-4">
@@ -185,7 +185,7 @@ export const SellerSponsorships: React.FC = () => {
 
               <div className="flex gap-4 relative">
                 <div className="flex flex-col items-center shrink-0">
-                  <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-black text-xs">2</div>
+                  <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-kinder text-xs">2</div>
                   <div className="w-0.5 h-full bg-orange-100" />
                 </div>
                 <div className="pb-4">
@@ -196,7 +196,7 @@ export const SellerSponsorships: React.FC = () => {
 
               <div className="flex gap-4">
                 <div className="flex flex-col items-center shrink-0">
-                  <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-black text-xs">3</div>
+                  <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-kinder text-xs">3</div>
                 </div>
                 <div>
                   <h5 className="font-extrabold text-sm text-zinc-950">{t("Activation & Suivi Qualité")}</h5>
@@ -210,7 +210,7 @@ export const SellerSponsorships: React.FC = () => {
 
       <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-zinc-100">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-           <h3 className="text-xl font-black text-zinc-950 uppercase tracking-widest rtl:tracking-normal">{t("Choisir un produit à sponsoriser")}</h3>
+           <h3 className="text-xl font-kinder text-zinc-950 uppercase tracking-widest rtl:tracking-normal">{t("Choisir un produit à sponsoriser")}</h3>
            <div className="relative w-full md:w-96">
              <Search className="w-5 h-5 absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400" />
              <input 
@@ -242,22 +242,22 @@ export const SellerSponsorships: React.FC = () => {
                 <div key={product.id} className="border border-zinc-100 rounded-[2rem] p-4 flex gap-4 hover:shadow-lg hover:border-orange-100 transition-all bg-white group">
                   <img loading="lazy" src={getOptimizedImageUrl(product.image, 200) || 'https://via.placeholder.com/150'} alt={product.name} className="w-24 h-24 rounded-2xl object-cover shrink-0" />
                   <div className="flex flex-col flex-1 min-w-0 py-1">
-                    <h4 className="font-black text-sm text-zinc-950 truncate" title={product.name}>{product.name}</h4>
-                    <p className="text-xs font-black text-orange-600 mt-1">{product.price} {t("DA")}</p>
+                    <h4 className="font-kinder text-sm text-zinc-950 truncate" title={product.name}>{product.name}</h4>
+                    <p className="text-xs font-kinder text-orange-600 mt-1">{product.price} {t("DA")}</p>
                     
                     <div className="mt-auto">
                       {isCurrentlySponsored ? (
-                        <div className="w-full mt-3 py-2.5 rounded-xl bg-emerald-50 text-emerald-700 text-[10px] uppercase font-black tracking-widest rtl:tracking-normal text-center flex items-center justify-center gap-1.5 border border-emerald-100">
+                        <div className="w-full mt-3 py-2.5 rounded-xl bg-emerald-50 text-emerald-700 text-[10px] uppercase font-kinder tracking-widest rtl:tracking-normal text-center flex items-center justify-center gap-1.5 border border-emerald-100">
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                           {t("Sponsorisé Actif")}</div>
                       ) : pendingRequest ? (
-                        <div className="w-full mt-3 py-2.5 rounded-xl bg-orange-50 text-orange-600 text-[10px] uppercase font-black tracking-widest rtl:tracking-normal text-center flex items-center justify-center gap-1.5 border border-orange-100">
+                        <div className="w-full mt-3 py-2.5 rounded-xl bg-orange-50 text-orange-600 text-[10px] uppercase font-kinder tracking-widest rtl:tracking-normal text-center flex items-center justify-center gap-1.5 border border-orange-100">
                           <Clock className="w-3.5 h-3.5 text-orange-500 animate-spin" />
                           {t("En Attente d'Approbation")}</div>
                       ) : (
                         <button 
                           onClick={() => handleOpenConditions(product)}
-                          className="w-full mt-3 py-2.5 rounded-xl bg-zinc-950 text-white text-[10px] uppercase font-black tracking-widest rtl:tracking-normal hover:bg-orange-600 transition-colors flex items-center justify-center gap-2 group-hover:shadow-md"
+                          className="w-full mt-3 py-2.5 rounded-xl bg-zinc-950 text-white text-[10px] uppercase font-kinder tracking-widest rtl:tracking-normal hover:bg-orange-600 transition-colors flex items-center justify-center gap-2 group-hover:shadow-md"
                         >
                           <Zap className="w-3.5 h-3.5 text-orange-400" />
                           {t("Sponsoriser")}</button>
@@ -274,7 +274,7 @@ export const SellerSponsorships: React.FC = () => {
       {/* Requests History */}
       {sponsorshipRequests.length > 0 && (
         <div className="bg-zinc-50 rounded-[3rem] p-10 border border-zinc-100">
-          <h3 className="text-xl font-black text-zinc-950 uppercase tracking-widest rtl:tracking-normal mb-6">{t("Suivi de vos demandes")}</h3>
+          <h3 className="text-xl font-kinder text-zinc-950 uppercase tracking-widest rtl:tracking-normal mb-6">{t("Suivi de vos demandes")}</h3>
           <div className="space-y-4">
             {sponsorshipRequests.map((req) => {
                   
@@ -325,8 +325,8 @@ export const SellerSponsorships: React.FC = () => {
                     <ShieldAlert className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-black text-zinc-950 uppercase tracking-widest rtl:tracking-normal leading-none">{t("Formulaire d'engagement Sponsoring")}</h3>
-                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest rtl:tracking-normal mt-2">{selectedProduct?.name}</p>
+                    <h3 className="text-lg font-kinder text-zinc-950 uppercase tracking-widest rtl:tracking-normal leading-none">{t("Formulaire d'engagement Sponsoring")}</h3>
+                    <p className="text-[10px] font-kinder text-zinc-500 uppercase tracking-widest rtl:tracking-normal mt-2">{selectedProduct?.name}</p>
                   </div>
                </div>
 
@@ -336,19 +336,19 @@ export const SellerSponsorships: React.FC = () => {
                  
                  <div className="space-y-4">
                    <div className="bg-zinc-50 p-5 rounded-2xl">
-                     <h4 className="font-black text-zinc-900 text-xs uppercase tracking-widest rtl:tracking-normal flex items-center gap-2 mb-2"><BadgeInfo className="w-4 h-4 text-orange-500" /> {t("1. Qualité du format")}</h4>
+                     <h4 className="font-kinder text-zinc-900 text-xs uppercase tracking-widest rtl:tracking-normal flex items-center gap-2 mb-2"><BadgeInfo className="w-4 h-4 text-orange-500" /> {t("1. Qualité du format")}</h4>
                      <p>{t("Le produit doit présenter des images de haute qualité, sans textes superposés, ni filigranes agressifs. La description doit être précise et complète.")}</p>
                    </div>
                    <div className="bg-zinc-50 p-5 rounded-2xl">
-                     <h4 className="font-black text-zinc-900 text-xs uppercase tracking-widest rtl:tracking-normal flex items-center gap-2 mb-2"><CheckCircle2 className="w-4 h-4 text-orange-500" /> {t("2. Exactitude des prix & stock")}</h4>
+                     <h4 className="font-kinder text-zinc-900 text-xs uppercase tracking-widest rtl:tracking-normal flex items-center gap-2 mb-2"><CheckCircle2 className="w-4 h-4 text-orange-500" /> {t("2. Exactitude des prix & stock")}</h4>
                      <p>{t("Toute manipulation de prix afin de tromper l'algorithme entraînera un ban permanent du programme de sponsoring. Le produit doit être disponible en stock local.")}</p>
                    </div>
                    <div className="bg-zinc-50 p-5 rounded-2xl">
-                     <h4 className="font-black text-zinc-900 text-xs uppercase tracking-widest rtl:tracking-normal flex items-center gap-2 mb-2"><Star className="w-4 h-4 text-orange-500" /> {t("3. Garantie de Taux de Rejet minimal")}</h4>
+                     <h4 className="font-kinder text-zinc-900 text-xs uppercase tracking-widest rtl:tracking-normal flex items-center gap-2 mb-2"><Star className="w-4 h-4 text-orange-500" /> {t("3. Garantie de Taux de Rejet minimal")}</h4>
                      <p>{t("Le vendeur s'engage à expédier rapidement les produits sponsorisés. Un Taux de Retour (RTO) supérieur à la moyenne annulera la priorité de ce produit, même parrainé.")}</p>
                    </div>
                    <div className="bg-zinc-50 p-5 rounded-2xl">
-                     <h4 className="font-black text-zinc-900 text-xs uppercase tracking-widest rtl:tracking-normal flex items-center gap-2 mb-2"><BadgeInfo className="w-4 h-4 text-orange-500" /> {t("4. Traitement des requêtes")}</h4>
+                     <h4 className="font-kinder text-zinc-900 text-xs uppercase tracking-widest rtl:tracking-normal flex items-center gap-2 mb-2"><BadgeInfo className="w-4 h-4 text-orange-500" /> {t("4. Traitement des requêtes")}</h4>
                      <p>{t("Un grand nombre de vendeurs souhaitant sponsoriser implique une compétition. Le panneau d'administration étudie les requêtes manuellement selon la performance globale de votre boutique OLMART.")}</p>
                    </div>
                  </div>
@@ -367,20 +367,20 @@ export const SellerSponsorships: React.FC = () => {
                       checked={agreedToConditions} 
                       onChange={(e) => setAgreedToConditions(e.target.checked)} 
                     />
-                    <span className="font-black tracking-tight rtl:tracking-normal text-zinc-900 flex-1 leading-snug">
+                    <span className="font-kinder tracking-tight rtl:tracking-normal text-zinc-900 flex-1 leading-snug">
                       {t("J'accepte et je m'engage à respecter les conditions de sponsoring d'OLMART. J'atteste que mon produit répond aux normes e-commerce Premium.")}</span>
                   </label>
 
                   <div className="flex gap-4">
                     <button 
                       onClick={() => setShowConditionsModal(false)}
-                      className="flex-1 py-4 bg-white border border-zinc-200 text-zinc-900 font-black text-xs uppercase tracking-widest rtl:tracking-normal rounded-2xl hover:bg-zinc-50 transition-colors"
+                      className="flex-1 py-4 bg-white border border-zinc-200 text-zinc-900 font-kinder text-xs uppercase tracking-widest rtl:tracking-normal rounded-2xl hover:bg-zinc-50 transition-colors"
                     >
                       {t("Annuler")}</button>
                     <button 
                       onClick={handleSubmitSponsorship}
                       disabled={!agreedToConditions || isSubmitting}
-                      className="flex-1 py-4 bg-orange-600 text-white font-black text-xs uppercase tracking-widest rtl:tracking-normal rounded-2xl hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-orange-500/20"
+                      className="flex-1 py-4 bg-orange-600 text-white font-kinder text-xs uppercase tracking-widest rtl:tracking-normal rounded-2xl hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-orange-500/20"
                     >
                       {isSubmitting ? 'Traitement...' : 'Soumettre la requête'}
                     </button>

@@ -239,66 +239,66 @@ export const ProductInfo: React.FC<InfoProps> = ({
       {/* HEADER SECTION */}
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="px-4 py-1.5 bg-[#121315]/10 text-[#121315] border border-[#121315]/20 rounded-full font-bold text-[10px] rtl:text-[12px] uppercase tracking-widest rtl:tracking-normal">
+           <span className="px-4 py-1.5 bg-[#FDF9EC] text-[#3C2B22] border-2 border-white shadow-sm rounded-full font-bold text-[10px] rtl:text-[12px] uppercase tracking-widest rtl:tracking-normal">
             {product.category}
           </span>
           {product.subcategory && (
-            <span className="px-4 py-1.5 bg-[#121315]/5 text-[#121315]/80 border border-[#121315]/10 rounded-full font-bold text-[10px] rtl:text-[12px] uppercase tracking-widest rtl:tracking-normal">
+             <span className="px-4 py-1.5 bg-white text-[#3C2B22]/80 border-2 border-white shadow-sm rounded-full font-bold text-[10px] rtl:text-[12px] uppercase tracking-widest rtl:tracking-normal">
               {product.subcategory}
             </span>
           )}
           {product.subSubCategory && (
-            <span className="px-4 py-1.5 bg-[#121315]/5 text-[#121315]/80 border border-[#121315]/10 rounded-full font-bold text-[10px] rtl:text-[12px] uppercase tracking-widest rtl:tracking-normal">
+             <span className="px-4 py-1.5 bg-white text-[#3C2B22]/80 border-2 border-white shadow-sm rounded-full font-bold text-[10px] rtl:text-[12px] uppercase tracking-widest rtl:tracking-normal">
               {product.subSubCategory}
             </span>
           )}
           {product.gender && product.gender !== "mixed" && (
-            <span className="px-3 py-1.5 bg-stone-100 text-stone-600 rounded-full font-medium text-[10px] rtl:text-[12px] uppercase tracking-wider rtl:tracking-normal">
+             <span className="px-4 py-1.5 bg-white text-[#3C2B22]/80 border-2 border-white shadow-sm rounded-full font-medium text-[10px] rtl:text-[12px] uppercase tracking-wider rtl:tracking-normal">
               {product.gender}
             </span>
           )}
           {product.tags &&
             product.tags.length > 0 &&
             product.tags.map((tag: any, idx: number) => (
-              <span
+               <span
                 key={`tag-${idx}`}
-                className="px-3 py-1.5 bg-stone-100 text-stone-600 rounded-full font-medium text-[10px] rtl:text-[12px] uppercase tracking-wider rtl:tracking-normal"
+                className="px-4 py-1.5 bg-white text-[#3C2B22]/80 border-2 border-white shadow-sm rounded-full font-medium text-[10px] rtl:text-[12px] uppercase tracking-wider rtl:tracking-normal"
               >
                 {tag.label || tag}
               </span>
             ))}
           {product.materials && product.materials.length > 0 && (
-            <span className="px-3 py-1.5 bg-stone-100 text-stone-600 rounded-full font-medium text-[10px] rtl:text-[12px] uppercase tracking-wider rtl:tracking-normal">
+             <span className="px-4 py-1.5 bg-white text-[#3C2B22]/80 border-2 border-white shadow-sm rounded-full font-medium text-[10px] rtl:text-[12px] uppercase tracking-wider rtl:tracking-normal">
               {MATERIAL_TRANSLATIONS[product.materials[0]]?.[currentLang] || product.materials[0]}
             </span>
           )}
           {product.brand && (
-            <span className="px-3 py-1.5 bg-stone-100 text-stone-600 rounded-full font-medium text-[10px] rtl:text-[12px] uppercase tracking-wider rtl:tracking-normal">
+             <span className="px-4 py-1.5 bg-white text-[#3C2B22]/80 border-2 border-white shadow-sm rounded-full font-medium text-[10px] rtl:text-[12px] uppercase tracking-wider rtl:tracking-normal">
               {product.brand}
             </span>
           )}
           {product.condition && (
-            <span className="px-3 py-1.5 bg-[#F37021]/10 text-[#F37021] border border-[#F37021]/20 rounded-full font-bold text-[10px] rtl:text-[12px] uppercase tracking-wider rtl:tracking-normal">
+             <span className="px-4 py-1.5 bg-[#FF5C00]/10 text-[#FF5C00] border-2 border-[#FF5C00]/20 shadow-sm rounded-full font-bold text-[10px] rtl:text-[12px] uppercase tracking-wider rtl:tracking-normal">
               {product.condition}
             </span>
           )}
         </div>
 
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#121315] tracking-tight rtl:tracking-normal leading-[1.1] font-display">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-kinder text-[#3C2B22] uppercase tracking-wide drop-shadow-sm leading-[1.1]">
           {productName}
         </h1>
 
         <div className="flex items-end gap-4 pt-2">
-          <div className="text-4xl sm:text-5xl font-black text-[#F37021] tracking-tighter rtl:tracking-normal">
+           <div className="text-4xl sm:text-5xl font-kinder text-[#FF5C00] tracking-wide drop-shadow-sm">
             {formatPrice(currentPrice)}
           </div>
           {isProductFlashActive ? (
-            <div className="text-xl sm:text-2xl font-semibold text-stone-500/80 line-through mb-1.5">
+             <div className="text-xl sm:text-2xl font-bold text-[#3C2B22]/50 line-through mb-1.5 font-sans">
               {formatPrice(product.price)}
             </div>
           ) : (
             product.onSale && (
-              <div className="text-xl sm:text-2xl font-semibold text-stone-500/80 line-through mb-1.5">
+               <div className="text-xl sm:text-2xl font-bold text-[#3C2B22]/50 line-through mb-1.5 font-sans">
                 {formatPrice(currentPrice * 1.2)}
               </div>
             )
@@ -307,52 +307,52 @@ export const ProductInfo: React.FC<InfoProps> = ({
       </div>
 
       {isProductFlashActive && (
-        <div className="border-2 border-orange-500/30 bg-gradient-to-br from-[#FFFBF9] via-[#FAF3EC] to-[#FFF9F5] p-5 rounded-2xl shadow-[0_12px_30px_rgba(243,112,33,0.08)] mb-6 relative overflow-hidden">
+         <div className="border-[3px] border-[#FF5C00]/30 bg-[#FDF9EC] p-6 rounded-[2rem] shadow-sm mb-6 relative overflow-hidden">
           {/* Flame warning banner */}
-          <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-red-600 via-[#F37021] to-yellow-500" />
+          <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-[#FF5C00] via-[#FF5C00] to-yellow-500" />
 
           <div className="flex flex-col gap-4 relative z-10">
             {/* Header badges and title */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-orange-200/40 pb-3">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b-[3px] border-[#FF5C00]/20 pb-4">
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-600 text-white text-[10px] sm:text-[11px] font-mono font-black uppercase tracking-wider animate-bounce">
+                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FF5C00] text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider animate-bounce shadow-sm">
                   <Flame className="w-3.5 h-3.5 fill-current animate-pulse" />
                   {t("VENTE FLASH EXCLUSIVE")}
                 </span>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#F37021]/15 text-[#F37021] text-[10px] sm:text-[11px] font-mono font-black uppercase tracking-wider">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-ping" />
+                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FF5C00]/10 text-[#FF5C00] text-[10px] sm:text-[11px] font-bold uppercase tracking-wider border border-[#FF5C00]/20">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#FF5C00] animate-ping" />
                   {t("STOCK ULTRA-LIMITÉ")}
                 </span>
               </div>
-              <div className="text-[11px] font-mono font-black text-red-600 uppercase tracking-widest">
+               <div className="text-[12px] font-kinder text-[#FF5C00] uppercase">
                 -{Math.round(((product.price - currentPrice) / product.price) * 100)}% {t("SÉLECTION")}
               </div>
             </div>
 
             {/* Warning Message */}
-            <p className="text-xs sm:text-sm font-medium text-stone-600 leading-relaxed">
+             <p className="text-xs sm:text-sm font-bold text-[#3C2B22]/70 leading-relaxed">
               {currentLang === "ar"
                 ? "⚠️ انتبه! هذا معروض بسعر تخفيض لاهب ولفترة محدودة للغاية. بمجرد انتهاء العداد، سيعود هذا المنتج تلقائيًا وبشكل فوري إلى سعره الأصلي ولن تتمكن من الاستفادة من هذا السعر مجددًا."
                 : "⚠️ Attention ! Ce produit d'exception bénéficie d'un tarif Flash ultra-limité. Dès que le compte à rebours s'achève, cet article repassera automatiquement à son tarif d'origine sans aucun préavis."}
             </p>
 
             {/* Countdown grid & scarcity metrics */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center bg-white/50 p-4 rounded-xl border border-orange-200/30">
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center bg-white p-4 rounded-[1.5rem] border-2 border-white shadow-sm">
               {/* Chrono */}
-              <div className="flex flex-col gap-1">
-                <span className="text-[9px] font-mono font-black text-stone-500 uppercase tracking-wider">
+              <div className="flex flex-col gap-1.5">
+                 <span className="text-[10px] font-bold text-[#3C2B22]/60 uppercase tracking-widest">
                   {t("L'OFFRE EXPIRE DANS :")}
                 </span>
-                <div className="flex items-center gap-1.5">
-                  <div className="bg-[#121315] text-white font-mono font-black text-base px-2 py-0.5 rounded shadow">
+                <div className="flex items-center gap-1.5 font-kinder text-lg">
+                   <div className="bg-[#3C2B22] text-white px-3 py-1.5 rounded-[1rem] shadow-sm">
                     {String(timeLeft.hours).padStart(2, "0")}
                   </div>
-                  <span className="text-red-500 font-black animate-pulse">:</span>
-                  <div className="bg-[#121315] text-white font-mono font-black text-base px-2 py-0.5 rounded shadow">
+                   <span className="text-[#FF5C00] font-kinder animate-pulse">:</span>
+                  <div className="bg-[#3C2B22] text-white font-mono font-kinder text-base px-2 py-0.5 rounded shadow">
                     {String(timeLeft.minutes).padStart(2, "0")}
                   </div>
-                  <span className="text-red-500 font-black animate-pulse">:</span>
-                  <div className="bg-red-600 text-white font-mono font-black text-base px-2 py-0.5 rounded shadow animate-pulse">
+                  <span className="text-red-500 font-kinder animate-pulse">:</span>
+                  <div className="bg-red-600 text-white font-mono font-kinder text-base px-2 py-0.5 rounded shadow animate-pulse">
                     {String(timeLeft.seconds).padStart(2, "0")}
                   </div>
                 </div>
@@ -360,7 +360,7 @@ export const ProductInfo: React.FC<InfoProps> = ({
 
               {/* simulated metric */}
               <div className="flex flex-col gap-1.5 border-t sm:border-t-0 sm:border-l border-orange-200/40 pt-3 sm:pt-0 sm:pl-4">
-                <div className="flex justify-between text-[11px] font-black text-[#121315]">
+                <div className="flex justify-between text-[11px] font-kinder text-[#3C2B22]">
                   <span className="text-red-600 animate-pulse flex items-center gap-1">
                     <Flame className="w-3.5 h-3.5 fill-current inline animate-pulse" />
                     {currentLang === "ar" ? "بقي منتجات قليلة جداً!" : "Derniers articles en stock !"}
@@ -371,7 +371,7 @@ export const ProductInfo: React.FC<InfoProps> = ({
                 </div>
                 <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden border border-stone-200/50">
                   <div
-                    className="h-full bg-gradient-to-r from-red-600 to-[#F37021] rounded-full"
+                    className="h-full bg-gradient-to-r from-red-600 to-[#FF5C00] rounded-full"
                     style={{ width: "92%" }}
                   />
                 </div>
@@ -385,11 +385,11 @@ export const ProductInfo: React.FC<InfoProps> = ({
       {shop && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-white rounded-2xl border border-stone-200 shadow-sm">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-[#121315]/5 flex items-center justify-center overflow-hidden border border-stone-100">
+            <div className="w-12 h-12 rounded-full bg-[#3C2B22]/5 flex items-center justify-center overflow-hidden border border-stone-100">
               {shop.logoUrl ? (
                 <img loading="lazy" src={shop.logoUrl} alt={shop.shopName} className="w-full h-full object-cover" />
               ) : (
-                <Store className="w-6 h-6 text-[#121315]" />
+                <Store className="w-6 h-6 text-[#3C2B22]" />
               )}
             </div>
             <div>
@@ -398,7 +398,7 @@ export const ProductInfo: React.FC<InfoProps> = ({
               </p>
               <Link
                 to={`/shop/${shop.id}`}
-                className="text-sm font-black text-[#121315] hover:text-[#F37021] transition-colors line-clamp-1"
+                className="text-sm font-kinder text-[#3C2B22] hover:text-[#FF5C00] transition-colors line-clamp-1"
               >
                 {shop.shopName}
               </Link>
@@ -411,7 +411,7 @@ export const ProductInfo: React.FC<InfoProps> = ({
               className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-xs rtl:text-sm transition-all ${
                 isFollowing
                   ? "bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-red-500"
-                  : "bg-[#121315] text-white hover:bg-[#1f150f] shadow-md shadow-[#121315]/10"
+                  : "bg-[#3C2B22] text-white hover:bg-[#1f150f] shadow-md shadow-[#3C2B22]/10"
               }`}
             >
               {isFollowing ? (
@@ -439,10 +439,10 @@ export const ProductInfo: React.FC<InfoProps> = ({
       {/* DESCRIPTION */}
       <div className="bg-white/60 backdrop-blur-md rounded-2xl p-5 border border-stone-200">
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-8 h-8 rounded-full bg-[#F37021]/10 flex items-center justify-center">
-            <Info className="w-4 h-4 text-[#F37021]" />
+          <div className="w-8 h-8 rounded-full bg-[#FF5C00]/10 flex items-center justify-center">
+            <Info className="w-4 h-4 text-[#FF5C00]" />
           </div>
-          <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-[#121315]">
+          <h3 className="text-[11px] font-kinder uppercase tracking-[0.2em] text-[#3C2B22]">
             {t("product.details.seller_word") || "Le mot du créateur"}
           </h3>
         </div>
@@ -480,7 +480,7 @@ export const ProductInfo: React.FC<InfoProps> = ({
                         disabled={isColorOutOfStock(c) && selectedColor !== c}
                         onClick={() => onSelectColor(c)}
                         title={c}
-                        className={`w-12 h-12 rounded-full border-[3px] transition-all flex items-center justify-center ${selectedColor === c ? "border-[#F37021] scale-110 shadow-lg shadow-[#F37021]/20" : "border-stone-100 hover:border-stone-300"} ${isColorOutOfStock(c) ? "opacity-30 cursor-not-allowed relative overflow-hidden" : ""}`}
+                        className={`w-12 h-12 rounded-full border-[3px] transition-all flex items-center justify-center ${selectedColor === c ? "border-[#FF5C00] scale-110 shadow-lg shadow-[#FF5C00]/20" : "border-stone-100 hover:border-stone-300"} ${isColorOutOfStock(c) ? "opacity-30 cursor-not-allowed relative overflow-hidden" : ""}`}
                         style={{ background: colorHex }}
                       >
                         {selectedColor === c && (
@@ -500,7 +500,7 @@ export const ProductInfo: React.FC<InfoProps> = ({
                         key={c}
                         disabled={isColorOutOfStock(c) && selectedColor !== c}
                         onClick={() => onSelectColor(c)}
-                        className={`px-4 py-2.5 rounded-xl font-bold text-xs rtl:text-sm uppercase tracking-wider rtl:tracking-normal transition-all ${selectedColor === c ? "bg-[#121315] text-white shadow-md shadow-[#121315]/20 border border-[#121315]" : "bg-white text-stone-600 border border-stone-200 hover:border-[#121315]"} ${isColorOutOfStock(c) ? "opacity-30 cursor-not-allowed relative overflow-hidden" : ""}`}
+                        className={`px-4 py-2.5 rounded-xl font-bold text-xs rtl:text-sm uppercase tracking-wider rtl:tracking-normal transition-all ${selectedColor === c ? "bg-[#3C2B22] text-white shadow-md shadow-[#3C2B22]/20 border border-[#3C2B22]" : "bg-white text-stone-600 border border-stone-200 hover:border-[#3C2B22]"} ${isColorOutOfStock(c) ? "opacity-30 cursor-not-allowed relative overflow-hidden" : ""}`}
                       >
                         {c}
                         {isColorOutOfStock(c) && (
@@ -524,7 +524,7 @@ export const ProductInfo: React.FC<InfoProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsSizeGuideOpen(true)}
-                  className="text-[10px] rtl:text-[12px] font-black uppercase tracking-wider rtl:tracking-normal text-orange-600 hover:text-orange-700 transition-colors flex items-center gap-1 cursor-pointer"
+                  className="text-[10px] rtl:text-[12px] font-kinder uppercase tracking-wider rtl:tracking-normal text-orange-600 hover:text-orange-700 transition-colors flex items-center gap-1 cursor-pointer"
                 >
                   {t("product.details.size_guide") || "📐 Guide des correspondances"}
                 </button>
@@ -535,7 +535,7 @@ export const ProductInfo: React.FC<InfoProps> = ({
                     key={s}
                     disabled={isSizeOutOfStock(s) && selectedSize !== s}
                     onClick={() => onSelectSize(s)}
-                    className={`px-6 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest rtl:tracking-normal transition-all ${selectedSize === s ? "bg-[#121315] text-white shadow-lg shadow-[#121315]/20" : "bg-stone-50 border border-stone-200 text-stone-600 hover:bg-stone-100"} ${isSizeOutOfStock(s) ? "opacity-40 cursor-not-allowed" : ""}`}
+                    className={`px-6 py-3 rounded-2xl font-kinder text-[11px] uppercase tracking-widest rtl:tracking-normal transition-all ${selectedSize === s ? "bg-[#3C2B22] text-white shadow-lg shadow-[#3C2B22]/20" : "bg-stone-50 border border-stone-200 text-stone-600 hover:bg-stone-100"} ${isSizeOutOfStock(s) ? "opacity-40 cursor-not-allowed" : ""}`}
                   >
                     {s}
                   </button>
@@ -558,7 +558,7 @@ export const ProductInfo: React.FC<InfoProps> = ({
                 <p className="text-[10px] rtl:text-[12px] font-bold text-stone-500 uppercase tracking-wider rtl:tracking-normal mb-1 line-clamp-1">
                   {attr.label}
                 </p>
-                <p className="text-sm font-black text-[#121315] line-clamp-2">
+                <p className="text-sm font-kinder text-[#3C2B22] line-clamp-2">
                   {attr.value} {attr.unit}
                 </p>
               </div>
@@ -585,9 +585,9 @@ export const ProductInfo: React.FC<InfoProps> = ({
               {product.sku && (
                 <div className="space-y-1">
                   <p className="text-[10px] rtl:text-[12px] font-bold text-stone-500 uppercase tracking-widest rtl:tracking-normal flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-[#121315]" /> {t("product.details.sku") || "Référence SKU"}
+                    <Sparkles className="w-3 h-3 text-[#3C2B22]" /> {t("product.details.sku") || "Référence SKU"}
                   </p>
-                  <p className="text-xs rtl:text-sm font-black text-[#121315] font-mono select-all bg-stone-50/80 px-2 py-1 rounded w-max">
+                  <p className="text-xs rtl:text-sm font-kinder text-[#3C2B22] font-mono select-all bg-stone-50/80 px-2 py-1 rounded w-max">
                     {product.sku}
                   </p>
                 </div>
@@ -595,19 +595,19 @@ export const ProductInfo: React.FC<InfoProps> = ({
               {product.season && (
                 <div className="space-y-1">
                   <p className="text-[10px] rtl:text-[12px] font-bold text-stone-500 uppercase tracking-widest rtl:tracking-normal flex items-center gap-1">
-                    <CalendarDays className="w-3 h-3 text-[#121315]" />{" "}
+                    <CalendarDays className="w-3 h-3 text-[#3C2B22]" />{" "}
                     {t("product.details.collection") || "Collection / Saison"}
                   </p>
-                  <p className="text-xs rtl:text-sm font-extrabold text-[#121315]">{getTranslatedSeason()}</p>
+                  <p className="text-xs rtl:text-sm font-extrabold text-[#3C2B22]">{getTranslatedSeason()}</p>
                 </div>
               )}
               {product.materials && product.materials.length > 0 && (
                 <div className="space-y-1 col-span-2 sm:col-span-1">
                   <p className="text-[10px] rtl:text-[12px] font-bold text-stone-500 uppercase tracking-widest rtl:tracking-normal flex items-center gap-1">
-                    <Layers className="w-3 h-3 text-[#121315]" />{" "}
+                    <Layers className="w-3 h-3 text-[#3C2B22]" />{" "}
                     {t("product.details.materials") || "Composition & Matière"}
                   </p>
-                  <p className="text-xs rtl:text-sm font-extrabold text-[#121315] truncate">
+                  <p className="text-xs rtl:text-sm font-extrabold text-[#3C2B22] truncate">
                     {getTranslatedMaterials()}
                     {product.otherMaterial ? ` (${product.otherMaterial})` : ""}
                   </p>
@@ -616,10 +616,10 @@ export const ProductInfo: React.FC<InfoProps> = ({
               {(product.dimensions || product.weight) && (
                 <div className="space-y-1 col-span-2 sm:col-span-1">
                   <p className="text-[10px] rtl:text-[12px] font-bold text-stone-500 uppercase tracking-widest rtl:tracking-normal flex items-center gap-1">
-                    <Maximize2 className="w-3 h-3 text-[#121315]" />{" "}
+                    <Maximize2 className="w-3 h-3 text-[#3C2B22]" />{" "}
                     {t("product.details.logistics") || "Logistique & Dimensions"}
                   </p>
-                  <p className="text-xs rtl:text-sm font-extrabold text-[#121315]">
+                  <p className="text-xs rtl:text-sm font-extrabold text-[#3C2B22]">
                     {product.weight ? `${t("product.details.weight") || "Poids"}: ${product.weight} kg` : ""}
                     {product.weight && product.dimensions ? " | " : ""}
                     {product.dimensions ? `${t("product.details.format") || "Format"}: ${product.dimensions}` : ""}
@@ -644,7 +644,7 @@ export const ProductInfo: React.FC<InfoProps> = ({
                       <p className="text-[10px] rtl:text-[12px] font-bold text-stone-500 uppercase tracking-wider rtl:tracking-normal">
                         {t("Garantie & Support")}
                       </p>
-                      <p className="text-xs rtl:text-sm font-extrabold text-[#121315]">{product.warranty}</p>
+                      <p className="text-xs rtl:text-sm font-extrabold text-[#3C2B22]">{product.warranty}</p>
                     </div>
                   </div>
                 )}
@@ -657,20 +657,20 @@ export const ProductInfo: React.FC<InfoProps> = ({
                       <p className="text-[10px] rtl:text-[12px] font-bold text-stone-500 uppercase tracking-wider rtl:tracking-normal">
                         {t("product.details.vendor_status") || "Statut Légal"}
                       </p>
-                      <p className="text-xs rtl:text-sm font-extrabold text-[#121315]">{shop.legalStatus}</p>
+                      <p className="text-xs rtl:text-sm font-extrabold text-[#3C2B22]">{shop.legalStatus}</p>
                     </div>
                   </div>
                 )}
                 {(product.preparationTime || shop?.avgPreparationTime) && (
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 shrink-0 rounded-full bg-[#F37021]/5 flex items-center justify-center mt-0.5">
-                      <Truck className="w-3.5 h-3.5 text-[#F37021]" />
+                    <div className="w-6 h-6 shrink-0 rounded-full bg-[#FF5C00]/5 flex items-center justify-center mt-0.5">
+                      <Truck className="w-3.5 h-3.5 text-[#FF5C00]" />
                     </div>
                     <div>
                       <p className="text-[10px] rtl:text-[12px] font-bold text-stone-500 uppercase tracking-wider rtl:tracking-normal">
                         {t("product.details.prep_time") || "Délai Moyen de Préparation"}
                       </p>
-                      <p className="text-xs rtl:text-sm font-extrabold text-[#121315]">
+                      <p className="text-xs rtl:text-sm font-extrabold text-[#3C2B22]">
                         {t("product.details.prep_text", {
                           days: product.preparationTime || shop?.avgPreparationTime,
                         }) || "Prêt pour expédition"}
@@ -692,7 +692,7 @@ export const ProductInfo: React.FC<InfoProps> = ({
                     <p className="text-[10px] rtl:text-[12px] font-bold text-stone-500 uppercase tracking-wider rtl:tracking-normal">
                       {t("product.details.return_policy") || "Politique de Retour & Échange"}
                     </p>
-                    <p className="text-xs rtl:text-sm font-extrabold text-[#121315] italic">
+                    <p className="text-xs rtl:text-sm font-extrabold text-[#3C2B22] italic">
                       {product.returnPolicy
                         ? t("product.details.return_14j") || "Retours acceptés sous 14 jours (Politique du produit)"
                         : shop?.returnPolicy ||
@@ -714,7 +714,7 @@ export const ProductInfo: React.FC<InfoProps> = ({
             <Truck className="w-5 h-5 text-emerald-600" />
           </div>
           <div>
-            <h4 className="text-sm font-bold text-[#121315] mb-1">
+            <h4 className="text-sm font-bold text-[#3C2B22] mb-1">
               {t("product.details.national_shipping") || "Livraison Nationale"}
             </h4>
             <p className="text-xs rtl:text-sm font-medium text-stone-500">
@@ -727,7 +727,7 @@ export const ProductInfo: React.FC<InfoProps> = ({
             <ShieldCheck className="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <h4 className="text-sm font-bold text-[#121315] mb-1">
+            <h4 className="text-sm font-bold text-[#3C2B22] mb-1">
               {t("product.details.secure_purchase") || "Achat Sécurisé"}
             </h4>
             <p className="text-xs rtl:text-sm font-medium text-stone-500">
@@ -746,7 +746,7 @@ export const ProductInfo: React.FC<InfoProps> = ({
             >
               {t("common.close") || "✕ Fermer"}
             </button>
-            <h3 className="text-2xl font-black text-[#121315] tracking-tight rtl:tracking-normal mb-4">
+            <h3 className="text-2xl font-kinder text-[#3C2B22] tracking-tight rtl:tracking-normal mb-4">
               {t("product.details.size_guide_title") || "📐 Guide des Correspondances de Tailles"}
             </h3>
             <p className="text-xs rtl:text-sm text-stone-500 mb-6 leading-relaxed">
@@ -756,7 +756,7 @@ export const ProductInfo: React.FC<InfoProps> = ({
             <div className="overflow-x-auto rounded-2xl border border-stone-100 mb-6">
               <table className="w-full text-left border-collapse text-xs rtl:text-sm">
                 <thead>
-                  <tr className="bg-stone-50 border-b border-stone-150 font-black text-[#121315]">
+                  <tr className="bg-stone-50 border-b border-stone-150 font-kinder text-[#3C2B22]">
                     <th className="p-3">{t("Taille EUR/Turquie")}</th>
                     <th className="p-3">{t("Équivalence Chine")}</th>
                     <th className="p-3">{t("Coupe Algérie")}</th>
@@ -791,7 +791,7 @@ export const ProductInfo: React.FC<InfoProps> = ({
                 </tbody>
               </table>
             </div>
-            <div className="bg-amber-50 border border-amber-200/50 p-4 rounded-xl text-[11px] text-[#121315] leading-relaxed font-semibold">
+            <div className="bg-amber-50 border border-amber-200/50 p-4 rounded-xl text-[11px] text-[#3C2B22] leading-relaxed font-semibold">
               💡 <strong>{t("product.details.size_guide_tip_title") || "Astuce :"}</strong>{" "}
               {t("product.details.size_guide_tip_content") ||
                 "Le standard Turquie correspond parfaitement aux tailles européennes classiques. Pour la Chine, commandez systématiquement une taille au-dessus."}

@@ -53,7 +53,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                 </button>
               </div>
 
-              <h3 className="text-xl font-black text-[#121315] mb-2 relative z-10">{title}</h3>
+              <h3 className="text-xl font-kinder text-[#3C2B22] mb-2 relative z-10">{title}</h3>
               <p className="text-stone-500 font-medium text-sm mb-8 leading-relaxed relative z-10">{message}</p>
 
               <div className="flex gap-3 relative z-10">
@@ -68,7 +68,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                     onConfirm();
                     onClose();
                   }}
-                  className="flex-1 px-4 py-3 bg-[#121315] hover:bg-[#0a0b0c] text-white rounded-xl font-bold tracking-wide transition-colors shadow-lg"
+                  className="flex-1 px-4 py-3 bg-[#3C2B22] hover:bg-[#0a0b0c] text-white rounded-xl font-bold tracking-wide transition-colors shadow-lg"
                 >
                   {confirmText}
                 </button>

@@ -52,12 +52,17 @@ export const Wallet: React.FC = () => {
         const q = query(
           collection(db, "withdrawals"),
           where("sellerId", "==", currentUser.uid),
-          orderBy("createdAt", "desc"),
-          limit(20)
+          limit(250)
         );
         const snap = await getDocs(q);
-        setWithdrawals(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as WithdrawalRequest)));
-        setLastVisible(snap.docs[snap.docs.length - 1] || null);
+        const fetched = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as WithdrawalRequest));
+        fetched.sort((a, b) => {
+          const tA = a.createdAt?.seconds || 0;
+          const tB = b.createdAt?.seconds || 0;
+          return tB - tA;
+        });
+        setWithdrawals(fetched);
+        setLastVisible(null);
       } catch (err) {
         console.error(err);
       } finally {
@@ -68,25 +73,8 @@ export const Wallet: React.FC = () => {
   }, [currentUser]);
 
   const loadMoreWithdrawals = async () => {
-    if (!currentUser || !lastVisible) return;
-    setLoadingMore(true);
-    try {
-      const q = query(
-        collection(db, "withdrawals"),
-        where("sellerId", "==", currentUser.uid),
-        orderBy("createdAt", "desc"),
-        startAfter(lastVisible),
-        limit(20)
-      );
-      const snap = await getDocs(q);
-      const newWithdrawals = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as WithdrawalRequest));
-      setWithdrawals(prev => [...prev, ...newWithdrawals]);
-      setLastVisible(snap.docs[snap.docs.length - 1] || null);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingMore(false);
-    }
+    // Left as safe no-op since all withdrawals are pre-fetched
+    return;
   };
 
   const handleRequestWithdrawal = async () => {
@@ -142,7 +130,7 @@ export const Wallet: React.FC = () => {
     <div className="max-w-6xl space-y-10">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-3xl font-black tracking-tight rtl:tracking-normal text-zinc-950">{t("Portefeuille & Finances")}</h2>
+          <h2 className="text-3xl font-kinder tracking-tight rtl:tracking-normal text-zinc-950">{t("Portefeuille & Finances")}</h2>
           <p className="text-zinc-500 font-medium">{t("Gérez vos revenus et demandez vos virements.")}</p>
         </div>
       </div>
@@ -158,15 +146,15 @@ export const Wallet: React.FC = () => {
                   </div>
                   <div className="space-y-6">
                      <div>
-                       <p className="text-[10px] font-black text-orange-200 uppercase tracking-widest rtl:tracking-normal mb-2">{t("Solde Disponible Net")}</p>
-                       <h3 className="text-5xl font-black text-white tracking-tighter rtl:tracking-normal">
+                       <p className="text-[10px] font-kinder text-orange-200 uppercase tracking-widest rtl:tracking-normal mb-2">{t("Solde Disponible Net")}</p>
+                       <h3 className="text-5xl font-kinder text-white tracking-tighter rtl:tracking-normal">
                           {formatPrice(activeBalance)}
                        </h3>
                        <p className="text-[10px] text-orange-200 font-medium mt-4">{t("Commission plateforme :")}{userProfile?.commissionRate || 10}%</p>
                      </div>
                      {lockedBalance > 0 && (
                         <div className="bg-black/10 rounded-2xl p-4 border border-white/10 backdrop-blur-md">
-                          <p className="text-[10px] font-black text-orange-100 uppercase tracking-widest rtl:tracking-normal mb-1">{t("Fonds gelés (Retraits en cours)")}</p>
+                          <p className="text-[10px] font-kinder text-orange-100 uppercase tracking-widest rtl:tracking-normal mb-1">{t("Fonds gelés (Retraits en cours)")}</p>
                           <p className="text-lg font-bold text-white">{formatPrice(lockedBalance)}</p>
                         </div>
                      )}
@@ -184,7 +172,7 @@ export const Wallet: React.FC = () => {
 
          {/* Withdrawal Form */}
          <div className="lg:col-span-2 bg-white rounded-[3rem] border border-zinc-100 shadow-sm p-10">
-            <h4 className="text-xl font-black mb-8 flex items-center gap-3">
+            <h4 className="text-xl font-kinder mb-8 flex items-center gap-3">
                <ArrowUpRight className="w-6 h-6 text-orange-500" />
                {t("Demander un Retrait")}</h4>
             <div className="space-y-6">
@@ -198,7 +186,7 @@ export const Wallet: React.FC = () => {
                         <Landmark className="w-5 h-5" />
                       </div>
                       <div className="text-start">
-                        <p className="text-xs font-black text-zinc-900 mt-1">{t("Virement Bancaire (RIB)")}</p>
+                        <p className="text-xs font-kinder text-zinc-900 mt-1">{t("Virement Bancaire (RIB)")}</p>
                       </div>
                     </div>
                   </button>
@@ -211,7 +199,7 @@ export const Wallet: React.FC = () => {
                         <CreditCard className="w-5 h-5" />
                       </div>
                       <div className="text-start">
-                        <p className="text-xs font-black text-zinc-900 mt-1">{t("CCP / BaridiMob")}</p>
+                        <p className="text-xs font-kinder text-zinc-900 mt-1">{t("CCP / BaridiMob")}</p>
                       </div>
                     </div>
                   </button>
@@ -220,36 +208,36 @@ export const Wallet: React.FC = () => {
                <div className="bg-zinc-50 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between border border-zinc-100 gap-4">
                   <div className="flex items-center gap-4">
                      <div>
-                        <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-0.5">{t("Compte destinataire utilisé")}</p>
-                        <p className="font-black text-zinc-900">{userProfile?.rib || "Aucun compte configuré"}</p>
+                        <p className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-0.5">{t("Compte destinataire utilisé")}</p>
+                        <p className="font-kinder text-zinc-900">{userProfile?.rib || "Aucun compte configuré"}</p>
                      </div>
                   </div>
                   <CheckCircle2 className={`w-6 h-6 hidden md:block ${userProfile?.rib ? 'text-emerald-500' : 'text-zinc-200'}`} />
                </div>
 
                <div className="space-y-2">
-                  <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal ml-1">{t("Montant à retirer (DA)")}</label>
+                  <label className="block text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal ml-1">{t("Montant à retirer (DA)")}</label>
                   <div className="relative">
                     <input 
                       type="text" 
                       inputMode="decimal"
                       pattern="[0-9]*[.]?[0-9]{0,2}"
                       placeholder={t("Min. 2 000 DA") || "Min. 2 000 DA"}
-                      className="w-full px-8 py-5 bg-zinc-50 border border-zinc-100 rounded-3xl outline-none text-2xl font-black tracking-tight rtl:tracking-normal focus:ring-4 ring-orange-500/5 transition-all"
+                      className="w-full px-8 py-5 bg-zinc-50 border border-zinc-100 rounded-3xl outline-none text-2xl font-kinder tracking-tight rtl:tracking-normal focus:ring-4 ring-orange-500/5 transition-all"
                       value={amount}
                       onChange={(e) => {
                         const val = e.target.value;
                         if (/^\d*\.?\d{0,2}$/.test(val)) setAmount(val);
                       }}
                     />
-                    <div className="absolute right-8 top-1/2 -translate-y-1/2 text-zinc-400 font-black">{t("DA")}</div>
+                    <div className="absolute right-8 top-1/2 -translate-y-1/2 text-zinc-400 font-kinder">{t("DA")}</div>
                   </div>
                </div>
 
                <button 
                   onClick={handleRequestWithdrawal}
                   disabled={requestLoading || !userProfile?.rib || !amount}
-                  className="w-full bg-zinc-950 text-white py-5 rounded-[2rem] font-black uppercase tracking-widest rtl:tracking-normal text-sm hover:bg-zinc-800 transition-all shadow-xl disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full bg-zinc-950 text-white py-5 rounded-[2rem] font-kinder uppercase tracking-widest rtl:tracking-normal text-sm hover:bg-zinc-800 transition-all shadow-xl disabled:opacity-50 flex items-center justify-center gap-2"
                >
                   {requestLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                   {requestLoading ? t("security.verifying", 'Traitement...') : t("seller.wallet.confirm_request", 'Confirmer la Demande')}
@@ -261,7 +249,7 @@ export const Wallet: React.FC = () => {
       {/* History */}
       <div className="bg-white rounded-[3rem] border border-zinc-100 shadow-sm overflow-hidden">
          <div className="p-10 border-b border-zinc-50 flex items-center justify-between">
-            <h4 className="text-xl font-black flex items-center gap-3">
+            <h4 className="text-xl font-kinder flex items-center gap-3">
                <History className="w-6 h-6 text-orange-500" />
                {t("Historique des Retraits")}</h4>
          </div>
@@ -286,8 +274,8 @@ export const Wallet: React.FC = () => {
                                           {['PAID', 'COMPLETED'].includes(w.status?.toUpperCase() || '') ? <CheckCircle2 className="w-7 h-7" /> : ['CANCELED', 'FAILED'].includes(w.status?.toUpperCase() || '') ? <Clock className="w-7 h-7 rotate-45" /> : <Clock className="w-7 h-7" />}
                                        </div>
                                        <div>
-                                          <p className="font-black text-zinc-950 text-xl">{formatPrice(w.amount)}</p>
-                                          <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mt-1">
+                                          <p className="font-kinder text-zinc-950 text-xl">{formatPrice(w.amount)}</p>
+                                          <p className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mt-1">
                                             {w.method ? w.method.replace('_', ' ') : t("seller.wallet.transfer", 'Virement')} • {['PAID', 'COMPLETED'].includes(w.status?.toUpperCase() || '') ? t("seller.wallet.paid_on", 'Payé le ') : t("seller.wallet.requested_on", 'Demandé le ')}{w.createdAt?.toDate().toLocaleDateString('fr-FR')}
                                           </p>
                                        </div>
@@ -317,7 +305,7 @@ export const Wallet: React.FC = () => {
                <button 
                   onClick={loadMoreWithdrawals} 
                   disabled={loadingMore}
-                  className="px-6 py-3 bg-white border border-zinc-200 text-zinc-900 rounded-full font-black text-xs uppercase tracking-widest hover:border-orange-500 hover:text-orange-500 transition-all flex items-center gap-2 shadow-sm relative group"
+                  className="px-6 py-3 bg-white border border-zinc-200 text-zinc-900 rounded-full font-kinder text-xs uppercase tracking-widest hover:border-orange-500 hover:text-orange-500 transition-all flex items-center gap-2 shadow-sm relative group"
                >
                   {loadingMore && <Loader2 className="w-4 h-4 animate-spin" />}
                   {loadingMore ? t("Chargement...") : t("Afficher plus")}

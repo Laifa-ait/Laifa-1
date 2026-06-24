@@ -1,4 +1,20 @@
 import { admin, db, firebaseConfig } from "../config/firebase-admin";
+import { Request, Response, NextFunction } from "express";
+
+export interface AuthenticatedRequest extends Request {
+  user?: {
+    uid: string;
+    email?: string;
+    role?: string;
+    [key: string]: any;
+  };
+}
+
+interface FirestoreDocument {
+  fields?: {
+    role?: { stringValue?: string };
+  };
+}
 
 const fetchRoleFromRest = async (uid: string, idToken: string): Promise<string | null> => {
   try {
@@ -16,7 +32,7 @@ const fetchRoleFromRest = async (uid: string, idToken: string): Promise<string |
     });
 
     if (res.ok) {
-      const data: any = await res.json();
+      const data: FirestoreDocument = await res.json();
       return data.fields?.role?.stringValue || null;
     }
   } catch (err: any) {
@@ -25,7 +41,7 @@ const fetchRoleFromRest = async (uid: string, idToken: string): Promise<string |
   return null;
 };
 
-export const authenticateToken = async (req: any, res: any, next: any) => {
+export const authenticateToken = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
   const isProd = process.env.NODE_ENV === "production";
 
@@ -45,9 +61,9 @@ export const authenticateToken = async (req: any, res: any, next: any) => {
     // Explicit hardcoded super-admin fallback by email (secure-by-design & resilient)
     if (decodedToken.email && decodedToken.email.toLowerCase() === process.env.ADMIN_EMAIL?.toLowerCase()) {
       role = "admin";
-      (process.env.NODE_ENV === "debug" ? console.log : function () {})(
-        `[Admin Auth] Verified admin user ${decodedToken.email} (case-insensitive)`
-      );
+      if (process.env.NODE_ENV === "development") {
+        console.log(`[Admin Auth] Verified admin user ${decodedToken.email} (case-insensitive)`);
+      }
     } else {
       // Check DB for role if possible
       try {
@@ -58,10 +74,8 @@ export const authenticateToken = async (req: any, res: any, next: any) => {
           }
         }
       } catch (e: any) {
-        console.warn(
-          "Could not fetch user role from db (Admin SDK), attempting Firestore REST API fallback...",
-          e.message || e
-        );
+        console.warn("Auth middleware: Failed to fetch user role from DB:", e.message);
+        console.warn("Attempting Firestore REST API fallback...");
         const restRole = await fetchRoleFromRest(decodedToken.uid, idToken);
         if (restRole) {
           role = restRole;
@@ -74,20 +88,18 @@ export const authenticateToken = async (req: any, res: any, next: any) => {
     req.user = { ...decodedToken, role };
     next();
   } catch (error: any) {
-    const errString = String(error.message || error);
-
     return res.status(401).json({ error: `Jeton invalide ou expiré : ${error.message}` });
   }
 };
 
-export const authorizeAdmin = (req: any, res: any, next: any) => {
+export const authorizeAdmin = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   if (!req.user || (req.user.role !== "admin" && req.user.role !== "superadmin")) {
     return res.status(403).json({ error: "Accès refusé. Privilèges Administrateur requis." });
   }
   next();
 };
 
-export const authorizeSeller = (req: any, res: any, next: any) => {
+export const authorizeSeller = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   if (!req.user || (req.user.role !== "seller" && req.user.role !== "admin")) {
     return res.status(403).json({ error: "Accès refusé. Privilèges Vendeur ou Administrateur requis." });
   }

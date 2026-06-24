@@ -246,7 +246,7 @@ export const Verification: React.FC = () => {
   return (
     <div className="max-w-4xl space-y-10">
       <div>
-        <h2 className="text-3xl font-black tracking-tight rtl:tracking-normal text-zinc-950">{t("Vérification & Documents")}</h2>
+        <h2 className="text-3xl font-kinder tracking-tight rtl:tracking-normal text-zinc-950">{t("Vérification & Documents")}</h2>
         <p className="text-zinc-500 font-medium mt-2">{t("Conformément à la Loi 18-05 du commerce électronique en Algérie.")}</p>
       </div>
 
@@ -272,14 +272,14 @@ export const Verification: React.FC = () => {
            <div className="bg-emerald-50 border border-emerald-100 rounded-3xl p-6 flex items-start gap-4 mb-10">
                <ShieldCheck className="w-6 h-6 text-emerald-600 mt-1" />
                <div className="flex-1">
-                  <p className="text-emerald-900 font-black text-[12px] uppercase tracking-widest rtl:tracking-normal">{t("Mode Diagnostic Olma")}</p>
+                  <p className="text-emerald-900 font-kinder text-[12px] uppercase tracking-widest rtl:tracking-normal">{t("Mode Diagnostic Olma")}</p>
                   <p className="text-emerald-700/80 text-[11px] font-medium mt-1 leading-relaxed">
                     {t("Utilisez ce bouton pour tester instantanément si l'administration reçoit vos signaux de validation.")}</p>
                   <button 
                     type="button"
                     onClick={simulateSubmission}
                     disabled={loading}
-                    className="mt-4 px-6 py-2.5 bg-emerald-600 text-white text-[10px] uppercase font-black tracking-widest rtl:tracking-normal rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20 cursor-pointer border-none disabled:opacity-50"
+                    className="mt-4 px-6 py-2.5 bg-emerald-600 text-white text-[10px] uppercase font-kinder tracking-widest rtl:tracking-normal rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20 cursor-pointer border-none disabled:opacity-50"
                   >
                     {t("SIMULER UNE RÉCEPTION ADMIN")}</button>
                </div>
@@ -289,16 +289,16 @@ export const Verification: React.FC = () => {
          <form onSubmit={handleSubmit} className="space-y-10">
             {/* Étape 1 : Le Profil Artistique */}
             <div className="space-y-6 bg-zinc-50/50 p-6 rounded-3xl border border-zinc-100">
-              <h4 className="text-xs font-black uppercase tracking-widest rtl:tracking-normal text-[#c2a878] flex items-center gap-2">
+              <h4 className="text-xs font-kinder uppercase tracking-widest rtl:tracking-normal text-[#c2a878] flex items-center gap-2">
                  <ShieldCheck className="w-4 h-4" />
                  {t("Étape 1 : Votre Profil Artistique")}</h4>
               <div className="grid md:grid-cols-2 gap-6">
                  <div>
-                    <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5 ml-1">{t("Nom de la marque / Atelier")}</label>
+                    <label className="block text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5 ml-1">{t("Nom de la marque / Atelier")}</label>
                     <input required type="text" className="w-full px-5 py-4 bg-white border border-zinc-100 rounded-2xl outline-none font-bold" value={formData.brandName || ''} onChange={(e) => setFormData({...formData, brandName: e.target.value})} placeholder={t("Ex: Maison Olma") || "Ex: Maison Olma"} />
                  </div>
                  <div>
-                    <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5 ml-1">{t("Style de design principal")}</label>
+                    <label className="block text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5 ml-1">{t("Style de design principal")}</label>
                     <select required className="w-full px-5 py-4 bg-white border border-zinc-100 rounded-2xl outline-none font-bold text-zinc-800" value={formData.designStyle || ''} onChange={(e) => setFormData({...formData, designStyle: e.target.value})}>
                       <option value="" disabled>{t("Sélectionnez un style...")}</option>
                       <option value="Contemporain">{t("Contemporain")}</option>
@@ -310,11 +310,11 @@ export const Verification: React.FC = () => {
                     </select>
                  </div>
                  <div className="md:col-span-2">
-                    <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5 ml-1">{t("Lien vers Portfolio (Site Web)")}</label>
+                    <label className="block text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5 ml-1">{t("Lien vers Portfolio (Site Web)")}</label>
                     <input required type="url" className="w-full px-5 py-4 bg-white border border-zinc-100 rounded-2xl outline-none font-bold" value={formData.portfolioUrl || ''} onChange={(e) => setFormData({...formData, portfolioUrl: e.target.value})} placeholder="https://votre-portfolio.dz" />
                  </div>
                  <div className="md:col-span-2">
-                    <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5 ml-1">{t("L'histoire de votre marque (Optionnel)")}</label>
+                    <label className="block text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5 ml-1">{t("L'histoire de votre marque (Optionnel)")}</label>
                     <textarea className="w-full px-5 py-4 bg-white border border-zinc-100 rounded-2xl outline-none font-medium h-32 resize-none" value={formData.brandStory || ''} onChange={(e) => setFormData({...formData, brandStory: e.target.value})} placeholder={t("Décrivez votre démarche artistique, vos matériaux...") || "Décrivez votre démarche artistique, vos matériaux..."} />
                  </div>
               </div>
@@ -323,32 +323,32 @@ export const Verification: React.FC = () => {
             {/* Étape 2 : Conformité Légale */}
             <div className="grid md:grid-cols-2 gap-8 pt-4">
                <div className="space-y-6">
-                  <h4 className="text-xs font-black uppercase tracking-widest rtl:tracking-normal text-zinc-500 flex items-center gap-2">
+                  <h4 className="text-xs font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-500 flex items-center gap-2">
                      <FileText className="w-4 h-4" />
                      {t("Étape 2 : Informations Légales")}</h4>
                   <div className="space-y-4">
                      <div>
-                        <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5 ml-1">{t("Numéro Registre de Commerce (RC)")}</label>
+                        <label className="block text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5 ml-1">{t("Numéro Registre de Commerce (RC)")}</label>
                         <input required type="text" className="w-full px-5 py-4 bg-zinc-50 border border-zinc-100 rounded-2xl outline-none font-bold" value={formData.rcNumber || ''} onChange={(e) => setFormData({...formData, rcNumber: e.target.value})} />
                      </div>
                      <div>
-                        <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5 ml-1">{t("NIF (Identifiant Fiscal)")}</label>
+                        <label className="block text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5 ml-1">{t("NIF (Identifiant Fiscal)")}</label>
                         <input required type="text" className="w-full px-5 py-4 bg-zinc-50 border border-zinc-100 rounded-2xl outline-none font-bold" value={formData.nifNumber || ''} onChange={(e) => setFormData({...formData, nifNumber: e.target.value})} />
                      </div>
                      <div>
-                        <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5 ml-1">{t("Compte Bancaire / CCP (RIB/RIP)")}</label>
-                        <input required type="text" className="w-full px-5 py-4 bg-zinc-50 border border-zinc-100 rounded-2xl outline-none font-black" value={formData.rib || ''} onChange={(e) => setFormData({...formData, rib: e.target.value})} />
+                        <label className="block text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5 ml-1">{t("Compte Bancaire / CCP (RIB/RIP)")}</label>
+                        <input required type="text" className="w-full px-5 py-4 bg-zinc-50 border border-zinc-100 rounded-2xl outline-none font-kinder" value={formData.rib || ''} onChange={(e) => setFormData({...formData, rib: e.target.value})} />
                      </div>
                   </div>
                </div>
 
                <div className="space-y-6">
-                  <h4 className="text-xs font-black uppercase tracking-widest rtl:tracking-normal text-[#ea580c] flex items-center gap-2">
+                  <h4 className="text-xs font-kinder uppercase tracking-widest rtl:tracking-normal text-[#ea580c] flex items-center gap-2">
                      <Upload className="w-4 h-4" />
                      {t("Justificatifs (Fichiers)")}</h4>
                   <div className="space-y-4">
                      <div>
-                        <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5 ml-1">{t("Photo / Scan du Registre de Commerce")}</label>
+                        <label className="block text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5 ml-1">{t("Photo / Scan du Registre de Commerce")}</label>
                         <div className="relative overflow-hidden w-full px-5 py-4 bg-zinc-50 border border-zinc-200 border-dashed rounded-2xl flex items-center justify-center hover:bg-zinc-100 transition-colors cursor-pointer">
                            <input required={!formData.fileRC} type="file" accept="image/*,application/pdf" onChange={(e) => handleFileChange(e, 'RC')} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                            <div className="flex flex-col items-center flex-1 text-center gap-1 pointer-events-none">
@@ -360,7 +360,7 @@ export const Verification: React.FC = () => {
                         </div>
                      </div>
                      <div>
-                        <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5 ml-1">{t("Pièce d'identité (CNI / Passeport)")}</label>
+                        <label className="block text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5 ml-1">{t("Pièce d'identité (CNI / Passeport)")}</label>
                         <div className="relative overflow-hidden w-full px-5 py-4 bg-zinc-50 border border-zinc-200 border-dashed rounded-2xl flex items-center justify-center hover:bg-zinc-100 transition-colors cursor-pointer">
                            <input required={!formData.fileId} type="file" accept="image/*,application/pdf" onChange={(e) => handleFileChange(e, 'Id')} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                            <div className="flex flex-col items-center flex-1 text-center gap-1 pointer-events-none">
@@ -372,7 +372,7 @@ export const Verification: React.FC = () => {
                         </div>
                      </div>
                      <div>
-                        <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5 ml-1">{t("Attestation de compte / Chèque annulé (RIB)")}</label>
+                        <label className="block text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5 ml-1">{t("Attestation de compte / Chèque annulé (RIB)")}</label>
                         <div className="relative overflow-hidden w-full px-5 py-4 bg-zinc-50 border border-zinc-200 border-dashed rounded-2xl flex items-center justify-center hover:bg-zinc-100 transition-colors cursor-pointer">
                            <input required={!formData.fileRib} type="file" accept="image/*,application/pdf" onChange={(e) => handleFileChange(e, 'Rib')} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                            <div className="flex flex-col items-center flex-1 text-center gap-1 pointer-events-none">
@@ -410,7 +410,7 @@ export const Verification: React.FC = () => {
                </div>
             )}
 
-            <button type="submit" disabled={loading} className="w-full relative bg-zinc-950 text-white py-5 rounded-[2rem] font-black uppercase tracking-widest rtl:tracking-normal text-sm hover:bg-zinc-900 transition-all shadow-2xl disabled:opacity-50 overflow-hidden">
+            <button type="submit" disabled={loading} className="w-full relative bg-zinc-950 text-white py-5 rounded-[2rem] font-kinder uppercase tracking-widest rtl:tracking-normal text-sm hover:bg-zinc-900 transition-all shadow-2xl disabled:opacity-50 overflow-hidden">
                {loading ? (
                   <span className="relative z-10 flex items-center justify-center gap-2">
                      <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />

@@ -27,14 +27,14 @@ export const ProductReviews: React.FC<ReviewsProps> = ({
 
   return (
     <div className="bg-white rounded-[2.5rem] p-8 mt-12 border border-zinc-100 shadow-sm">
-      <h3 className="text-xl font-black text-[#121315] mb-8">{t("product.reviews_title") || "Avis Clients"}</h3>
+      <h3 className="text-xl font-kinder text-[#3C2B22] mb-8">{t("product.reviews_title") || "Avis Clients"}</h3>
       {comments.length === 0 ? (
         <p className="text-zinc-400">{t("product.reviews_none") || "Aucun avis pour le moment."}</p>
       ) : (
         <div className="space-y-6">
           {comments.map((c) => (
             <div key={c.id} className="border-b border-zinc-100 pb-4">
-              <p className="font-black text-sm">{c.name}</p>
+              <p className="font-kinder text-sm">{c.name}</p>
               <div className="flex text-orange-400">
                 {[...Array(c.stars)].map((_, i) => (
                   <Star key={i} className="w-3 h-3 fill-current" />

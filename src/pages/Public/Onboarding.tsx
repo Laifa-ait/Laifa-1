@@ -148,7 +148,7 @@ export const Onboarding: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] flex items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-[#FDF9EC] flex items-center justify-center p-6 relative overflow-hidden">
       <div className="absolute top-10 right-10 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-10 left-10 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -161,7 +161,7 @@ export const Onboarding: React.FC = () => {
           <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-[1.5rem] flex items-center justify-center mx-auto mb-8 shadow-inner">
             <User className="w-10 h-10" />
           </div>
-          <h2 className="text-3xl font-black text-zinc-950 mb-2 tracking-tight rtl:tracking-normal">
+          <h2 className="text-3xl font-kinder text-zinc-950 mb-2 tracking-tight rtl:tracking-normal">
             {step === 1 ? t("complete_profile_title", "Finalisons votre profil") : t("select_interests", "Vos centres d'intérêt")}
           </h2>
           <p className="text-zinc-500 font-medium">
@@ -275,7 +275,7 @@ export const Onboarding: React.FC = () => {
           <button 
             type="submit"
             disabled={loading}
-            className="w-full py-5 bg-orange-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-orange-500 transition-all shadow-xl shadow-orange-500/30 flex items-center justify-center gap-3 disabled:opacity-50"
+            className="w-full py-5 bg-orange-600 text-white rounded-2xl font-kinder text-xs uppercase tracking-[0.2em] hover:bg-orange-500 transition-all shadow-xl shadow-orange-500/30 flex items-center justify-center gap-3 disabled:opacity-50"
           >
             {loading ? (
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

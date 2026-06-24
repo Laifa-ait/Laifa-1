@@ -26,8 +26,8 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({ isOpen, onClos
           {/* Header */}
           <div className="w-full max-w-5xl flex items-center justify-between text-white z-10 pt-4 px-4">
             <div className="space-y-1">
-              <h3 className="text-sm font-black uppercase tracking-wider rtl:tracking-normal text-zinc-100">{title}</h3>
-              <p className="text-[10px] rtl:text-[12px] uppercase tracking-widest rtl:tracking-normal text-[#F37021] font-bold">
+              <h3 className="text-sm font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-100">{title}</h3>
+              <p className="text-[10px] rtl:text-[12px] uppercase tracking-widest rtl:tracking-normal text-[#FF5C00] font-bold">
                 {t("Pincez l'écran pour zoomer en HD")}
               </p>
             </div>

@@ -68,7 +68,7 @@ export const MegaMenuSettings: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-12">
       <div>
-        <h1 className="text-3xl font-black text-zinc-900 tracking-tighter rtl:tracking-normal uppercase">
+        <h1 className="text-3xl font-kinder text-zinc-900 tracking-tighter rtl:tracking-normal uppercase">
           {t("Mega Menu")}
         </h1>
         <p className="text-sm font-semibold text-zinc-500 uppercase tracking-widest rtl:tracking-normal mt-1">
@@ -162,7 +162,7 @@ export const MegaMenuSettings: React.FC = () => {
             <div className="bg-white rounded-3xl p-8 border border-zinc-100 shadow-sm sticky top-24">
               <div className="mb-8 border-b border-zinc-100 pb-6 flex justify-between items-center">
                 <div>
-                  <h2 className="text-xl font-black text-zinc-900">{t("Produit lié")}</h2>
+                  <h2 className="text-xl font-kinder text-zinc-900">{t("Produit lié")}</h2>
                   <p className="text-sm text-zinc-500 mt-1">
                     {t("Modifiez le produit affiché au survol de")}
                     <span className="font-bold text-zinc-900">« {currentLink.name} »</span>
@@ -191,7 +191,7 @@ export const MegaMenuSettings: React.FC = () => {
 
                   <button
                     type="submit"
-                    className="w-full bg-[#ea580c] hover:bg-[#c2410c] text-white font-black uppercase tracking-widest rtl:tracking-normal text-sm py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-orange-500/20"
+                    className="w-full bg-[#ea580c] hover:bg-[#c2410c] text-white font-kinder uppercase tracking-widest rtl:tracking-normal text-sm py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-orange-500/20"
                   >
                     <Save className="w-4 h-4" />
                     {t("Enregistrer les modifications")}
@@ -228,19 +228,19 @@ export const MegaMenuSettings: React.FC = () => {
                         </div>
 
                         <div className="absolute bottom-6 start-5 end-5 flex flex-col">
-                          <h4 className="text-[17px] font-black text-white leading-tight mb-3 tracking-tighter rtl:tracking-normal">
+                          <h4 className="text-[17px] font-kinder text-white leading-tight mb-3 tracking-tighter rtl:tracking-normal">
                             {selectedProduct.name}
                           </h4>
                           <div className="flex items-center justify-between">
                             <div className="flex flex-col">
-                              <span className="text-lg font-black text-white tracking-tighter rtl:tracking-normal leading-none">
+                              <span className="text-lg font-kinder text-white tracking-tighter rtl:tracking-normal leading-none">
                                 {selectedProduct.price.toLocaleString("fr-DZ")}
                               </span>
                               <span className="text-xs font-bold text-white uppercase tracking-widest rtl:tracking-normal mt-1">
                                 {t("DA")}
                               </span>
                             </div>
-                            <div className="px-4 py-2.5 bg-white text-zinc-950 rounded-xl font-black text-[10px] uppercase tracking-widest rtl:tracking-normal">
+                            <div className="px-4 py-2.5 bg-white text-zinc-950 rounded-xl font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal">
                               {t("Découvrir")}
                             </div>
                           </div>

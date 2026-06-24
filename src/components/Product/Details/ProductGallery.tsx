@@ -78,7 +78,7 @@ export const ProductGallery: React.FC<GalleryProps> = ({
                 setShowVideo(false);
               }}
               onContextMenu={(e) => e.preventDefault()}
-              className={`w-20 h-28 rounded-xl overflow-hidden border-[3px] transition-all shrink-0 ${selectedIndex === i ? "border-[#F37021] shadow-md shadow-[#F37021]/20 scale-95" : "border-white shadow-sm hover:border-zinc-200"}`}
+              className={`w-20 h-28 rounded-xl overflow-hidden border-[3px] transition-all shrink-0 ${selectedIndex === i ? "border-[#FF5C00] shadow-md shadow-[#FF5C00]/20 scale-95" : "border-white shadow-sm hover:border-zinc-200"}`}
             >
               <img
                 loading="lazy"

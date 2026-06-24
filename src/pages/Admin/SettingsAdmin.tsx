@@ -67,7 +67,7 @@ export const SettingsAdmin: React.FC = () => {
       <Toaster position="bottom-right" />
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-black text-zinc-950 mb-2">{t("Paramètres Généraux")}</h1>
+          <h1 className="text-3xl font-kinder text-zinc-950 mb-2">{t("Paramètres Généraux")}</h1>
           <p className="text-sm font-bold text-zinc-500">{t("Gérez les textes et paramètres globaux de la plateforme.")}</p>
         </div>
         <button
@@ -92,7 +92,7 @@ export const SettingsAdmin: React.FC = () => {
                 <Info className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="font-black text-lg text-zinc-950">{t("À propos d'Olma")}</h2>
+                <h2 className="font-kinder text-lg text-zinc-950">{t("À propos d'Olma")}</h2>
                 <p className="text-xs font-bold text-zinc-500">{t("Ce texte s'affichera dans le menu mobile pour les utilisateurs.")}</p>
               </div>
             </div>
@@ -111,7 +111,7 @@ export const SettingsAdmin: React.FC = () => {
                 <Info className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="font-black text-lg text-zinc-950">{t("Email de Support & Contact")}</h2>
+                <h2 className="font-kinder text-lg text-zinc-950">{t("Email de Support & Contact")}</h2>
                 <p className="text-xs font-bold text-zinc-500">{t("Moyen de contact par défaut affiché dans le footer.")}</p>
               </div>
             </div>
@@ -131,7 +131,7 @@ export const SettingsAdmin: React.FC = () => {
                 <ShieldCheck className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="font-black text-lg text-zinc-950">{t("Politique de Confidentialité")}</h2>
+                <h2 className="font-kinder text-lg text-zinc-950">{t("Politique de Confidentialité")}</h2>
                 <p className="text-xs font-bold text-zinc-500">{t("Texte de la politique de confidentialité de la plateforme.")}</p>
               </div>
             </div>
@@ -150,7 +150,7 @@ export const SettingsAdmin: React.FC = () => {
                 <ShieldCheck className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="font-black text-lg text-zinc-950">{t("Politique de Remboursement et Retour")}</h2>
+                <h2 className="font-kinder text-lg text-zinc-950">{t("Politique de Remboursement et Retour")}</h2>
                 <p className="text-xs font-bold text-zinc-500">{t("Texte de la politique de remboursement et retour de la plateforme.")}</p>
               </div>
             </div>
@@ -169,7 +169,7 @@ export const SettingsAdmin: React.FC = () => {
                 <ShieldCheck className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="font-black text-lg text-zinc-950">{t("Règles d'inscription & CGV")}</h2>
+                <h2 className="font-kinder text-lg text-zinc-950">{t("Règles d'inscription & CGV")}</h2>
                 <p className="text-xs font-bold text-zinc-500">{t("Oblige les utilisateurs à lire et accepter ces règles avant l'inscription.")}</p>
               </div>
             </div>
@@ -188,7 +188,7 @@ export const SettingsAdmin: React.FC = () => {
                 <ShieldCheck className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="font-black text-lg text-zinc-950">{t("Logistique & Webhooks API")}</h2>
+                <h2 className="font-kinder text-lg text-zinc-950">{t("Logistique & Webhooks API")}</h2>
                 <p className="text-xs font-bold text-zinc-500">{t("Connexion avec Yalidine, Mayestro et Kazitour.")}</p>
               </div>
             </div>

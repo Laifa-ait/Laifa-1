@@ -64,13 +64,18 @@ export const Catalog: React.FC = () => {
         const prodQ = query(
           collection(db, "products"), 
           where("sellerId", "==", currentUser.uid),
-          orderBy("createdAt", "desc"),
-          limit(PRODUCTS_PER_PAGE)
+          limit(250)
         );
         const prodSnap = await getDocs(prodQ);
         if (!cancelled) {
-          setProducts(prodSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as SellerProduct)));
-          setLastVisible(prodSnap.docs[prodSnap.docs.length - 1] || null);
+          const fetched = prodSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as SellerProduct));
+          fetched.sort((a, b) => {
+            const tA = a.createdAt?.seconds || 0;
+            const tB = b.createdAt?.seconds || 0;
+            return tB - tA;
+          });
+          setProducts(fetched);
+          setLastVisible(null); // No need for Firestore pagination with small catalogs
         }
         
         // Fetch Categories
@@ -111,25 +116,8 @@ export const Catalog: React.FC = () => {
   }, [currentUser]);
 
   const loadMoreProducts = async () => {
-    if (!currentUser || !lastVisible) return;
-    setLoadingMore(true);
-    try {
-      const prodQ = query(
-        collection(db, "products"), 
-        where("sellerId", "==", currentUser.uid),
-        orderBy("createdAt", "desc"),
-        startAfter(lastVisible),
-        limit(PRODUCTS_PER_PAGE)
-      );
-      const prodSnap = await getDocs(prodQ);
-      const newProducts = prodSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setProducts(prev => [...prev, ...newProducts]);
-      setLastVisible(prodSnap.docs[prodSnap.docs.length - 1]);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingMore(false);
-    }
+    // Left as safe no-op since all products are pre-fetched
+    return;
   };
 
   const handleSaveSuccess = async () => {
@@ -141,12 +129,17 @@ export const Catalog: React.FC = () => {
       const prodQ = query(
         collection(db, "products"),
         where("sellerId", "==", currentUser.uid),
-        orderBy("createdAt", "desc"),
-        limit(PRODUCTS_PER_PAGE)
+        limit(250)
       );
       const prodSnap = await getDocs(prodQ);
-      setProducts(prodSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as SellerProduct)));
-      setLastVisible(prodSnap.docs[prodSnap.docs.length - 1] || null);
+      const fetched = prodSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as SellerProduct));
+      fetched.sort((a, b) => {
+        const tA = a.createdAt?.seconds || 0;
+        const tB = b.createdAt?.seconds || 0;
+        return tB - tA;
+      });
+      setProducts(fetched);
+      setLastVisible(null);
     } catch (err) {
       console.error(err);
     } finally {
@@ -191,7 +184,7 @@ export const Catalog: React.FC = () => {
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-3xl font-black tracking-tight rtl:tracking-normal text-zinc-950">{t("Mon Catalogue")}</h2>
+          <h2 className="text-3xl font-kinder tracking-tight rtl:tracking-normal text-zinc-950">{t("Mon Catalogue")}</h2>
           <p className="text-zinc-500 font-medium">{t("Gérez vos articles en vente sur Olma.")}</p>
         </div>
         <button 
@@ -216,7 +209,7 @@ export const Catalog: React.FC = () => {
           />
         </div>
         <div className="relative group">
-           <button className="h-full px-8 bg-white border border-zinc-100 text-zinc-700 rounded-2xl flex items-center justify-center gap-3 font-black text-xs uppercase tracking-widest rtl:tracking-normal hover:bg-zinc-50 transition-colors shadow-sm whitespace-nowrap">
+           <button className="h-full px-8 bg-white border border-zinc-100 text-zinc-700 rounded-2xl flex items-center justify-center gap-3 font-kinder text-xs uppercase tracking-widest rtl:tracking-normal hover:bg-zinc-50 transition-colors shadow-sm whitespace-nowrap">
              <Filter className="w-4 h-4" />
              <span className="hidden md:inline">{t("Filtres")}</span>
            </button>
@@ -251,11 +244,11 @@ export const Catalog: React.FC = () => {
                               </div>
                               <div className="min-w-0 flex-1">
                                 <h4 className="font-extrabold text-zinc-950 text-base sm:text-lg mb-1 leading-normal truncate" title={p.name}>{p.name}</h4>
-                                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-[10px] font-black text-zinc-400 tracking-widest rtl:tracking-normal uppercase">
+                                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-[10px] font-kinder text-zinc-400 tracking-widest rtl:tracking-normal uppercase">
                                   <span className="rtl:tracking-normal">{p.category}</span>
                                   <span className="w-1 h-1 bg-zinc-200 rounded-full" />
                                   <div className="flex items-center gap-1.5 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-0.5 shadow-sm">
-                                    <span className="text-[9px] font-black text-emerald-600 uppercase tracking-normal">{t("Stock:")}</span>
+                                    <span className="text-[9px] font-kinder text-emerald-600 uppercase tracking-normal">{t("Stock:")}</span>
                                     <input 
                                       type="number" 
                                       defaultValue={p.stock}
@@ -278,30 +271,30 @@ export const Catalog: React.FC = () => {
                                           }
                                         }
                                       }}
-                                      className="w-10 text-center text-[11px] font-black outline-none bg-transparent text-zinc-800 transition-colors"
+                                      className="w-10 text-center text-[11px] font-kinder outline-none bg-transparent text-zinc-800 transition-colors"
                                     />
                                   </div>
                                 </div>
                                 
                                 <div className="flex flex-wrap items-center gap-2 mt-2">
                                   {(!p.status || p.status === 'active') && (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[9px] font-black uppercase tracking-wider rtl:tracking-normal border border-emerald-100">
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal border border-emerald-100">
                                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                                       {t("Approuvé & En Ligne")}</span>
                                   )}
                                   {p.status === 'pending' && (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 text-[9px] font-black uppercase tracking-wider rtl:tracking-normal border border-amber-100 shadow-sm backdrop-blur-md">
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal border border-amber-100 shadow-sm backdrop-blur-md">
                                       <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                                       {t("En cours d'examen par la Curation")}</span>
                                   )}
                                   {p.status === 'pending_deletion' && (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-50 text-red-700 text-[9px] font-black uppercase tracking-wider rtl:tracking-normal border border-red-150 animate-pulse">
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-50 text-red-700 text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal border border-red-150 animate-pulse">
                                       <span>{t("⏳ Suppression en attente")}</span>
                                     </span>
                                   )}
                                   {p.status === 'rejected' && (
                                     <div className="flex flex-col gap-1">
-                                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-50 text-red-700 text-[9px] font-black uppercase tracking-wider rtl:tracking-normal border border-red-100">
+                                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-50 text-red-700 text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal border border-red-100">
                                         <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
                                         {t("Refusé par la modération")}</span>
                                       {p.rejectionReason && (
@@ -310,23 +303,23 @@ export const Catalog: React.FC = () => {
                                     </div>
                                   )}
                                   {p.flashSaleActive && (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 text-[9px] font-black uppercase tracking-wider rtl:tracking-normal border border-purple-100">
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal border border-purple-100">
                                       <span>{t("flash_sale_label")} {formatPrice(p.flashPrice || 0)}</span>
                                     </span>
                                   )}
                                   {p.promoPrice && !p.flashSaleActive && (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 text-[9px] font-black uppercase tracking-wider rtl:tracking-normal border border-rose-100">
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal border border-rose-100">
                                       <span>{t("promo_label")} {formatPrice(p.promoPrice)}</span>
                                     </span>
                                   )}
                                   {p.isSponsored && (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gradient-to-r from-orange-400 to-amber-500 text-white text-[9px] font-black uppercase tracking-wider rtl:tracking-normal border border-white/20 shadow-sm">
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gradient-to-r from-orange-400 to-amber-500 text-white text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal border border-white/20 shadow-sm">
                                       <Zap className="w-2.5 h-2.5 fill-white" /> {t("Sponsorisé")}</span>
                                   )}
                                 </div>
 
                                 <div className="flex items-center gap-2 mt-2">
-                                   <p className="font-black text-[#ea580c] text-xl">
+                                   <p className="font-kinder text-[#ea580c] text-xl">
                                       {p.flashSaleActive ? formatPrice(p.flashPrice) : (p.promoPrice ? formatPrice(p.promoPrice) : formatPrice(p.price))}
                                    </p>
                                    {(p.promoPrice || p.flashSaleActive) && (

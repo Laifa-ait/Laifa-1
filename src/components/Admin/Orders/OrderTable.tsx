@@ -73,19 +73,19 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                     )}
                   </button>
                 </th>
-                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-zinc-450">
+                <th className="p-5 text-[10px] font-kinder uppercase tracking-widest text-zinc-450">
                   {t("Manifeste & ID")}
                 </th>
-                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-zinc-450">
+                <th className="p-5 text-[10px] font-kinder uppercase tracking-widest text-zinc-450">
                   {t("Client & Livrable")}
                 </th>
-                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-zinc-450">
+                <th className="p-5 text-[10px] font-kinder uppercase tracking-widest text-zinc-450">
                   {t("Encaissable COD / 5% Math")}
                 </th>
-                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-zinc-450">
+                <th className="p-5 text-[10px] font-kinder uppercase tracking-widest text-zinc-450">
                   {t("ID Suivi / Transport")}
                 </th>
-                <th className="p-5 text-[10px] font-black uppercase tracking-widest text-zinc-450">
+                <th className="p-5 text-[10px] font-kinder uppercase tracking-widest text-zinc-450">
                   {t("Statut Étape")}
                 </th>
               </tr>
@@ -127,7 +127,7 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                     </td>
 
                     <td className="p-5">
-                      <strong className="block text-sm text-zinc-900 font-black">
+                      <strong className="block text-sm text-zinc-900 font-kinder">
                         {order.shippingAddress?.fullName || order.shippingAddress?.name || "Client Olmart"}
                       </strong>
                       <div className="text-[10px] font-bold text-zinc-450 uppercase flex items-center gap-1 mt-1">
@@ -139,10 +139,10 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                     </td>
 
                     <td className="p-5 font-sans">
-                      <strong className="block text-base font-black text-zinc-950 tracking-tight">
+                      <strong className="block text-base font-kinder text-zinc-950 tracking-tight">
                         {formatPrice(order.total)}
                       </strong>
-                      <span className="text-[9px] font-black text-purple-600 bg-purple-50 px-2 py-0.5 rounded inline-block uppercase tracking-wide mt-1">
+                      <span className="text-[9px] font-kinder text-purple-600 bg-purple-50 px-2 py-0.5 rounded inline-block uppercase tracking-wide mt-1">
                         {t("Portion (5%):")} {formatPrice(calculatedOrdersMap[order.id]?.commissionCalc || 0)}
                       </span>
                     </td>
@@ -150,10 +150,10 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                     <td className="p-5">
                       {order.trackingId || order.trackingNumber ? (
                         <div className="space-y-1">
-                          <span className="text-[11px] font-black font-mono bg-zinc-950 text-white rounded px-2 py-0.5 inline-block uppercase select-all">
+                          <span className="text-[11px] font-kinder font-mono bg-zinc-950 text-white rounded px-2 py-0.5 inline-block uppercase select-all">
                             {order.trackingId || order.trackingNumber}
                           </span>
-                          <span className="block text-[8px] font-black uppercase text-zinc-400">
+                          <span className="block text-[8px] font-kinder uppercase text-zinc-400">
                             {order.deliveryProvider || "YALIDINE"}
                           </span>
                         </div>

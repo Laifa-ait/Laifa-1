@@ -80,7 +80,7 @@ export const Curation: React.FC = () => {
       {/* Header */}
       <div className="bg-white rounded-[2.5rem] p-8 md:p-10 border border-zinc-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-zinc-950 uppercase tracking-tight rtl:tracking-normal">
+          <h1 className="text-2xl sm:text-3xl font-kinder text-zinc-950 uppercase tracking-tight rtl:tracking-normal">
             {t("Curation des")}
             <span className="text-amber-600">{t("Produits")}</span>
           </h1>
@@ -95,8 +95,8 @@ export const Curation: React.FC = () => {
             <ShieldCheck className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-2xl font-black text-amber-900">{products.length}</div>
-            <div className="text-[10px] font-black text-amber-700 uppercase tracking-widest rtl:tracking-normal">
+            <div className="text-2xl font-kinder text-amber-900">{products.length}</div>
+            <div className="text-[10px] font-kinder text-amber-700 uppercase tracking-widest rtl:tracking-normal">
               {t("En attente")}
             </div>
           </div>
@@ -114,7 +114,7 @@ export const Curation: React.FC = () => {
           <div className="w-24 h-24 bg-zinc-50 rounded-full flex items-center justify-center mb-6">
             <CheckCircle2 className="w-10 h-10 text-zinc-300" />
           </div>
-          <h3 className="text-xl font-black text-zinc-900 mb-2">{t("Aucun produit en attente")}</h3>
+          <h3 className="text-xl font-kinder text-zinc-900 mb-2">{t("Aucun produit en attente")}</h3>
           <p className="text-zinc-500 font-medium">{t("L'équipe de curation est à jour dans ses validations.")}</p>
         </div>
       ) : (
@@ -142,7 +142,7 @@ export const Curation: React.FC = () => {
                   )}
 
                   {product.images && product.images.length > 1 && (
-                    <div className="absolute bottom-4 end-4 bg-black/50 text-white text-[10px] font-black uppercase tracking-widest rtl:tracking-normal px-3 py-1.5 rounded-xl">
+                    <div className="absolute bottom-4 end-4 bg-black/50 text-white text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal px-3 py-1.5 rounded-xl">
                       +{product.images.length - 1} {t("photos")}
                     </div>
                   )}
@@ -152,22 +152,22 @@ export const Curation: React.FC = () => {
                   <div className="flex-1">
                     <div className="flex items-start justify-between gap-4 mb-4">
                       <div>
-                        <h3 className="text-lg font-black text-zinc-900 leading-tight mb-2 line-clamp-2 md:line-clamp-none">
+                        <h3 className="text-lg font-kinder text-zinc-900 leading-tight mb-2 line-clamp-2 md:line-clamp-none">
                           {product.name}
                         </h3>
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="bg-zinc-100 text-zinc-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest rtl:tracking-normal">
+                          <span className="bg-zinc-100 text-zinc-600 px-3 py-1 rounded-lg text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal">
                             {product.category}
                           </span>
                           {product.subcategory && (
-                            <span className="bg-zinc-100 text-zinc-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest rtl:tracking-normal">
+                            <span className="bg-zinc-100 text-zinc-600 px-3 py-1 rounded-lg text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal">
                               {product.subcategory}
                             </span>
                           )}
                         </div>
                       </div>
                       <div className="text-end shrink-0">
-                        <div className="text-lg font-black text-amber-600">
+                        <div className="text-lg font-kinder text-amber-600">
                           {product.price} {t("DA")}
                         </div>
                         {product.stock && (
@@ -188,7 +188,7 @@ export const Curation: React.FC = () => {
                     {rejectingId === product.id ? (
                       <div className="mt-6 space-y-4 animate-in fade-in slide-in-from-bottom-2">
                         <div className="bg-red-50 p-4 rounded-2xl border border-red-100">
-                          <label className="block text-[10px] font-black text-red-800 uppercase tracking-widest rtl:tracking-normal mb-2 flex items-center gap-2">
+                          <label className="block text-[10px] font-kinder text-red-800 uppercase tracking-widest rtl:tracking-normal mb-2 flex items-center gap-2">
                             <MessageSquareX className="w-3 h-3" /> {t("Motif du refus")}
                           </label>
                           <textarea
@@ -211,7 +211,7 @@ export const Curation: React.FC = () => {
                           </button>
                           <button
                             onClick={() => handleReject(product.id)}
-                            className="flex-1 py-3 text-xs font-black uppercase tracking-widest rtl:tracking-normal text-white bg-red-600 rounded-xl hover:bg-red-700 shadow-lg shadow-red-500/20"
+                            className="flex-1 py-3 text-xs font-kinder uppercase tracking-widest rtl:tracking-normal text-white bg-red-600 rounded-xl hover:bg-red-700 shadow-lg shadow-red-500/20"
                           >
                             {t("Confirmer le refus")}
                           </button>
@@ -224,13 +224,13 @@ export const Curation: React.FC = () => {
                             setRejectingId(product.id);
                             setRejectionReason("");
                           }}
-                          className="flex-1 bg-red-50 text-red-600 py-3 rounded-2xl font-black uppercase tracking-widest rtl:tracking-normal text-[10px] hover:bg-red-100 border border-red-100 transition-colors flex items-center justify-center gap-2"
+                          className="flex-1 bg-red-50 text-red-600 py-3 rounded-2xl font-kinder uppercase tracking-widest rtl:tracking-normal text-[10px] hover:bg-red-100 border border-red-100 transition-colors flex items-center justify-center gap-2"
                         >
                           <XCircle className="w-4 h-4" /> {t("Refuser")}
                         </button>
                         <button
                           onClick={() => handleApprove(product.id)}
-                          className="flex-1 bg-amber-500 text-white py-3 rounded-2xl font-black uppercase tracking-widest rtl:tracking-normal text-[10px] hover:bg-amber-600 shadow-md shadow-amber-500/20 transition-all flex items-center justify-center gap-2 active:scale-95"
+                          className="flex-1 bg-amber-500 text-white py-3 rounded-2xl font-kinder uppercase tracking-widest rtl:tracking-normal text-[10px] hover:bg-amber-600 shadow-md shadow-amber-500/20 transition-all flex items-center justify-center gap-2 active:scale-95"
                         >
                           <ShieldCheck className="w-4 h-4" /> {t("Approuver")}
                         </button>

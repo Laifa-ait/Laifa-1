@@ -37,7 +37,7 @@ export const ProductBuyBox: React.FC<BuyBoxProps> = ({
           className={`flex-1 sm:flex-[3] rounded-2xl py-4 sm:py-5 flex items-center justify-center gap-3 transition-all duration-200 shadow-xl group border border-transparent ${
             isCurrentSelectionOutOfStock
               ? "bg-stone-200 text-stone-400 cursor-not-allowed shadow-none"
-              : "bg-[#121315] text-white hover:bg-[#F37021] hover:-translate-y-1 hover:shadow-lg shadow-[#121315]/20 hover:shadow-[#F37021]/30 active:translate-y-0 active:scale-95 border-b-2 border-b-black/20"
+              : "bg-[#3C2B22] text-white hover:bg-[#FF5C00] hover:-translate-y-1 hover:shadow-lg shadow-[#3C2B22]/20 hover:shadow-[#FF5C00]/30 active:translate-y-0 active:scale-95 border-b-2 border-b-black/20"
           }`}
         >
           <ShoppingBag className="w-5 h-5 group-hover:-rotate-12 transition-transform" />
@@ -60,7 +60,7 @@ export const ProductBuyBox: React.FC<BuyBoxProps> = ({
 
         <button
           onClick={onShare}
-          className="w-14 sm:w-16 rounded-2xl bg-white border-2 border-stone-200 text-[#121315] flex items-center justify-center hover:border-stone-300 transition-colors"
+          className="w-14 sm:w-16 rounded-2xl bg-white border-2 border-stone-200 text-[#3C2B22] flex items-center justify-center hover:border-stone-300 transition-colors"
           aria-label={t("Share product") || "Share product"}
         >
           <Share2 className="w-5 h-5" />

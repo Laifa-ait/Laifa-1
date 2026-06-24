@@ -50,27 +50,6 @@ export default defineConfig(({mode}) => {
     base: '/',
     build: {
       outDir: 'dist',
-      sourcemap: false,
-      chunkSizeWarningLimit: 1000,
-      rollupOptions: {
-        maxParallelFileOps: 2,
-        output: {
-          manualChunks: (id) => {
-            if (id.includes('node_modules')) {
-              if (id.includes('recharts') || id.includes('d3')) {
-                return 'vendor-charts';
-              }
-              if (id.includes('xlsx')) {
-                return 'vendor-xlsx';
-              }
-              if (id.includes('html2canvas')) {
-                return 'vendor-html2canvas';
-              }
-              return 'vendor';
-            }
-          }
-        }
-      }
     },
     resolve: {
       alias: {
@@ -78,8 +57,7 @@ export default defineConfig(({mode}) => {
       },
     },
     server: {
-                  
-      
+      hmr: false
     },
   };
 });

@@ -21,13 +21,13 @@ export const SupportFAB: React.FC = () => {
       aria-label={t("Support Support") || "Support Support"}
     >
       <MessageSquare className="w-6 h-6 fill-current group-hover:scale-110 transition-transform" />
-      <div className="absolute -top-1 -end-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-[8px] font-black animate-pulse">
+      <div className="absolute -top-1 -end-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-[8px] font-kinder animate-pulse">
         1
       </div>
       
       {/* Tooltip for desktop */}
       <div className="absolute end-full me-4 pointer-events-none opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 rtl:-translate-x-4 rtl:group-hover:translate-x-0 transition-all duration-300 hidden sm:block">
-        <div className="bg-zinc-900 text-white text-[10px] rtl:text-[12px] font-black uppercase tracking-widest rtl:tracking-normal px-3 py-2 rounded-xl whitespace-nowrap shadow-xl">
+        <div className="bg-zinc-900 text-white text-[10px] rtl:text-[12px] font-kinder uppercase tracking-widest rtl:tracking-normal px-3 py-2 rounded-xl whitespace-nowrap shadow-xl">
           {t("Support Client")}</div>
       </div>
     </button>

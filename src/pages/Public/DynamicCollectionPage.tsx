@@ -421,7 +421,7 @@ export const DynamicCollectionPage: React.FC = () => {
   }, [products, activeCategory, activeQuickFilter, sortBy, searchQuery, selectedWilaya, minPrice, maxPrice]);
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] relative text-[#121315]" ref={containerRef}>
+    <div className="min-h-screen bg-[#FDF9EC] relative text-[#3C2B22]" ref={containerRef}>
       {/* 25vh / 35vh banner as requested, perfectly resized */}
       <div className="h-[25vh] min-h-[220px] md:h-[35vh] md:min-h-[320px] relative flex flex-col justify-end">
         
@@ -434,7 +434,7 @@ export const DynamicCollectionPage: React.FC = () => {
             <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
           
-          <div className="font-black text-lg sm:text-xl tracking-widest rtl:tracking-normal text-white drop-shadow-md uppercase">
+          <div className="font-kinder text-lg sm:text-xl tracking-widest rtl:tracking-normal text-white drop-shadow-md uppercase">
             {t("Olmart Shop")}
           </div>
 
@@ -470,7 +470,7 @@ export const DynamicCollectionPage: React.FC = () => {
               <span>/</span>
               <span>{t("Shop")}</span>
             </div>
-            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tighter rtl:tracking-normal uppercase drop-shadow-2xl text-white mb-2 md:mb-4 leading-none">
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-kinder tracking-tighter rtl:tracking-normal uppercase drop-shadow-2xl text-white mb-2 md:mb-4 leading-none">
               {t(sectionTitle) || decodedName}
             </h1>
           </motion.div>
@@ -482,12 +482,12 @@ export const DynamicCollectionPage: React.FC = () => {
             </div>
             <button 
               onClick={() => setShowAdvancedFilters(true)}
-              className="flex items-center justify-center gap-3 px-6 md:px-8 h-10 sm:h-11 rounded-full bg-white/10 backdrop-blur-md text-white border border-white/20 font-black uppercase tracking-widest rtl:tracking-normal text-[10px] md:text-xs hover:bg-white/20 transition-all duration-300 shadow-xl shrink-0 cursor-pointer select-none"
+              className="flex items-center justify-center gap-3 px-6 md:px-8 h-10 sm:h-11 rounded-full bg-white/10 backdrop-blur-md text-white border border-white/20 font-kinder uppercase tracking-widest rtl:tracking-normal text-[10px] md:text-xs hover:bg-white/20 transition-all duration-300 shadow-xl shrink-0 cursor-pointer select-none"
             >
               <SlidersHorizontal className="w-3.5 h-3.5 md:w-4 md:h-4" />
               <span>{t("Filtres")}</span>
               {activeFiltersCount > 0 && (
-                <span className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-[#F37021] text-white text-[9px] font-black leading-none shadow-md ring-2 ring-white animate-pulse">
+                <span className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-[#FF5C00] text-white text-[9px] font-kinder leading-none shadow-md ring-2 ring-white animate-pulse">
                   {activeFiltersCount}
                 </span>
               )}
@@ -497,10 +497,10 @@ export const DynamicCollectionPage: React.FC = () => {
       </div>
 
       {/* Main body content section with specialized local logic */}
-      <div ref={filterSectionRef} className="relative z-40 bg-[#FAF8F5] rounded-t-[2rem] -mt-6 sm:-mt-8 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] min-h-[65vh]">
+      <div ref={filterSectionRef} className="relative z-40 bg-[#FDF9EC] rounded-t-[2rem] -mt-6 sm:-mt-8 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] min-h-[65vh]">
         
         {/* Sticky category row */}
-        <div className="sticky top-0 z-40 bg-[#FAF8F5]/95 backdrop-blur-md border-b border-[#121315]/10 shadow-sm rounded-t-[2rem] pt-6 sm:pt-8">
+        <div className="sticky top-0 z-40 bg-[#FDF9EC]/95 backdrop-blur-md border-b border-[#3C2B22]/10 shadow-sm rounded-t-[2rem] pt-6 sm:pt-8">
           <div className="max-w-[90rem] mx-auto px-4 sm:px-8 pb-3 lg:pb-4">
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between w-full gap-3">
@@ -514,8 +514,8 @@ export const DynamicCollectionPage: React.FC = () => {
                         onClick={() => setActiveCategory(cat.id)}
                         className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all duration-300 border cursor-pointer select-none ${
                           isSelected
-                            ? "bg-[#121315] text-white border-[#121315] shadow-md"
-                            : "bg-white text-[#121315]/70 border-[#121315]/10 hover:border-[#121315]/30"
+                            ? "bg-[#3C2B22] text-white border-[#3C2B22] shadow-md"
+                            : "bg-white text-[#3C2B22]/70 border-[#3C2B22]/10 hover:border-[#3C2B22]/30"
                         }`}
                       >
                         <cat.icon className="w-3.5 h-3.5" />
@@ -538,8 +538,8 @@ export const DynamicCollectionPage: React.FC = () => {
                       onClick={() => setActiveQuickFilter(isSelected ? null : filter.id)}
                       className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-full text-[10px] font-bold uppercase tracking-widest rtl:tracking-normal transition-all whitespace-nowrap cursor-pointer select-none ${
                         isSelected
-                          ? "bg-[#F37021] border-[#F37021] text-white shadow-md font-extrabold"
-                          : "bg-white/60 border-[#121315]/10 text-[#121315]/70 hover:bg-white hover:text-[#121315]"
+                          ? "bg-[#FF5C00] border-[#FF5C00] text-white shadow-md font-extrabold"
+                          : "bg-white/60 border-[#3C2B22]/10 text-[#3C2B22]/70 hover:bg-white hover:text-[#3C2B22]"
                       }`}
                     >
                       <filter.icon className="w-3 h-3" />
@@ -554,8 +554,8 @@ export const DynamicCollectionPage: React.FC = () => {
                     onClick={() => setShowSortDropdown(!showSortDropdown)}
                     className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-full text-[10px] font-bold uppercase tracking-widest rtl:tracking-normal transition-all whitespace-nowrap cursor-pointer hover:bg-white select-none ${
                       sortBy !== "popular" 
-                        ? "bg-[#121315] border-[#121315] text-white" 
-                        : "bg-white/60 border-[#121315]/10 text-[#121315]/70"
+                        ? "bg-[#3C2B22] border-[#3C2B22] text-white" 
+                        : "bg-white/60 border-[#3C2B22]/10 text-[#3C2B22]/70"
                     }`}
                   >
                     <span>
@@ -571,7 +571,7 @@ export const DynamicCollectionPage: React.FC = () => {
                   {showSortDropdown && (
                     <>
                       <div className="fixed inset-0 z-40" onClick={() => setShowSortDropdown(false)} />
-                      <div className="absolute end-0 top-full mt-1.5 bg-white border border-[#121315]/10 rounded-xl shadow-xl z-50 py-1.5 min-w-[150px] animate-in fade-in-50 slide-in-from-top-1 rtl:start-0 rtl:end-auto">
+                      <div className="absolute end-0 top-full mt-1.5 bg-white border border-[#3C2B22]/10 rounded-xl shadow-xl z-50 py-1.5 min-w-[150px] animate-in fade-in-50 slide-in-from-top-1 rtl:start-0 rtl:end-auto">
                         {[
                           { id: "popular", label: "Popularité" },
                           { id: "price-asc", label: "Prix Croissant" },
@@ -586,8 +586,8 @@ export const DynamicCollectionPage: React.FC = () => {
                             }}
                             className={`w-full text-left px-4 py-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider rtl:tracking-normal transition-colors border-none bg-transparent cursor-pointer flex items-center ${
                               sortBy === opt.id 
-                                ? "text-[#F37021] bg-[#FAF8F5]" 
-                                : "text-[#121315]/85 hover:bg-[#FAF8F5]/50 hover:text-[#121315]"
+                                ? "text-[#FF5C00] bg-[#FDF9EC]" 
+                                : "text-[#3C2B22]/85 hover:bg-[#FDF9EC]/50 hover:text-[#3C2B22]"
                             }`}
                           >
                             {t(opt.label)}
@@ -608,8 +608,8 @@ export const DynamicCollectionPage: React.FC = () => {
             
             {/* Main Products Grid Column */}
             <div className="col-span-2 lg:col-span-12">
-              <div className="flex items-center gap-2 text-[10px] sm:text-xs font-bold tracking-[0.2em] text-[#121315] uppercase mb-6 ms-1">
-                <span className="text-[#121315] font-black">{filteredProducts.length}</span>{" "}
+              <div className="flex items-center gap-2 text-[10px] sm:text-xs font-bold tracking-[0.2em] text-[#3C2B22] uppercase mb-6 ms-1">
+                <span className="text-[#3C2B22] font-kinder">{filteredProducts.length}</span>{" "}
                 {t("ARTICLES")}
               </div>
 
@@ -618,7 +618,7 @@ export const DynamicCollectionPage: React.FC = () => {
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
                     <div
                       key={i}
-                      className="aspect-[3/4] bg-[#121315]/5 animate-pulse rounded-xl"
+                      className="aspect-[3/4] bg-[#3C2B22]/5 animate-pulse rounded-xl"
                     />
                   ))}
                 </div>
@@ -645,7 +645,7 @@ export const DynamicCollectionPage: React.FC = () => {
                   )}
                 </div>
               ) : (
-                <div className="text-center text-[#121315]/50 py-20 text-lg">
+                <div className="text-center text-[#3C2B22]/50 py-20 text-lg">
                   {t("Aucun article trouvé pour cette collection.")}
                 </div>
               )}
@@ -671,17 +671,17 @@ export const DynamicCollectionPage: React.FC = () => {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 end-0 w-full max-w-md bg-[#FAF6EE] shadow-2xl z-[201] flex flex-col overflow-hidden text-[#121315]"
+              className="fixed inset-y-0 end-0 w-full max-w-md bg-[#FAF6EE] shadow-2xl z-[201] flex flex-col overflow-hidden text-[#3C2B22]"
             >
               {/* Header */}
-              <div className="p-6 bg-white border-b border-[#121315]/10 flex items-center justify-between">
+              <div className="p-6 bg-white border-b border-[#3C2B22]/10 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <SlidersHorizontal className="w-5 h-5 text-[#121315]" />
-                  <h2 className="font-black text-sm uppercase tracking-wider rtl:tracking-normal text-[#121315]">{t("Filtres Avancés")}</h2>
+                  <SlidersHorizontal className="w-5 h-5 text-[#3C2B22]" />
+                  <h2 className="font-kinder text-sm uppercase tracking-wider rtl:tracking-normal text-[#3C2B22]">{t("Filtres Avancés")}</h2>
                 </div>
                 <button
                   onClick={() => setShowAdvancedFilters(false)}
-                  className="w-10 h-10 rounded-full flex items-center justify-center bg-[#121315]/5 hover:bg-[#121315]/10 text-[#121315] transition-colors cursor-pointer select-none border-none outline-none"
+                  className="w-10 h-10 rounded-full flex items-center justify-center bg-[#3C2B22]/5 hover:bg-[#3C2B22]/10 text-[#3C2B22] transition-colors cursor-pointer select-none border-none outline-none"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -691,44 +691,44 @@ export const DynamicCollectionPage: React.FC = () => {
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 {/* 58 Wilayas compliant Selector */}
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-[#121315]/70">{t("Wilaya de livraison")}</label>
+                  <label className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-[#3C2B22]/70">{t("Wilaya de livraison")}</label>
                   <div className="relative">
                     <select
                       value={selectedWilaya}
                       onChange={(e) => setSelectedWilaya(e.target.value)}
-                      className="w-full px-4 py-3 bg-white border border-[#121315]/10 rounded-xl outline-none focus:border-[#F37021] transition-colors text-xs font-bold text-[#121315]/80 cursor-pointer appearance-none shadow-sm"
+                      className="w-full px-4 py-3 bg-white border border-[#3C2B22]/10 rounded-xl outline-none focus:border-[#FF5C00] transition-colors text-xs font-bold text-[#3C2B22]/80 cursor-pointer appearance-none shadow-sm"
                     >
                       <option value="all">{t("Toutes les Wilayas (58 Wilayas)")}</option>
                       {ALGERIA_WILAYAS.map((wilaya) => (
                         <option key={wilaya} value={wilaya}>{wilaya}</option>
                       ))}
                     </select>
-                    <ChevronDown className="absolute end-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#121315] pointer-events-none" />
+                    <ChevronDown className="absolute end-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#3C2B22] pointer-events-none" />
                   </div>
                 </div>
 
                 {/* Price range */}
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-[#121315]/70">{t("Tranche de Prix (DA)")}</label>
+                  <label className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-[#3C2B22]/70">{t("Tranche de Prix (DA)")}</label>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <span className="text-[9px] font-bold text-[#121315]/50 uppercase tracking-widest rtl:tracking-normal">{t("Min (DA)")}</span>
+                      <span className="text-[9px] font-bold text-[#3C2B22]/50 uppercase tracking-widest rtl:tracking-normal">{t("Min (DA)")}</span>
                       <input
                         type="number"
                         placeholder="0"
                         value={minPrice}
                         onChange={(e) => setMinPrice(e.target.value)}
-                        className="w-full px-4 py-2.5 bg-white border border-[#121315]/10 rounded-xl text-xs font-bold text-[#121315] focus:border-[#F37021] outline-none shadow-sm"
+                        className="w-full px-4 py-2.5 bg-white border border-[#3C2B22]/10 rounded-xl text-xs font-bold text-[#3C2B22] focus:border-[#FF5C00] outline-none shadow-sm"
                       />
                     </div>
                     <div className="space-y-1">
-                      <span className="text-[9px] font-bold text-[#121315]/50 uppercase tracking-widest rtl:tracking-normal">{t("Max (DA)")}</span>
+                      <span className="text-[9px] font-bold text-[#3C2B22]/50 uppercase tracking-widest rtl:tracking-normal">{t("Max (DA)")}</span>
                       <input
                         type="number"
                         placeholder={t("Indéfini") || "Indéfini"}
                         value={maxPrice}
                         onChange={(e) => setMaxPrice(e.target.value)}
-                        className="w-full px-4 py-2.5 bg-white border border-[#121315]/10 rounded-xl text-xs font-bold text-[#121315] focus:border-[#F37021] outline-none shadow-sm"
+                        className="w-full px-4 py-2.5 bg-white border border-[#3C2B22]/10 rounded-xl text-xs font-bold text-[#3C2B22] focus:border-[#FF5C00] outline-none shadow-sm"
                       />
                     </div>
                   </div>
@@ -736,7 +736,7 @@ export const DynamicCollectionPage: React.FC = () => {
 
                 {/* Express criteria options */}
                 <div className="space-y-3 pt-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-[#121315]/70">{t("Critères Spécifiques")}</label>
+                  <label className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-[#3C2B22]/70">{t("Critères Spécifiques")}</label>
                   <div className="space-y-3">
                     {[
                       { id: "free-shipping", name: "Livraison Gratuite", desc: "Produits sans frais de port" },
@@ -750,16 +750,16 @@ export const DynamicCollectionPage: React.FC = () => {
                           onClick={() => setActiveQuickFilter(isActive ? null : opt.id)}
                           className={`w-full flex items-start gap-3 p-3.5 rounded-xl border text-left transition-all cursor-pointer outline-none ${
                             isActive
-                              ? "bg-white border-[#F37021] shadow-md ring-1 ring-[#F37021]"
-                              : "bg-white border-[#121315]/10 hover:border-[#121315]/30 shadow-sm"
+                              ? "bg-white border-[#FF5C00] shadow-md ring-1 ring-[#FF5C00]"
+                              : "bg-white border-[#3C2B22]/10 hover:border-[#3C2B22]/30 shadow-sm"
                           }`}
                         >
-                          <div className={`mt-0.5 w-4 h-4 rounded-md border flex items-center justify-center transition-colors ${isActive ? "bg-[#F37021] border-[#F37021]" : "bg-white border-zinc-300"}`}>
+                          <div className={`mt-0.5 w-4 h-4 rounded-md border flex items-center justify-center transition-colors ${isActive ? "bg-[#FF5C00] border-[#FF5C00]" : "bg-white border-zinc-300"}`}>
                             {isActive && <Check className="w-2.5 h-2.5 text-white stroke-[3px]" />}
                           </div>
                           <div>
-                            <div className={`text-[10px] font-black uppercase tracking-widest rtl:tracking-normal ${isActive ? "text-[#F37021]" : "text-[#121315]"}`}>{t(opt.name)}</div>
-                            <div className="text-[9px] text-[#121315]/60 mt-0.5 leading-relaxed font-semibold">{t(opt.desc)}</div>
+                            <div className={`text-[10px] font-black uppercase tracking-widest rtl:tracking-normal ${isActive ? "text-[#FF5C00]" : "text-[#3C2B22]"}`}>{t(opt.name)}</div>
+                            <div className="text-[9px] text-[#3C2B22]/60 mt-0.5 leading-relaxed font-semibold">{t(opt.desc)}</div>
                           </div>
                         </button>
                       );
@@ -769,7 +769,7 @@ export const DynamicCollectionPage: React.FC = () => {
               </div>
 
               {/* Bottom Apply Buttons */}
-              <div className="p-6 bg-white border-t border-[#121315]/10 grid grid-cols-2 gap-3 shrink-0">
+              <div className="p-6 bg-white border-t border-[#3C2B22]/10 grid grid-cols-2 gap-3 shrink-0">
                 <button
                   onClick={() => {
                     setSelectedWilaya("all");
@@ -777,14 +777,14 @@ export const DynamicCollectionPage: React.FC = () => {
                     setMaxPrice("");
                     setActiveQuickFilter(null);
                   }}
-                  className="px-4 py-3 border border-[#121315]/10 rounded-xl text-[10px] font-extrabold uppercase tracking-widest rtl:tracking-normal text-[#121315]/75 hover:bg-zinc-50 transition-all cursor-pointer flex items-center justify-center gap-2 select-none"
+                  className="px-4 py-3 border border-[#3C2B22]/10 rounded-xl text-[10px] font-extrabold uppercase tracking-widest rtl:tracking-normal text-[#3C2B22]/75 hover:bg-zinc-50 transition-all cursor-pointer flex items-center justify-center gap-2 select-none"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>{t("Effacer")}</span>
                 </button>
                 <button
                   onClick={() => setShowAdvancedFilters(false)}
-                  className="px-4 py-3 bg-[#121315] border border-[#121315] text-white rounded-xl text-[10px] font-extrabold uppercase tracking-widest rtl:tracking-normal hover:bg-[#0a0b0c] transition-all cursor-pointer flex items-center justify-center select-none"
+                  className="px-4 py-3 bg-[#3C2B22] border border-[#3C2B22] text-white rounded-xl text-[10px] font-extrabold uppercase tracking-widest rtl:tracking-normal hover:bg-[#0a0b0c] transition-all cursor-pointer flex items-center justify-center select-none"
                 >
                   <span>{t("Appliquer")}</span>
                 </button>

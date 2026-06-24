@@ -202,7 +202,7 @@ export const AddressManager: React.FC<AddressManagerProps> = ({ currentUser, use
     <div className="space-y-8" id="address-manager-module">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-black text-xl text-zinc-900 tracking-tight rtl:tracking-normal text-start">
+          <h3 className="font-kinder text-xl text-zinc-900 tracking-tight rtl:tracking-normal text-start">
             {t("Mon Carnet d'Adresses")}
           </h3>
           <p className="text-zinc-500 text-xs rtl:text-sm text-start">
@@ -498,7 +498,7 @@ export const AddressManager: React.FC<AddressManagerProps> = ({ currentUser, use
                   </div>
 
                   <div className="space-y-1.5 text-zinc-700">
-                    <p className="font-black text-sm text-zinc-900 tracking-tight rtl:tracking-normal">
+                    <p className="font-kinder text-sm text-zinc-900 tracking-tight rtl:tracking-normal">
                       {addr.name || userProfile?.displayName}
                     </p>
                     <p className="font-extrabold text-[11px] text-zinc-800 uppercase tracking-widest rtl:tracking-normal">

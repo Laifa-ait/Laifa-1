@@ -486,7 +486,7 @@ export const BannerAdmin: React.FC = () => {
     <div className="max-w-6xl mx-auto space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-zinc-900 tracking-tighter rtl:tracking-normal uppercase flex items-center gap-2">
+          <h1 className="text-3xl font-kinder text-zinc-900 tracking-tighter rtl:tracking-normal uppercase flex items-center gap-2">
             <Settings className="w-8 h-8 text-orange-500" />
             {t("Carousel & Design")}
           </h1>
@@ -519,7 +519,7 @@ export const BannerAdmin: React.FC = () => {
       {isLoading ? (
         <div className="flex flex-col items-center justify-center p-24 bg-white rounded-3xl border border-zinc-100 shadow-sm space-y-4">
           <div className="w-12 h-12 rounded-full border-4 border-orange-200 border-t-orange-600 animate-spin" />
-          <span className="text-xs font-black text-zinc-500 uppercase tracking-widest rtl:tracking-normal">
+          <span className="text-xs font-kinder text-zinc-500 uppercase tracking-widest rtl:tracking-normal">
             {t("Hydratation des données...")}
           </span>
         </div>
@@ -532,7 +532,7 @@ export const BannerAdmin: React.FC = () => {
             </h2>
             <button
               onClick={() => handleOpenBannerModal(null)}
-              className="flex items-center gap-2 bg-orange-600 text-white px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-widest rtl:tracking-normal hover:bg-orange-500 transition-colors shadow-lg active:scale-95 cursor-pointer"
+              className="flex items-center gap-2 bg-orange-600 text-white px-5 py-3 rounded-2xl font-kinder text-xs uppercase tracking-widest rtl:tracking-normal hover:bg-orange-500 transition-colors shadow-lg active:scale-95 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               {t("Nouvelle Bannière")}
@@ -549,7 +549,7 @@ export const BannerAdmin: React.FC = () => {
             </div>
           ) : (
             <div className="bg-white rounded-3xl border border-zinc-100 shadow-sm overflow-hidden">
-              <div className="p-4 bg-zinc-50/50 border-b border-zinc-100 text-[10px] uppercase font-black tracking-widest rtl:tracking-normal text-zinc-400 grid grid-cols-1 md:grid-cols-12 gap-4 hidden md:grid">
+              <div className="p-4 bg-zinc-50/50 border-b border-zinc-100 text-[10px] uppercase font-kinder tracking-widest rtl:tracking-normal text-zinc-400 grid grid-cols-1 md:grid-cols-12 gap-4 hidden md:grid">
                 <div className="col-span-1 text-center">{t("Tri")}</div>
                 <div className="col-span-4">{t("Visuels (bureau / mobile)")}</div>
                 <div className="col-span-3">{t("Détails Marketing")}</div>
@@ -582,7 +582,7 @@ export const BannerAdmin: React.FC = () => {
                         >
                           <ArrowUp className="w-4 h-4" />
                         </button>
-                        <span className="text-xs font-black text-zinc-800 bg-zinc-100 px-2.5 py-1 rounded-md min-w-[24px] text-center shrink-0">
+                        <span className="text-xs font-kinder text-zinc-800 bg-zinc-100 px-2.5 py-1 rounded-md min-w-[24px] text-center shrink-0">
                           {banner.sort_order || index + 1}
                         </span>
                         <button
@@ -606,7 +606,7 @@ export const BannerAdmin: React.FC = () => {
                               className="w-full h-full object-cover"
                               referrerPolicy="no-referrer"
                             />
-                            <div className="absolute top-1 start-1 px-1 bg-black/60 rounded text-[8px] text-white uppercase font-black">
+                            <div className="absolute top-1 start-1 px-1 bg-black/60 rounded text-[8px] text-white uppercase font-kinder">
                               {t("Desktop")}
                             </div>
                           </div>
@@ -619,7 +619,7 @@ export const BannerAdmin: React.FC = () => {
                                 className="w-full h-full object-cover"
                                 referrerPolicy="no-referrer"
                               />
-                              <div className="absolute top-1 start-1 px-1 bg-black/60 rounded text-[8px] text-white uppercase font-black">
+                              <div className="absolute top-1 start-1 px-1 bg-black/60 rounded text-[8px] text-white uppercase font-kinder">
                                 {t("Mobile")}
                               </div>
                             </div>
@@ -727,7 +727,7 @@ export const BannerAdmin: React.FC = () => {
 
             <form onSubmit={handleCreateTag} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-500">
+                <label className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-500">
                   {t("Nom du Tag (ex: Soldes d'été)")}
                 </label>
                 <input
@@ -741,7 +741,7 @@ export const BannerAdmin: React.FC = () => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-500">
+                <label className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-500">
                   {t("Slug d'URL (ex: soldes-ete)")}
                 </label>
                 <input
@@ -763,7 +763,7 @@ export const BannerAdmin: React.FC = () => {
 
               <button
                 type="submit"
-                className="w-full h-11 bg-orange-600 text-white rounded-xl font-black text-xs uppercase tracking-widest rtl:tracking-normal hover:bg-orange-500 transition-colors cursor-pointer flex items-center justify-center gap-2"
+                className="w-full h-11 bg-orange-600 text-white rounded-xl font-kinder text-xs uppercase tracking-widest rtl:tracking-normal hover:bg-orange-500 transition-colors cursor-pointer flex items-center justify-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 {t("Créer le Tag")}
@@ -791,7 +791,7 @@ export const BannerAdmin: React.FC = () => {
                       className="flex justify-between items-center p-3 border border-zinc-100 rounded-2xl hover:border-zinc-300 transition-all bg-[#fafafa]/50"
                     >
                       <div className="space-y-0.5 min-w-0">
-                        <div className="text-xs font-black text-zinc-950 truncate flex items-center gap-1.5">
+                        <div className="text-xs font-kinder text-zinc-950 truncate flex items-center gap-1.5">
                           <Tag className="w-3 h-3 text-orange-500 shrink-0" />
                           {tag.name}
                         </div>
@@ -824,7 +824,7 @@ export const BannerAdmin: React.FC = () => {
             {/* Modal Header */}
             <div className="p-6 sm:p-8 border-b border-zinc-100 flex items-center justify-between shrink-0">
               <div>
-                <h3 className="text-xl font-black text-zinc-900 uppercase tracking-tight rtl:tracking-normal">
+                <h3 className="text-xl font-kinder text-zinc-900 uppercase tracking-tight rtl:tracking-normal">
                   {selectedBanner ? "Modifier la Bannière" : "Créer une Bannière d'Accueil"}
                 </h3>
                 <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest rtl:tracking-normal mt-0.5">
@@ -846,7 +846,7 @@ export const BannerAdmin: React.FC = () => {
                 {/* Title and Title Color */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-sans">
                   <div className="space-y-1.5 md:col-span-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-500">
+                    <label className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-500">
                       {t("Titre de la Bannière *")}
                     </label>
                     <input
@@ -859,7 +859,7 @@ export const BannerAdmin: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-500">
+                    <label className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-500">
                       {t("Couleur Titre")}
                     </label>
                     <div className="flex gap-1.5">
@@ -883,7 +883,7 @@ export const BannerAdmin: React.FC = () => {
                 {/* Subtitle and Subtitle Color */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-zinc-100 pt-3">
                   <div className="space-y-1.5 md:col-span-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-500">
+                    <label className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-500">
                       {t("Sous-titre de la Bannière")}
                     </label>
                     <input
@@ -898,7 +898,7 @@ export const BannerAdmin: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-500">
+                    <label className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-500">
                       {t("Couleur Sous-titre")}
                     </label>
                     <div className="flex gap-1.5">
@@ -922,7 +922,7 @@ export const BannerAdmin: React.FC = () => {
                 {/* Button CTA text and styling */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-zinc-100 pt-3">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-500">
+                    <label className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-500">
                       {t("Texte du Bouton *")}
                     </label>
                     <input
@@ -935,7 +935,7 @@ export const BannerAdmin: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-500">
+                    <label className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-500">
                       {t("Fond du Bouton")}
                     </label>
                     <div className="flex gap-1.5">
@@ -955,7 +955,7 @@ export const BannerAdmin: React.FC = () => {
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-500">
+                    <label className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-500">
                       {t("Écriture Bouton")}
                     </label>
                     <div className="flex gap-1.5">
@@ -981,7 +981,7 @@ export const BannerAdmin: React.FC = () => {
                   {/* Desktop configuration */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-baseline">
-                      <label className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-500">
+                      <label className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-500">
                         {t("Image Bureau * (1920x800 px)")}
                       </label>
                       <span className="text-[9px] font-bold text-orange-600 bg-orange-50 px-2 rounded">
@@ -1043,7 +1043,7 @@ export const BannerAdmin: React.FC = () => {
                   {/* Mobile configuration */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-baseline">
-                      <label className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-500">
+                      <label className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-500">
                         {t("Image Mobile (800x1000 px)")}
                       </label>
                       <span className="text-[9px] font-bold text-zinc-400 uppercase">{t("Optionnel")}</span>
@@ -1106,7 +1106,7 @@ export const BannerAdmin: React.FC = () => {
                 {/* Tag ID selection (required) */}
                 <div className="space-y-1.5 pt-1 border-t border-zinc-100">
                   <div className="flex justify-between items-baseline">
-                    <label className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-500">
+                    <label className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-500">
                       {t("Tag de Redirection d'Accueil *")}
                     </label>
                     <span className="text-[9px] font-bold text-zinc-400">{t("Clic → Filtre Catalogue")}</span>
@@ -1135,7 +1135,7 @@ export const BannerAdmin: React.FC = () => {
                 {/* Featured Products Selection */}
                 <div className="space-y-3 pt-3 border-t border-zinc-100">
                   <div className="flex justify-between items-baseline">
-                    <label className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-500">
+                    <label className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-500">
                       {t("Produits Mis en Avant (VIP)")}
                     </label>
                     <span className="text-[9px] font-bold text-zinc-400">{t("Seront affichés en premier")}</span>
@@ -1247,7 +1247,7 @@ export const BannerAdmin: React.FC = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-3 text-start">
                     <div>
-                      <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-700 mb-1">
+                      <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-700 mb-1">
                         {t("Audience Cible")}
                       </label>
                       <select
@@ -1261,7 +1261,7 @@ export const BannerAdmin: React.FC = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[9px] font-black uppercase tracking-wider rtl:tracking-normal text-zinc-700 mb-1">
+                      <label className="block text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal text-zinc-700 mb-1">
                         {t("Wilayas Cibles (")}
                         {bannerTargetRegions.length})
                       </label>
@@ -1289,13 +1289,13 @@ export const BannerAdmin: React.FC = () => {
                       {bannerTargetRegions.map((w) => (
                         <span
                           key={w}
-                          className="inline-flex items-center gap-1 bg-zinc-900/5 text-zinc-900 border border-zinc-900/10 px-2 py-0.5 rounded-md text-[8px] font-black"
+                          className="inline-flex items-center gap-1 bg-zinc-900/5 text-zinc-900 border border-zinc-900/10 px-2 py-0.5 rounded-md text-[8px] font-kinder"
                         >
                           {w}
                           <button
                             type="button"
                             onClick={() => setBannerTargetRegions(bannerTargetRegions.filter((item) => item !== w))}
-                            className="hover:text-red-600 text-[8px] font-black leading-none ms-1 bg-transparent border-none p-0 cursor-pointer"
+                            className="hover:text-red-600 text-[8px] font-kinder leading-none ms-1 bg-transparent border-none p-0 cursor-pointer"
                           >
                             ✕
                           </button>
@@ -1316,7 +1316,7 @@ export const BannerAdmin: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isUploadingDesktop || isUploadingMobile}
-                  className="w-full h-12 bg-zinc-950 text-white hover:bg-zinc-800 rounded-xl font-black text-xs uppercase tracking-widest rtl:tracking-normal transition-colors select-none cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
+                  className="w-full h-12 bg-zinc-950 text-white hover:bg-zinc-800 rounded-xl font-kinder text-xs uppercase tracking-widest rtl:tracking-normal transition-colors select-none cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
                 >
                   <Check className="w-4 h-4" />
                   <span>{t("Enregistrer la Bannière")}</span>
@@ -1326,14 +1326,14 @@ export const BannerAdmin: React.FC = () => {
               {/* REAL-TIME PREVIEW PANEL (Desktop & Mobile) */}
               <div className="space-y-6">
                 <div className="sticky top-0 space-y-5">
-                  <h4 className="text-xs font-black uppercase tracking-widest rtl:tracking-normal text-zinc-400 flex items-center gap-1.5">
+                  <h4 className="text-xs font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-400 flex items-center gap-1.5">
                     <Eye className="w-4 h-4 text-orange-600 animate-pulse" />
                     {t("Aperçu en Temps Réel")}
                   </h4>
 
                   {/* Desktop Preview Card (Ratio 21:9) */}
                   <div className="space-y-1.5">
-                    <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal block">
+                    <span className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal block">
                       {t("Format Bureau (Aperçu)")}
                     </span>
                     <div className="w-full aspect-[2.4/1] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-200 relative shadow-md">
@@ -1358,12 +1358,12 @@ export const BannerAdmin: React.FC = () => {
                       {/* Marketing data overlays */}
                       <div className="absolute inset-0 flex flex-col justify-end p-4 text-white">
                         {tags.find((t) => t.id === bannerTagId) && (
-                          <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded bg-white/15 tracking-widest rtl:tracking-normal uppercase font-black text-[7px] w-fit mb-1">
+                          <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded bg-white/15 tracking-widest rtl:tracking-normal uppercase font-kinder text-[7px] w-fit mb-1">
                             {tags.find((t) => t.id === bannerTagId)?.name}
                           </span>
                         )}
                         <h3
-                          className="text-sm font-black tracking-tight rtl:tracking-normal leading-none mb-0.5 shadow-sm uppercase shrink-0"
+                          className="text-sm font-kinder tracking-tight rtl:tracking-normal leading-none mb-0.5 shadow-sm uppercase shrink-0"
                           style={{ color: bannerTitleColor }}
                         >
                           {bannerTitle || "Titre de la Bannière"}
@@ -1378,7 +1378,7 @@ export const BannerAdmin: React.FC = () => {
                         )}
                         <button
                           style={{ backgroundColor: bannerBtnBgColor, color: bannerBtnTextColor }}
-                          className="rounded-lg py-1 px-3 text-[8px] uppercase tracking-widest rtl:tracking-normal font-black shrink-0 w-fit pointer-events-none mt-1 shadow-sm transition-colors duration-150"
+                          className="rounded-lg py-1 px-3 text-[8px] uppercase tracking-widest rtl:tracking-normal font-kinder shrink-0 w-fit pointer-events-none mt-1 shadow-sm transition-colors duration-150"
                         >
                           {bannerButtonText}
                         </button>
@@ -1388,7 +1388,7 @@ export const BannerAdmin: React.FC = () => {
 
                   {/* Mobile Preview Frame Phone Mockup (Ratio 4:5) */}
                   <div className="space-y-1.5">
-                    <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal block">
+                    <span className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal block">
                       {t("Format Téléphone (Aperçu)")}
                     </span>
                     <div className="w-44 aspect-[4/5] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-200 relative mx-auto shadow-md">
@@ -1409,7 +1409,7 @@ export const BannerAdmin: React.FC = () => {
                             className="w-full h-full object-cover"
                             referrerPolicy="no-referrer"
                           />
-                          <div className="absolute top-1.5 start-1.5 px-1.5 py-0.5 bg-orange-600/90 rounded text-[7px] font-black text-white uppercase tracking-wider rtl:tracking-normal select-none leading-none">
+                          <div className="absolute top-1.5 start-1.5 px-1.5 py-0.5 bg-orange-600/90 rounded text-[7px] font-kinder text-white uppercase tracking-wider rtl:tracking-normal select-none leading-none">
                             {t("Desktop Fallback")}
                           </div>
                         </div>
@@ -1425,12 +1425,12 @@ export const BannerAdmin: React.FC = () => {
                       {/* Mobile mockup detail */}
                       <div className="absolute inset-x-0 bottom-0 p-3 text-white">
                         {tags.find((t) => t.id === bannerTagId) && (
-                          <span className="inline-block tracking-widest rtl:tracking-normal uppercase font-black text-[6px] text-zinc-300 drop-shadow mb-0.5">
+                          <span className="inline-block tracking-widest rtl:tracking-normal uppercase font-kinder text-[6px] text-zinc-300 drop-shadow mb-0.5">
                             {tags.find((t) => t.id === bannerTagId)?.name}
                           </span>
                         )}
                         <h4
-                          className="text-[10px] font-black leading-tight mb-0.5 uppercase select-none tracking-tight rtl:tracking-normal drop-shadow truncate"
+                          className="text-[10px] font-kinder leading-tight mb-0.5 uppercase select-none tracking-tight rtl:tracking-normal drop-shadow truncate"
                           style={{ color: bannerTitleColor }}
                         >
                           {bannerTitle || "Titre de la Bannière"}
@@ -1445,7 +1445,7 @@ export const BannerAdmin: React.FC = () => {
                         )}
                         <button
                           style={{ backgroundColor: bannerBtnBgColor, color: bannerBtnTextColor }}
-                          className="rounded py-1 px-2.5 text-[7px] uppercase tracking-widest rtl:tracking-normal font-black shrink-0 w-fit pointer-events-none block shadow-sm mt-0.5"
+                          className="rounded py-1 px-2.5 text-[7px] uppercase tracking-widest rtl:tracking-normal font-kinder shrink-0 w-fit pointer-events-none block shadow-sm mt-0.5"
                         >
                           {bannerButtonText}
                         </button>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, Suspense } from "react";
 import { motion } from "motion/react";
 import {
   TrendingUp,
@@ -72,17 +72,27 @@ export const Overview: React.FC = () => {
   });
   const [adminAlerts, setAdminAlerts] = useState<AdminAlert[]>([]);
   const [data, setData] = useState<DashboardData[]>([]);
-  const [recentEvents, setRecentEvents] = useState<AnalyticsEvent[]>([]);
+  const [recentEvents, setRecentEvents] = useState<any[]>([]);
   const [globalOrders, setGlobalOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [lastAlertVisible, setLastAlertVisible] = useState<any>(null);
   const ALERTS_PER_PAGE = 20;
 
-  const [insights, setInsights] = useState(() => {
+  const [insights, setInsights] = useState<any>(() => {
     try {
       return analyticsEngine.getInsights();
     } catch {
-      return { events: [], summary: {} };
+      return { 
+        totalViews: 0,
+        totalCarts: 0,
+        totalPurchases: 0,
+        totalRevenue: 0,
+        conversionRate: "0.0",
+        addToCartRate: "0.0",
+        categoryHits: [],
+        productViews: [],
+        searchQueries: []
+      };
     }
   });
 
@@ -224,7 +234,7 @@ export const Overview: React.FC = () => {
     <div className="space-y-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-4xl font-black tracking-tight rtl:tracking-normal text-zinc-950">
+          <h2 className="text-4xl font-kinder tracking-tight rtl:tracking-normal text-zinc-950">
             {t("Vue d'ensemble")}
           </h2>
           <p className="text-zinc-500 font-medium">{t("Contrôle global de la performance Olma Algérie.")}</p>
@@ -232,7 +242,7 @@ export const Overview: React.FC = () => {
         <div className="flex items-center gap-4">
           {/* OLAP BigQuery Pattern Acknowledgement */}
           <div className="hidden lg:flex flex-col text-end me-4">
-            <span className="text-[10px] font-black uppercase text-zinc-400 tracking-widest rtl:tracking-normal leading-none">
+            <span className="text-[10px] font-kinder uppercase text-zinc-400 tracking-widest rtl:tracking-normal leading-none">
               {t("Moteur Analytics")}
             </span>
             <span className="text-xs font-bold text-emerald-600">{t("Export BigQuery Actif (OLAP)")}</span>
@@ -240,7 +250,7 @@ export const Overview: React.FC = () => {
 
           <button
             onClick={() => debouncedRefresh()}
-            className="flex items-center gap-3 px-6 py-4 bg-white border border-zinc-100 rounded-2xl font-black text-[10px] uppercase tracking-widest rtl:tracking-normal text-zinc-500 hover:text-zinc-900 transition-all shadow-sm cursor-pointer"
+            className="flex items-center gap-3 px-6 py-4 bg-white border border-zinc-100 rounded-2xl font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal text-zinc-500 hover:text-zinc-900 transition-all shadow-sm cursor-pointer"
           >
             <RefreshCw className="w-4 h-4" /> {t("Actualiser")}
           </button>
@@ -251,7 +261,7 @@ export const Overview: React.FC = () => {
 
       {adminAlerts.length > 0 && (
         <div className="flex flex-col gap-4">
-          <h3 className="text-[14px] font-black uppercase tracking-widest rtl:tracking-normal text-[#E3000F] flex items-center gap-2">
+          <h3 className="text-[14px] font-kinder uppercase tracking-widest rtl:tracking-normal text-[#E3000F] flex items-center gap-2">
             <AlertTriangle className="w-4 h-4" /> {t("Alertes Critiques Système (")}
             {adminAlerts.length})
           </h3>
@@ -263,7 +273,7 @@ export const Overview: React.FC = () => {
                     <AlertTriangle className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-black text-red-900">
+                    <h4 className="text-sm font-kinder text-red-900">
                       {alert.type === "velocity_kill_switch"
                         ? t("Suspension Vélocité (Kill-Switch)") || "Suspension Vélocité (Kill-Switch)"
                         : alert.type}
@@ -284,7 +294,7 @@ export const Overview: React.FC = () => {
             <div className="flex justify-center mt-4">
               <button
                 onClick={loadMoreAlerts}
-                className="px-6 py-2 bg-white border border-red-200 text-red-600 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-50 transition-colors shadow-sm"
+                className="px-6 py-2 bg-white border border-red-200 text-red-600 rounded-xl font-kinder text-[10px] uppercase tracking-widest hover:bg-red-50 transition-colors shadow-sm"
               >
                 {t("Charger plus d'alertes")}
               </button>
@@ -305,7 +315,7 @@ export const Overview: React.FC = () => {
           <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
             <ShieldAlert className="w-6 h-6" />
           </div>
-          <span className="font-black text-[10px] uppercase tracking-widest rtl:tracking-normal text-center leading-tight">
+          <span className="font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal text-center leading-tight">
             {t("Modération")}
             <br />
             {t("Produits")}
@@ -318,7 +328,7 @@ export const Overview: React.FC = () => {
           <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
             <Users className="w-6 h-6" />
           </div>
-          <span className="font-black text-[10px] uppercase tracking-widest rtl:tracking-normal text-center leading-tight">
+          <span className="font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal text-center leading-tight">
             {t("Modération")}
             <br />
             {t("Vendeurs")}
@@ -331,7 +341,7 @@ export const Overview: React.FC = () => {
           <div className="w-12 h-12 rounded-full bg-red-100/50 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
             <AlertTriangle className="w-6 h-6 text-red-500" />
           </div>
-          <span className="font-black text-[10px] uppercase tracking-widest rtl:tracking-normal text-center leading-tight">
+          <span className="font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal text-center leading-tight">
             {t("Gérer")}
             <br />
             {t("Litiges")}
@@ -344,7 +354,7 @@ export const Overview: React.FC = () => {
           <div className="w-12 h-12 rounded-full bg-blue-100/50 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
             <ShoppingCart className="w-6 h-6 text-blue-500" />
           </div>
-          <span className="font-black text-[10px] uppercase tracking-widest rtl:tracking-normal text-center leading-tight">
+          <span className="font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal text-center leading-tight">
             {t("Toutes")}
             <br />
             {t("Commandes")}
@@ -394,11 +404,11 @@ export const Overview: React.FC = () => {
             <div className={`w-14 h-14 rounded-2xl ${k.color} flex items-center justify-center mb-8`}>
               <k.icon className="w-6 h-6" />
             </div>
-            <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5">
+            <p className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5">
               {k.label}
             </p>
-            <h4 className="text-3xl font-black text-zinc-950 tracking-tighter rtl:tracking-normal mb-4">{k.value}</h4>
-            <div className="flex items-center gap-2 text-emerald-500 font-black text-[10px] uppercase tracking-widest rtl:tracking-normal">
+            <h4 className="text-3xl font-kinder text-zinc-950 tracking-tighter rtl:tracking-normal mb-4">{k.value}</h4>
+            <div className="flex items-center gap-2 text-emerald-500 font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal">
               <ArrowUp className="w-3 h-3" />
               {k.inc}
             </div>
@@ -410,11 +420,11 @@ export const Overview: React.FC = () => {
       <div className="space-y-8 bg-zinc-50/50 p-6 sm:p-10 rounded-[3.5rem] border border-zinc-200/50 mt-12">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h3 className="text-xl sm:text-2xl font-black tracking-tight rtl:tracking-normal text-zinc-950 uppercase flex items-center gap-2.5">
+            <h3 className="text-xl sm:text-2xl font-kinder tracking-tight rtl:tracking-normal text-zinc-950 uppercase flex items-center gap-2.5">
               <Sparkles className="w-6 h-6 text-orange-500 animate-pulse" />
               {t("Comportement & Funnel Client (useUserHabits)")}
             </h3>
-            <p className="text-zinc-500 text-[10px] font-black uppercase mt-1">
+            <p className="text-zinc-500 text-[10px] font-kinder uppercase mt-1">
               {t("Statistiques d'achat & intentions capturées en temps réel sur la plateforme.")}
             </p>
           </div>
@@ -423,7 +433,7 @@ export const Overview: React.FC = () => {
               analyticsEngine.clear();
               refreshAnalytics();
             }}
-            className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-black text-[9px] uppercase tracking-widest rtl:tracking-normal rounded-xl transition-colors border-none cursor-pointer self-start sm:self-center"
+            className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-kinder text-[9px] uppercase tracking-widest rtl:tracking-normal rounded-xl transition-colors border-none cursor-pointer self-start sm:self-center"
           >
             {t("Réinitialiser Journal")}
           </button>
@@ -463,12 +473,12 @@ export const Overview: React.FC = () => {
           ].map((k, i) => (
             <div key={i} className={`p-6 sm:p-8 rounded-[2rem] border ${k.color} shadow-sm relative overflow-hidden`}>
               <div className="flex items-center justify-between mb-4">
-                <span className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal opacity-80">
+                <span className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal opacity-80">
                   {k.label}
                 </span>
                 <k.icon className="w-5 h-5 opacity-80" />
               </div>
-              <h4 className="text-xl sm:text-2xl font-black tracking-tighter rtl:tracking-normal mb-1">{k.value}</h4>
+              <h4 className="text-xl sm:text-2xl font-kinder tracking-tighter rtl:tracking-normal mb-1">{k.value}</h4>
               <p className="text-[9px] font-bold uppercase opacity-60">{k.dsc}</p>
             </div>
           ))}
@@ -479,7 +489,7 @@ export const Overview: React.FC = () => {
           {/* Top Viewed */}
           <div className="bg-white p-8 rounded-[2.5rem] border border-zinc-150 shadow-sm flex flex-col justify-between">
             <div>
-              <h4 className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-[#ea580c] mb-6 flex items-center gap-2">
+              <h4 className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-[#ea580c] mb-6 flex items-center gap-2">
                 <Eye className="w-4 h-4" /> {t("Articles Populaires")}
               </h4>
               {insights.productViews.length === 0 ? (
@@ -504,7 +514,7 @@ export const Overview: React.FC = () => {
           {/* Popular Search queries */}
           <div className="bg-white p-8 rounded-[2.5rem] border border-zinc-150 shadow-sm flex flex-col justify-between">
             <div>
-              <h4 className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-[#ea580c] mb-6 flex items-center gap-2">
+              <h4 className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-[#ea580c] mb-6 flex items-center gap-2">
                 <Search className="w-4 h-4" /> {t("Recherches Populaires")}
               </h4>
               {insights.searchQueries.length === 0 ? (
@@ -529,7 +539,7 @@ export const Overview: React.FC = () => {
           {/* Category Heatmap Weight */}
           <div className="bg-white p-8 rounded-[2.5rem] border border-zinc-150 shadow-sm flex flex-col justify-between">
             <div>
-              <h4 className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-[#ea580c] mb-6 flex items-center gap-2">
+              <h4 className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-[#ea580c] mb-6 flex items-center gap-2">
                 <Sparkles className="w-4 h-4" /> {t("Densité d'Intérêt Catégorie")}
               </h4>
               {insights.categoryHits.length === 0 ? (
@@ -539,7 +549,7 @@ export const Overview: React.FC = () => {
                   {insights.categoryHits.map((item, idx) => {
                     return (
                       <div key={idx} className="space-y-1">
-                        <div className="flex items-center justify-between text-[11px] font-black text-zinc-700 uppercase">
+                        <div className="flex items-center justify-between text-[11px] font-kinder text-zinc-700 uppercase">
                           <span>{item.name}</span>
                           <span>
                             {item.value} {t("pts")}
@@ -564,23 +574,23 @@ export const Overview: React.FC = () => {
 
         {/* Live Event Stream Logs */}
         <div className="bg-white p-6 sm:p-8 rounded-[2.5rem] border border-zinc-150 shadow-sm">
-          <h4 className="text-xs font-black uppercase tracking-widest rtl:tracking-normal text-zinc-900 mb-6 flex items-center gap-2">
+          <h4 className="text-xs font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-900 mb-6 flex items-center gap-2">
             <History className="w-5 h-5 text-[#ea580c]" /> {t("Journal Temps Réel des Événements")}
           </h4>
           <div className="overflow-x-auto text-start">
             <table className="w-full text-start border-collapse">
               <thead>
                 <tr className="bg-zinc-50/50 border-b border-zinc-100">
-                  <th className="px-5 py-4 text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
+                  <th className="px-5 py-4 text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
                     {t("Heure")}
                   </th>
-                  <th className="px-5 py-4 text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
+                  <th className="px-5 py-4 text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
                     {t("Session User")}
                   </th>
-                  <th className="px-5 py-4 text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
+                  <th className="px-5 py-4 text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
                     {t("Action")}
                   </th>
-                  <th className="px-5 py-4 text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
+                  <th className="px-5 py-4 text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
                     {t("Détails")}
                   </th>
                 </tr>
@@ -647,7 +657,7 @@ export const Overview: React.FC = () => {
       <div className="grid lg:grid-cols-3 gap-10">
         {/* Chart */}
         <div className="lg:col-span-2 bg-white rounded-[3.5rem] p-12 border border-zinc-100 shadow-sm">
-          <h4 className="text-xl font-black flex items-center gap-4 mb-10">
+          <h4 className="text-xl font-kinder flex items-center gap-4 mb-10">
             <BarChart3 className="w-7 h-7 text-orange-500" />
             {t("Revenus & Commissions Olma")}
           </h4>
@@ -669,7 +679,7 @@ export const Overview: React.FC = () => {
         {/* Activity Log */}
         <div className="bg-white rounded-[3.5rem] border border-zinc-100 shadow-sm overflow-hidden flex flex-col">
           <div className="p-10 border-b border-zinc-50">
-            <h4 className="text-xl font-black flex items-center gap-4">
+            <h4 className="text-xl font-kinder flex items-center gap-4">
               <Activity className="w-6 h-6 text-orange-500" />
               {t("Flux d'Activité")}
             </h4>
@@ -679,7 +689,7 @@ export const Overview: React.FC = () => {
               <div key={i} className="p-8 hover:bg-zinc-50/50 transition-colors flex gap-6">
                 <div className={`w-3 h-3 rounded-full mt-2 shrink-0 ${e.color.replace("text-", "bg-")}`} />
                 <div>
-                  <p className="text-sm font-black text-zinc-950 leading-tight">{e.label}</p>
+                  <p className="text-sm font-kinder text-zinc-950 leading-tight">{e.label}</p>
                   <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest rtl:tracking-normal mt-1">
                     {e.time}
                   </p>
@@ -690,7 +700,7 @@ export const Overview: React.FC = () => {
           <div className="p-10 bg-zinc-50/50">
             <button
               onClick={handleDangerReset}
-              className="w-full bg-red-50 text-red-600 py-5 rounded-[2rem] font-black text-[10px] uppercase tracking-widest rtl:tracking-normal flex items-center justify-center gap-3 hover:bg-red-600 hover:text-white transition-all shadow-lg shadow-red-500/5 group"
+              className="w-full bg-red-50 text-red-600 py-5 rounded-[2rem] font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal flex items-center justify-center gap-3 hover:bg-red-600 hover:text-white transition-all shadow-lg shadow-red-500/5 group"
             >
               <AlertTriangle className="w-4 h-4 group-hover:scale-125 transition-transform" />
               {t("Danger Zone: Reset DB")}
@@ -702,7 +712,7 @@ export const Overview: React.FC = () => {
       {/* Surveillance Globale des Expéditions */}
       <div className="bg-white rounded-[3.5rem] border border-zinc-100 shadow-sm overflow-hidden flex flex-col mt-12">
         <div className="p-10 border-b border-zinc-50">
-          <h4 className="text-xl font-black flex items-center gap-4">
+          <h4 className="text-xl font-kinder flex items-center gap-4">
             <Truck className="w-7 h-7 text-orange-500" />
             {t("Surveillance Globale des Expéditions")}
           </h4>
@@ -711,22 +721,22 @@ export const Overview: React.FC = () => {
           <table className="w-full text-start">
             <thead>
               <tr className="bg-zinc-50/50 border-b border-zinc-100">
-                <th className="px-10 py-8 text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
+                <th className="px-10 py-8 text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
                   {t("N° Commande")}
                 </th>
-                <th className="px-10 py-8 text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
+                <th className="px-10 py-8 text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
                   {t("Nom du Client")}
                 </th>
-                <th className="px-10 py-8 text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
+                <th className="px-10 py-8 text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
                   {t("Seller ID(s)")}
                 </th>
-                <th className="px-10 py-8 text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
+                <th className="px-10 py-8 text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
                   {t("Statut")}
                 </th>
-                <th className="px-10 py-8 text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
+                <th className="px-10 py-8 text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
                   {t("Tracking ID")}
                 </th>
-                <th className="px-10 py-8 text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
+                <th className="px-10 py-8 text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
                   {t("Action")}
                 </th>
               </tr>
@@ -749,7 +759,7 @@ export const Overview: React.FC = () => {
                   return (
                     <tr key={order.id} className="hover:bg-zinc-50/50 transition-colors">
                       <td className="px-10 py-8">
-                        <span className="text-sm font-black text-zinc-950">
+                        <span className="text-sm font-kinder text-zinc-950">
                           #{order.id.substring(0, 8).toUpperCase()}
                         </span>
                       </td>
@@ -764,13 +774,13 @@ export const Overview: React.FC = () => {
                             [...new Set(order.sellerIds as string[])].map((sid: string) => (
                               <span
                                 key={sid}
-                                className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal truncate"
+                                className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal truncate"
                               >
                                 {sid}
                               </span>
                             ))
                           ) : (
-                            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal truncate">
+                            <span className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal truncate">
                               {t("Inconnu")}
                             </span>
                           )}
@@ -800,7 +810,7 @@ export const Overview: React.FC = () => {
                             href={order.labelUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-950 text-white rounded-xl text-[10px] font-black uppercase tracking-widest rtl:tracking-normal hover:bg-orange-600 transition-colors shadow-lg"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-950 text-white rounded-xl text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal hover:bg-orange-600 transition-colors shadow-lg"
                           >
                             <Printer className="w-3 h-3" /> {t("Imprimer l'étiquette")}
                           </a>

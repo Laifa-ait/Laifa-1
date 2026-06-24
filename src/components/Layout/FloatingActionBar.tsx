@@ -67,14 +67,14 @@ export const FloatingActionBar: React.FC = () => {
             <item.icon className="w-5 h-5 transition-transform group-hover:scale-110" />
 
             {item.badge !== undefined && (
-              <span className="absolute top-1 end-1 w-4 h-4 bg-red-500 text-white text-[9px] rtl:text-[11px] font-black flex items-center justify-center rounded-full border-2 border-white shadow-sm">
+              <span className="absolute top-1 end-1 w-4 h-4 bg-red-500 text-white text-[9px] rtl:text-[11px] font-kinder flex items-center justify-center rounded-full border-2 border-white shadow-sm">
                 {item.badge}
               </span>
             )}
 
             {/* Tooltip */}
             <div className="absolute end-full me-4 pointer-events-none opacity-0 group-hover:opacity-100 translate-x-4 rtl:-translate-x-4 group-hover:translate-x-0 transition-all duration-300">
-              <div className="bg-zinc-950 text-white text-[10px] rtl:text-[12px] font-black uppercase tracking-widest rtl:tracking-normal px-3 py-2 rounded-xl whitespace-nowrap shadow-xl">
+              <div className="bg-zinc-950 text-white text-[10px] rtl:text-[12px] font-kinder uppercase tracking-widest rtl:tracking-normal px-3 py-2 rounded-xl whitespace-nowrap shadow-xl">
                 {item.label}
               </div>
             </div>
@@ -93,7 +93,7 @@ export const FloatingActionBar: React.FC = () => {
           <ArrowUp className="w-5 h-5 transition-transform group-hover:-translate-y-1" />
 
           <div className="absolute end-full me-4 pointer-events-none opacity-0 group-hover:opacity-100 translate-x-4 rtl:-translate-x-4 group-hover:translate-x-0 transition-all duration-300">
-            <div className="bg-zinc-950 text-white text-[10px] rtl:text-[12px] font-black uppercase tracking-widest rtl:tracking-normal px-3 py-2 rounded-xl whitespace-nowrap shadow-xl">
+            <div className="bg-zinc-950 text-white text-[10px] rtl:text-[12px] font-kinder uppercase tracking-widest rtl:tracking-normal px-3 py-2 rounded-xl whitespace-nowrap shadow-xl">
               {t("scroll_up") || "Remonter"}
             </div>
           </div>

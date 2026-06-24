@@ -40,10 +40,10 @@ export const SideDrawer: React.FC<SideDrawerProps> = ({ isOpen, onClose, title, 
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 32, stiffness: 320 }}
-            className="fixed right-0 top-0 h-full w-full max-w-md bg-[#FAF8F5]/98 md:backdrop-blur-xl z-[110] shadow-[0_20px_50px_rgba(44,30,22,0.10)] flex flex-col overscroll-contain border-l border-[#EBE5DF]/40"
+            className="fixed right-0 top-0 h-full w-full max-w-md bg-[#FDF9EC]/98 md:backdrop-blur-xl z-[110] shadow-[0_20px_50px_rgba(44,30,22,0.10)] flex flex-col overscroll-contain border-l border-[#FF5C00]/40"
             style={{ maxHeight: "100dvh", overflowY: "auto" }}
           >
-            <div className="p-6 border-b border-[#EBE5DF]/40 flex items-center justify-between shrink-0 bg-[#FAF8F5]">
+            <div className="p-6 border-b border-[#FF5C00]/40 flex items-center justify-between shrink-0 bg-[#FDF9EC]">
               <h3 className="text-lg font-bold flex items-center gap-2 tracking-tight rtl:tracking-normal text-zinc-900">
                 {icon} {title}
               </h3>

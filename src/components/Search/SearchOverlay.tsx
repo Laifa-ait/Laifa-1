@@ -167,7 +167,7 @@ export const SearchOverlay: React.FC = () => {
       <span>
         {parts.map((part, i) =>
           part.toLowerCase() === query.toLowerCase() ? (
-            <b key={i} className="text-[#F37021] font-extrabold bg-[#F37021]/15 px-1 rounded">
+            <b key={i} className="text-[#FF5C00] font-extrabold bg-[#FF5C00]/15 px-1 rounded">
               {part}
             </b>
           ) : (
@@ -186,17 +186,17 @@ export const SearchOverlay: React.FC = () => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
-          className="fixed inset-0 z-[1000] bg-stone-50/95 backdrop-blur-xl overflow-y-auto flex flex-col justify-start min-h-screen text-[#121315] pb-16"
+          className="fixed inset-0 z-[1000] bg-stone-50/95 backdrop-blur-xl overflow-y-auto flex flex-col justify-start min-h-screen text-[#3C2B22] pb-16"
           dir={isRtl ? "rtl" : "ltr"}
         >
           {/* Header Bar */}
-          <div className="w-full max-w-7xl mx-auto px-4 md:px-8 py-6 flex items-center justify-between border-b border-[#EBE5DF] shrink-0">
+          <div className="w-full max-w-7xl mx-auto px-4 md:px-8 py-6 flex items-center justify-between border-b border-[#FF5C00] shrink-0">
             <div className="flex items-center gap-3">
-              <Compass className="w-6 h-6 text-[#F37021] animate-pulse" />
-              <span className="font-serif italic text-lg tracking-wide uppercase text-[#121315]/90">
+              <Compass className="w-6 h-6 text-[#FF5C00] animate-pulse" />
+              <span className="font-serif italic text-lg tracking-wide uppercase text-[#3C2B22]/90">
                 {t("search_global") || "Recherche globale"}
               </span>
-              <div className="hidden sm:flex items-center gap-1 bg-[#121315]/5 border border-[#121315]/10 px-2 py-0.5 rounded-lg text-[10px] rtl:text-[12px] text-zinc-500 font-mono">
+              <div className="hidden sm:flex items-center gap-1 bg-[#3C2B22]/5 border border-[#3C2B22]/10 px-2 py-0.5 rounded-lg text-[10px] rtl:text-[12px] text-zinc-500 font-mono">
                 <span>{t("Ctrl")}</span>
                 <span>+</span>
                 <span>{t("common.key_k", "K")}</span>
@@ -205,7 +205,7 @@ export const SearchOverlay: React.FC = () => {
 
             <button
               onClick={() => setIsSearchOpen(false)}
-              className="p-3 bg-white hover:bg-[#121315]/5 border border-[#EBE5DF] hover:border-[#F37021]/30 text-[#121315] rounded-full transition-all duration-300 hover:rotate-90 cursor-pointer flex items-center justify-center shadow-sm hover:shadow-md"
+              className="p-3 bg-white hover:bg-[#3C2B22]/5 border border-[#FF5C00] hover:border-[#FF5C00]/30 text-[#3C2B22] rounded-full transition-all duration-300 hover:rotate-90 cursor-pointer flex items-center justify-center shadow-sm hover:shadow-md"
             >
               <X className="w-6 h-6 stroke-[1.5]" />
             </button>
@@ -221,10 +221,10 @@ export const SearchOverlay: React.FC = () => {
             >
               <form onSubmit={handleSearchSubmit} className="relative group">
                 <div
-                  className={`absolute inset-y-0 ${isRtl ? "right-6" : "left-6"} flex items-center pointer-events-none text-zinc-400 group-focus-within:text-[#F37021] transition-all`}
+                  className={`absolute inset-y-0 ${isRtl ? "right-6" : "left-6"} flex items-center pointer-events-none text-zinc-400 group-focus-within:text-[#FF5C00] transition-all`}
                 >
                   {isSearching ? (
-                    <Loader2 className="w-7 h-7 animate-spin text-[#F37021]" />
+                    <Loader2 className="w-7 h-7 animate-spin text-[#FF5C00]" />
                   ) : (
                     <Search className="w-7 h-7" />
                   )}
@@ -236,7 +236,7 @@ export const SearchOverlay: React.FC = () => {
                   value={localSearch}
                   onChange={(e) => setLocalSearch(e.target.value)}
                   placeholder={t("search_today_prompt") || "Que recherchez-vous aujourd'hui ?"}
-                  className={`w-full bg-white hover:bg-stone-50 border border-[#EBE5DF] focus:border-[#F37021]/60 text-[#121315] placeholder-zinc-400 rounded-3xl py-5 sm:py-6 ${isRtl ? "pr-16 pl-32" : "pl-16 pr-32"} text-lg sm:text-2xl font-medium outline-none focus:bg-white transition-all duration-300 shadow-xl`}
+                  className={`w-full bg-white hover:bg-stone-50 border border-[#FF5C00] focus:border-[#FF5C00]/60 text-[#3C2B22] placeholder-zinc-400 rounded-3xl py-5 sm:py-6 ${isRtl ? "pr-16 pl-32" : "pl-16 pr-32"} text-lg sm:text-2xl font-medium outline-none focus:bg-white transition-all duration-300 shadow-xl`}
                 />
 
                 <div className={`absolute inset-y-2 ${isRtl ? "left-2" : "right-2"} flex items-center`}>
@@ -244,14 +244,14 @@ export const SearchOverlay: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setLocalSearch("")}
-                      className="p-2 text-zinc-400 hover:text-[#F37021] bg-transparent border-none cursor-pointer me-1 transition-colors"
+                      className="p-2 text-zinc-400 hover:text-[#FF5C00] bg-transparent border-none cursor-pointer me-1 transition-colors"
                     >
                       <X className="w-5 h-5" />
                     </button>
                   )}
                   <button
                     type="submit"
-                    className="h-full px-6 bg-[#121315] hover:bg-[#F37021] text-white hover:text-white font-bold text-xs rtl:text-sm uppercase tracking-widest rtl:tracking-normal rounded-2xl transition-all duration-300 cursor-pointer shadow-md"
+                    className="h-full px-6 bg-[#3C2B22] hover:bg-[#FF5C00] text-white hover:text-white font-bold text-xs rtl:text-sm uppercase tracking-widest rtl:tracking-normal rounded-2xl transition-all duration-300 cursor-pointer shadow-md"
                   >
                     {t("search") || "Rechercher"}
                   </button>
@@ -259,7 +259,7 @@ export const SearchOverlay: React.FC = () => {
               </form>
 
               <p className="mt-3 text-xs rtl:text-sm text-zinc-500 text-center flex items-center justify-center gap-1.5 font-sans">
-                <Info className="w-3.5 h-3.5 text-[#F37021]/70" />
+                <Info className="w-3.5 h-3.5 text-[#FF5C00]/70" />
                 {t("search_shortcut") || "Appuyez sur ⌘K pour orienter vos recherches"}
               </p>
             </motion.div>
@@ -276,8 +276,8 @@ export const SearchOverlay: React.FC = () => {
                 >
                   {/* Recent Searches */}
                   <div className="space-y-4">
-                    <h4 className="text-xs rtl:text-sm font-semibold uppercase text-zinc-500 tracking-wider rtl:tracking-normal flex items-center gap-2 pb-3 border-b border-[#EBE5DF]">
-                      <History className="w-4 h-4 text-[#F37021]" />
+                    <h4 className="text-xs rtl:text-sm font-semibold uppercase text-zinc-500 tracking-wider rtl:tracking-normal flex items-center gap-2 pb-3 border-b border-[#FF5C00]">
+                      <History className="w-4 h-4 text-[#FF5C00]" />
                       {t("search_recent") || "Vos Recherches Récentes"}
                     </h4>
                     {recentSearches.length > 0 ? (
@@ -286,7 +286,7 @@ export const SearchOverlay: React.FC = () => {
                           <li
                             key={i}
                             onClick={() => selectSearchTerm(term)}
-                            className="flex items-center justify-between py-2.5 px-4 rounded-xl border border-[#EBE5DF] hover:border-[#F37021]/30 bg-white hover:bg-stone-50 text-[14px] font-medium text-[#121315] hover:text-[#F37021] transition-all cursor-pointer group shadow-sm hover:shadow"
+                            className="flex items-center justify-between py-2.5 px-4 rounded-xl border border-[#FF5C00] hover:border-[#FF5C00]/30 bg-white hover:bg-stone-50 text-[14px] font-medium text-[#3C2B22] hover:text-[#FF5C00] transition-all cursor-pointer group shadow-sm hover:shadow"
                           >
                             <span className="truncate">{term}</span>
                             <button
@@ -307,8 +307,8 @@ export const SearchOverlay: React.FC = () => {
 
                   {/* Trending Tags */}
                   <div className="space-y-4">
-                    <h4 className="text-xs rtl:text-sm font-semibold uppercase text-zinc-500 tracking-wider rtl:tracking-normal flex items-center gap-2 pb-3 border-b border-[#EBE5DF]">
-                      <TrendingUp className="w-4 h-4 text-[#F37021]" />
+                    <h4 className="text-xs rtl:text-sm font-semibold uppercase text-zinc-500 tracking-wider rtl:tracking-normal flex items-center gap-2 pb-3 border-b border-[#FF5C00]">
+                      <TrendingUp className="w-4 h-4 text-[#FF5C00]" />
                       {t("search_trending") || "Suggestions Populaires / Tendances"}
                     </h4>
                     <div className="flex flex-wrap gap-2.5 pt-2">
@@ -316,7 +316,7 @@ export const SearchOverlay: React.FC = () => {
                         <button
                           key={i}
                           onClick={() => selectSearchTerm(tag)}
-                          className="px-4 py-2.5 text-[13px] font-medium border border-[#EBE5DF] bg-white hover:border-[#F37021] hover:bg-[#F37021]/10 text-zinc-600 hover:text-[#F37021] rounded-full transition-all cursor-pointer shadow-sm hover:shadow"
+                          className="px-4 py-2.5 text-[13px] font-medium border border-[#FF5C00] bg-white hover:border-[#FF5C00] hover:bg-[#FF5C00]/10 text-zinc-600 hover:text-[#FF5C00] rounded-full transition-all cursor-pointer shadow-sm hover:shadow"
                         >
                           {tag}
                         </button>
@@ -329,7 +329,7 @@ export const SearchOverlay: React.FC = () => {
                 <div className="space-y-8">
                   {isSearching ? (
                     <div className="py-24 flex flex-col justify-center items-center gap-4">
-                      <Loader2 className="w-10 h-10 animate-spin text-[#F37021]" />
+                      <Loader2 className="w-10 h-10 animate-spin text-[#FF5C00]" />
                       <span className="text-sm text-zinc-400 font-medium">
                         {t("Recherche en cours dans les 58 wilayas...")}
                       </span>
@@ -339,9 +339,9 @@ export const SearchOverlay: React.FC = () => {
                       {/* Stores Section */}
                       {matchedStores.length > 0 && (
                         <div className="space-y-4">
-                          <div className="flex items-center gap-4 pb-2 border-b border-[#EBE5DF]">
+                          <div className="flex items-center gap-4 pb-2 border-b border-[#FF5C00]">
                             <h4 className="text-sm font-semibold uppercase tracking-wider text-zinc-800 flex items-center gap-2">
-                              <Sparkles className="w-4 h-4 text-[#F37021]" />
+                              <Sparkles className="w-4 h-4 text-[#FF5C00]" />
                               {t("matching_stores") || "Boutiques correspondantes"}
                             </h4>
                           </div>
@@ -353,9 +353,9 @@ export const SearchOverlay: React.FC = () => {
                                     navigate(`/store/${store.id || store.uid}`);
                                     setIsSearchOpen(false);
                                   }}
-                                  className="w-full text-left p-4 hover:bg-orange-50/50 flex items-center gap-4 group transition-colors rounded-2xl outline-none border border-transparent hover:border-[#F37021]/30 hover:shadow-sm cursor-pointer"
+                                  className="w-full text-left p-4 hover:bg-orange-50/50 flex items-center gap-4 group transition-colors rounded-2xl outline-none border border-transparent hover:border-[#FF5C00]/30 hover:shadow-sm cursor-pointer"
                                 >
-                                  <div className="w-14 h-14 rounded-xl bg-white overflow-hidden flex-shrink-0 border border-[#EBE5DF]">
+                                  <div className="w-14 h-14 rounded-xl bg-white overflow-hidden flex-shrink-0 border border-[#FF5C00]">
                                     {store.logoUrl ? (
                                       <img
                                         loading="lazy"
@@ -365,21 +365,21 @@ export const SearchOverlay: React.FC = () => {
                                       />
                                     ) : (
                                       <div className="w-full h-full bg-slate-100 flex items-center justify-center">
-                                        <span className="text-slate-400 font-black text-2xl uppercase">
+                                        <span className="text-slate-400 font-kinder text-2xl uppercase">
                                           {(store.shopName || store.displayName || "B").charAt(0)}
                                         </span>
                                       </div>
                                     )}
                                   </div>
                                   <div className="flex flex-col flex-1 overflow-hidden">
-                                    <span className="font-semibold text-[15px] text-[#121315] group-hover:text-[#F37021] truncate transition-colors">
+                                    <span className="font-semibold text-[15px] text-[#3C2B22] group-hover:text-[#FF5C00] truncate transition-colors">
                                       {store.shopName || store.displayName}
                                     </span>
                                     <span className="text-[12px] font-medium text-zinc-500 uppercase tracking-wider mt-1 truncate">
                                       {t("Wilaya")} {store.wilaya ? store.wilaya : "58"}
                                     </span>
                                   </div>
-                                  <ArrowRight className="w-4 h-4 text-zinc-300 group-hover:text-[#F37021] group-hover:translate-x-1 transition-all" />
+                                  <ArrowRight className="w-4 h-4 text-zinc-300 group-hover:text-[#FF5C00] group-hover:translate-x-1 transition-all" />
                                 </button>
                               </li>
                             ))}
@@ -390,9 +390,9 @@ export const SearchOverlay: React.FC = () => {
                       {/* Products Section */}
                       {results.length > 0 && (
                         <div className="space-y-4">
-                          <div className="flex justify-between items-center gap-4 pb-2 border-b border-[#EBE5DF]">
+                          <div className="flex justify-between items-center gap-4 pb-2 border-b border-[#FF5C00]">
                             <h4 className="text-sm font-semibold uppercase tracking-wider rtl:tracking-normal text-zinc-800 flex items-center gap-2">
-                              <Sparkles className="w-4 h-4 text-[#F37021]" />
+                              <Sparkles className="w-4 h-4 text-[#FF5C00]" />
                               {t("search_matching_title") || "Créations correspondantes"}
                             </h4>
                             <span className="text-xs rtl:text-sm font-medium text-zinc-500">
@@ -406,9 +406,9 @@ export const SearchOverlay: React.FC = () => {
                                 <li key={product.id}>
                                   <button
                                     onClick={() => navigateToProduct(product.id, product.name)}
-                                    className="w-full text-start p-4 bg-white hover:bg-stone-50 flex items-center gap-4 group transition-all rounded-2xl outline-none border border-[#EBE5DF] hover:border-[#F37021]/30 cursor-pointer shadow-sm hover:shadow-md"
+                                    className="w-full text-start p-4 bg-white hover:bg-stone-50 flex items-center gap-4 group transition-all rounded-2xl outline-none border border-[#FF5C00] hover:border-[#FF5C00]/30 cursor-pointer shadow-sm hover:shadow-md"
                                   >
-                                    <div className="w-16 h-16 rounded-xl bg-white overflow-hidden flex-shrink-0 border border-[#EBE5DF] group-hover:border-[#F37021]/50 shadow-inner">
+                                    <div className="w-16 h-16 rounded-xl bg-white overflow-hidden flex-shrink-0 border border-[#FF5C00] group-hover:border-[#FF5C00]/50 shadow-inner">
                                       <img
                                         loading="lazy"
                                         src={getOptimizedImageUrl(product.image, 200)}
@@ -418,7 +418,7 @@ export const SearchOverlay: React.FC = () => {
                                       />
                                     </div>
                                     <div className="flex flex-col text-start overflow-hidden min-w-0 flex-grow">
-                                      <span className="font-semibold text-[15px] text-[#121315] group-hover:text-[#F37021] transition-all truncate">
+                                      <span className="font-semibold text-[15px] text-[#3C2B22] group-hover:text-[#FF5C00] transition-all truncate">
                                         {highlightMatch(product.name, localSearch)}
                                       </span>
                                       <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest rtl:tracking-normal mt-1 truncate">
@@ -429,7 +429,7 @@ export const SearchOverlay: React.FC = () => {
                                         {formatPrice(product.price)}
                                       </span>
                                     </div>
-                                    <div className="shrink-0 p-2 bg-stone-100 rounded-full group-hover:bg-[#F37021] group-hover:text-white text-zinc-400 transition-all">
+                                    <div className="shrink-0 p-2 bg-stone-100 rounded-full group-hover:bg-[#FF5C00] group-hover:text-white text-zinc-400 transition-all">
                                       <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                                     </div>
                                   </button>
@@ -443,7 +443,7 @@ export const SearchOverlay: React.FC = () => {
                       <div className="pt-6 flex justify-center">
                         <button
                           onClick={handleSearchSubmit}
-                          className="px-8 py-3.5 text-xs rtl:text-sm font-bold uppercase tracking-[0.2em] text-white bg-[#121315] hover:bg-[#F37021] hover:text-white rounded-full transition-all duration-300 cursor-pointer border-none shadow-md hover:shadow-lg active:scale-95"
+                          className="px-8 py-3.5 text-xs rtl:text-sm font-bold uppercase tracking-[0.2em] text-white bg-[#3C2B22] hover:bg-[#FF5C00] hover:text-white rounded-full transition-all duration-300 cursor-pointer border-none shadow-md hover:shadow-lg active:scale-95"
                         >
                           {t("search_see_all") || "Voir tous les résultats"}
                         </button>
@@ -452,11 +452,11 @@ export const SearchOverlay: React.FC = () => {
                   ) : (
                     /* Zero results found fallback alert + recommended carousel items */
                     <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-                      <div className="bg-white border border-[#F37021]/20 rounded-3xl p-8 flex flex-col items-center justify-center text-center space-y-4 shadow-xl max-w-2xl mx-auto backdrop-blur-md">
-                        <div className="w-14 h-14 bg-[#F37021]/10 rounded-full flex items-center justify-center text-[#F37021]">
+                      <div className="bg-white border border-[#FF5C00]/20 rounded-3xl p-8 flex flex-col items-center justify-center text-center space-y-4 shadow-xl max-w-2xl mx-auto backdrop-blur-md">
+                        <div className="w-14 h-14 bg-[#FF5C00]/10 rounded-full flex items-center justify-center text-[#FF5C00]">
                           <Search className="w-7 h-7" />
                         </div>
-                        <span className="text-xl font-semibold text-[#121315]">
+                        <span className="text-xl font-semibold text-[#3C2B22]">
                           {t("search_no_results") || "Aucun résultat pour"} "{localSearch}"
                         </span>
                         <p className="text-sm text-zinc-500 max-w-md">
@@ -467,8 +467,8 @@ export const SearchOverlay: React.FC = () => {
 
                       {recommendedProducts.length > 0 && (
                         <div className="space-y-5 max-w-5xl mx-auto pt-4">
-                          <h4 className="text-xs rtl:text-sm font-bold uppercase tracking-widest rtl:tracking-normal text-zinc-500 flex items-center gap-2 pb-2 border-b border-[#EBE5DF]">
-                            <Star className="w-4 h-4 text-[#F37021] fill-[#F37021]" />
+                          <h4 className="text-xs rtl:text-sm font-bold uppercase tracking-widest rtl:tracking-normal text-zinc-500 flex items-center gap-2 pb-2 border-b border-[#FF5C00]">
+                            <Star className="w-4 h-4 text-[#FF5C00] fill-[#FF5C00]" />
                             {t("search_recommended") || "Créations recommandées"}
                           </h4>
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -476,9 +476,9 @@ export const SearchOverlay: React.FC = () => {
                               <button
                                 key={p.id}
                                 onClick={() => navigateToProduct(p.id, p.name)}
-                                className="p-4 bg-white hover:bg-stone-50 border border-[#EBE5DF] hover:border-[#F37021]/30 rounded-2xl transition-all cursor-pointer flex flex-col text-start group shadow-sm hover:shadow-md"
+                                className="p-4 bg-white hover:bg-stone-50 border border-[#FF5C00] hover:border-[#FF5C00]/30 rounded-2xl transition-all cursor-pointer flex flex-col text-start group shadow-sm hover:shadow-md"
                               >
-                                <div className="w-full aspect-square rounded-xl overflow-hidden bg-white border border-[#EBE5DF] relative">
+                                <div className="w-full aspect-square rounded-xl overflow-hidden bg-white border border-[#FF5C00] relative">
                                   <img
                                     loading="lazy"
                                     src={getOptimizedImageUrl(p.image, 400)}
@@ -487,7 +487,7 @@ export const SearchOverlay: React.FC = () => {
                                     referrerPolicy="no-referrer"
                                   />
                                 </div>
-                                <span className="font-semibold text-sm text-[#121315] group-hover:text-[#F37021] truncate transition-colors mt-3 w-full">
+                                <span className="font-semibold text-sm text-[#3C2B22] group-hover:text-[#FF5C00] truncate transition-colors mt-3 w-full">
                                   {p.name}
                                 </span>
                                 <div className="flex items-center justify-between mt-1 w-full">
@@ -498,7 +498,7 @@ export const SearchOverlay: React.FC = () => {
                                     {p.wilaya ? `${t("wilaya", "Wilaya")} ${p.wilaya}` : t("wilayas_58", "58 Wilayas")}
                                   </span>
                                 </div>
-                                <span className="text-sm font-semibold text-[#F37021] mt-2 font-mono">
+                                <span className="text-sm font-semibold text-[#FF5C00] mt-2 font-mono">
                                   {formatPrice(p.price)}
                                 </span>
                               </button>

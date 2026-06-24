@@ -102,10 +102,10 @@ export const ShippingAdmin: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-3xl font-black tracking-tight rtl:tracking-normal text-zinc-950 uppercase">{t("Tarifs & Livraison")}</h2>
+          <h2 className="text-3xl font-kinder tracking-tight rtl:tracking-normal text-zinc-950 uppercase">{t("Tarifs & Livraison")}</h2>
           <p className="text-zinc-500 font-medium">{t("Configuration globale des partenaires logistiques (Yalidine, ZR Express) et grilles tarifaires par Wilaya.")}</p>
         </div>
-        <button onClick={saveSettings} disabled={isSaving} className="px-8 py-4 bg-zinc-950 text-white rounded-[1.5rem] font-black text-xs uppercase tracking-widest rtl:tracking-normal flex items-center gap-3 hover:bg-zinc-800 transition-colors shadow-xl disabled:opacity-50">
+        <button onClick={saveSettings} disabled={isSaving} className="px-8 py-4 bg-zinc-950 text-white rounded-[1.5rem] font-kinder text-xs uppercase tracking-widest rtl:tracking-normal flex items-center gap-3 hover:bg-zinc-800 transition-colors shadow-xl disabled:opacity-50">
            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} 
            {t("Enregistrer Grille")}
         </button>
@@ -117,7 +117,7 @@ export const ShippingAdmin: React.FC = () => {
                 <div className="w-12 h-12 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center mb-6">
                     <Truck className="w-6 h-6" />
                 </div>
-                <h3 className="text-lg font-black text-zinc-900 mb-2">{t("Tarif de Base (Défaut)")}</h3>
+                <h3 className="text-lg font-kinder text-zinc-900 mb-2">{t("Tarif de Base (Défaut)")}</h3>
                 <p className="text-xs text-zinc-500 font-medium mb-6">{t("S'applique à toutes les wilayas non configurées spécifiquement.")}</p>
                 <div className="flex items-center gap-2 bg-zinc-50 p-4 rounded-xl border border-zinc-200">
                     <span className="text-zinc-400 font-bold uppercase tracking-widest rtl:tracking-normal text-[10px]">{t("DZD")}</span>
@@ -125,14 +125,14 @@ export const ShippingAdmin: React.FC = () => {
                       type="number" 
                       value={globalBaseFee} 
                       onChange={(e) => setGlobalBaseFee(parseInt(e.target.value) || 0)}
-                      className="bg-transparent border-none text-xl font-black text-zinc-900 w-full outline-none text-end"
+                      className="bg-transparent border-none text-xl font-kinder text-zinc-900 w-full outline-none text-end"
                     />
                 </div>
             </div>
 
             <div className="bg-orange-50 p-8 rounded-[2rem] border border-orange-100">
                <ShieldAlert className="w-8 h-8 text-orange-500 mb-4" />
-               <h3 className="text-sm font-black text-orange-950 uppercase tracking-widest rtl:tracking-normal mb-2">{t("Sécurité Logistique")}</h3>
+               <h3 className="text-sm font-kinder text-orange-950 uppercase tracking-widest rtl:tracking-normal mb-2">{t("Sécurité Logistique")}</h3>
                <p className="text-xs text-orange-800">{t("Assurez-vous que les prix configurés incluent les frais d'assurance pour les objets de valeur. Le supplément poids (volumétrique) est calculé dynamiquement au Checkout.")}</p>
             </div>
          </div>
@@ -140,13 +140,13 @@ export const ShippingAdmin: React.FC = () => {
          <div className="md:col-span-2 space-y-6">
             <div className="bg-white rounded-[2rem] border border-zinc-100 shadow-sm overflow-hidden p-8 flex items-center justify-between">
               <div>
-                 <h3 className="text-sm font-black text-zinc-900 uppercase tracking-widest rtl:tracking-normal">{t("Wilaya de Départ")}</h3>
+                 <h3 className="text-sm font-kinder text-zinc-900 uppercase tracking-widest rtl:tracking-normal">{t("Wilaya de Départ")}</h3>
                  <p className="text-xs text-zinc-500 font-medium">{t("Sélectionnez l'origine pour définir sa propre grille vers les 58 wilayas")}.</p>
               </div>
               <select 
                 value={selectedOrigin}
                 onChange={(e) => setSelectedOrigin(e.target.value)}
-                className="px-6 py-4 bg-zinc-50 border border-zinc-200 rounded-2xl text-sm font-black text-zinc-900 outline-none focus:border-orange-500"
+                className="px-6 py-4 bg-zinc-50 border border-zinc-200 rounded-2xl text-sm font-kinder text-zinc-900 outline-none focus:border-orange-500"
               >
                 <option value="DEFAULT_ORIGIN">{t("Config par Défaut (Général)")}</option>
                 <optgroup label="Spécifique par région">
@@ -158,7 +158,7 @@ export const ShippingAdmin: React.FC = () => {
             <div className="bg-white rounded-[2rem] border border-zinc-100 shadow-sm overflow-hidden">
                <div className="p-8 border-b border-zinc-100 flex items-center gap-4">
                   <MapPin className="w-5 h-5 text-zinc-400" />
-                  <h3 className="text-lg font-black text-zinc-900">
+                  <h3 className="text-lg font-kinder text-zinc-900">
                      {selectedOrigin === "DEFAULT_ORIGIN" ? t("Grille Tarifaire (Défaut)") : t("Tarifs depuis ") + selectedOrigin}
                   </h3>
                </div>
@@ -178,7 +178,7 @@ export const ShippingAdmin: React.FC = () => {
                           <div className="flex items-center gap-3">
                               <span className={`w-2 h-2 rounded-full ${isConfigured ? 'bg-emerald-500' : 'bg-zinc-300'}`} />
                               <span className="font-bold text-sm text-zinc-700">{wilaya}</span>
-                              {!isConfigured && <span className="ms-2 text-[9px] uppercase tracking-widest rtl:tracking-normal font-black text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded">{selectedOrigin === "DEFAULT_ORIGIN" ? t("Tarif Base") : t("Hérité du Défaut")}</span>}
+                              {!isConfigured && <span className="ms-2 text-[9px] uppercase tracking-widest rtl:tracking-normal font-kinder text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded">{selectedOrigin === "DEFAULT_ORIGIN" ? t("Tarif Base") : t("Hérité du Défaut")}</span>}
                           </div>
                           <div className="flex items-center gap-2">
                              <input 
@@ -188,7 +188,7 @@ export const ShippingAdmin: React.FC = () => {
                                onChange={(e) => handleUpdateWilaya(wilaya, e.target.value)}
                                className="w-24 text-end px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm font-bold focus:border-orange-500 outline-none"
                              />
-                             <span className="text-[10px] uppercase font-black text-zinc-400 tracking-widest rtl:tracking-normal">{t("DZD")}</span>
+                             <span className="text-[10px] uppercase font-kinder text-zinc-400 tracking-widest rtl:tracking-normal">{t("DZD")}</span>
                           </div>
                        </div>
                      );

@@ -34,7 +34,7 @@ export const ForgotPassword: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] flex items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-[#FDF9EC] flex items-center justify-center p-6 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-1/2 h-full bg-orange-500/5 blur-[120px] pointer-events-none" />
 
       <button 
@@ -50,7 +50,7 @@ export const ForgotPassword: React.FC = () => {
         className="w-full max-w-md bg-white rounded-[2rem] p-10 border border-zinc-100 shadow-2xl relative z-10"
       >
         <div className="text-center mb-10">
-          <h2 className="text-3xl font-black text-zinc-950 mb-2 tracking-tight rtl:tracking-normal">{t("forgot_password_title", "Mot de passe oublié")}</h2>
+          <h2 className="text-3xl font-kinder text-zinc-950 mb-2 tracking-tight rtl:tracking-normal">{t("forgot_password_title", "Mot de passe oublié")}</h2>
           <p className="text-zinc-500 font-medium leading-relaxed">
             {t("forgot_password_desc", "Entrez votre adresse e-mail. Nous vous enverrons un lien pour réinitialiser votre mot de passe.")}
           </p>
@@ -71,7 +71,7 @@ export const ForgotPassword: React.FC = () => {
               <p className="text-zinc-500 text-sm">{t("check_inbox", "Vérifiez votre boîte de réception et vos courriers indésirables.")}</p>
               <button 
                 onClick={() => navigate('/auth')}
-                className="w-full py-5 bg-zinc-950 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-zinc-900 transition-all shadow-xl"
+                className="w-full py-5 bg-zinc-950 text-white rounded-2xl font-kinder text-xs uppercase tracking-[0.2em] hover:bg-zinc-900 transition-all shadow-xl"
               >
                 {t("back_to_login", "Retour à la connexion")}
               </button>
@@ -100,7 +100,7 @@ export const ForgotPassword: React.FC = () => {
               <button 
                 type="submit"
                 disabled={loading}
-                className="w-full py-5 bg-orange-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-orange-500 transition-all shadow-xl shadow-orange-500/30 flex items-center justify-center disabled:opacity-50"
+                className="w-full py-5 bg-orange-600 text-white rounded-2xl font-kinder text-xs uppercase tracking-[0.2em] hover:bg-orange-500 transition-all shadow-xl shadow-orange-500/30 flex items-center justify-center disabled:opacity-50"
               >
                 {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : t("send_link", "Envoyer le lien")}
               </button>

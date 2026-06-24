@@ -262,7 +262,7 @@ export const OrderDetails: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#faf8f5] flex items-center justify-center p-6">
+      <div className="min-h-screen bg-[#FDF9EC] flex items-center justify-center p-6">
          <div className="flex flex-col items-center gap-4 text-zinc-400">
             <Package className="w-12 h-12 opacity-50 animate-pulse" />
             <p className="text-sm font-bold uppercase tracking-widest rtl:tracking-normal">{t("Chargement...")}</p>
@@ -273,11 +273,11 @@ export const OrderDetails: React.FC = () => {
 
   if (!order) {
     return (
-      <div className="min-h-screen bg-[#faf8f5] flex flex-col items-center justify-center p-6">
+      <div className="min-h-screen bg-[#FDF9EC] flex flex-col items-center justify-center p-6">
          <XCircle className="w-16 h-16 text-red-400 mb-6" />
-         <h2 className="text-2xl font-black text-zinc-900 mb-2 tracking-tight rtl:tracking-normal">{t("Commande introuvable")}</h2>
+         <h2 className="text-2xl font-kinder text-zinc-900 mb-2 tracking-tight rtl:tracking-normal">{t("Commande introuvable")}</h2>
          <p className="text-zinc-500 mb-8 font-medium">{t("Cette commande n'existe pas ou vous n'y avez pas accès.")}</p>
-         <button onClick={() => navigate('/dashboard/buyer')} className="px-8 py-4 bg-zinc-950 text-white rounded-2xl font-black uppercase tracking-widest rtl:tracking-normal text-[11px]">
+         <button onClick={() => navigate('/dashboard/buyer')} className="px-8 py-4 bg-zinc-950 text-white rounded-2xl font-kinder uppercase tracking-widest rtl:tracking-normal text-[11px]">
             {t("Retour au tableau de bord")}</button>
       </div>
     );
@@ -325,15 +325,15 @@ export const OrderDetails: React.FC = () => {
   }, {});
 
   return (
-    <div className="bg-[#faf8f5] min-h-screen pt-24 pb-40 px-4 md:px-8">
+    <div className="bg-[#FDF9EC] min-h-screen pt-24 pb-40 px-4 md:px-8">
       <div className="max-w-4xl mx-auto space-y-10">
         
         {/* Header & Back Action */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
            <div className="space-y-4">
-              <button onClick={() => navigate('/dashboard/buyer')} className="flex items-center gap-2 text-zinc-400 font-black text-[10px] uppercase tracking-widest rtl:tracking-normal hover:text-zinc-900 transition-colors">
+              <button onClick={() => navigate('/dashboard/buyer')} className="flex items-center gap-2 text-zinc-400 font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal hover:text-zinc-900 transition-colors">
                  <ArrowLeft className="w-4 h-4" /> {t("Retour aux commandes")}</button>
-              <h1 className="text-4xl md:text-5xl font-black text-zinc-950 tracking-tighter rtl:tracking-normal">
+              <h1 className="text-4xl md:text-5xl font-kinder text-zinc-950 tracking-tighter rtl:tracking-normal">
                  {t("Commande")}<span className="text-zinc-400">#{order.id.substring(0,8)}</span>
               </h1>
               <p className="text-sm font-bold text-zinc-500">{t("Passée le")}{orderDate}</p>
@@ -397,21 +397,21 @@ export const OrderDetails: React.FC = () => {
 
         {/* Tracking Info Panel */}
         {order.trackingId && (
-           <div className="bg-[#121315] text-white p-6 rounded-3xl shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
+           <div className="bg-[#3C2B22] text-white p-6 rounded-3xl shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
               <div className="flex items-center gap-4 w-full sm:w-auto">
                  <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center shrink-0">
-                    <Truck className="w-6 h-6 text-[#F37021]" />
+                    <Truck className="w-6 h-6 text-[#FF5C00]" />
                  </div>
                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-[#F37021]">{t("Envoi logistique")}</p>
-                    <p className="text-sm font-bold text-white/90">{t("Colis enregistré chez le transporteur, N° de suivi :")}<span className="font-black text-white ml-1">{order.trackingId}</span></p>
+                    <p className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-[#FF5C00]">{t("Envoi logistique")}</p>
+                    <p className="text-sm font-bold text-white/90">{t("Colis enregistré chez le transporteur, N° de suivi :")}<span className="font-kinder text-white ml-1">{order.trackingId}</span></p>
                  </div>
               </div>
               <a 
                  href={order.labelUrl || "#"} 
                  target="_blank" 
                  rel="noopener noreferrer"
-                 className="w-full sm:w-auto px-6 py-3 bg-white text-[#121315] rounded-xl text-xs font-black uppercase tracking-widest rtl:tracking-normal text-center hover:bg-stone-50 transition-colors"
+                 className="w-full sm:w-auto px-6 py-3 bg-white text-[#3C2B22] rounded-xl text-xs font-kinder uppercase tracking-widest rtl:tracking-normal text-center hover:bg-stone-50 transition-colors"
               >
                  {t("Suivre le colis")}</a>
            </div>
@@ -421,7 +421,7 @@ export const OrderDetails: React.FC = () => {
            {/* Items List */}
            <div className="lg:col-span-2 space-y-8">
               <div className="bg-white rounded-[3rem] p-8 border border-zinc-100 shadow-xl shadow-zinc-200/20">
-                 <h3 className="text-xl font-black tracking-tight rtl:tracking-normal mb-8">{t("Articles commandés")}</h3>
+                 <h3 className="text-xl font-kinder tracking-tight rtl:tracking-normal mb-8">{t("Articles commandés")}</h3>
                  
                  <div className="space-y-10">
                     {Object.entries(groupedItems).map(([sid, items]) => (
@@ -430,7 +430,7 @@ export const OrderDetails: React.FC = () => {
                              <div className="w-8 h-8 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600">
                                 <Building2 className="w-4 h-4" />
                              </div>
-                             <span className="text-sm font-black uppercase tracking-widest rtl:tracking-normal text-zinc-900">
+                             <span className="text-sm font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-900">
                                 {shops[sid]?.shopName || "Vendeur Olma"}
                              </span>
                           </div>
@@ -457,11 +457,11 @@ export const OrderDetails: React.FC = () => {
                                           <div className="flex-1 min-w-0">
                                              <h4 className="font-bold text-sm text-zinc-900 truncate">{item.name}</h4>
                                              {item.selectedVariant && (
-                                                <p className="text-[10px] font-black uppercase text-zinc-500 mt-1">{t("Var:")}{item.selectedVariant}</p>
+                                                <p className="text-[10px] font-kinder uppercase text-zinc-500 mt-1">{t("Var:")}{item.selectedVariant}</p>
                                              )}
                                              <div className="flex items-center justify-between mt-2">
-                                                <p className="text-[11px] font-black uppercase text-zinc-400">{t("Quantité:")}{item.quantity}</p>
-                                                <p className="font-black text-sm text-zinc-900">{formatPrice(item.price * item.quantity)}</p>
+                                                <p className="text-[11px] font-kinder uppercase text-zinc-400">{t("Quantité:")}{item.quantity}</p>
+                                                <p className="font-kinder text-sm text-zinc-900">{formatPrice(item.price * item.quantity)}</p>
                                              </div>
                                           </div>
                                        </div>
@@ -472,10 +472,10 @@ export const OrderDetails: React.FC = () => {
                                              {wasReviewed ? (
                                                 <div className="bg-emerald-50/40 border border-emerald-100 p-4 rounded-2xl flex flex-col gap-3 text-left">
                                                    <div className="flex items-center gap-2">
-                                                      <div className="flex items-center gap-1 bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest rtl:tracking-normal">
+                                                      <div className="flex items-center gap-1 bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md text-[9px] font-kinder uppercase tracking-widest rtl:tracking-normal">
                                                          <ShieldCheck className="w-3 h-3" />
                                                          {t("Acheteur Vérifié Olmart")}</div>
-                                                      <span className="text-[9px] font-black text-emerald-700 uppercase tracking-wider rtl:tracking-normal ml-auto">{t("Avis publié !")}</span>
+                                                      <span className="text-[9px] font-kinder text-emerald-700 uppercase tracking-wider rtl:tracking-normal ml-auto">{t("Avis publié !")}</span>
                                                    </div>
                                                    <div>
                                                       <div className="flex gap-1 mb-1.5">
@@ -490,12 +490,12 @@ export const OrderDetails: React.FC = () => {
                                                 <div className="space-y-4">
                                                    <div className="bg-orange-50 border border-orange-100 p-3 rounded-xl flex items-start gap-3">
                                                       <ShieldCheck className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
-                                                      <p className="text-xs font-bold text-[#121315] leading-tight">
+                                                      <p className="text-xs font-bold text-[#3C2B22] leading-tight">
                                                          {t("Votre avis compte !")}<span className="text-orange-600 block mt-0.5">{t("Gagnez 100 DA sur votre Wallet en publiant une photo de votre article !")}</span>
                                                       </p>
                                                    </div>
                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-left">
-                                                      <span className="text-[10px] font-black uppercase text-zinc-400 tracking-wider rtl:tracking-normal">{t("Avez-vous aimé cet article ? Notez-le :")}</span>
+                                                      <span className="text-[10px] font-kinder uppercase text-zinc-400 tracking-wider rtl:tracking-normal">{t("Avez-vous aimé cet article ? Notez-le :")}</span>
                                                       <div className="flex gap-1">
                                                          {[1, 2, 3, 4, 5].map((star) => (
                                                             <button
@@ -518,13 +518,13 @@ export const OrderDetails: React.FC = () => {
                                                          className="w-full px-4 py-3 bg-white border border-zinc-200 rounded-xl font-medium text-xs outline-none focus:border-zinc-500 focus:ring-2 focus:ring-orange-500/20 text-left resize-none"
                                                       />
                                                       <div className="flex justify-between items-center">
-                                                         <button type="button" className="text-xs font-bold text-stone-500 flex items-center gap-1.5 hover:text-[#121315] transition-colors">
+                                                         <button type="button" className="text-xs font-bold text-stone-500 flex items-center gap-1.5 hover:text-[#3C2B22] transition-colors">
                                                             <Camera className="w-4 h-4" /> {t("Ajouter une photo")}</button>
                                                          <button
                                                             type="button"
                                                             disabled={isSubmitting}
                                                             onClick={() => handleSubmitReview(itemProductId)}
-                                                            className="px-6 py-2 bg-[#F37021] text-white rounded-[2rem] text-[10px] font-black uppercase tracking-widest rtl:tracking-normal hover:bg-[#b04b2c] transition-colors disabled:opacity-40 whitespace-nowrap cursor-pointer shadow-sm"
+                                                            className="px-6 py-2 bg-[#FF5C00] text-white rounded-[2rem] text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal hover:bg-[#b04b2c] transition-colors disabled:opacity-40 whitespace-nowrap cursor-pointer shadow-sm"
                                                          >
                                                             {isSubmitting ? "Envoi..." : "Publier l'avis"}
                                                          </button>
@@ -547,28 +547,28 @@ export const OrderDetails: React.FC = () => {
            {/* Summary & Actions */}
            <div className="space-y-8">
               <div className="bg-white rounded-[3rem] p-8 border border-zinc-100 shadow-xl shadow-zinc-200/20 space-y-8">
-                 <h3 className="text-xl font-black tracking-tight rtl:tracking-normal">{t("Résumé financier")}</h3>
+                 <h3 className="text-xl font-kinder tracking-tight rtl:tracking-normal">{t("Résumé financier")}</h3>
                  
                  <div className="space-y-4">
-                    <div className="flex justify-between items-center text-[11px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-500">
+                    <div className="flex justify-between items-center text-[11px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-500">
                        <span>{t("Sous-total")}</span>
                        <span>{formatPrice(order.subtotal)}</span>
                     </div>
                     {order.discountAmount > 0 && (
-                       <div className="flex justify-between items-center text-[11px] font-black uppercase tracking-widest rtl:tracking-normal text-emerald-500">
+                       <div className="flex justify-between items-center text-[11px] font-kinder uppercase tracking-widest rtl:tracking-normal text-emerald-500">
                           <span className="flex items-center gap-2"><Ticket className="w-3 h-3" /> {t("Réduction")}</span>
                           <span>-{formatPrice(order.discountAmount)}</span>
                        </div>
                     )}
-                    <div className="flex justify-between items-center text-[11px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-500">
+                    <div className="flex justify-between items-center text-[11px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-500">
                        <span>{t("Frais de livraison")}</span>
                        <span>{formatPrice(order.shippingTotal)}</span>
                     </div>
                     
                     <div className="pt-6 border-t border-zinc-100">
                        <div className="flex justify-between items-end">
-                          <span className="text-xs font-black uppercase tracking-widest rtl:tracking-normal text-zinc-900">{t("Total payé")}</span>
-                          <span className="text-3xl font-black tracking-tighter rtl:tracking-normal">{formatPrice(order.total)}</span>
+                          <span className="text-xs font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-900">{t("Total payé")}</span>
+                          <span className="text-3xl font-kinder tracking-tighter rtl:tracking-normal">{formatPrice(order.total)}</span>
                        </div>
                        <p className="text-[9px] font-bold text-zinc-400 mt-2 uppercase tracking-widest rtl:tracking-normal text-right">{t("Payé à la livraison (Cash)")}</p>
                     </div>
@@ -576,22 +576,22 @@ export const OrderDetails: React.FC = () => {
               </div>
 
                              <div className="bg-white rounded-[3rem] p-8 border border-zinc-100 shadow-xl shadow-zinc-200/20 space-y-6">
-                  <h3 className="text-sm font-black uppercase tracking-widest rtl:tracking-normal mb-2 flex items-center gap-3">
+                  <h3 className="text-sm font-kinder uppercase tracking-widest rtl:tracking-normal mb-2 flex items-center gap-3">
                      <MapPin className="w-5 h-5 text-zinc-400" />
                      {t("Adresse de livraison")}</h3>
-                  <div className="bg-[#FAF8F5] p-6 rounded-3xl border border-zinc-100">
+                  <div className="bg-[#FDF9EC] p-6 rounded-3xl border border-zinc-100">
                      <p className="font-bold text-sm text-zinc-900 mb-1">{order.shippingAddress?.name}</p>
                      <p className="text-xs text-zinc-500 font-medium leading-relaxed">
                         {order.shippingAddress?.address}<br/>
-                        {order.shippingAddress?.commune && <><span className="font-black text-zinc-900">{order.shippingAddress.commune}</span><br/></>}
-                        <span className="font-black text-zinc-900">{order.shippingAddress?.wilaya}</span><br/>
-                        <span className="font-black text-zinc-900">{order.shippingAddress?.phone}</span>
+                        {order.shippingAddress?.commune && <><span className="font-kinder text-zinc-900">{order.shippingAddress.commune}</span><br/></>}
+                        <span className="font-kinder text-zinc-900">{order.shippingAddress?.wilaya}</span><br/>
+                        <span className="font-kinder text-zinc-900">{order.shippingAddress?.phone}</span>
                      </p>
                   </div>
 
                   {/* Cash on delivery premium callout (Safety isolation) */}
                   <div className="p-4 bg-orange-50/50 border border-orange-100/50 rounded-2xl">
-                     <p className="text-[10px] font-black uppercase text-[#F37021] tracking-wider rtl:tracking-normal mb-1">{t("ℹ️ Paiement à la livraison")}</p>
+                     <p className="text-[10px] font-kinder uppercase text-[#FF5C00] tracking-wider rtl:tracking-normal mb-1">{t("ℹ️ Paiement à la livraison")}</p>
                      <p className="text-[11px] text-zinc-500 font-medium leading-relaxed">
                         {t("Le livreur des 58 Wilayas vous contactera par téléphone pour valider l'heure de passage. Merci de préparer la somme exacte en espèces.")}</p>
                   </div>
@@ -602,7 +602,7 @@ export const OrderDetails: React.FC = () => {
                   <div className="bg-purple-50/60 border border-purple-100 p-6 rounded-[2rem] space-y-3">
                      <div className="flex items-center gap-3 text-purple-700">
                         <RotateCcw className="w-5 h-5" />
-                        <h4 className="font-black text-xs uppercase tracking-wider rtl:tracking-normal">{t("Demande de retour enregistrée")}</h4>
+                        <h4 className="font-kinder text-xs uppercase tracking-wider rtl:tracking-normal">{t("Demande de retour enregistrée")}</h4>
                      </div>
                      <p className="text-xs text-zinc-650 font-normal leading-relaxed">
                         {t("Motif :")}<span className="font-extrabold text-zinc-850">{order.returnRequest.reason}</span><br />
@@ -629,7 +629,7 @@ export const OrderDetails: React.FC = () => {
                   <div className="bg-orange-50/60 border border-orange-150 p-6 rounded-[2rem] space-y-3">
                      <div className="flex items-center gap-3 text-orange-700">
                         <AlertTriangle className="w-5 h-5" />
-                        <h4 className="font-black text-xs uppercase tracking-wider rtl:tracking-normal">{t("Réclamation active")}</h4>
+                        <h4 className="font-kinder text-xs uppercase tracking-wider rtl:tracking-normal">{t("Réclamation active")}</h4>
                      </div>
                      <p className="text-xs text-zinc-650 font-medium">
                         {t("Motif du litige :")}<span className="font-bold text-zinc-800">{order.disputeRequest.reason}</span>
@@ -645,7 +645,7 @@ export const OrderDetails: React.FC = () => {
                      {!showReturnForm ? (
                         <button
                            onClick={() => { setShowReturnForm(true); setShowDisputeForm(false); }}
-                           className="w-full py-4 bg-purple-50 hover:bg-purple-105 border border-purple-200 text-purple-700 rounded-3xl font-black text-[10px] uppercase tracking-widest rtl:tracking-normal transition-all cursor-pointer text-center block"
+                           className="w-full py-4 bg-purple-50 hover:bg-purple-105 border border-purple-200 text-purple-700 rounded-3xl font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal transition-all cursor-pointer text-center block"
                         >
                            {t("Demander un retour d'article")}</button>
                      ) : (
@@ -680,13 +680,13 @@ export const OrderDetails: React.FC = () => {
                      {!showDisputeForm ? (
                         <button
                            onClick={() => { setShowDisputeForm(true); setShowReturnForm(false); }}
-                           className="w-full py-4 bg-zinc-100 hover:bg-zinc-200 border border-zinc-300 text-zinc-700 rounded-3xl font-black text-[10px] uppercase tracking-widest rtl:tracking-normal transition-all cursor-pointer text-center block"
+                           className="w-full py-4 bg-zinc-100 hover:bg-zinc-200 border border-zinc-300 text-zinc-700 rounded-3xl font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal transition-all cursor-pointer text-center block"
                         >
                            {t("Ouvrir un Litige (Tribunal Interne)")}</button>
                      ) : (
                         <form onSubmit={handleOpenDispute} className="bg-zinc-50/80 border border-zinc-300 p-6 rounded-[2.5rem] space-y-5 shadow-xl shadow-zinc-900/5 text-left">
                            <div className="flex justify-between items-center mb-2 border-b border-zinc-200 pb-3">
-                              <h4 className="font-black text-xs uppercase tracking-wider rtl:tracking-normal text-zinc-800 flex items-center gap-2">
+                              <h4 className="font-kinder text-xs uppercase tracking-wider rtl:tracking-normal text-zinc-800 flex items-center gap-2">
                                  <span className="w-2 h-2 rounded-full bg-zinc-400" />
                                  {t("Centre de Résolution")}</h4>
                               <button type="button" onClick={() => setShowDisputeForm(false)} className="text-zinc-400 hover:text-zinc-600 text-xs font-bold transition-colors">{t("Fermer")}</button>
@@ -696,7 +696,7 @@ export const OrderDetails: React.FC = () => {
                               {t("En ouvrant ce litige, vous saisissez le tribunal interne OLMART. Le vendeur aura 24h pour accepter votre demande. En cas de refus, l'escalade sera faite vers un médiateur officiel. Soyez courtois et factuel.")}</div>
 
                            <div className="space-y-1">
-                              <label className="text-[10px] font-black uppercase text-zinc-500">{t("Motif précis du litige")}</label>
+                              <label className="text-[10px] font-kinder uppercase text-zinc-500">{t("Motif précis du litige")}</label>
                               <select 
                                  value={disputeReason} 
                                  onChange={(e) => setDisputeReason(e.target.value)}
@@ -710,7 +710,7 @@ export const OrderDetails: React.FC = () => {
                            </div>
 
                            <div className="space-y-1">
-                              <label className="text-[10px] font-black uppercase text-zinc-500">{t("Preuve par image")}</label>
+                              <label className="text-[10px] font-kinder uppercase text-zinc-500">{t("Preuve par image")}</label>
                               <div className="flex flex-wrap gap-2 mb-2">
                                  {disputePhotos.map((photo, idx) => (
                                     <div key={idx} className="relative w-16 h-16 rounded-xl overflow-hidden bg-zinc-100 border border-zinc-200">
@@ -737,7 +737,7 @@ export const OrderDetails: React.FC = () => {
                            </div>
 
                            <div className="space-y-1">
-                              <label className="text-[10px] font-black uppercase text-zinc-500">{t("Description détaillée des faits")}</label>
+                              <label className="text-[10px] font-kinder uppercase text-zinc-500">{t("Description détaillée des faits")}</label>
                               <textarea
                                  rows={3}
                                  required
@@ -751,7 +751,7 @@ export const OrderDetails: React.FC = () => {
                            <button
                               type="submit"
                               disabled={submittingAction}
-                              className="w-full py-4 bg-zinc-900 hover:bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-widest rtl:tracking-normal disabled:opacity-50 transition-colors cursor-pointer"
+                              className="w-full py-4 bg-zinc-900 hover:bg-black text-white rounded-2xl font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal disabled:opacity-50 transition-colors cursor-pointer"
                            >
                               {submittingAction ? "Soumission en cours..." : "Soumettre au Tribunal"}
                            </button>
@@ -765,7 +765,7 @@ export const OrderDetails: React.FC = () => {
                      <button 
                        onClick={handleCancelOrder}
                        disabled={cancelling}
-                       className="w-full py-5 bg-red-50 text-red-600 hover:bg-red-100 rounded-3xl font-black text-[10px] uppercase tracking-widest rtl:tracking-normal transition-all border border-red-100 disabled:opacity-50 cursor-pointer"
+                       className="w-full py-5 bg-red-50 text-red-600 hover:bg-red-100 rounded-3xl font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal transition-all border border-red-100 disabled:opacity-50 cursor-pointer"
                      >
                         {cancelling ? 'Annulation...' : 'Annuler la commande'}
                      </button>

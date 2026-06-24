@@ -79,29 +79,29 @@ export const FeaturedProducts: React.FC = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-[#FAF8F5] pb-20">
+      <div className="min-h-screen bg-[#FDF9EC] pb-20">
         {/* Page Header */}
-        <div className="bg-white border-b border-[#EBE5DF]/40 pt-10 pb-6 px-4 sm:px-8">
+        <div className="bg-white border-b border-[#FF5C00]/40 pt-10 pb-6 px-4 sm:px-8">
           <div className="max-w-7xl mx-auto">
             <button 
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-zinc-400 hover:text-[#121315] transition-colors mb-6 text-sm font-bold uppercase tracking-widest rtl:tracking-normal"
+              className="flex items-center gap-2 text-zinc-400 hover:text-[#3C2B22] transition-colors mb-6 text-sm font-bold uppercase tracking-widest rtl:tracking-normal"
             >
               <ChevronLeft className="w-4 h-4" />
               {t("Retour")}</button>
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="w-5 h-5 text-[#F37021]" />
-                  <span className="text-xs font-black text-[#F37021] uppercase tracking-[0.3em]">{t("Édition Limitée")}</span>
+                  <Sparkles className="w-5 h-5 text-[#FF5C00]" />
+                  <span className="text-xs font-kinder text-[#FF5C00] uppercase tracking-[0.3em]">{t("Édition Limitée")}</span>
                 </div>
-                <h1 className="text-3xl sm:text-5xl font-black text-[#121315] uppercase tracking-tighter rtl:tracking-normal leading-none">
+                <h1 className="text-3xl sm:text-5xl font-kinder text-[#3C2B22] uppercase tracking-tighter rtl:tracking-normal leading-none">
                   {t("Nos Incontournables")}</h1>
                 <p className="text-zinc-500 mt-2 font-medium">{t("Les produits les plus plébiscités par notre communauté.")}</p>
               </div>
               <div className="flex items-center gap-2 bg-zinc-50 px-4 py-2 rounded-xl border border-zinc-100">
-                <Filter className="w-4 h-4 text-[#121315]" />
-                <span className="text-xs font-black text-[#121315] uppercase tracking-widest rtl:tracking-normal">{t("Trier par Popularité")}</span>
+                <Filter className="w-4 h-4 text-[#3C2B22]" />
+                <span className="text-xs font-kinder text-[#3C2B22] uppercase tracking-widest rtl:tracking-normal">{t("Trier par Popularité")}</span>
               </div>
             </div>
           </div>
@@ -136,7 +136,7 @@ export const FeaturedProducts: React.FC = () => {
                   <button
                     onClick={() => fetchFeatured(true)}
                     disabled={loadingMore}
-                    className="flex items-center gap-3 px-10 py-4 bg-[#121315] text-white rounded-full text-xs font-black uppercase tracking-[0.2em] shadow-2xl shadow-[#121315]/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                    className="flex items-center gap-3 px-10 py-4 bg-[#3C2B22] text-white rounded-full text-xs font-kinder uppercase tracking-[0.2em] shadow-2xl shadow-[#3C2B22]/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
                   >
                     {loadingMore ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -152,7 +152,7 @@ export const FeaturedProducts: React.FC = () => {
               <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
                 <Sparkles className="w-10 h-10 text-zinc-200" />
               </div>
-              <h3 className="text-xl font-black text-[#121315] uppercase">{t("Aucun incontournable ?")}</h3>
+              <h3 className="text-xl font-kinder text-[#3C2B22] uppercase">{t("Aucun incontournable ?")}</h3>
               <p className="text-zinc-500 max-w-xs mt-2">{t("Revenez plus tard, nos vendeurs préparent de nouvelles offres.")}</p>
             </div>
           )}

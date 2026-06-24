@@ -201,7 +201,7 @@ export const ImageAdjusterModal: React.FC<ImageAdjusterModalProps> = ({ src, typ
         {/* Header */}
         <div className="p-6 border-b border-zinc-100 flex items-center justify-between">
           <div className={`${isRTL ? "text-right" : "text-left"}`}>
-            <h3 className="text-lg font-black text-zinc-950 tracking-tight">{t("title")}</h3>
+            <h3 className="text-lg font-kinder text-zinc-950 tracking-tight">{t("title")}</h3>
             <p className="text-xs text-zinc-500 font-medium">
               {type === "logo" ? "Format Carré / Cercle" : "Format Large (Couverture)"}
             </p>
@@ -321,14 +321,14 @@ export const ImageAdjusterModal: React.FC<ImageAdjusterModalProps> = ({ src, typ
           <div className="flex gap-2">
             <button
               onClick={handleRotate}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-zinc-200/80 rounded-2xl text-[11px] font-black text-zinc-700 hover:bg-zinc-50 active:scale-95 transition-all uppercase tracking-wider"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-zinc-200/80 rounded-2xl text-[11px] font-kinder text-zinc-700 hover:bg-zinc-50 active:scale-95 transition-all uppercase tracking-wider"
             >
               <RotateCw className="w-4 h-4 text-zinc-500" />
               <span>{t("rotate")}</span>
             </button>
             <button
               onClick={handleReset}
-              className="px-4 py-3 border border-zinc-200/80 rounded-2xl text-[11px] font-black text-zinc-500 hover:bg-zinc-50 active:scale-95 transition-all uppercase tracking-wider"
+              className="px-4 py-3 border border-zinc-200/80 rounded-2xl text-[11px] font-kinder text-zinc-500 hover:bg-zinc-50 active:scale-95 transition-all uppercase tracking-wider"
             >
               {t("reset")}
             </button>

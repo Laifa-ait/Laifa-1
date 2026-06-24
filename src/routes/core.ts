@@ -667,7 +667,7 @@ router.post(
 
       if (langsToTranslate.length > 0) {
         const response = await ai.models.generateContent({
-          model: "gemini-1.5-flash",
+          model: "gemini-3.5-flash",
           contents: `Translate the following text from French to the following languages: ${langsToTranslate.join(", ")}. Return ONLY a pure JSON object. Format strictly as: { "langCode": "translated text", ... }\n\nText: "${text}"`,
           config: { responseMimeType: "application/json" }
         });
@@ -704,7 +704,7 @@ router.post(
 
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-3.5-flash",
         contents: `Translate the following text from French to Arabic and English. Return ONLY a pure JSON object. Format strictly as: { "ar": "...", "en": "..." }\n\nText: "${fr}"`,
         config: { responseMimeType: "application/json" }
       });
@@ -796,7 +796,7 @@ router.post(
 
           if (Object.keys(objToTranslate).length > 0) {
             const response = await ai.models.generateContent({
-              model: "gemini-1.5-flash",
+              model: "gemini-3.5-flash",
               contents: `Translate the following JSON object values from French to Arabic and English. Return ONLY a pure JSON object mapping the same keys to an object with "ar" and "en" properties. JSON format: { "key1": {"ar": "...", "en": "..."}, "key2": ... }.\n\n${JSON.stringify(objToTranslate)}`,
               config: { responseMimeType: "application/json" }
             });
@@ -938,7 +938,7 @@ router.post(
 
           if (Object.keys(objToTranslate).length > 0) {
             const response = await ai.models.generateContent({
-              model: "gemini-1.5-flash",
+              model: "gemini-3.5-flash",
               contents: `Translate the following JSON object values from French to Arabic and English. Return ONLY a pure JSON object mapping the same keys to an object with "ar" and "en" properties. JSON format: { "key1": {"ar": "...", "en": "..."}, "key2": ... }.\n\n${JSON.stringify(objToTranslate)}`,
               config: { responseMimeType: "application/json" }
             });
@@ -1055,7 +1055,7 @@ router.post(
     }`;
 
       const result = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-3.5-flash",
         contents: [
           { inlineData: { data: base64Data, mimeType } },
           { text: prompt },
@@ -2468,7 +2468,7 @@ Format de retour JSON STRICT (sans markdown, uniquement le JSON):
 Répondez uniquement avec le JSON.`;
 
         const response = await ai.models.generateContent({
-          model: "gemini-1.5-flash",
+          model: "gemini-3.5-flash",
           contents: prompt,
           config: { responseMimeType: "application/json" }
         });

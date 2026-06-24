@@ -67,7 +67,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   if (hideNavigation) {
     return (
       <div
-        className={`min-h-screen w-full font-sans selection:bg-[#EBE5DF] ${i18n.language === "ar" ? "rtl" : "ltr"} ${isAuthPage ? "bg-[#FAF8F5]" : ""}`}
+        className={`min-h-screen w-full font-sans selection:bg-[#EBE5DF] ${i18n.language === "ar" ? "rtl" : "ltr"} ${isAuthPage ? "bg-[#FDF9EC]" : ""}`}
         dir={i18n.language === "ar" ? "rtl" : "ltr"}
       >
         {children}
@@ -77,7 +77,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div
-      className={`min-h-screen overflow-x-clip w-full max-w-full bg-[#FAF8F5] text-[#121315] font-sans selection:bg-[#EBE5DF] pb-0 sm:pb-0 ${i18n.language === "ar" ? "rtl" : "ltr"}`}
+      className={`min-h-screen overflow-x-clip w-full max-w-full bg-[#FDF9EC] text-[#3C2B22] font-sans selection:bg-[#EBE5DF] pb-0 sm:pb-0 ${i18n.language === "ar" ? "rtl" : "ltr"}`}
       dir={i18n.language === "ar" ? "rtl" : "ltr"}
     >
       {!isPremiumCollection && <Navbar />}

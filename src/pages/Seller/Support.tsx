@@ -206,12 +206,12 @@ export const Support: React.FC = () => {
     <div className="space-y-6 h-[calc(100vh-6rem)] flex flex-col">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
         <div>
-          <h2 className="text-3xl font-black tracking-tight rtl:tracking-normal text-zinc-950">{t("Support Admin")}</h2>
+          <h2 className="text-3xl font-kinder tracking-tight rtl:tracking-normal text-zinc-950">{t("Support Admin")}</h2>
           <p className="text-zinc-500 font-medium text-sm">{t("Gérez vos tickets d'assistance et litiges.")}</p>
         </div>
         <button 
           onClick={() => setIsNewTicketModalOpen(true)}
-          className="px-6 py-3 bg-zinc-950 text-white rounded-2xl font-black text-xs uppercase tracking-widest rtl:tracking-normal hover:bg-orange-600 transition-colors shadow-lg flex items-center justify-center gap-2"
+          className="px-6 py-3 bg-zinc-950 text-white rounded-2xl font-kinder text-xs uppercase tracking-widest rtl:tracking-normal hover:bg-orange-600 transition-colors shadow-lg flex items-center justify-center gap-2"
         >
           <Plus className="w-4 h-4" />
           {t("Nouveau Ticket")}</button>
@@ -221,7 +221,7 @@ export const Support: React.FC = () => {
         {/* Sidebar: Tickets list */}
         <div className="w-full lg:w-96 bg-white rounded-[2rem] border border-zinc-100 flex flex-col shrink-0 overflow-hidden shadow-sm">
           <div className="p-6 border-b border-zinc-50 shrink-0 bg-zinc-50/50">
-            <h3 className="font-black text-zinc-950">{t("Vos Tickets")}</h3>
+            <h3 className="font-kinder text-zinc-950">{t("Vos Tickets")}</h3>
           </div>
           <div className="flex-1 overflow-y-auto divide-y divide-zinc-50">
             {loadingTickets ? (
@@ -274,9 +274,9 @@ export const Support: React.FC = () => {
               <div className="p-6 border-b border-zinc-50 flex items-center justify-between shrink-0 shadow-sm z-10 bg-white" >
                 <div>
                   <div className="flex items-center gap-3 mb-1">
-                    <h3 className="font-black text-lg text-zinc-950">{currentTicket?.subject}</h3>
+                    <h3 className="font-kinder text-lg text-zinc-950">{currentTicket?.subject}</h3>
                     {currentTicket?.status === 'resolved' && (
-                       <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest rtl:tracking-normal bg-emerald-100 text-emerald-700 px-2 py-1 rounded-xl">
+                       <span className="flex items-center gap-1 text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal bg-emerald-100 text-emerald-700 px-2 py-1 rounded-xl">
                           <CheckCircle2 className="w-3 h-3" /> {t("Résolu")}</span>
                     )}
                   </div>
@@ -325,7 +325,7 @@ export const Support: React.FC = () => {
                           <p className={`text-sm font-medium leading-relaxed whitespace-pre-wrap ${isSeller ? 'text-zinc-800' : 'text-zinc-600'}`}>{m.text}</p>
                           
                           {m.createdAt && (
-                            <div className="mt-3 flex items-center justify-end gap-1.5 text-[9px] font-black uppercase text-zinc-300">
+                            <div className="mt-3 flex items-center justify-end gap-1.5 text-[9px] font-kinder uppercase text-zinc-300">
                               <Clock className="w-3 h-3" />
                               {m.createdAt.toDate?.().toLocaleString('fr-FR')}
                             </div>
@@ -367,7 +367,7 @@ export const Support: React.FC = () => {
                     <button 
                       type="submit"
                       disabled={sending || (!newMessage.trim() && !uploading)}
-                      className="px-6 h-14 bg-zinc-950 text-white rounded-2xl font-black text-xs uppercase tracking-widest rtl:tracking-normal hover:bg-orange-600 transition-colors shadow-lg disabled:opacity-50 flex items-center justify-center shrink-0"
+                      className="px-6 h-14 bg-zinc-950 text-white rounded-2xl font-kinder text-xs uppercase tracking-widest rtl:tracking-normal hover:bg-orange-600 transition-colors shadow-lg disabled:opacity-50 flex items-center justify-center shrink-0"
                     >
                       <Send className="w-5 h-5" />
                     </button>
@@ -423,7 +423,7 @@ export const Support: React.FC = () => {
               className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl border border-zinc-100 overflow-hidden"
             >
               <div className="px-8 py-6 border-b border-zinc-50 flex items-center justify-between">
-                <h3 className="text-xl font-black text-zinc-950">{t("Ouvrir un ticket")}</h3>
+                <h3 className="text-xl font-kinder text-zinc-950">{t("Ouvrir un ticket")}</h3>
                 <button 
                   onClick={() => setIsNewTicketModalOpen(false)}
                   className="w-10 h-10 bg-zinc-50 text-zinc-400 hover:text-zinc-900 rounded-full flex items-center justify-center transition-colors"
@@ -433,7 +433,7 @@ export const Support: React.FC = () => {
               </div>
               <form onSubmit={handleCreateTicket} className="p-8 space-y-6">
                 <div>
-                  <label className="block text-xs font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2">{t("Catégorie de la demande")}</label>
+                  <label className="block text-xs font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2">{t("Catégorie de la demande")}</label>
                   <select
                     required
                     value={newTicketData.subject}
@@ -450,7 +450,7 @@ export const Support: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2">{t("Priorité")}</label>
+                  <label className="block text-xs font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2">{t("Priorité")}</label>
                   <select
                     value={newTicketData.priority}
                     onChange={e => setNewTicketData({...newTicketData, priority: e.target.value})}
@@ -464,7 +464,7 @@ export const Support: React.FC = () => {
                 <button 
                   type="submit"
                   disabled={creatingTicket || !newTicketData.subject.trim()}
-                  className="w-full py-4 bg-zinc-950 text-white rounded-2xl font-black text-sm uppercase tracking-widest rtl:tracking-normal hover:bg-orange-600 transition-colors shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-zinc-950 text-white rounded-2xl font-kinder text-sm uppercase tracking-widest rtl:tracking-normal hover:bg-orange-600 transition-colors shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {creatingTicket ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
                   {t("Créer le ticket")}</button>

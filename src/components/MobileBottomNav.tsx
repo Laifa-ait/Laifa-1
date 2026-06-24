@@ -32,9 +32,9 @@ export const MobileBottomNav: React.FC = () => {
           onClick={() => navigate("/")}
           className="flex flex-col items-center justify-center w-14 h-14 rounded-2xl active:scale-[0.92] transition-all bg-transparent border-none cursor-pointer relative"
         >
-          {isActive("/") && <div className="absolute inset-0 bg-[#F37021]/10 rounded-2xl -z-10" />}
+          {isActive("/") && <div className="absolute inset-0 bg-[#FF5C00]/10 rounded-2xl -z-10" />}
           <Home
-            className={`w-6 h-6 transition-colors ${isActive("/") ? "text-[#F37021]" : "text-[#121315]/40"}`}
+            className={`w-6 h-6 transition-colors ${isActive("/") ? "text-[#FF5C00]" : "text-[#3C2B22]/40"}`}
             strokeWidth={isActive("/") ? 2.5 : 2}
           />
         </button>
@@ -44,9 +44,9 @@ export const MobileBottomNav: React.FC = () => {
           onClick={() => navigate("/categories")}
           className="flex flex-col items-center justify-center w-14 h-14 rounded-2xl active:scale-[0.92] transition-all bg-transparent border-none cursor-pointer relative"
         >
-          {isActive("/categories") && <div className="absolute inset-0 bg-[#F37021]/10 rounded-2xl -z-10" />}
+          {isActive("/categories") && <div className="absolute inset-0 bg-[#FF5C00]/10 rounded-2xl -z-10" />}
           <LayoutGrid
-            className={`w-6 h-6 transition-colors ${isActive("/categories") ? "text-[#F37021]" : "text-[#121315]/40"}`}
+            className={`w-6 h-6 transition-colors ${isActive("/categories") ? "text-[#FF5C00]" : "text-[#3C2B22]/40"}`}
             strokeWidth={isActive("/categories") ? 2.5 : 2}
           />
         </button>
@@ -57,11 +57,11 @@ export const MobileBottomNav: React.FC = () => {
           className="flex flex-col items-center justify-center w-14 h-14 rounded-2xl active:scale-[0.92] transition-all relative bg-transparent border-none cursor-pointer"
         >
           <Heart
-            className={`w-6 h-6 transition-colors ${wishlist.length > 0 ? "text-[#F37021] fill-[#F37021]/20" : "text-[#121315]/40"}`}
+            className={`w-6 h-6 transition-colors ${wishlist.length > 0 ? "text-[#FF5C00] fill-[#FF5C00]/20" : "text-[#3C2B22]/40"}`}
             strokeWidth={wishlist.length > 0 ? 2.5 : 2}
           />
           {wishlist.length > 0 && (
-            <span className="absolute top-2 right-3 w-2 h-2 bg-[#F37021] border-2 border-white rounded-full shadow-sm" />
+            <span className="absolute top-2 right-3 w-2 h-2 bg-[#FF5C00] border-2 border-white rounded-full shadow-sm" />
           )}
         </button>
 
@@ -72,11 +72,11 @@ export const MobileBottomNav: React.FC = () => {
         >
           <div className="relative">
             <ShoppingBag
-              className={`w-6 h-6 transition-colors ${cart.length > 0 ? "text-[#F37021]" : "text-[#121315]/40"}`}
+              className={`w-6 h-6 transition-colors ${cart.length > 0 ? "text-[#FF5C00]" : "text-[#3C2B22]/40"}`}
               strokeWidth={cart.length > 0 ? 2.5 : 2}
             />
             {cart.length > 0 && (
-              <span className="absolute -top-1.5 -right-2 w-4.5 h-4.5 bg-[#F37021] text-white text-[9px] rounded-full flex items-center justify-center font-black border-[1.5px] border-white shadow-sm">
+              <span className="absolute -top-1.5 -right-2 w-4.5 h-4.5 bg-[#FF5C00] text-white text-[9px] rounded-full flex items-center justify-center font-kinder border-[1.5px] border-white shadow-sm">
                 {cart.length}
               </span>
             )}
@@ -101,10 +101,10 @@ export const MobileBottomNav: React.FC = () => {
           className="flex flex-col items-center justify-center w-14 h-14 rounded-2xl active:scale-[0.92] transition-all bg-transparent border-none cursor-pointer relative"
         >
           {location.pathname.startsWith("/dashboard") && (
-            <div className="absolute inset-0 bg-[#F37021]/10 rounded-2xl -z-10" />
+            <div className="absolute inset-0 bg-[#FF5C00]/10 rounded-2xl -z-10" />
           )}
           <UserIcon
-            className={`w-6 h-6 transition-colors ${location.pathname.startsWith("/dashboard") ? "text-[#F37021]" : "text-[#121315]/40"}`}
+            className={`w-6 h-6 transition-colors ${location.pathname.startsWith("/dashboard") ? "text-[#FF5C00]" : "text-[#3C2B22]/40"}`}
             strokeWidth={location.pathname.startsWith("/dashboard") ? 2.5 : 2}
           />
         </button>

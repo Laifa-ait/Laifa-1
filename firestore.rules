@@ -115,7 +115,7 @@ service cloud.firestore {
         )
       ); 
       allow update: if isSignedIn() && (
-        isAdmin() || request.auth.token.email == 'laifa.ait@gmail.com' || (
+        isAdmin() || (
           request.auth.uid == uid 
           && isValidUser(incoming())
           && (
@@ -319,6 +319,7 @@ service cloud.firestore {
     // -------------------------------------------------------------------------
     match /user_notifications/{notifId} {
       allow read: if isSignedIn() && resource.data.recipientId == request.auth.uid;
+      allow create: if isAdmin();
       allow update: if isSignedIn() && resource.data.recipientId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
       allow delete: if isSignedIn() && resource.data.recipientId == request.auth.uid;
     }
@@ -442,7 +443,7 @@ service cloud.firestore {
     // -------------------------------------------------------------------------
     match /audit_logs/{id} { 
       allow read: if isAdmin(); 
-      allow create: if isSignedIn() && request.auth.token.role == 'admin'; 
+      allow create: if isAdmin(); 
     }
 
     // -------------------------------------------------------------------------

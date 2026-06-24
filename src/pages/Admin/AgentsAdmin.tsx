@@ -68,7 +68,7 @@ export const AgentsAdmin: React.FC = () => {
         <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center mb-2 shadow-sm border border-orange-200">
           <Bot className="w-6 h-6 text-orange-600" />
         </div>
-        <h1 className="text-3xl font-black text-zinc-950 uppercase tracking-tight rtl:tracking-normal">
+        <h1 className="text-3xl font-kinder text-zinc-950 uppercase tracking-tight rtl:tracking-normal">
           {t("Agents IA")}
         </h1>
         <p className="text-zinc-500 font-medium text-sm max-w-2xl">
@@ -97,7 +97,7 @@ export const AgentsAdmin: React.FC = () => {
               {renderAgentStatus(configs.growth)}
             </div>
 
-            <h2 className="text-xl font-black text-zinc-900 mb-2">{t("Growth Analyst")}</h2>
+            <h2 className="text-xl font-kinder text-zinc-900 mb-2">{t("Growth Analyst")}</h2>
             <h3 className="text-sm font-bold text-blue-600 mb-4 tracking-wider rtl:tracking-normal uppercase">
               {t("Analyste Stratégique")}
             </h3>
@@ -113,7 +113,7 @@ export const AgentsAdmin: React.FC = () => {
                 <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider rtl:tracking-normal mb-1">
                   {t("Impact")}
                 </span>
-                <span className="text-sm font-black text-zinc-800">{t("+14% Conversion")}</span>
+                <span className="text-sm font-kinder text-zinc-800">{t("+14% Conversion")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -159,7 +159,7 @@ export const AgentsAdmin: React.FC = () => {
               {renderAgentStatus(configs.cart)}
             </div>
 
-            <h2 className="text-xl font-black text-zinc-900 mb-2">{t("Récupérateur de Paniers")}</h2>
+            <h2 className="text-xl font-kinder text-zinc-900 mb-2">{t("Récupérateur de Paniers")}</h2>
             <h3 className="text-sm font-bold text-orange-600 mb-4 tracking-wider rtl:tracking-normal uppercase">
               {t("Emailing / Notifications Mails")}
             </h3>
@@ -175,7 +175,7 @@ export const AgentsAdmin: React.FC = () => {
                 <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider rtl:tracking-normal mb-1">
                   {t("Impact")}
                 </span>
-                <span className="text-sm font-black text-zinc-800">{t("+22% Récupération")}</span>
+                <span className="text-sm font-kinder text-zinc-800">{t("+22% Récupération")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -221,7 +221,7 @@ export const AgentsAdmin: React.FC = () => {
               {renderAgentStatus(configs.moderator)}
             </div>
 
-            <h2 className="text-xl font-black text-zinc-900 mb-2">{t("Modérateur de Contenu")}</h2>
+            <h2 className="text-xl font-kinder text-zinc-900 mb-2">{t("Modérateur de Contenu")}</h2>
             <h3 className="text-sm font-bold text-emerald-600 mb-4 tracking-wider rtl:tracking-normal uppercase">
               {t("Vérification Automatique")}
             </h3>
@@ -237,7 +237,7 @@ export const AgentsAdmin: React.FC = () => {
                 <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider rtl:tracking-normal mb-1">
                   {t("Objectif")}
                 </span>
-                <span className="text-sm font-black text-zinc-800">{t("Conformité")}</span>
+                <span className="text-sm font-kinder text-zinc-800">{t("Conformité")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -283,7 +283,7 @@ export const AgentsAdmin: React.FC = () => {
               {renderAgentStatus(configs.support)}
             </div>
 
-            <h2 className="text-xl font-black text-zinc-900 mb-2">{t("Assistant Support Client")}</h2>
+            <h2 className="text-xl font-kinder text-zinc-900 mb-2">{t("Assistant Support Client")}</h2>
             <h3 className="text-sm font-bold text-purple-600 mb-4 tracking-wider rtl:tracking-normal uppercase">
               {t("Chatbot / Support Niveau 1")}
             </h3>
@@ -299,7 +299,7 @@ export const AgentsAdmin: React.FC = () => {
                 <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider rtl:tracking-normal mb-1">
                   {t("Objectif")}
                 </span>
-                <span className="text-sm font-black text-zinc-800">{t("Assistance H24")}</span>
+                <span className="text-sm font-kinder text-zinc-800">{t("Assistance H24")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <button

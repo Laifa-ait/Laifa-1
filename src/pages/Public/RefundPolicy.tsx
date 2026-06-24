@@ -46,12 +46,12 @@ export const RefundPolicy: React.FC = () => {
                             <BadgeDollarSign className="w-6 h-6" />
                         </div>
                         <div>
-                            <h1 className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">{t("Politique de Remboursement")}</h1>
+                            <h1 className="text-2xl sm:text-3xl font-kinder text-stone-900 tracking-tight">{t("Politique de Remboursement")}</h1>
                             <p className="text-sm font-medium text-stone-500 mt-1">{t("Consultez les informations concernant les retours et remboursements.")}</p>
                         </div>
                     </div>
 
-                    <div className="prose prose-stone max-w-none prose-p:text-sm prose-p:leading-relaxed prose-headings:font-black">
+                    <div className="prose prose-stone max-w-none prose-p:text-sm prose-p:leading-relaxed prose-headings:font-kinder">
                         <ReactMarkdown>{policyText}</ReactMarkdown>
                     </div>
                 </div>

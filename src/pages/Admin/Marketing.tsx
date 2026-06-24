@@ -334,7 +334,7 @@ export const Marketing: React.FC = () => {
     <div className="space-y-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-4xl font-black tracking-tight rtl:tracking-normal text-zinc-950">
+          <h2 className="text-4xl font-kinder tracking-tight rtl:tracking-normal text-zinc-950">
             {t("Marketing & Catalogue")}
           </h2>
           <p className="text-zinc-500 font-medium font-sans">
@@ -366,7 +366,7 @@ export const Marketing: React.FC = () => {
             className="bg-white rounded-[3.5rem] border border-zinc-100 shadow-sm p-12 space-y-10"
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-100 pb-8">
-              <h4 className="text-xl font-black flex items-center gap-4">
+              <h4 className="text-xl font-kinder flex items-center gap-4">
                 <LayoutGrid className="w-7 h-7 text-orange-500 animate-pulse" />
                 {t("Arbre des Catégories Interactif")}
               </h4>
@@ -374,14 +374,14 @@ export const Marketing: React.FC = () => {
                 <button
                   onClick={handleTranslateAll}
                   disabled={isTranslating}
-                  className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-white bg-indigo-600 hover:bg-indigo-700 px-5 py-3 rounded-2xl transition-all self-start disabled:opacity-50"
+                  className="flex items-center gap-2 text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-white bg-indigo-600 hover:bg-indigo-700 px-5 py-3 rounded-2xl transition-all self-start disabled:opacity-50"
                 >
                   <Sparkles className={`w-3.5 h-3.5 ${isTranslating ? "animate-spin" : ""}`} />
                   {isTranslating ? "Traduction en cours..." : "AI Traduire tout le Catalogue"}
                 </button>
                 <button
                   onClick={handleResetToDefault}
-                  className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest rtl:tracking-normal text-[#ea580c] bg-orange-50 hover:bg-orange-100 px-5 py-3 rounded-2xl transition-all self-start"
+                  className="flex items-center gap-2 text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-[#ea580c] bg-orange-50 hover:bg-orange-100 px-5 py-3 rounded-2xl transition-all self-start"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   {t("Réinitialiser par défaut")}
@@ -395,7 +395,7 @@ export const Marketing: React.FC = () => {
                 <Folder className="w-5 h-5 text-orange-500" />
               </div>
               <div className="flex-1 w-full">
-                <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1">
+                <p className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1">
                   {t("Nouveau Niveau 1")}
                 </p>
                 <input
@@ -412,7 +412,7 @@ export const Marketing: React.FC = () => {
               </div>
               <button
                 onClick={handleAddCat}
-                className="w-full md:w-auto px-8 py-4 bg-zinc-950 text-white rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 text-xs font-black uppercase tracking-widest rtl:tracking-normal transition-all shadow-md shrink-0"
+                className="w-full md:w-auto px-8 py-4 bg-zinc-950 text-white rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 text-xs font-kinder uppercase tracking-widest rtl:tracking-normal transition-all shadow-md shrink-0"
               >
                 <Plus className="w-4 h-4" /> {t("Créer")}
               </button>
@@ -447,10 +447,10 @@ export const Marketing: React.FC = () => {
                             <FolderOpen className="w-5 h-5" />
                           </div>
                           <div className="min-w-0">
-                            <h5 className="font-black text-zinc-950 text-sm tracking-tight rtl:tracking-normal uppercase">
+                            <h5 className="font-kinder text-zinc-950 text-sm tracking-tight rtl:tracking-normal uppercase">
                               {catName}
                             </h5>
-                            <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mt-1">
+                            <p className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mt-1">
                               {subcatCount} {subcatCount > 1 ? "Sous-catégories" : "Sous-catégorie"} • {subSubcatCount}{" "}
                               {subSubcatCount > 1 ? "Éléments" : "Élément"}
                             </p>
@@ -513,7 +513,7 @@ export const Marketing: React.FC = () => {
                                             <h6 className="font-extrabold text-zinc-900 text-xs uppercase tracking-wider rtl:tracking-normal">
                                               {subcatName}
                                             </h6>
-                                            <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mt-0.5">
+                                            <p className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mt-0.5">
                                               {items.length}{" "}
                                               {items.length > 1 ? "Sous-sous-catégories" : "Sous-sous-catégorie"}
                                             </p>
@@ -564,7 +564,7 @@ export const Marketing: React.FC = () => {
                                                       key={item}
                                                       className="inline-flex items-center gap-2 px-3.5 py-2 bg-zinc-50 border border-zinc-100 hover:border-orange-200 rounded-full group/pill transition-colors"
                                                     >
-                                                      <span className="text-[10px] font-black text-zinc-700 uppercase tracking-widest rtl:tracking-normal">
+                                                      <span className="text-[10px] font-kinder text-zinc-700 uppercase tracking-widest rtl:tracking-normal">
                                                         {item}
                                                       </span>
                                                       <button
@@ -629,7 +629,7 @@ export const Marketing: React.FC = () => {
                                 />
                                 <button
                                   onClick={() => handleAddSubcat(catName)}
-                                  className="px-5 py-2.5 bg-zinc-900 hover:bg-orange-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest rtl:tracking-normal transition-all"
+                                  className="px-5 py-2.5 bg-zinc-900 hover:bg-orange-500 text-white rounded-xl text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal transition-all"
                                 >
                                   <Plus className="w-3 h-3 inline me-1" /> {t("Ajouter")}
                                 </button>
@@ -655,7 +655,7 @@ export const Marketing: React.FC = () => {
             className="bg-white rounded-[3.5rem] border border-zinc-100 shadow-sm p-12"
           >
             <div className="flex items-center justify-between mb-10">
-              <h4 className="text-2xl font-black flex items-center gap-4 text-zinc-950">
+              <h4 className="text-2xl font-kinder flex items-center gap-4 text-zinc-950">
                 <Ticket className="w-8 h-8 text-orange-500" />
                 {t("Codes Promos & Coupons de la Plateforme (Actifs)")}
               </h4>
@@ -681,7 +681,7 @@ export const Marketing: React.FC = () => {
                 >
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-1 font-mono">
+                      <label className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-1 font-mono">
                         {t("Code Coupon *")}
                       </label>
                       <input
@@ -689,12 +689,12 @@ export const Marketing: React.FC = () => {
                         required
                         value={couponForm.code}
                         onChange={(e) => setCouponForm({ ...couponForm, code: e.target.value })}
-                        className="w-full px-6 py-4 bg-white border border-zinc-200 rounded-xl outline-none font-black text-sm uppercase tracking-widest rtl:tracking-normal"
+                        className="w-full px-6 py-4 bg-white border border-zinc-200 rounded-xl outline-none font-kinder text-sm uppercase tracking-widest rtl:tracking-normal"
                         placeholder={t("EX: AID2026") || "EX: AID2026"}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-1 font-mono">
+                      <label className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-1 font-mono">
                         {t("Description")}
                       </label>
                       <input
@@ -707,7 +707,7 @@ export const Marketing: React.FC = () => {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-1 font-mono">
+                        <label className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-1 font-mono">
                           {t("Type de Réduction")}
                         </label>
                         <select
@@ -715,14 +715,14 @@ export const Marketing: React.FC = () => {
                           onChange={(e) =>
                             setCouponForm({ ...couponForm, discountType: e.target.value as "percent" | "fixed" })
                           }
-                          className="w-full px-5 py-4 bg-white border border-zinc-200 rounded-xl outline-none font-black text-xs uppercase cursor-pointer"
+                          className="w-full px-5 py-4 bg-white border border-zinc-200 rounded-xl outline-none font-kinder text-xs uppercase cursor-pointer"
                         >
                           <option value="percent">{t("Pourcentage (%)")}</option>
                           <option value="fixed">{t("Montant Fixe (DA)")}</option>
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-1 font-mono">
+                        <label className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-1 font-mono">
                           {t("Valeur de la Remise *")}
                         </label>
                         <input
@@ -732,7 +732,7 @@ export const Marketing: React.FC = () => {
                           step="any"
                           value={couponForm.discountValue}
                           onChange={(e) => setCouponForm({ ...couponForm, discountValue: e.target.value })}
-                          className="w-full px-5 py-4 bg-white border border-zinc-200 rounded-xl outline-none font-black text-sm"
+                          className="w-full px-5 py-4 bg-white border border-zinc-200 rounded-xl outline-none font-kinder text-sm"
                           placeholder={couponForm.discountType === "percent" ? "Ex: 15" : "Ex: 500"}
                         />
                       </div>
@@ -742,7 +742,7 @@ export const Marketing: React.FC = () => {
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-1 font-mono">
+                        <label className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-1 font-mono">
                           {t("Minimum Achat (DA)")}
                         </label>
                         <input
@@ -755,7 +755,7 @@ export const Marketing: React.FC = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-1 font-mono">
+                        <label className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-1 font-mono">
                           {t("Remise Max (DA)")}
                         </label>
                         <input
@@ -772,7 +772,7 @@ export const Marketing: React.FC = () => {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-1 font-mono">
+                        <label className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-1 font-mono">
                           {t("Usage Max (Limité)")}
                         </label>
                         <input
@@ -785,7 +785,7 @@ export const Marketing: React.FC = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-1 font-mono">
+                        <label className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal ms-1 font-mono">
                           {t("Date d'Expiration *")}
                         </label>
                         <input
@@ -808,7 +808,7 @@ export const Marketing: React.FC = () => {
                           className="w-5 h-5 rounded accent-orange-500 cursor-pointer"
                         />
                         <label
-                          className="text-xs font-black text-zinc-950 uppercase tracking-wide rtl:tracking-normal cursor-pointer"
+                          className="text-xs font-kinder text-zinc-950 uppercase tracking-wide rtl:tracking-normal cursor-pointer"
                           htmlFor="isActive"
                         >
                           {t("Activer immédiatement le coupon")}
@@ -818,7 +818,7 @@ export const Marketing: React.FC = () => {
                         id="submit-create-coupon"
                         type="submit"
                         disabled={isCreatingCoupon}
-                        className="px-8 py-4 bg-orange-600 hover:bg-orange-700 text-white font-black text-[10px] uppercase tracking-widest rtl:tracking-normal rounded-xl disabled:opacity-50 transition-colors shadow-lg"
+                        className="px-8 py-4 bg-orange-600 hover:bg-orange-700 text-white font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal rounded-xl disabled:opacity-50 transition-colors shadow-lg"
                       >
                         {isCreatingCoupon ? "Création..." : "Valider & Créer"}
                       </button>
@@ -838,10 +838,10 @@ export const Marketing: React.FC = () => {
               ) : coupons.length === 0 ? (
                 <div className="p-20 border-2 border-dashed border-zinc-100 rounded-[2.5rem] text-center space-y-4">
                   <Ticket className="w-16 h-16 text-zinc-100 mx-auto animate-pulse" />
-                  <p className="text-zinc-500 font-black text-xs uppercase tracking-widest rtl:tracking-normal">
+                  <p className="text-zinc-500 font-kinder text-xs uppercase tracking-widest rtl:tracking-normal">
                     {t("Aucun coupon promotionnel actif.")}
                   </p>
-                  <p className="text-[10px] font-black text-zinc-300 uppercase tracking-widest rtl:tracking-normal">
+                  <p className="text-[10px] font-kinder text-zinc-300 uppercase tracking-widest rtl:tracking-normal">
                     {t("Lancez vos ventes en créant un nouveau code ci-dessus !")}
                   </p>
                 </div>
@@ -870,7 +870,7 @@ export const Marketing: React.FC = () => {
                         </div>
                         <div className="space-y-1 min-w-0">
                           <div className="flex items-center gap-3 flex-wrap">
-                            <h5 className="text-xl font-black text-zinc-950 uppercase tracking-widest rtl:tracking-normal leading-none mt-1 font-mono">
+                            <h5 className="text-xl font-kinder text-zinc-950 uppercase tracking-widest rtl:tracking-normal leading-none mt-1 font-mono">
                               {coupon.code}
                             </h5>
                             <span
@@ -879,7 +879,7 @@ export const Marketing: React.FC = () => {
                               {isExpired ? "Expiré" : !coupon.isActive ? "Désactivé" : "Actif"}
                             </span>
                             {coupon.minOrderValue > 0 && (
-                              <span className="bg-zinc-100 text-zinc-600 border border-zinc-200/60 px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest rtl:tracking-normal font-mono">
+                              <span className="bg-zinc-100 text-zinc-600 border border-zinc-200/60 px-2.5 py-1 rounded-full text-[8px] font-kinder uppercase tracking-widest rtl:tracking-normal font-mono">
                                 {t("Min:")}
                                 {formatPrice(coupon.minOrderValue)}
                               </span>
@@ -888,7 +888,7 @@ export const Marketing: React.FC = () => {
                           {coupon.description && (
                             <p className="text-xs text-zinc-500 font-medium">{coupon.description}</p>
                           )}
-                          <div className="flex items-center gap-4 text-[9px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal flex-wrap pt-1 font-mono">
+                          <div className="flex items-center gap-4 text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal flex-wrap pt-1 font-mono">
                             <span className="flex items-center gap-1.5">
                               <Sparkles className="w-3" /> {t("Remise de -")}
                               {coupon.discountType === "percent"
@@ -949,7 +949,7 @@ export const Marketing: React.FC = () => {
             key="featured"
             className="bg-white rounded-[3.5rem] border border-zinc-100 shadow-sm p-12"
           >
-            <h4 className="text-xl font-black flex items-center gap-4 mb-10">
+            <h4 className="text-xl font-kinder flex items-center gap-4 mb-10">
               <Star className="w-7 h-7 text-orange-500 fill-orange-500" />
               {t("Produits mis en avant")}
             </h4>

@@ -75,7 +75,7 @@ export const MonthlyUpdateBanner: React.FC = () => {
                   <Sparkles className="w-4 h-4 text-amber-300" />
                 </div>
                 <div>
-                  <div className="text-[10px] rtl:text-[12px] font-black text-amber-300 uppercase tracking-widest rtl:tracking-normal mb-0.5">
+                  <div className="text-[10px] rtl:text-[12px] font-kinder text-amber-300 uppercase tracking-widest rtl:tracking-normal mb-0.5">
                     {currentLang === "ar" ? "تحديثات الشهر" : currentLang === "en" ? "Monthly Update" : "Mise à jour"} •{" "}
                     {latestUpdate.month || latestUpdate.id}
                   </div>
@@ -111,7 +111,7 @@ export const MonthlyUpdateBanner: React.FC = () => {
               className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden"
             >
               <div className="flex items-center justify-between p-6 border-b border-zinc-100">
-                <h2 className="text-2xl font-black text-zinc-900 flex items-center gap-3">
+                <h2 className="text-2xl font-kinder text-zinc-900 flex items-center gap-3">
                   <Megaphone className="w-6 h-6 text-emerald-500" />
                   {currentLang === "ar"
                     ? "سجل التحديثات"
@@ -136,7 +136,7 @@ export const MonthlyUpdateBanner: React.FC = () => {
                     <div key={up.id} className="relative pl-6 rtl:pl-0 rtl:pr-6">
                       <div className="absolute left-0 rtl:left-auto rtl:right-0 top-0 bottom-0 w-px bg-zinc-200"></div>
                       <div className="absolute left-[-4px] rtl:left-auto rtl:right-[-4px] top-1.5 w-2 h-2 rounded-full bg-emerald-500 ring-4 ring-white"></div>
-                      <div className="mb-1 text-xs rtl:text-sm font-black text-emerald-600 uppercase tracking-widest rtl:tracking-normal">
+                      <div className="mb-1 text-xs rtl:text-sm font-kinder text-emerald-600 uppercase tracking-widest rtl:tracking-normal">
                         {up.month || up.id}
                       </div>
                       <div className="bg-white rounded-2xl p-5 shadow-sm border border-zinc-200/60 whitespace-pre-wrap text-zinc-700 text-sm leading-relaxed font-medium">
@@ -149,7 +149,7 @@ export const MonthlyUpdateBanner: React.FC = () => {
               <div className="p-6 bg-white border-t border-zinc-100 text-center">
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="px-8 py-3 bg-zinc-950 text-white rounded-full font-black text-sm uppercase tracking-widest rtl:tracking-normal hover:bg-zinc-800 transition-colors"
+                  className="px-8 py-3 bg-zinc-950 text-white rounded-full font-kinder text-sm uppercase tracking-widest rtl:tracking-normal hover:bg-zinc-800 transition-colors"
                 >
                   {currentLang === "ar" ? "إغلاق" : currentLang === "en" ? "Close" : "Fermer"}
                 </button>

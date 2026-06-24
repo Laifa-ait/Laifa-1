@@ -31,10 +31,10 @@ export const UserSection: React.FC<UserSectionProps> = ({ currentUser, userProfi
             />
           </button>
           <div>
-            <h4 className="font-black text-xl leading-tight text-white tracking-tighter rtl:tracking-normal shadow-sm">
+            <h4 className="font-kinder text-xl leading-tight text-white tracking-tighter rtl:tracking-normal shadow-sm">
               {userProfile?.displayName}
             </h4>
-            <p className="text-white text-[10px] rtl:text-[12px] font-black uppercase tracking-widest rtl:tracking-normal mt-1.5 drop-shadow-sm">
+            <p className="text-white text-[10px] rtl:text-[12px] font-kinder uppercase tracking-widest rtl:tracking-normal mt-1.5 drop-shadow-sm">
               {userProfile?.role === "admin"
                 ? "Administrateur"
                 : userProfile?.role === "seller"
@@ -45,12 +45,12 @@ export const UserSection: React.FC<UserSectionProps> = ({ currentUser, userProfi
         </div>
       ) : (
         <div className="relative z-10">
-          <h4 className="font-black text-2xl mb-6 leading-tight text-white tracking-tighter rtl:tracking-normal">
+          <h4 className="font-kinder text-2xl mb-6 leading-tight text-white tracking-tighter rtl:tracking-normal">
             {t("Prêt à explorer Olma ?")}
           </h4>
           <button
             onClick={() => handleNav("/auth")}
-            className="w-full bg-[#ea580c] text-white py-4 rounded-2xl font-black text-xs rtl:text-sm uppercase tracking-widest rtl:tracking-normal flex items-center justify-center gap-3 shadow-lg shadow-orange-500/20 active:scale-95 transition-all"
+            className="w-full bg-[#ea580c] text-white py-4 rounded-2xl font-kinder text-xs rtl:text-sm uppercase tracking-widest rtl:tracking-normal flex items-center justify-center gap-3 shadow-lg shadow-orange-500/20 active:scale-95 transition-all"
           >
             {t("Se connecter")}
             <User className="w-4 h-4 text-white" />

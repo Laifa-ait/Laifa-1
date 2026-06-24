@@ -244,7 +244,7 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div>
-            <h2 className="text-xl font-black text-[#121315] uppercase tracking-tight rtl:tracking-normal">
+            <h2 className="text-xl font-kinder text-[#3C2B22] uppercase tracking-tight rtl:tracking-normal">
               {t("Bordereaux de Transport National")}
             </h2>
             <p className="text-xs rtl:text-sm text-zinc-400 font-bold">
@@ -255,7 +255,7 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
 
         <button
           onClick={handlePrint}
-          className="px-6 py-3 bg-[#ea580c] hover:bg-[#c2410c] text-white font-black text-xs rtl:text-sm uppercase tracking-widest rtl:tracking-normal rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer border-none shadow-md hover:shadow-lg"
+          className="px-6 py-3 bg-[#ea580c] hover:bg-[#c2410c] text-white font-kinder text-xs rtl:text-sm uppercase tracking-widest rtl:tracking-normal rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer border-none shadow-md hover:shadow-lg"
         >
           <Printer className="w-4 h-4" />
           {t("Lancer l'impression")}
@@ -266,14 +266,14 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
         {/* Left customization form */}
         <div className="lg:col-span-5 space-y-6">
           <div className="bg-white rounded-3xl p-6 border border-zinc-100 shadow-sm space-y-5">
-            <h3 className="text-xs rtl:text-sm font-black text-[#121315] uppercase tracking-widest rtl:tracking-normal flex items-center gap-1">
-              <Settings className="w-4 h-4 text-[#F37021]" />
+            <h3 className="text-xs rtl:text-sm font-kinder text-[#3C2B22] uppercase tracking-widest rtl:tracking-normal flex items-center gap-1">
+              <Settings className="w-4 h-4 text-[#FF5C00]" />
               {t("Format & Paramètres")}
             </h3>
 
             {/* Carrier style selection list */}
             <div className="space-y-2">
-              <label className="block text-[10px] rtl:text-[12px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
+              <label className="block text-[10px] rtl:text-[12px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
                 {t("Modèle de transporteur partenaire")}
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -289,7 +289,7 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
                       setCarrierTemplate(c.id as any);
                       setApiSynced(false);
                     }}
-                    className={`py-2 px-3 rounded-xl text-[10px] rtl:text-[12px] font-black uppercase tracking-wider rtl:tracking-normal transition-all border cursor-pointer ${carrierTemplate === c.id ? "bg-[#121315] text-white border-transparent shadow-sm" : "bg-zinc-50 text-zinc-500 border-zinc-200 hover:bg-zinc-100"}`}
+                    className={`py-2 px-3 rounded-xl text-[10px] rtl:text-[12px] font-black uppercase tracking-wider rtl:tracking-normal transition-all border cursor-pointer ${carrierTemplate === c.id ? "bg-[#3C2B22] text-white border-transparent shadow-sm" : "bg-zinc-50 text-zinc-500 border-zinc-200 hover:bg-zinc-100"}`}
                   >
                     {c.label}
                   </button>
@@ -299,7 +299,7 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
 
             {/* Label paper size */}
             <div className="space-y-2">
-              <label className="block text-[10px] rtl:text-[12px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
+              <label className="block text-[10px] rtl:text-[12px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
                 {t("Gabarit Papier")}
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -310,7 +310,7 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
                   <button
                     key={sz.id}
                     onClick={() => setLabelSize(sz.id as any)}
-                    className={`py-2 px-2 rounded-xl text-[10px] rtl:text-[12px] font-black uppercase tracking-wider rtl:tracking-normal transition-all border cursor-pointer ${labelSize === sz.id ? "bg-[#121315] text-white border-transparent" : "bg-zinc-50 text-zinc-500 border-zinc-200 hover:bg-zinc-100"}`}
+                    className={`py-2 px-2 rounded-xl text-[10px] rtl:text-[12px] font-black uppercase tracking-wider rtl:tracking-normal transition-all border cursor-pointer ${labelSize === sz.id ? "bg-[#3C2B22] text-white border-transparent" : "bg-zinc-50 text-zinc-500 border-zinc-200 hover:bg-zinc-100"}`}
                   >
                     {sz.label}
                   </button>
@@ -320,7 +320,7 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
 
             {/* Custom Remarks for courier */}
             <div className="space-y-2">
-              <label className="block text-[10px] rtl:text-[12px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
+              <label className="block text-[10px] rtl:text-[12px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
                 {t("Instructions de livraison (Bordereau)")}
               </label>
               <textarea
@@ -328,7 +328,7 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
                 onChange={(e) => setRemarks(e.target.value)}
                 rows={3}
                 placeholder={t("Ex: Appeler avant d'arriver...") || "Ex: Appeler avant d'arriver..."}
-                className="w-full text-xs rtl:text-sm font-semibold p-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:border-[#F37021] outline-none"
+                className="w-full text-xs rtl:text-sm font-semibold p-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:border-[#FF5C00] outline-none"
               />
             </div>
 
@@ -347,10 +347,10 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
           </div>
 
           {/* Connected shipping API controller panel */}
-          <div className="bg-[#121315] text-white rounded-3xl p-6 shadow-md space-y-4">
+          <div className="bg-[#3C2B22] text-white rounded-3xl p-6 shadow-md space-y-4">
             <div className="flex items-center gap-2">
               <RefreshCw className={`w-4 h-4 text-orange-400 ${isSyncingWithCarrier ? "animate-spin" : ""}`} />
-              <h4 className="text-xs rtl:text-sm font-black uppercase tracking-widest rtl:tracking-normal text-[#FAF8F5]">
+              <h4 className="text-xs rtl:text-sm font-kinder uppercase tracking-widest rtl:tracking-normal text-[#FAF8F5]">
                 {t("Passerelle API Transport")}
               </h4>
             </div>
@@ -362,7 +362,7 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
 
             <div className="bg-white/10 p-3.5 rounded-2xl flex items-center justify-between">
               <div>
-                <span className="block text-[8px] font-black uppercase text-zinc-300">{t("Statut de couplage")}</span>
+                <span className="block text-[8px] font-kinder uppercase text-zinc-300">{t("Statut de couplage")}</span>
                 <span className="text-xs rtl:text-sm font-bold">
                   {apiSynced ? `Pris en charge (${carrierTemplate.toUpperCase()})` : "En attente d'enregistrement"}
                 </span>
@@ -377,7 +377,7 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
             <button
               onClick={handleSyncCarrier}
               disabled={isSyncingWithCarrier || apiSynced}
-              className="w-full text-center py-3.5 bg-[#F37021] hover:bg-[#b04f30] disabled:bg-zinc-600 disabled:opacity-50 text-white font-black text-xs rtl:text-sm uppercase tracking-widest rtl:tracking-normal rounded-xl transition-all border-none cursor-pointer flex items-center justify-center gap-2"
+              className="w-full text-center py-3.5 bg-[#FF5C00] hover:bg-[#b04f30] disabled:bg-zinc-600 disabled:opacity-50 text-white font-kinder text-xs rtl:text-sm uppercase tracking-widest rtl:tracking-normal rounded-xl transition-all border-none cursor-pointer flex items-center justify-center gap-2"
             >
               {isSyncingWithCarrier
                 ? "Synchronisation API..."
@@ -390,7 +390,7 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
 
         {/* Right Label Print Live Preview container */}
         <div className="lg:col-span-7 flex flex-col items-center">
-          <span className="text-[10px] rtl:text-[12px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-3 select-none">
+          <span className="text-[10px] rtl:text-[12px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-3 select-none">
             {t("Aperçu conforme du ticket d'expédition (Standard Algérie)")}
           </span>
 
@@ -405,7 +405,7 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
                 {/* Header info */}
                 <div className="flex items-center justify-between border-b-2 border-zinc-950 pb-2">
                   <div className="space-y-0.5">
-                    <h3 className="text-sm font-black uppercase tracking-tighter rtl:tracking-normal leading-none">
+                    <h3 className="text-sm font-kinder uppercase tracking-tighter rtl:tracking-normal leading-none">
                       {carrierTemplate === "yalidine" ? "⚡ Yalidine Express" : "📦 MAYESTRO DELIVERY"}
                     </h3>
                     <p className="text-[9px] rtl:text-[11px] font-bold text-zinc-500">
@@ -422,14 +422,14 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
                 {/* Sender vs Recipient */}
                 <div className="grid grid-cols-2 gap-4 text-[10px] rtl:text-[12px] border-b border-zinc-950 pb-3">
                   <div className="space-y-1">
-                    <span className="block text-[8px] font-black text-zinc-500 uppercase tracking-wide">
+                    <span className="block text-[8px] font-kinder text-zinc-500 uppercase tracking-wide">
                       {t("EXPÉDITEUR :")}
                     </span>
                     <strong className="block text-zinc-900 leading-tight">{t("OLMART DIRECT")}</strong>
                     <span className="block text-zinc-500 font-bold">+213 23 00 00</span>
                   </div>
                   <div className="space-y-1 border-l border-zinc-200 pl-3">
-                    <span className="block text-[8px] font-black text-zinc-500 uppercase tracking-wide">
+                    <span className="block text-[8px] font-kinder text-zinc-500 uppercase tracking-wide">
                       {t("DESTINATAIRE :")}
                     </span>
                     <strong className="block text-zinc-900 leading-tight">
@@ -441,20 +441,20 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
 
                 {/* Shipping Location Address */}
                 <div className="space-y-1 border-b border-zinc-950 pb-3">
-                  <span className="block text-[8px] font-black text-zinc-500 uppercase tracking-wide">
+                  <span className="block text-[8px] font-kinder text-zinc-500 uppercase tracking-wide">
                     {t("ADRESSE DE LIVRAISON")}
                   </span>
-                  <p className="text-[11px] font-black text-zinc-950 leading-tight">
+                  <p className="text-[11px] font-kinder text-zinc-950 leading-tight">
                     {order.shippingAddress?.street || "Non spécifiée"}
                   </p>
-                  <p className="text-[12px] font-black text-zinc-900 uppercase">
+                  <p className="text-[12px] font-kinder text-zinc-900 uppercase">
                     📍 {order.shippingAddress?.commune || "Commune"} • {order.shippingAddress?.wilaya || "Wilaya"}
                   </p>
                 </div>
 
                 {/* Package content details */}
                 <div className="space-y-2 text-[10px] rtl:text-[12px] border-b border-zinc-950 pb-3">
-                  <span className="block text-[8px] font-black text-zinc-500 uppercase tracking-wide">
+                  <span className="block text-[8px] font-kinder text-zinc-500 uppercase tracking-wide">
                     {t("CONTENU COLIS / ARTICLES")}
                   </span>
                   <div className="space-y-1 font-sans">
@@ -471,10 +471,10 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
 
                 {/* COD amount to collect - Very highlighted for the delivery guy */}
                 <div className="border-[3px] border-zinc-950 p-2 text-center rounded-lg bg-zinc-950 text-white">
-                  <span className="block text-[8px] font-black tracking-widest rtl:tracking-normal text-[#FAF8F5]/70 uppercase">
+                  <span className="block text-[8px] font-kinder tracking-widest rtl:tracking-normal text-[#FAF8F5]/70 uppercase">
                     {t("MONTANT A ENCAISSER DU CLIENT (COD)")}
                   </span>
-                  <h4 className="text-xl font-black">{formatPrice(order.total)}</h4>
+                  <h4 className="text-xl font-kinder">{formatPrice(order.total)}</h4>
                   <p className="text-[8px] tracking-wide text-zinc-300 uppercase leading-none mt-1">
                     {t("Cash on Delivery - Espèces d'Algérie uniquement")}
                   </p>
@@ -497,7 +497,7 @@ export const ShippingLabelPrinter: React.FC<ShippingLabelPrinterProps> = ({ orde
                         ))}
                       </div>
                     </div>
-                    <strong className="block text-[12px] font-black tracking-[0.2em] text-black">
+                    <strong className="block text-[12px] font-kinder tracking-[0.2em] text-black">
                       {generatedTracking}
                     </strong>
                   </div>

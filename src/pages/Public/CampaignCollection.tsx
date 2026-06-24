@@ -111,7 +111,7 @@ export const CampaignCollection: React.FC = () => {
             {t("Retour")}</button>
           
           <h1 
-            className="text-4xl md:text-6xl font-black tracking-tight rtl:tracking-normal mb-4 drop-shadow-xl uppercase"
+            className="text-4xl md:text-6xl font-kinder tracking-tight rtl:tracking-normal mb-4 drop-shadow-xl uppercase"
             style={{ color: data.banner.title_color || '#FFFFFF' }}
           >
             {data.banner.title}
@@ -132,7 +132,7 @@ export const CampaignCollection: React.FC = () => {
         {/* Section Header */}
         <div className="mb-10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-black text-zinc-900 tracking-tight rtl:tracking-normal flex items-center gap-2">
+            <h2 className="text-2xl font-kinder text-zinc-900 tracking-tight rtl:tracking-normal flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-orange-500" />
               {t("Sélection de la collection")}</h2>
             <p className="text-zinc-500 mt-1 font-medium text-sm">
@@ -152,7 +152,7 @@ export const CampaignCollection: React.FC = () => {
                 return (
                               <div key={product.id} className="relative group flex flex-col h-full">
                                 {product.isBannerFeatured && (
-                                  <div className="absolute -top-3 -left-3 z-20 bg-gradient-to-r from-orange-400 to-orange-500 text-white text-[10px] uppercase font-black tracking-wider rtl:tracking-normal px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 border-2 border-white">
+                                  <div className="absolute -top-3 -left-3 z-20 bg-gradient-to-r from-orange-400 to-orange-500 text-white text-[10px] uppercase font-kinder tracking-wider rtl:tracking-normal px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 border-2 border-white">
                                     <Star className="w-3 h-3 fill-current" />
                                     {t("Coup de cœur")}</div>
                                 )}
@@ -172,7 +172,7 @@ export const CampaignCollection: React.FC = () => {
                 <button
                   onClick={loadMore}
                   disabled={loadingMore}
-                  className="px-8 py-4 bg-zinc-950 text-white hover:bg-orange-600 hover:scale-[1.02] active:scale-[0.98] rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all disabled:opacity-50 flex items-center gap-3 cursor-pointer shadow-lg"
+                  className="px-8 py-4 bg-zinc-950 text-white hover:bg-orange-600 hover:scale-[1.02] active:scale-[0.98] rounded-2xl font-kinder text-xs uppercase tracking-[0.2em] transition-all disabled:opacity-50 flex items-center gap-3 cursor-pointer shadow-lg"
                 >
                   {loadingMore ? (
                     <>

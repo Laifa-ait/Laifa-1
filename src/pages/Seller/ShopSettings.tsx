@@ -194,7 +194,7 @@ export const ShopSettings: React.FC = () => {
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-3xl font-black tracking-tight rtl:tracking-normal text-zinc-950">{t("Paramètres Boutique")}</h2>
+          <h2 className="text-3xl font-kinder tracking-tight rtl:tracking-normal text-zinc-950">{t("Paramètres Boutique")}</h2>
           <p className="text-zinc-500 font-medium">{t("Configurez votre identité visuelle et logistique.")}</p>
         </div>
         <div className="flex bg-zinc-100 p-1.5 rounded-2xl">
@@ -217,24 +217,24 @@ export const ShopSettings: React.FC = () => {
               <div className="grid md:grid-cols-2 gap-8">
                  <div className="space-y-6">
                     <div>
-                       <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2 ml-1">{t("Nom Public de la Boutique")}</label>
+                       <label className="block text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2 ml-1">{t("Nom Public de la Boutique")}</label>
                        <input required disabled={!isShopValidated} type="text" className="w-full px-6 py-4 bg-zinc-50 border border-zinc-100 rounded-2xl outline-none font-bold disabled:opacity-50 disabled:cursor-not-allowed" value={shopData.shopName || ''} onChange={(e) => setShopData({...shopData, shopName: e.target.value})} />
                     </div>
                     <div>
-                       <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2 ml-1">{t("Wilaya du Magasin Principal")}</label>
+                       <label className="block text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2 ml-1">{t("Wilaya du Magasin Principal")}</label>
                        <select className="w-full px-6 py-4 bg-zinc-50 border border-zinc-100 rounded-2xl outline-none font-bold appearance-none cursor-pointer" value={shopData.wilaya || ''} onChange={(e) => setShopData({...shopData, wilaya: e.target.value})}>
                           {ALGERIA_WILAYAS.map(w => <option key={w} value={w}>{w}</option>)}
                        </select>
                     </div>
                     <div>
-                       <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2 ml-1">{t("Slogan / Courte Description")}</label>
+                       <label className="block text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2 ml-1">{t("Slogan / Courte Description")}</label>
                        <textarea rows={3} className="w-full px-6 py-4 bg-zinc-50 border border-zinc-100 rounded-2xl outline-none font-medium resize-none text-sm" value={shopData.shopDescription || ''} onChange={(e) => setShopData({...shopData, shopDescription: e.target.value})} />
                     </div>
                  </div>
 
                  <div className="space-y-6">
                     <div>
-                       <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2 ml-1">{t("Logo de la Boutique")}</label>
+                       <label className="block text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2 ml-1">{t("Logo de la Boutique")}</label>
                        <div className="flex gap-4">
                           <div className="relative flex-1 bg-zinc-50 border border-zinc-200 border-dashed rounded-2xl flex items-center justify-center hover:bg-zinc-100 transition-colors cursor-pointer overflow-hidden p-4">
                              <input type="file" accept="image/*" onChange={handleFileChange('logoUrl')} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
@@ -251,7 +251,7 @@ export const ShopSettings: React.FC = () => {
                        </div>
                     </div>
                     <div>
-                       <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2 ml-1">{t("Bannière de la Boutique")}</label>
+                       <label className="block text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2 ml-1">{t("Bannière de la Boutique")}</label>
                        <div className="relative overflow-hidden w-full px-5 py-4 bg-zinc-50 border border-zinc-200 border-dashed rounded-2xl flex items-center justify-center hover:bg-zinc-100 transition-colors cursor-pointer">
                           <input type="file" accept="image/*" onChange={handleFileChange('bannerUrl')} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                           <div className="flex flex-col items-center flex-1 text-center gap-2 pointer-events-none">
@@ -269,7 +269,7 @@ export const ShopSettings: React.FC = () => {
                     </div>
                  </div>
               </div>
-              <button type="submit" disabled={loading || uploadingLogo || uploadingBanner} className="w-full bg-zinc-950 text-white py-5 rounded-[2rem] font-black uppercase tracking-widest rtl:tracking-normal text-sm hover:bg-zinc-900 transition-all shadow-xl disabled:opacity-50 flex items-center justify-center gap-3">
+              <button type="submit" disabled={loading || uploadingLogo || uploadingBanner} className="w-full bg-zinc-950 text-white py-5 rounded-[2rem] font-kinder uppercase tracking-widest rtl:tracking-normal text-sm hover:bg-zinc-900 transition-all shadow-xl disabled:opacity-50 flex items-center justify-center gap-3">
                  <Save className="w-5 h-5" />
                  {loading ? 'Sauvegarde...' : (uploadingLogo || uploadingBanner) ? 'Transfert d\'image en cours...' : 'Sauvegarder le Profil'}
               </button>
@@ -281,20 +281,20 @@ export const ShopSettings: React.FC = () => {
               <div className="absolute top-0 right-0 w-64 h-64 bg-[#ea580c]/20 rounded-full blur-3xl -mr-20 -mt-20" />
               <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
                  <div>
-                    <h3 className="text-2xl font-black mb-1 text-[#ffffff]">{t("Tarification Globale")}</h3>
+                    <h3 className="text-2xl font-kinder mb-1 text-[#ffffff]">{t("Tarification Globale")}</h3>
                     <p className="text-zinc-400 font-medium">{t("Définissez un tarif par défaut pour toutes les Wilayas.")}</p>
                  </div>
                  <div className="flex items-center gap-4 bg-white/5 p-2 rounded-2xl border border-white/10">
                     <input 
                       type="number" 
-                      className="bg-transparent text-2xl font-black w-32 px-4 outline-none text-[#ffffff]" 
+                      className="bg-transparent text-2xl font-kinder w-32 px-4 outline-none text-[#ffffff]" 
                       value={globalPrice} 
                       onChange={(e) => setGlobalPrice(e.target.value)}
                     />
-                    <span className="text-xs font-black uppercase text-zinc-400 pr-4">{t("DA")}</span>
+                    <span className="text-xs font-kinder uppercase text-zinc-400 pr-4">{t("DA")}</span>
                     <button 
                       onClick={applyToAll}
-                      className="bg-white text-zinc-950 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest rtl:tracking-normal hover:bg-orange-500 hover:text-white transition-all"
+                      className="bg-white text-zinc-950 px-6 py-3 rounded-xl font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal hover:bg-orange-500 hover:text-white transition-all"
                     >
                        {t("Appliquer Partout")}</button>
                  </div>
@@ -309,7 +309,7 @@ export const ShopSettings: React.FC = () => {
                                          <div key={w} className="p-5 border border-zinc-50 rounded-2xl flex items-center justify-between hover:border-orange-200 transition-colors bg-zinc-50/30">
                                             <div className="flex items-center gap-3">
                                                <MapPin className="w-4 h-4 text-zinc-400" />
-                                               <span className="text-[10px] font-black text-zinc-900 uppercase tracking-widest rtl:tracking-normal">{w}</span>
+                                               <span className="text-[10px] font-kinder text-zinc-900 uppercase tracking-widest rtl:tracking-normal">{w}</span>
                                             </div>
                                             <div className="flex flex-col gap-2 items-end">
                                               <div className="flex items-center gap-2">
@@ -333,7 +333,7 @@ export const ShopSettings: React.FC = () => {
                                                    }}
                                                    className="accent-zinc-900 cursor-pointer"
                                                 />
-                                                <label htmlFor={`disable-${w}`} className="text-[9px] font-black text-zinc-500 uppercase cursor-pointer hover:text-zinc-900">{t("Ne pas livrer")}</label>
+                                                <label htmlFor={`disable-${w}`} className="text-[9px] font-kinder text-zinc-500 uppercase cursor-pointer hover:text-zinc-900">{t("Ne pas livrer")}</label>
                                               </div>
                                             </div>
                                          </div>
@@ -344,7 +344,7 @@ export const ShopSettings: React.FC = () => {
                  <button 
                    onClick={handleSaveShipping}
                    disabled={loading}
-                   className="bg-[#ea580c] text-white px-10 py-5 rounded-[2rem] font-black text-xs uppercase tracking-widest rtl:tracking-normal shadow-xl shadow-orange-500/20 hover:scale-105 transition-all"
+                   className="bg-[#ea580c] text-white px-10 py-5 rounded-[2rem] font-kinder text-xs uppercase tracking-widest rtl:tracking-normal shadow-xl shadow-orange-500/20 hover:scale-105 transition-all"
                  >
                     {loading ? 'Mise à jour...' : 'Sauvegarder les Tarifs (58 Wilayas)'}
                  </button>

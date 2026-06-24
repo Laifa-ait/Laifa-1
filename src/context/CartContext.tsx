@@ -4,11 +4,12 @@ import { useAuth } from "./AuthContext";
 import { analyticsEngine } from "../utils/analyticsEngine";
 import { db } from "../lib/firebase";
 import { doc, setDoc, getDoc, collection, writeBatch, getDocs, query, where, documentId } from "firebase/firestore";
+import toast from "react-hot-toast";
 
 interface CartContextType {
   cart: CartItem[];
   wishlist: string[];
-  addToCart: (productOrId: any, sellerIdOrOptions?: any, options?: any) => void;
+  addToCart: (productOrId: string | any, sellerIdOrOptions?: string | any, options?: any) => void;
   removeFromCart: (index: number) => void;
   updateQuantity: (index: number, qty: number) => void;
   clearCart: (sellerId?: string) => void;
@@ -201,12 +202,14 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     let sellerId: string;
     let actualOptions: any = {};
     let initialDetails: any = {};
+    let productStock: number | undefined = undefined;
 
     if (productOrId && typeof productOrId === "object" && productOrId.id) {
       // Called with (product, options)
       productId = productOrId.id;
       sellerId = productOrId.sellerId || "";
       actualOptions = sellerIdOrOptions || {};
+      productStock = productOrId.stock;
       initialDetails = {
         name: productOrId.name,
         price: productOrId.price,
@@ -223,6 +226,12 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       actualOptions = options || {};
     }
 
+    const quantityToAdd = actualOptions?.quantity || 1;
+
+    if (productStock !== undefined && productStock < quantityToAdd) {
+      toast.error(`Stock insuffisant. Disponible : ${productStock}`);
+      return;
+    }
     setCart((prev) => {
       const quantityToAdd = actualOptions?.quantity || 1;
       const selectedVariant = actualOptions?.selectedVariant || null;
@@ -373,8 +382,13 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const updateQuantity = (index: number, qty: number) => {
+    const MAX_QTY = 99;
     if (qty <= 0) {
       removeFromCart(index);
+      return;
+    }
+    if (qty > MAX_QTY) {
+      toast.error(`Quantité maximum : ${MAX_QTY}`);
       return;
     }
     setCart((prev) => {

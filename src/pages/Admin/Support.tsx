@@ -159,7 +159,7 @@ export const SupportAdmin: React.FC = () => {
     <div className="space-y-6 h-[calc(100vh-6rem)] flex flex-col">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
         <div>
-          <h2 className="text-3xl font-black tracking-tight rtl:tracking-normal text-zinc-950">{t("Tickets Support")}</h2>
+          <h2 className="text-3xl font-kinder tracking-tight rtl:tracking-normal text-zinc-950">{t("Tickets Support")}</h2>
           <p className="text-zinc-500 text-sm font-medium">{t("Gérez et résolvez les litiges vendeurs.")}</p>
         </div>
       </div>
@@ -231,7 +231,7 @@ export const SupportAdmin: React.FC = () => {
                      <Store className="w-6 h-6 text-zinc-500" />
                    </div>
                    <div>
-                     <h3 className="font-black text-lg text-zinc-950">{currentTicket?.shopName}</h3>
+                     <h3 className="font-kinder text-lg text-zinc-950">{currentTicket?.shopName}</h3>
                      <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
                         {currentTicket?.subject} 
                      </p>
@@ -240,7 +240,7 @@ export const SupportAdmin: React.FC = () => {
                 {currentTicket?.status !== 'resolved' && (
                    <button 
                       onClick={handleResolveTicket}
-                      className="px-4 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200 rounded-xl font-black text-[10px] uppercase tracking-widest rtl:tracking-normal transition-colors flex items-center gap-2"
+                      className="px-4 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200 rounded-xl font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal transition-colors flex items-center gap-2"
                    >
                       <CheckCircle2 className="w-4 h-4" /> {t("Clôturer")}</button>
                 )}
@@ -285,7 +285,7 @@ export const SupportAdmin: React.FC = () => {
                           <p className={`text-sm font-medium leading-relaxed whitespace-pre-wrap ${m.isInternal ? 'text-yellow-900' : ''}`}>{m.text}</p>
                           
                           {m.createdAt && (
-                            <div className="mt-3 flex items-center justify-end gap-1.5 text-[9px] font-black uppercase text-zinc-400">
+                            <div className="mt-3 flex items-center justify-end gap-1.5 text-[9px] font-kinder uppercase text-zinc-400">
                               <Clock className="w-3 h-3" />
                               {m.createdAt.toDate?.().toLocaleString('fr-FR')}
                               {m.isInternal && <span className="ms-2 text-yellow-600 bg-yellow-100 px-2 py-0.5 rounded-full">{t("NOTE INTERNE")}</span>}

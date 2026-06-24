@@ -3,7 +3,38 @@ import { collection, query, orderBy, limit, getDocs, where, doc, getDoc } from "
 import { db } from "../lib/firebase";
 import { Product } from "../types";
 import { PRODUCT_HIERARCHY } from "../constants";
-import { cacheEngine, handleDevQuotaLogger } from "../utils/mockProducts";
+
+class LocalMemoryCache {
+  private cache: Record<string, { data: any; expiry: number }> = {};
+  set(key: string, data: any, durationMs = 300000) {
+    this.cache[key] = { data, expiry: Date.now() + durationMs };
+  }
+  get(key: string): any | null {
+    const item = this.cache[key];
+    if (item && Date.now() < item.expiry) {
+      return item.data;
+    }
+    if (item) delete this.cache[key];
+    return null;
+  }
+  clear() {
+    this.cache = {};
+  }
+}
+const cacheEngine = new LocalMemoryCache();
+
+function handleDevQuotaLogger(context: string, isFromCache: boolean) {
+  if (import.meta.env.DEV) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(
+        `%c[Olma Dev-Safe Layer] %c${context} %c${isFromCache ? "⚡ SWR CACHED" : "📦 LIVE (Firestore)"}`,
+        "color: #C95D3B; font-weight: bold;",
+        "color: inherit;",
+        isFromCache ? "color: #38bdf8; font-weight: bold;" : "color: #34d399; font-weight: bold;"
+      );
+    }
+  }
+}
 
 interface ShopContextType {
   fetchFeaturedProducts: (nbLimit?: number) => Promise<Product[]>;
@@ -250,9 +281,8 @@ export const ShopProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const fetchCrossSellProducts = async (currentProduct: Product, nbLimit = 4): Promise<Product[]> => {
-    // Advanced Cross-Selling Logic: Suggest complementary products from the SAME seller to mutualize shipping.
-    // If the product is clothing, suggest accessories.
+  const fetchCrossSellProducts = React.useCallback(async (currentProduct: Product, nbLimit = 4): Promise<Product[]> => {
+    // Advanced Cross-Selling Logic
     let targetCategory = "Accessoires"; // Default fallback
     const catLower = (currentProduct.category || "").toLowerCase();
 
@@ -292,7 +322,7 @@ export const ShopProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch {
       return [];
     }
-  };
+  }, []);
 
   const fetchRecommendedProducts = async (nbLimit = 8): Promise<Product[]> => {
     const cacheKey = `recommended_products_${nbLimit}`;

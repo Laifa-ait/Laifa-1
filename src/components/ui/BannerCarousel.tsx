@@ -182,7 +182,7 @@ export const BannerCarousel: React.FC<BannerCarouselProps> = ({
     >
       <div
         onClick={handleBannerClick}
-        className="relative w-full overflow-hidden rounded-xl sm:rounded-2xl shadow-[0_24px_70px_rgba(30,67,86,0.12)] group cursor-pointer bg-[#121315] border border-[#EBE5DF]/20 transition-all duration-500 hover:border-[#121315]/30"
+        className="relative w-full overflow-hidden rounded-xl sm:rounded-2xl shadow-[0_24px_70px_rgba(30,67,86,0.12)] group cursor-pointer bg-[#3C2B22] border border-[#FF5C00]/20 transition-all duration-500 hover:border-[#3C2B22]/30"
       >
         <div className="relative w-full h-[220px] sm:h-[320px] lg:h-[380px] xl:h-[420px] overflow-hidden">
           <AnimatePresence mode="wait">
@@ -199,7 +199,7 @@ export const BannerCarousel: React.FC<BannerCarouselProps> = ({
                 initial={{ scale: 1.06, y: 0 }}
                 animate={{ scale: 1, y: 0 }}
                 transition={{ duration: 6, ease: "easeOut" }}
-                className="absolute inset-0 w-full h-full bg-[#121315]"
+                className="absolute inset-0 w-full h-full bg-[#3C2B22]"
               >
                 <picture className="w-full h-full">
                   {mobileImageUrl && <source srcSet={mobileImageUrl} media="(max-width: 640px)" />}
@@ -216,7 +216,7 @@ export const BannerCarousel: React.FC<BannerCarouselProps> = ({
               {/* Enhanced Multidirectional Overlays for Maximum Rich Contrast */}
               <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-zinc-950/90 via-zinc-950/40 to-transparent z-0" />
               <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/40 to-transparent z-0" />
-              <div className="absolute inset-0 bg-[#121315]/15 group-hover:bg-transparent transition-colors duration-500 z-0" />
+              <div className="absolute inset-0 bg-[#3C2B22]/15 group-hover:bg-transparent transition-colors duration-500 z-0" />
             </motion.div>
           </AnimatePresence>
 
@@ -234,7 +234,7 @@ export const BannerCarousel: React.FC<BannerCarouselProps> = ({
                     className="flex items-center gap-2 mb-3 bg-white/10 backdrop-blur-xl px-3.5 py-1.5 rounded-full border border-white/15 shadow-[0_4px_12px_rgba(255,255,255,0.05)] hover:bg-white/20 transition-all duration-300"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
-                    <span className="text-[10px] rtl:text-[12px] md:text-[11px] font-black uppercase text-white tracking-[0.25em] rtl:tracking-normal leading-none">
+                    <span className="text-[10px] rtl:text-[12px] md:text-[11px] font-kinder uppercase text-white tracking-[0.25em] rtl:tracking-normal leading-none">
                       {linkedTag.name}
                     </span>
                   </motion.div>
@@ -248,7 +248,7 @@ export const BannerCarousel: React.FC<BannerCarouselProps> = ({
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
                     style={{ color: currentBanner.title_color || "#FFFFFF" }}
-                    className="text-3xl sm:text-5xl lg:text-7xl font-black leading-[0.95] uppercase tracking-tighter rtl:tracking-normal mb-4 drop-shadow-[0_4px_24px_rgba(0,0,0,0.5)] max-w-2xl text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-stone-100"
+                    className="text-3xl sm:text-5xl lg:text-7xl font-kinder leading-[0.95] uppercase tracking-tighter rtl:tracking-normal mb-4 drop-shadow-[0_4px_24px_rgba(0,0,0,0.5)] max-w-2xl text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-stone-100"
                   >
                     {title}
                   </motion.h2>
@@ -281,11 +281,11 @@ export const BannerCarousel: React.FC<BannerCarouselProps> = ({
                     }}
                     style={{
                       backgroundColor: currentBanner.btn_bg_color || "#FFFFFF",
-                      color: currentBanner.btn_text_color || "#121315",
+                      color: currentBanner.btn_text_color || "#3C2B22",
                     }}
                     whileHover={{ scale: 1.04, y: -2, boxShadow: "0 20px 40px rgba(0,0,0,0.2)" }}
                     whileTap={{ scale: 0.97 }}
-                    className="px-8 py-4 sm:px-10 sm:py-4.5 rounded-xl text-[10px] rtl:text-[12px] sm:text-xs rtl:text-sm font-black uppercase tracking-widest rtl:tracking-normal shadow-2xl transition-all duration-300 flex items-center gap-3 group/btn hover:brightness-105 z-10"
+                    className="px-8 py-4 sm:px-10 sm:py-4.5 rounded-xl text-[10px] rtl:text-[12px] sm:text-xs rtl:text-sm font-kinder uppercase tracking-widest rtl:tracking-normal shadow-2xl transition-all duration-300 flex items-center gap-3 group/btn hover:brightness-105 z-10"
                   >
                     <span>{buttonText}</span>
                     <ArrowRight
@@ -302,7 +302,7 @@ export const BannerCarousel: React.FC<BannerCarouselProps> = ({
         {activeBanners.length > 1 && (
           <>
             <motion.button
-              whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.95)", color: "#121315" }}
+              whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.95)", color: "#3C2B22" }}
               whileTap={{ scale: 0.9 }}
               onClick={isRTL ? handleNext : handlePrev}
               className={`absolute top-1/2 -translate-y-1/2 z-20 w-11 h-11 sm:w-13 sm:h-13 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white shadow-xl transition-all opacity-0 group-hover:opacity-100 duration-300 ${
@@ -318,7 +318,7 @@ export const BannerCarousel: React.FC<BannerCarouselProps> = ({
             </motion.button>
 
             <motion.button
-              whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.95)", color: "#121315" }}
+              whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.95)", color: "#3C2B22" }}
               whileTap={{ scale: 0.9 }}
               onClick={isRTL ? handlePrev : handleNext}
               className={`absolute top-1/2 -translate-y-1/2 z-20 w-11 h-11 sm:w-13 sm:h-13 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white shadow-xl transition-all opacity-0 group-hover:opacity-100 duration-300 ${

@@ -54,8 +54,12 @@ export const ProductDetails: React.FC = () => {
 
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => setShowStickyBuyBar(!entry.isIntersecting), { threshold: 0 });
-    if(buyBoxRef.current) observer.observe(buyBoxRef.current);
-    return () => observer.disconnect();
+    const current = buyBoxRef.current;
+    if (current) observer.observe(current);
+    return () => {
+      if (current) observer.unobserve(current);
+      observer.disconnect();
+    };
   }, []);
 
   useEffect(() => {
@@ -127,7 +131,7 @@ export const ProductDetails: React.FC = () => {
     return matchingVariants.every((v: any) => (parseInt(v.stock) || 0) <= 0);
   }, [product]);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     const hasColors = product.colors && product.colors.length > 0;
     const hasSizes = product.sizes && product.sizes.length > 0;
     
@@ -146,8 +150,13 @@ export const ProductDetails: React.FC = () => {
        selectedVariant = [selectedColor, selectedSize].filter(Boolean).join(' - ').toUpperCase();
     }
     
-    addToCart(product.id, product.sellerId, { selectedVariant });
-    toast.success(t("product_added_to_cart") || "Article ajouté au panier !");
+    try {
+      await addToCart(product.id, product.sellerId, { selectedVariant });
+      toast.success(t("product_added_to_cart") || "Article ajouté au panier !");
+    } catch (err) {
+      toast.error(t("checkout.error_adding_to_cart") || "Erreur lors de l'ajout au panier");
+      console.error(err);
+    }
   };
 
   const handleShare = async () => {
@@ -160,24 +169,38 @@ export const ProductDetails: React.FC = () => {
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">{t("common.loading") || "Chargement..."}</div>;
-  if (!product) return <div className="min-h-screen flex items-center justify-center">{t("common.not_found") || "Produit non trouvé"}</div>;
+  if (!product) return (
+    <div className="min-h-screen flex flex-col items-center justify-center text-center bg-[#FDF9EC]">
+      <ShoppingBag className="w-16 h-16 text-[#3C2B22]/30 mb-4" />
+      <h1 className="text-2xl font-kinder text-[#3C2B22] mb-4">{t("common.not_found") || "Produit non trouvé"}</h1>
+      <button onClick={() => navigate('/shop')} className="px-8 py-3.5 bg-[#3C2B22] hover:bg-[#FF5C00] text-white font-kinder text-sm uppercase tracking-widest rounded-full transition-all cursor-pointer shadow-md">
+        {t("common.back_to_shop") || "Retour à la boutique"}
+      </button>
+    </div>
+  );
 
   return (
-    <div className="bg-gradient-to-br from-stone-50 via-[#faf8f5] to-[#f4eee6] min-h-screen pb-32 selection:bg-[#121315] selection:text-white">
+    <div className="bg-[#FDF9EC] min-h-screen pb-32 selection:bg-[#FF5C00] selection:text-white">
       <Helmet>
-        <title>{`${product.name} | OLMART`}</title>
-        <meta name="description" content={product.description} />
+        <title>{product?.name ? `${product.name} | OLMART` : 'Produit | OLMART'}</title>
+        <meta name="description" content={product?.description?.substring(0, 160)} />
+        <meta property="og:title" content={product?.name} />
+        <meta property="og:description" content={product?.description?.substring(0, 200)} />
+        <meta property="og:image" content={images?.[0] || product?.images?.[0]} />
+        <meta property="og:type" content="product" />
+        <meta property="product:price:amount" content={String(displayedPrice)} />
+        <meta property="product:price:currency" content="DZD" />
       </Helmet>
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 lg:pt-32 pb-16">
-        <nav className="flex items-center gap-2 text-xs font-semibold text-[#121315]/50 uppercase tracking-widest rtl:tracking-normal flex-wrap mb-8 lg:mb-12">
-           <span className="cursor-pointer hover:text-[#121315]" onClick={() => navigate('/')}>{t("common.home") || "Accueil"}</span>
+        <nav className="flex items-center gap-2 text-[10px] font-bold text-[#3C2B22]/60 uppercase tracking-widest rtl:tracking-normal flex-wrap mb-8 lg:mb-12">
+           <span className="cursor-pointer hover:text-[#3C2B22]" onClick={() => navigate('/')}>{t("common.home") || "Accueil"}</span>
            <span>/</span>
-           <span className="cursor-pointer hover:text-[#121315]" onClick={() => navigate('/shop')}>{t("common.shop") || "Boutique"}</span>
+           <span className="cursor-pointer hover:text-[#3C2B22]" onClick={() => navigate('/shop')}>{t("common.shop") || "Boutique"}</span>
             {product.category && (
              <>
                <span>/</span>
-               <span className="cursor-pointer hover:text-[#121315]" onClick={() => navigate(`/shop?category=${encodeURIComponent(product.category!)}`)}>
+               <span className="cursor-pointer hover:text-[#3C2B22]" onClick={() => navigate(`/shop?category=${encodeURIComponent(product.category!)}`)}>
                  {getCategoryTranslation(product.category, t)}
                </span>
              </>
@@ -185,7 +208,7 @@ export const ProductDetails: React.FC = () => {
            {product.subcategory && (
              <>
                <span>/</span>
-               <span className="cursor-pointer hover:text-[#121315]" onClick={() => navigate(`/shop?category=${encodeURIComponent(product.category!)}&subcategory=${encodeURIComponent(product.subcategory!)}`)}>
+               <span className="cursor-pointer hover:text-[#3C2B22]" onClick={() => navigate(`/shop?category=${encodeURIComponent(product.category!)}&subcategory=${encodeURIComponent(product.subcategory!)}`)}>
                  {getCategoryTranslation(product.subcategory, t)}
                </span>
              </>
@@ -193,16 +216,16 @@ export const ProductDetails: React.FC = () => {
            {(product.subSubCategory || (product as any).subsubcategory) && (
              <>
                <span>/</span>
-               <span className="cursor-pointer hover:text-[#121315]" onClick={() => navigate(`/shop?category=${encodeURIComponent(product.category!)}&subcategory=${encodeURIComponent(product.subcategory!)}&subsubcategory=${encodeURIComponent(product.subSubCategory || (product as any).subsubcategory)}`)}>
+               <span className="cursor-pointer hover:text-[#3C2B22]" onClick={() => navigate(`/shop?category=${encodeURIComponent(product.category!)}&subcategory=${encodeURIComponent(product.subcategory!)}&subsubcategory=${encodeURIComponent(product.subSubCategory || (product as any).subsubcategory)}`)}>
                  {getCategoryTranslation(product.subSubCategory || (product as any).subsubcategory, t)}
                </span>
              </>
            )}
            <span>/</span>
-           <span className="text-[#121315] truncate max-w-[200px] sm:max-w-xs">{product.name}</span>
+           <span className="text-[#3C2B22] truncate max-w-[200px] sm:max-w-xs px-2 py-0.5 bg-white rounded-full border border-white shadow-sm font-kinder">{product.name}</span>
         </nav>
 
-        <div className="grid lg:grid-cols-12 gap-10 xl:gap-16 pb-16 border-b border-slate-200/60">
+        <div className="grid lg:grid-cols-12 gap-10 xl:gap-16 pb-16 border-b-[3px] border-[#FF5C00]/20">
           <div className="lg:col-span-6 h-max lg:sticky lg:top-28">
             <ProductGallery images={images} selectedIndex={selectedImageIndex} productName={product.name} onSelectImage={setSelectedImageIndex} showVideo={showVideo} setShowVideo={setShowVideo} productVideoUrl={product.video} onOpenLightbox={() => setIsLightboxOpen(true)} />
           </div>
@@ -217,19 +240,19 @@ export const ProductDetails: React.FC = () => {
         {/* Cohesive Recommended Products Module */}
         {!loadingRecom && recommendedProducts.length > 0 && (
           <div className="mt-16 sm:mt-24">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4 px-2">
               <div>
-                <div className="flex items-center gap-2 text-[#F37021] font-black text-[10px] uppercase tracking-widest rtl:tracking-normal mb-2">
+                <div className="flex items-center gap-2 text-[#FF5C00] font-bold text-[11px] uppercase tracking-widest rtl:tracking-normal mb-2 bg-[#FF5C00]/5 self-start px-3 py-1 rounded-full border border-[#FF5C00]/20 w-fit">
                   <Flame className="w-4 h-4 animate-pulse" /> {t("product.premium_selection") || "Sélection Premium"}
                 </div>
-                <h3 className="font-sans font-medium text-2xl sm:text-3xl text-[#121315] tracking-tight rtl:tracking-normal">
+                <h3 className="font-kinder text-3xl sm:text-4xl text-[#3C2B22] uppercase tracking-wide drop-shadow-sm">
                   {t("product.you_might_also_like") || "Vous aimerez aussi"}
                 </h3>
               </div>
-              <p className="text-xs text-zinc-500 font-medium">{t("product.recommendations_subtitle") || "Recommandations exclusives adaptées à vos goûts"}</p>
+              <p className="text-sm font-bold text-[#3C2B22]/60">{t("product.recommendations_subtitle") || "Recommandations exclusives adaptées à vos goûts"}</p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
               {recommendedProducts.map((p, idx) => (
                 <div key={p.id} className="opacity-0 animate-fade-in" style={{ animationDelay: `${idx * 100}ms`, animationFillMode: "forwards" }}>
                   <ProductCard product={p} index={idx} />

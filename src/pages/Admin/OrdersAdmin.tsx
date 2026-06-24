@@ -105,7 +105,7 @@ export const OrdersAdmin: React.FC = () => {
     canceled: "bg-rose-50 text-rose-700 border-rose-100",
     cancelled_by_client: "bg-red-50 text-red-700 border-red-100",
     returned: "bg-zinc-100 text-zinc-700 border-zinc-200",
-    dispute_open: "bg-[#F37021]/15 text-[#ea580c] border-[#F37021]/20",
+    dispute_open: "bg-[#FF5C00]/15 text-[#ea580c] border-[#FF5C00]/20",
   };
 
   // Safe Date Extractor
@@ -494,7 +494,7 @@ export const OrdersAdmin: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 border-b border-zinc-100 pb-5">
         <div>
-          <h2 className="text-3xl font-black tracking-tight rtl:tracking-normal text-zinc-950 uppercase flex items-center gap-2">
+          <h2 className="text-3xl font-kinder tracking-tight rtl:tracking-normal text-zinc-950 uppercase flex items-center gap-2">
             <ShoppingCart className="w-8 h-8 text-[#F46B1D]" />
             {t("Global Manifest & Central Orders Admin")}
           </h2>
@@ -526,10 +526,10 @@ export const OrdersAdmin: React.FC = () => {
             <TrendingUp className="w-6 h-6" />
           </div>
           <div>
-            <span className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+            <span className="block text-[10px] font-kinder text-zinc-400 uppercase tracking-widest">
               {t("Volume Global (COD Total)")}
             </span>
-            <strong className="block text-xl font-black font-mono text-zinc-900 tracking-tight mt-1">
+            <strong className="block text-xl font-kinder font-mono text-zinc-900 tracking-tight mt-1">
               {formatPrice(totalVolume)}
             </strong>
           </div>
@@ -544,10 +544,10 @@ export const OrdersAdmin: React.FC = () => {
             <Percent className="w-6 h-6" />
           </div>
           <div>
-            <span className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+            <span className="block text-[10px] font-kinder text-zinc-400 uppercase tracking-widest">
               {t("Commission Olmart (5%)")}
             </span>
-            <strong className="block text-xl font-black font-mono text-purple-600 tracking-tight mt-1">
+            <strong className="block text-xl font-kinder font-mono text-purple-600 tracking-tight mt-1">
               {formatPrice(totalCommission)}
             </strong>
           </div>
@@ -560,10 +560,10 @@ export const OrdersAdmin: React.FC = () => {
             <DollarSign className="w-6 h-6" />
           </div>
           <div>
-            <span className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+            <span className="block text-[10px] font-kinder text-zinc-400 uppercase tracking-widest">
               {t("Net Estimé Vendeurs (95%)")}
             </span>
-            <strong className="block text-xl font-black font-mono text-emerald-600 tracking-tight mt-1">
+            <strong className="block text-xl font-kinder font-mono text-emerald-600 tracking-tight mt-1">
               {formatPrice(sellersNetPayout)}
             </strong>
           </div>
@@ -576,10 +576,10 @@ export const OrdersAdmin: React.FC = () => {
             <FileText className="w-6 h-6" />
           </div>
           <div>
-            <span className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+            <span className="block text-[10px] font-kinder text-zinc-400 uppercase tracking-widest">
               {t("Portefeuille Actif")}
             </span>
-            <strong className="block text-xl font-black font-mono text-blue-600 tracking-tight mt-1">
+            <strong className="block text-xl font-kinder font-mono text-blue-600 tracking-tight mt-1">
               {filteredOrders.length} / {orders.length} {t("com.")}
             </strong>
           </div>
@@ -635,11 +635,11 @@ export const OrdersAdmin: React.FC = () => {
       {selectedOrderIds.length > 0 && (
         <div className="fixed bottom-6 start-1/2 -translate-x-1/2 bg-zinc-950 text-white p-4 sm:p-5 rounded-[2.5rem] shadow-2xl z-55 w-[90%] max-w-2xl flex flex-col md:flex-row items-center justify-between gap-4 border border-zinc-800">
           <div className="flex items-center gap-3">
-            <span className="w-8 h-8 rounded-full bg-[#ea580c] flex items-center justify-center font-black text-sm text-white">
+            <span className="w-8 h-8 rounded-full bg-[#ea580c] flex items-center justify-center font-kinder text-sm text-white">
               {selectedOrderIds.length}
             </span>
             <div>
-              <strong className="text-xs uppercase tracking-wider block font-black text-white">
+              <strong className="text-xs uppercase tracking-wider block font-kinder text-white">
                 {t("Commandes sélectionnées")}
               </strong>
               <span className="text-[10px] text-zinc-405 font-bold">{t("Manifeste groupé prêt")}</span>
@@ -650,7 +650,7 @@ export const OrdersAdmin: React.FC = () => {
             {/* Generate & Print Transport documents */}
             <button
               onClick={handleBulkPrint}
-              className="py-2.5 px-4 bg-white hover:bg-zinc-100 text-zinc-950 font-black text-[11px] uppercase tracking-wider rounded-xl flex items-center gap-1.5 cursor-pointer border-none transition-all shadow-md"
+              className="py-2.5 px-4 bg-white hover:bg-zinc-100 text-zinc-950 font-kinder text-[11px] uppercase tracking-wider rounded-xl flex items-center gap-1.5 cursor-pointer border-none transition-all shadow-md"
             >
               <Printer className="w-3.5 h-3.5 text-[#F46B1D]" />
               {t("Print Labels Bulk")} {t("admin_orders.pdf", "(PDF)")}
@@ -664,7 +664,7 @@ export const OrdersAdmin: React.FC = () => {
                   e.target.value = ""; // reset
                 }
               }}
-              className="py-2.5 px-3 bg-zinc-800 text-white font-black text-[11px] uppercase tracking-wider rounded-xl cursor-pointer border-none transition-all focus:outline-none"
+              className="py-2.5 px-3 bg-zinc-800 text-white font-kinder text-[11px] uppercase tracking-wider rounded-xl cursor-pointer border-none transition-all focus:outline-none"
             >
               <option value="">⚙️ {t("Changer Statut (Bulk)")}</option>
               {Object.keys(statusLabels).map((k) => (
@@ -691,10 +691,10 @@ export const OrdersAdmin: React.FC = () => {
             {/* Modal Header */}
             <div className="p-6 bg-zinc-950 text-white flex items-center justify-between">
               <div>
-                <span className="text-[9px] font-black uppercase tracking-widest text-[#F37021] block">
+                <span className="text-[9px] font-kinder uppercase tracking-widest text-[#FF5C00] block">
                   {t("Manifeste n°")} {selectedOrder.id.toUpperCase()}
                 </span>
-                <h3 className="text-lg font-black uppercase text-white mt-1">{t("Fiche Commande Complète")}</h3>
+                <h3 className="text-lg font-kinder uppercase text-white mt-1">{t("Fiche Commande Complète")}</h3>
               </div>
               <button
                 onClick={() => setSelectedOrder(null)}
@@ -708,37 +708,37 @@ export const OrdersAdmin: React.FC = () => {
             <div className="p-6 overflow-y-auto space-y-6 flex-1 text-zinc-800">
               {/* Client Profile Card with Phone links */}
               <div className="p-5 bg-zinc-50 border border-zinc-200 rounded-[2rem] space-y-3">
-                <h4 className="text-xs font-black uppercase tracking-widest text-zinc-505 flex items-center gap-1.5">
+                <h4 className="text-xs font-kinder uppercase tracking-widest text-zinc-505 flex items-center gap-1.5">
                   <FileText className="w-4 h-4 text-orange-500" />
                   {t("Dossier & Profil Client")}
                 </h4>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <span className="block text-[10px] uppercase font-black text-zinc-400">{t("Nom Complet")}</span>
+                    <span className="block text-[10px] uppercase font-kinder text-zinc-400">{t("Nom Complet")}</span>
                     <strong className="block text-sm text-zinc-900 font-extrabold">
                       {selectedOrder.shippingAddress?.fullName || selectedOrder.shippingAddress?.name}
                     </strong>
                   </div>
 
                   <div className="space-y-1">
-                    <span className="block text-[10px] uppercase font-black text-zinc-400">
+                    <span className="block text-[10px] uppercase font-kinder text-zinc-400">
                       {t("Téléphone de Contact")}
                     </span>
-                    <span className="inline-flex items-center gap-1 text-sm font-black text-zinc-900 bg-zinc-100 px-3.5 py-1.5 rounded-xl border border-zinc-200">
+                    <span className="inline-flex items-center gap-1 text-sm font-kinder text-zinc-900 bg-zinc-100 px-3.5 py-1.5 rounded-xl border border-zinc-200">
                       <Phone className="w-3.5 h-3.5 text-zinc-400" />
                       {selectedOrder.shippingAddress?.phone}
                     </span>
                   </div>
 
                   <div className="col-span-2 space-y-1 pt-1 border-t border-zinc-200">
-                    <span className="block text-[10px] uppercase font-black text-zinc-400">
+                    <span className="block text-[10px] uppercase font-kinder text-zinc-400">
                       {t("Adresse d'expédition")}
                     </span>
                     <p className="text-xs font-semibold text-zinc-700">
                       {selectedOrder.shippingAddress?.street || t("Non renseignée")}
                     </p>
-                    <strong className="text-xs font-black text-zinc-900 block mt-1">
+                    <strong className="text-xs font-kinder text-zinc-900 block mt-1">
                       🎯 {selectedOrder.shippingAddress?.wilaya} • {selectedOrder.shippingAddress?.commune}
                     </strong>
                   </div>
@@ -747,17 +747,17 @@ export const OrdersAdmin: React.FC = () => {
 
               {/* Product list breakdown */}
               <div className="space-y-3">
-                <h4 className="text-xs font-black uppercase tracking-widest text-zinc-505">
+                <h4 className="text-xs font-kinder uppercase tracking-widest text-zinc-505">
                   {t("Détail des Articles commandés")}
                 </h4>
                 <div className="border border-zinc-200 rounded-2xl overflow-hidden">
                   <table className="w-full text-start text-xs">
                     <thead>
                       <tr className="bg-zinc-50 border-b border-zinc-200">
-                        <th className="p-3 font-black text-zinc-600">{t("Produit")}</th>
-                        <th className="p-3 font-black text-zinc-600 w-20 text-center">{t("Quantité")}</th>
-                        <th className="p-3 font-black text-zinc-600 w-32 text-end">{t("Prix Unitaire")}</th>
-                        <th className="p-3 font-black text-zinc-600 w-32 text-end">{t("Total")}</th>
+                        <th className="p-3 font-kinder text-zinc-600">{t("Produit")}</th>
+                        <th className="p-3 font-kinder text-zinc-600 w-20 text-center">{t("Quantité")}</th>
+                        <th className="p-3 font-kinder text-zinc-600 w-32 text-end">{t("Prix Unitaire")}</th>
+                        <th className="p-3 font-kinder text-zinc-600 w-32 text-end">{t("Total")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-150">
@@ -775,7 +775,7 @@ export const OrdersAdmin: React.FC = () => {
                           </td>
                           <td className="p-3 text-center font-bold text-zinc-700 font-mono">{it.quantity}</td>
                           <td className="p-3 text-end font-bold text-zinc-800 font-mono">{formatPrice(it.price)}</td>
-                          <td className="p-3 text-end font-black text-zinc-900 font-mono">
+                          <td className="p-3 text-end font-kinder text-zinc-900 font-mono">
                             {formatPrice((it.price || 0) * (it.quantity || 1))}
                           </td>
                         </tr>
@@ -787,41 +787,41 @@ export const OrdersAdmin: React.FC = () => {
 
               {/* Commission breakdown breakdown & transparent math */}
               <div className="p-5 bg-purple-50/50 border border-purple-100 rounded-[2rem] space-y-3">
-                <span className="text-[9px] font-black uppercase tracking-widest text-purple-700 block">
+                <span className="text-[9px] font-kinder uppercase tracking-widest text-purple-700 block">
                   ⚙️ {t("Comptabilité & Commission Olmart")}
                 </span>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                   <div className="p-3 bg-white border border-purple-100 rounded-2xl">
-                    <span className="block text-[8px] font-black text-zinc-400 uppercase">{t("Articles")}</span>
-                    <strong className="text-xs font-black text-zinc-800">
+                    <span className="block text-[8px] font-kinder text-zinc-400 uppercase">{t("Articles")}</span>
+                    <strong className="text-xs font-kinder text-zinc-800">
                       {formatPrice(selectedOrder.subtotal || selectedOrder.total)}
                     </strong>
                   </div>
                   <div className="p-3 bg-white border border-purple-100 rounded-2xl">
-                    <span className="block text-[8px] font-black text-zinc-400 uppercase">{t("Livraison")}</span>
-                    <strong className="text-xs font-black text-zinc-800">
+                    <span className="block text-[8px] font-kinder text-zinc-400 uppercase">{t("Livraison")}</span>
+                    <strong className="text-xs font-kinder text-zinc-800">
                       {formatPrice(selectedOrder.shippingCost || 0)}
                     </strong>
                   </div>
                   <div className="p-3 bg-white border border-purple-100 rounded-2xl">
-                    <span className="block text-[8px] font-black text-zinc-400 uppercase">
+                    <span className="block text-[8px] font-kinder text-zinc-400 uppercase">
                       {t("Encaissement (COD)")}
                     </span>
-                    <strong className="text-sm font-black text-[#ea580c]">{formatPrice(selectedOrder.total)}</strong>
+                    <strong className="text-sm font-kinder text-[#ea580c]">{formatPrice(selectedOrder.total)}</strong>
                   </div>
                   <div className="p-3 bg-white border border-purple-100 rounded-2xl">
-                    <span className="block text-[8px] font-black text-purple-600 uppercase">
+                    <span className="block text-[8px] font-kinder text-purple-600 uppercase">
                       {t("Commission (5%)")}
                     </span>
-                    <strong className="text-sm font-black text-purple-700">
-                      -{formatPrice(calculatedOrdersMap[selectedOrder.id]?.commissionCalc || 0)}
+                    <strong className="text-sm font-kinder text-purple-700">
+                      -{formatPrice(calculatedOrdersMap[selectedOrder.id]?.commissionAmount || 0)}
                     </strong>
                   </div>
                 </div>
 
-                <div className="p-3 bg-purple-900/10 rounded-xl text-center text-xs font-black text-purple-800">
-                  {t("Net Vendeur à reverser :")} {formatPrice(calculatedOrdersMap[selectedOrder.id]?.netPayout || 0)}
+                <div className="p-3 bg-purple-900/10 rounded-xl text-center text-xs font-kinder text-purple-800">
+                  {t("Net Vendeur à reverser :")} {formatPrice(calculatedOrdersMap[selectedOrder.id]?.netRevenue || 0)}
                 </div>
               </div>
 
@@ -829,7 +829,7 @@ export const OrdersAdmin: React.FC = () => {
               <div className="p-5 border border-zinc-200 rounded-[2rem] space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <strong className="block text-xs uppercase tracking-wider text-zinc-705 font-black">
+                    <strong className="block text-xs uppercase tracking-wider text-zinc-705 font-kinder">
                       {t("Modifier le statut de la commande")}
                     </strong>
                     <span className="text-[10px] text-zinc-400 block">
@@ -841,7 +841,7 @@ export const OrdersAdmin: React.FC = () => {
                     disabled={isUpdatingStatus}
                     value={selectedOrder.status}
                     onChange={(e) => handleUpdateOrderStatus(selectedOrder.id, e.target.value as OrderStatus)}
-                    className="p-3 border border-zinc-200 bg-white rounded-xl text-xs font-black uppercase tracking-wider text-zinc-800 outline-none cursor-pointer"
+                    className="p-3 border border-zinc-200 bg-white rounded-xl text-xs font-kinder uppercase tracking-wider text-zinc-800 outline-none cursor-pointer"
                   >
                     {Object.keys(statusLabels).map((key) => (
                       <option key={key} value={key}>
@@ -865,7 +865,7 @@ export const OrdersAdmin: React.FC = () => {
                       setSelectedOrderIds([]);
                     }, 100);
                   }}
-                  className="px-4 py-2.5 bg-zinc-950 hover:bg-zinc-855 text-white font-black text-xs uppercase tracking-widest rounded-xl flex items-center gap-1 cursor-pointer transition-all border-none"
+                  className="px-4 py-2.5 bg-zinc-950 hover:bg-zinc-855 text-white font-kinder text-xs uppercase tracking-widest rounded-xl flex items-center gap-1 cursor-pointer transition-all border-none"
                 >
                   <Printer className="w-4 h-4" />
                   {t("Imprimer Ticket")} {t("admin_orders.pdf", "(PDF)")}
@@ -874,7 +874,7 @@ export const OrdersAdmin: React.FC = () => {
 
               <button
                 onClick={() => setSelectedOrder(null)}
-                className="px-5 py-2.5 bg-zinc-200 hover:bg-zinc-250 text-zinc-700 font-black text-xs uppercase tracking-widest rounded-xl cursor-pointer transition-all border-none"
+                className="px-5 py-2.5 bg-zinc-200 hover:bg-zinc-250 text-zinc-700 font-kinder text-xs uppercase tracking-widest rounded-xl cursor-pointer transition-all border-none"
               >
                 {t("Fermer")}
               </button>
@@ -882,7 +882,6 @@ export const OrdersAdmin: React.FC = () => {
           </div>
         </div>
       )}
-      <ConfirmationDialog />
     </div>
   );
 };

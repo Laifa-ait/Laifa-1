@@ -12,7 +12,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ requireAuth = false }) => 
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#faf8f5]">
+      <div className="min-h-screen flex items-center justify-center bg-[#FDF9EC]">
         <div className="w-8 h-8 border-4 border-[#ea580c] border-[#ffebd5] border-t-[#ea580c] rounded-full animate-spin"></div>
       </div>
     );

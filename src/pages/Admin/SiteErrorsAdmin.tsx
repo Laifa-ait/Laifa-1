@@ -48,7 +48,7 @@ export const SiteErrorsAdmin: React.FC = () => {
       {/* Header */}
       <div className="bg-white rounded-[2.5rem] p-8 md:p-10 border border-zinc-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-zinc-950 uppercase tracking-tight rtl:tracking-normal">
+          <h1 className="text-2xl sm:text-3xl font-kinder text-zinc-950 uppercase tracking-tight rtl:tracking-normal">
             {t("Agent")}<span className="text-red-600">{t("Erreurs")}</span>
           </h1>
           <p className="text-zinc-500 font-medium mt-2">
@@ -59,8 +59,8 @@ export const SiteErrorsAdmin: React.FC = () => {
             <Bug className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-2xl font-black text-red-900">{errors.length}</div>
-            <div className="text-[10px] font-black text-red-700 uppercase tracking-widest rtl:tracking-normal">{t("Signalements")}</div>
+            <div className="text-2xl font-kinder text-red-900">{errors.length}</div>
+            <div className="text-[10px] font-kinder text-red-700 uppercase tracking-widest rtl:tracking-normal">{t("Signalements")}</div>
           </div>
         </div>
       </div>
@@ -87,11 +87,11 @@ export const SiteErrorsAdmin: React.FC = () => {
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-2">
                                       {error.resolved ? (
-                                        <span className="bg-zinc-200 text-zinc-700 text-[9px] font-black uppercase tracking-widest rtl:tracking-normal px-2 py-1 rounded">{t("Résolu")}</span>
+                                        <span className="bg-zinc-200 text-zinc-700 text-[9px] font-kinder uppercase tracking-widest rtl:tracking-normal px-2 py-1 rounded">{t("Résolu")}</span>
                                       ) : (
-                                        <span className="bg-red-500 text-white text-[9px] font-black uppercase tracking-widest rtl:tracking-normal px-2 py-1 rounded">{t("Nouveau")}</span>
+                                        <span className="bg-red-500 text-white text-[9px] font-kinder uppercase tracking-widest rtl:tracking-normal px-2 py-1 rounded">{t("Nouveau")}</span>
                                       )}
-                                      <span className="text-zinc-500 text-[10px] font-black uppercase tracking-widest rtl:tracking-normal flex items-center gap-1">
+                                      <span className="text-zinc-500 text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal flex items-center gap-1">
                                         <Clock className="w-3 h-3" />
                                         {error.timestamp ? (() => {
                                           try {
@@ -104,7 +104,7 @@ export const SiteErrorsAdmin: React.FC = () => {
                                           }
                                         })() : 'En cours'}
                                       </span>
-                                      <span className="bg-orange-100 text-orange-700 text-[9px] font-black uppercase tracking-widest rtl:tracking-normal px-2 py-1 rounded">
+                                      <span className="bg-orange-100 text-orange-700 text-[9px] font-kinder uppercase tracking-widest rtl:tracking-normal px-2 py-1 rounded">
                                         {error.type === 'react_boundary' ? 'React Boundary' : error.type === 'window_error' ? 'Window Error' : 'Promise Rejection'}
                                       </span>
                                     </div>

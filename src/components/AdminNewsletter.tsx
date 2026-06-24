@@ -363,14 +363,14 @@ export default function AdminNewsletter({ auth }: any) {
                     <BarChart3 className="w-5 h-5" />
                   </div>
                   <span className="text-2xl font-bold tracking-tight rtl:tracking-normal">{s.value}</span>
-                  <span className="text-[9px] rtl:text-[11px] uppercase tracking-[0.2em] rtl:tracking-normal text-zinc-400 font-black mt-1">
+                  <span className="text-[9px] rtl:text-[11px] uppercase tracking-[0.2em] rtl:tracking-normal text-zinc-400 font-kinder mt-1">
                     {s.label}
                   </span>
                 </div>
               ))}
             </div>
             <div className="bg-white rounded-[2.5rem] p-8 lg:p-10 border border-zinc-100">
-              <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-zinc-400 mb-8 border-l-4 border-emerald-500 pl-4">
+              <h3 className="text-[11px] font-kinder uppercase tracking-[0.3em] text-zinc-400 mb-8 border-l-4 border-emerald-500 pl-4">
                 {t("Évolution de la base de données")}
               </h3>
               <div className="h-72 min-w-0" style={{ position: "relative" }}>
@@ -409,7 +409,7 @@ export default function AdminNewsletter({ auth }: any) {
           </div>
           <div className="space-y-6">
             <div className="bg-white rounded-[2.5rem] p-8 border border-zinc-100">
-              <h3 className="text-[10px] rtl:text-[12px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-400 mb-6">
+              <h3 className="text-[10px] rtl:text-[12px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-400 mb-6">
                 {t("Logs Récents")}
               </h3>
               <div className="space-y-4">
@@ -456,7 +456,7 @@ export default function AdminNewsletter({ auth }: any) {
                 {/* Left: Inputs */}
                 <div className="bg-white rounded-[2.5rem] p-8 lg:p-10 border border-zinc-100 space-y-8">
                   <div>
-                    <h3 className="text-[11px] font-black uppercase tracking-[0.2em] rtl:tracking-normal text-zinc-400 mb-1">
+                    <h3 className="text-[11px] font-kinder uppercase tracking-[0.2em] rtl:tracking-normal text-zinc-400 mb-1">
                       {t("Configuration")}
                     </h3>
                     <h2 className="text-xl font-bold text-zinc-900 mb-6">{t("Détails de l'envoi")}</h2>
@@ -503,7 +503,7 @@ export default function AdminNewsletter({ auth }: any) {
                         <button
                           key={t.type}
                           onClick={() => addBlock(t.type as BlockType)}
-                          className="px-4 py-3 bg-zinc-50 hover:bg-zinc-100 border border-zinc-100 rounded-2xl flex items-center gap-2 text-[10px] rtl:text-[12px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-600 transition-all"
+                          className="px-4 py-3 bg-zinc-50 hover:bg-zinc-100 border border-zinc-100 rounded-2xl flex items-center gap-2 text-[10px] rtl:text-[12px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-600 transition-all"
                         >
                           <t.icon className="w-3.5 h-3.5" /> {t.label}
                         </button>
@@ -517,7 +517,7 @@ export default function AdminNewsletter({ auth }: any) {
                           className="group bg-zinc-100/50 p-6 rounded-[2rem] border border-zinc-200/50 hover:border-emerald-200 transition-all space-y-4"
                         >
                           <div className="flex items-center justify-between">
-                            <span className="text-[9px] rtl:text-[11px] font-black uppercase tracking-[0.2em] rtl:tracking-normal text-zinc-400 flex items-center gap-2 bg-white px-3 py-1 rounded-full border border-zinc-100">
+                            <span className="text-[9px] rtl:text-[11px] font-kinder uppercase tracking-[0.2em] rtl:tracking-normal text-zinc-400 flex items-center gap-2 bg-white px-3 py-1 rounded-full border border-zinc-100">
                               <Code className="w-3 h-3 text-emerald-500" /> {t("Bloc")}
                               {block.type}
                             </span>
@@ -566,7 +566,7 @@ export default function AdminNewsletter({ auth }: any) {
                                 <button
                                   onClick={() => triggerUpload(block.id)}
                                   disabled={isUploading === block.id}
-                                  className="px-4 bg-zinc-900 text-white rounded-xl flex items-center gap-2 text-[10px] rtl:text-[12px] font-black uppercase tracking-widest rtl:tracking-normal disabled:opacity-50 transition-all hover:bg-zinc-800"
+                                  className="px-4 bg-zinc-900 text-white rounded-xl flex items-center gap-2 text-[10px] rtl:text-[12px] font-kinder uppercase tracking-widest rtl:tracking-normal disabled:opacity-50 transition-all hover:bg-zinc-800"
                                 >
                                   {isUploading === block.id ? (
                                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -619,7 +619,7 @@ export default function AdminNewsletter({ auth }: any) {
                       {campData.blocks.length === 0 && (
                         <div className="py-12 border-2 border-dashed border-zinc-100 rounded-[2rem] flex flex-col items-center justify-center text-center px-6">
                           <Plus className="w-8 h-8 text-zinc-200 mb-2" />
-                          <p className="text-[10px] rtl:text-[12px] uppercase tracking-widest rtl:tracking-normal font-black text-zinc-300">
+                          <p className="text-[10px] rtl:text-[12px] uppercase tracking-widest rtl:tracking-normal font-kinder text-zinc-300">
                             {t("Votre toile est vide. Ajoutez un bloc.")}
                           </p>
                         </div>
@@ -628,7 +628,7 @@ export default function AdminNewsletter({ auth }: any) {
 
                     <button
                       onClick={handleSaveCampaign}
-                      className="w-full bg-zinc-900 text-white font-black uppercase tracking-[0.2em] rtl:tracking-normal py-5 rounded-3xl mt-12 hover:scale-[1.01] transition-all active:scale-95 shadow-xl hover:shadow-2xl"
+                      className="w-full bg-zinc-900 text-white font-kinder uppercase tracking-[0.2em] rtl:tracking-normal py-5 rounded-3xl mt-12 hover:scale-[1.01] transition-all active:scale-95 shadow-xl hover:shadow-2xl"
                     >
                       {currentCampaignId ? "Mettre à jour la campagne" : "Sauvegarder en brouillon"}
                     </button>
@@ -639,7 +639,7 @@ export default function AdminNewsletter({ auth }: any) {
                 <div className="space-y-6">
                   <div className="bg-white rounded-[2.5rem] border border-zinc-100 overflow-hidden">
                     <div className="p-8 border-b border-zinc-100 bg-zinc-50/50 flex justify-between items-center">
-                      <h3 className="text-[10px] rtl:text-[12px] font-black uppercase tracking-[0.3em] text-zinc-400">
+                      <h3 className="text-[10px] rtl:text-[12px] font-kinder uppercase tracking-[0.3em] text-zinc-400">
                         {t("Archives")}
                       </h3>
                     </div>
@@ -660,13 +660,13 @@ export default function AdminNewsletter({ auth }: any) {
                           <div className="flex gap-2">
                             <button
                               onClick={() => handleEditCampaign(c)}
-                              className="flex-1 bg-white border border-zinc-200 text-zinc-900 text-[10px] rtl:text-[12px] font-black uppercase tracking-widest rtl:tracking-normal py-2.5 rounded-xl hover:bg-zinc-50 active:scale-95 transition-all"
+                              className="flex-1 bg-white border border-zinc-200 text-zinc-900 text-[10px] rtl:text-[12px] font-kinder uppercase tracking-widest rtl:tracking-normal py-2.5 rounded-xl hover:bg-zinc-50 active:scale-95 transition-all"
                             >
                               {t("Éditer")}
                             </button>
                             <button
                               onClick={() => {}}
-                              className="flex-1 bg-emerald-600 text-white text-[10px] rtl:text-[12px] font-black uppercase tracking-widest rtl:tracking-normal py-2.5 rounded-xl shadow-lg shadow-emerald-200 active:scale-95 transition-all"
+                              className="flex-1 bg-emerald-600 text-white text-[10px] rtl:text-[12px] font-kinder uppercase tracking-widest rtl:tracking-normal py-2.5 rounded-xl shadow-lg shadow-emerald-200 active:scale-95 transition-all"
                             >
                               {t("Envoyer")}
                             </button>
@@ -704,7 +704,7 @@ export default function AdminNewsletter({ auth }: any) {
       {!isLoading && activeTab === "subscribers" && (
         <div className="max-w-4xl mx-auto space-y-6">
           <div className="bg-white rounded-[2.5rem] p-8 border border-zinc-100">
-            <h3 className="text-[10px] rtl:text-[12px] font-black uppercase tracking-[0.2em] rtl:tracking-normal text-zinc-400 mb-6">
+            <h3 className="text-[10px] rtl:text-[12px] font-kinder uppercase tracking-[0.2em] rtl:tracking-normal text-zinc-400 mb-6">
               {t("Recrutement Manuel")}
             </h3>
             <div className="flex gap-4">
@@ -713,7 +713,7 @@ export default function AdminNewsletter({ auth }: any) {
                 placeholder={t("email@exemple.com") || "email@exemple.com"}
                 className="flex-1 bg-zinc-50 border border-zinc-100 rounded-2xl px-6 py-4 text-sm outline-none"
               />
-              <button className="bg-zinc-900 text-white px-8 rounded-2xl font-black uppercase tracking-widest rtl:tracking-normal text-[10px] rtl:text-[12px]">
+              <button className="bg-zinc-900 text-white px-8 rounded-2xl font-kinder uppercase tracking-widest rtl:tracking-normal text-[10px] rtl:text-[12px]">
                 {t("Inscrire")}
               </button>
             </div>
@@ -722,16 +722,16 @@ export default function AdminNewsletter({ auth }: any) {
             <table className="w-full text-left">
               <thead className="bg-zinc-50/50 border-b border-zinc-100">
                 <tr>
-                  <th className="px-8 py-6 text-[10px] rtl:text-[12px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
+                  <th className="px-8 py-6 text-[10px] rtl:text-[12px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
                     {t("Abonné")}
                   </th>
-                  <th className="px-8 py-6 text-[10px] rtl:text-[12px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
+                  <th className="px-8 py-6 text-[10px] rtl:text-[12px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
                     {t("Groupe")}
                   </th>
-                  <th className="px-8 py-6 text-[10px] rtl:text-[12px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
+                  <th className="px-8 py-6 text-[10px] rtl:text-[12px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
                     {t("Statut")}
                   </th>
-                  <th className="px-8 py-6 text-[10px] rtl:text-[12px] font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal text-right">
+                  <th className="px-8 py-6 text-[10px] rtl:text-[12px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal text-right">
                     {t("Actions")}
                   </th>
                 </tr>
@@ -779,14 +779,14 @@ export default function AdminNewsletter({ auth }: any) {
       {!isLoading && activeTab === "settings" && settings && (
         <div className="max-w-2xl mx-auto">
           <div className="bg-white rounded-[2.5rem] p-10 border border-zinc-100 shadow-sm">
-            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-zinc-400 mb-1 border-l-4 border-emerald-500 pl-4">
+            <h3 className="text-[11px] font-kinder uppercase tracking-[0.3em] text-zinc-400 mb-1 border-l-4 border-emerald-500 pl-4">
               {t("Signature & Authentification")}
             </h3>
             <h2 className="text-2xl font-bold text-zinc-900 mb-8 italic">{t("Paramètres SMTP")}</h2>
 
             <div className="space-y-6">
               <div>
-                <label className="block text-[10px] rtl:text-[12px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-400 mb-2">
+                <label className="block text-[10px] rtl:text-[12px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-400 mb-2">
                   {t("Identité de l'expéditeur")}
                 </label>
                 <input
@@ -796,7 +796,7 @@ export default function AdminNewsletter({ auth }: any) {
                 />
               </div>
               <div>
-                <label className="block text-[10px] rtl:text-[12px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-400 mb-2">
+                <label className="block text-[10px] rtl:text-[12px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-400 mb-2">
                   {t("Adresse Email Professionnelle")}
                 </label>
                 <input
@@ -806,7 +806,7 @@ export default function AdminNewsletter({ auth }: any) {
                 />
               </div>
               <div>
-                <label className="block text-[10px] rtl:text-[12px] font-black uppercase tracking-widest rtl:tracking-normal text-zinc-400 mb-2">
+                <label className="block text-[10px] rtl:text-[12px] font-kinder uppercase tracking-widest rtl:tracking-normal text-zinc-400 mb-2">
                   {t("Pied de page légal (RGPD)")}
                 </label>
                 <textarea
@@ -825,7 +825,7 @@ export default function AdminNewsletter({ auth }: any) {
                     showAlert(e.message, "error");
                   }
                 }}
-                className="w-full bg-emerald-600 text-white font-black uppercase tracking-[0.2em] rtl:tracking-normal py-5 rounded-[2rem] shadow-xl shadow-emerald-100 hover:shadow-2xl hover:scale-[1.01] transition-all"
+                className="w-full bg-emerald-600 text-white font-kinder uppercase tracking-[0.2em] rtl:tracking-normal py-5 rounded-[2rem] shadow-xl shadow-emerald-100 hover:shadow-2xl hover:scale-[1.01] transition-all"
               >
                 {t("Appliquer les modifications")}
               </button>

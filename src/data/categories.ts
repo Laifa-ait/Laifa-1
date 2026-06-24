@@ -4,7 +4,7 @@ export const DEFAULT_CATEGORIES: Record<string, { title: string; subtitle: strin
       title: "Artisanat Pur",
       subtitle: "Tradition des 58 Wilayas",
       image: "https://images.unsplash.com/photo-1590736704728-f4730bb30770?q=80&w=1000&auto=format&fit=crop",
-      gradient: "from-[#121315]/80 via-[#121315]/20 to-transparent",
+      gradient: "from-[#3C2B22]/80 via-[#3C2B22]/20 to-transparent",
     },
     "Maison & Déco": {
       title: "Maison & Design",

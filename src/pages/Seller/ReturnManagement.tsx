@@ -17,17 +17,24 @@ export const ReturnManagement: React.FC = () => {
       const fetchReturns = async () => {
          if (!currentUser) return;
          setLoading(true);
-         // Get orders where this seller has items and there is a return request
+         // Get orders where this seller has items simply, avoiding complex indexes
          const { limit } = await import('firebase/firestore');
          const q = query(
             collection(db, "orders"),
             where("sellerIds", "array-contains", currentUser.uid),
-            where("returnRequest", "!=", null),
-            limit(100)
+            limit(250)
          );
-         const snap = await getDocs(q);
-         setReturns(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-         setLoading(false);
+         try {
+            const snap = await getDocs(q);
+            const allOrders = snap.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+            // Filter returnRequest in-memory to completely bypass index requirement
+            const returnOrders = allOrders.filter((o: any) => o.returnRequest !== undefined && o.returnRequest !== null);
+            setReturns(returnOrders);
+         } catch (err) {
+            console.error("Error fetching returns: ", err);
+         } finally {
+            setLoading(false);
+         }
       };
       fetchReturns();
    }, [currentUser]);
@@ -92,7 +99,7 @@ export const ReturnManagement: React.FC = () => {
    return (
       <div className="space-y-6">
          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-black text-zinc-900">{t("Gestion des Retours")}</h2>
+            <h2 className="text-2xl font-kinder text-zinc-900">{t("Gestion des Retours")}</h2>
             <div className="px-4 py-2 bg-zinc-100 rounded-full text-xs font-bold text-zinc-600">
                {returns.length} {returns.length === 1 ? 'demande' : 'demandes'} {t("en cours")}</div>
          </div>

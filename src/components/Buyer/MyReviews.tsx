@@ -31,7 +31,7 @@ export const MyReviews: React.FC<{ currentUser: any }> = ({ currentUser }) => {
   return (
     <div className="space-y-6">
       <header>
-        <h2 className="text-2xl font-black text-[#121315] mb-1">{t("dashboard.reviews.title", "Mes Évaluations")}</h2>
+        <h2 className="text-2xl font-kinder text-[#3C2B22] mb-1">{t("dashboard.reviews.title", "Mes Évaluations")}</h2>
         <p className="text-zinc-500 font-medium text-sm">
           {t("dashboard.reviews.subtitle", "Gérez vos avis et aidez la communauté à mieux choisir.")}
         </p>
@@ -44,7 +44,7 @@ export const MyReviews: React.FC<{ currentUser: any }> = ({ currentUser }) => {
             <Star className="w-5 h-5 fill-current" />
           </div>
           <div>
-            <h3 className="font-black text-indigo-950">
+            <h3 className="font-kinder text-indigo-950">
               {t("dashboard.reviews.pending", "Avis en attente (")}
               {pendingReviews.length})
             </h3>
@@ -76,7 +76,7 @@ export const MyReviews: React.FC<{ currentUser: any }> = ({ currentUser }) => {
                       className="w-14 h-14 object-cover rounded-xl border border-zinc-100"
                     />
                     <div>
-                      <h4 className="font-bold text-sm text-[#121315] line-clamp-1">{item.productName}</h4>
+                      <h4 className="font-bold text-sm text-[#3C2B22] line-clamp-1">{item.productName}</h4>
                       <p className="text-[10px] rtl:text-[12px] uppercase font-bold text-zinc-400 tracking-wider rtl:tracking-normal mt-1">
                         {t("dashboard.reviews.purchased_on", "Acheté le")}
                         {item.date.toLocaleDateString()}
@@ -99,7 +99,7 @@ export const MyReviews: React.FC<{ currentUser: any }> = ({ currentUser }) => {
       {/* Published Reviews */}
       <div className="bg-white rounded-3xl border border-zinc-200 overflow-hidden shadow-sm">
         <div className="p-5 border-b border-zinc-200 bg-zinc-50/50">
-          <h3 className="font-bold text-[#121315] flex items-center gap-2">
+          <h3 className="font-bold text-[#3C2B22] flex items-center gap-2">
             <MessageSquareDashed className="w-5 h-5 text-zinc-400" />
             {t("dashboard.reviews.history", "Historique de mes avis")}
           </h3>
@@ -112,7 +112,7 @@ export const MyReviews: React.FC<{ currentUser: any }> = ({ currentUser }) => {
         ) : reviews.length === 0 ? (
           <div className="p-10 text-center flex flex-col items-center">
             <Star className="w-12 h-12 text-zinc-200 mb-4" />
-            <p className="font-bold text-[#121315] mb-1">{t("dashboard.reviews.no_published", "Aucun avis publié")}</p>
+            <p className="font-bold text-[#3C2B22] mb-1">{t("dashboard.reviews.no_published", "Aucun avis publié")}</p>
             <p className="text-zinc-500 text-sm max-w-sm">
               {t(
                 "dashboard.reviews.share_experience",

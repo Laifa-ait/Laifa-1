@@ -74,10 +74,10 @@ export const RecentlyViewedDrawer: React.FC = () => {
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[9px] rtl:text-[11px] font-black uppercase text-[#ea580c] tracking-wider rtl:tracking-normal mb-1">
+                    <p className="text-[9px] rtl:text-[11px] font-kinder uppercase text-[#ea580c] tracking-wider rtl:tracking-normal mb-1">
                       {product.category}
                     </p>
-                    <h4 className="text-sm font-black text-zinc-900 truncate mb-1">{product.name}</h4>
+                    <h4 className="text-sm font-kinder text-zinc-900 truncate mb-1">{product.name}</h4>
                     <p className="text-xs rtl:text-sm font-bold text-zinc-500">
                       {product.price.toLocaleString()} {t("DA")}
                     </p>

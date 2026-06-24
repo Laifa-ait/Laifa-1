@@ -8,12 +8,38 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import toast from 'react-hot-toast';
 import { useTranslation } from "react-i18next";
 
+export interface SupportTicket {
+  id: string;
+  userId: string;
+  userName?: string;
+  subject: string;
+  priority: 'low' | 'medium' | 'high' | 'critical' | string;
+  status: 'open' | 'in_progress' | 'resolved' | 'closed' | string;
+  lastMessage?: string;
+  createdAt: any;
+  lastMessageAt?: any;
+  resolvedAt?: any;
+  updatedAt?: any;
+}
+
+export interface SupportMessage {
+  id: string;
+  ticketId: string;
+  userId: string;
+  text: string;
+  sender: 'client' | 'admin' | string;
+  createdAt: any;
+  fileUrl?: string;
+  fileName?: string;
+  fileType?: string;
+}
+
 export const BuyerSupport: React.FC = () => {
     const { t } = useTranslation();
   const { currentUser, userProfile } = useAuth();
-  const [tickets, setTickets] = useState<any[]>([]);
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<SupportMessage[]>([]);
   
   const [loadingTickets, setLoadingTickets] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
@@ -22,6 +48,10 @@ export const BuyerSupport: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Rate-limiting message cooldown
+  const [lastSentTime, setLastSentTime] = useState<number>(0);
+  const MESSAGE_COOLDOWN = 2000; // 2 seconds
 
   // New Ticket Modal
   const [isNewTicketModalOpen, setIsNewTicketModalOpen] = useState(false);
@@ -38,18 +68,25 @@ export const BuyerSupport: React.FC = () => {
     );
 
     const unsubscribe = onSnapshot(q, (snap) => {
-      const fetchedTickets = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const fetchedTickets = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as SupportTicket));
       setTickets(fetchedTickets);
       setLoadingTickets(false);
       
-      // Auto-select first ticket if none selected and tickets exist
+      // Auto-select first ticket properly
       setSelectedTicket(prev => {
         if (!prev && fetchedTickets.length > 0) {
           return fetchedTickets[0].id;
         }
+        if (prev && !fetchedTickets.some(t => t.id === prev)) {
+          return fetchedTickets.length > 0 ? fetchedTickets[0].id : null;
+        }
         return prev;
       });
-    }, (error) => { console.error("Snapshot quota error in ", error); setLoadingTickets(false); });
+    }, (error) => { 
+      console.error("Firestore onSnapshot error:", error); 
+      toast.error("Impossible de charger les tickets d'assistance. Veuillez réessayer.");
+      setLoadingTickets(false); 
+    });
     return () => unsubscribe();
   }, [currentUser]);
 
@@ -67,23 +104,36 @@ export const BuyerSupport: React.FC = () => {
     );
 
     const unsubscribe = onSnapshot(q, (snap) => {
-      setMessages(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      setMessages(snap.docs.map(d => ({ id: d.id, ...d.data() } as SupportMessage)));
       setLoadingMessages(false);
-    }, (error) => { console.error("Snapshot quota error in ", error); setLoadingTickets(false); });
+    }, (error) => { 
+      console.error("Firestore messages fetching error:", error); 
+      setLoadingMessages(false); 
+    });
 
     return () => unsubscribe();
   }, [selectedTicket]);
 
   const handleCreateTicket = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentUser || !newTicketData.subject.trim()) return;
+    if (!currentUser) return;
+
+    const trimmedSubject = newTicketData.subject.trim();
+    if (!trimmedSubject) {
+      toast.error("Veuillez saisir un sujet.");
+      return;
+    }
+    if (trimmedSubject.length < 5) {
+      toast.error("Le sujet doit contenir au moins 5 caractères.");
+      return;
+    }
 
     setCreatingTicket(true);
     try {
       const ticketRef = await addDoc(collection(db, "supportTickets"), {
         userId: currentUser.uid,
-        userName: userProfile?.shopName ||userProfile?.displayName || 'Client',
-        subject: newTicketData.subject.trim(),
+        userName: userProfile?.shopName || userProfile?.displayName || 'Client',
+        subject: trimmedSubject,
         priority: newTicketData.priority,
         status: 'open',
         lastMessage: 'Ticket créé',
@@ -105,6 +155,14 @@ export const BuyerSupport: React.FC = () => {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !currentUser || !selectedTicket) return;
+
+    // Implement rate limiting
+    const now = Date.now();
+    if (now - lastSentTime < MESSAGE_COOLDOWN) {
+      toast.error("Veuillez patienter entre les messages (anti-spam).");
+      return;
+    }
+    setLastSentTime(now);
 
     setSending(true);
     try {
@@ -156,15 +214,19 @@ export const BuyerSupport: React.FC = () => {
     const file = event.target.files?.[0];
     if (!file || !currentUser || !selectedTicket) return;
 
-    // Validate type (image or pdf)
-    if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
-      toast.error("Seules les images et les PDF sont acceptés.");
+    // Robust MIME and extension validation
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      toast.error("Format de fichier non supporté (seuls JPG, PNG, WEBP et PDF sont autorisés).");
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
     
-    // Max 5MB
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("La taille du fichier ne doit pas dépasser 5Mo.");
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error("La taille du fichier ne doit pas dépasser 10Mo.");
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
@@ -200,18 +262,19 @@ export const BuyerSupport: React.FC = () => {
     }
   };
 
+
   const currentTicket = tickets.find(t => t.id === selectedTicket);
 
   return (
     <div className="space-y-6 h-[calc(100vh-6rem)] flex flex-col">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
         <div>
-          <h2 className="text-3xl font-black tracking-tight rtl:tracking-normal text-zinc-950">{t("Support Admin")}</h2>
+          <h2 className="text-3xl font-kinder tracking-tight rtl:tracking-normal text-zinc-950">{t("Support Admin")}</h2>
           <p className="text-zinc-500 font-medium text-sm">{t("Gérez vos tickets d'assistance et litiges.")}</p>
         </div>
         <button 
           onClick={() => setIsNewTicketModalOpen(true)}
-          className="px-6 py-3 bg-zinc-950 text-white rounded-2xl font-black text-xs uppercase tracking-widest rtl:tracking-normal hover:bg-orange-600 transition-colors shadow-lg flex items-center justify-center gap-2"
+          className="px-6 py-3 bg-zinc-950 text-white rounded-2xl font-kinder text-xs uppercase tracking-widest rtl:tracking-normal hover:bg-orange-600 transition-colors shadow-lg flex items-center justify-center gap-2"
         >
           <Plus className="w-4 h-4" />
           {t("Nouveau Ticket")}</button>
@@ -221,7 +284,7 @@ export const BuyerSupport: React.FC = () => {
         {/* Sidebar: Tickets list */}
         <div className="w-full lg:w-96 bg-white rounded-[2rem] border border-zinc-100 flex flex-col shrink-0 overflow-hidden shadow-sm">
           <div className="p-6 border-b border-zinc-50 shrink-0 bg-zinc-50/50">
-            <h3 className="font-black text-zinc-950">{t("Vos Tickets")}</h3>
+            <h3 className="font-kinder text-zinc-950">{t("Vos Tickets")}</h3>
           </div>
           <div className="flex-1 overflow-y-auto divide-y divide-zinc-50">
             {loadingTickets ? (
@@ -274,9 +337,9 @@ export const BuyerSupport: React.FC = () => {
               <div className="p-6 border-b border-zinc-50 flex items-center justify-between shrink-0 shadow-sm z-10 bg-white" >
                 <div>
                   <div className="flex items-center gap-3 mb-1">
-                    <h3 className="font-black text-lg text-zinc-950">{currentTicket?.subject}</h3>
+                    <h3 className="font-kinder text-lg text-zinc-950">{currentTicket?.subject}</h3>
                     {currentTicket?.status === 'resolved' && (
-                       <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest rtl:tracking-normal bg-emerald-100 text-emerald-700 px-2 py-1 rounded-xl">
+                       <span className="flex items-center gap-1 text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal bg-emerald-100 text-emerald-700 px-2 py-1 rounded-xl">
                           <CheckCircle2 className="w-3 h-3" /> {t("Résolu")}</span>
                     )}
                   </div>
@@ -325,7 +388,7 @@ export const BuyerSupport: React.FC = () => {
                           <p className={`text-sm font-medium leading-relaxed whitespace-pre-wrap ${isSeller ? 'text-zinc-800' : 'text-zinc-600'}`}>{m.text}</p>
                           
                           {m.createdAt && (
-                            <div className="mt-3 flex items-center justify-end gap-1.5 text-[9px] font-black uppercase text-zinc-300">
+                            <div className="mt-3 flex items-center justify-end gap-1.5 text-[9px] font-kinder uppercase text-zinc-300">
                               <Clock className="w-3 h-3" />
                               {m.createdAt.toDate?.().toLocaleString('fr-FR')}
                             </div>
@@ -367,7 +430,7 @@ export const BuyerSupport: React.FC = () => {
                     <button 
                       type="submit"
                       disabled={sending || (!newMessage.trim() && !uploading)}
-                      className="px-6 h-14 bg-zinc-950 text-white rounded-2xl font-black text-xs uppercase tracking-widest rtl:tracking-normal hover:bg-orange-600 transition-colors shadow-lg disabled:opacity-50 flex items-center justify-center shrink-0"
+                      className="px-6 h-14 bg-zinc-950 text-white rounded-2xl font-kinder text-xs uppercase tracking-widest rtl:tracking-normal hover:bg-orange-600 transition-colors shadow-lg disabled:opacity-50 flex items-center justify-center shrink-0"
                     >
                       <Send className="w-5 h-5" />
                     </button>
@@ -423,7 +486,7 @@ export const BuyerSupport: React.FC = () => {
               className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl border border-zinc-100 overflow-hidden"
             >
               <div className="px-8 py-6 border-b border-zinc-50 flex items-center justify-between">
-                <h3 className="text-xl font-black text-zinc-950">{t("Ouvrir un ticket")}</h3>
+                <h3 className="text-xl font-kinder text-zinc-950">{t("Ouvrir un ticket")}</h3>
                 <button 
                   onClick={() => setIsNewTicketModalOpen(false)}
                   className="w-10 h-10 bg-zinc-50 text-zinc-400 hover:text-zinc-900 rounded-full flex items-center justify-center transition-colors"
@@ -433,7 +496,7 @@ export const BuyerSupport: React.FC = () => {
               </div>
               <form onSubmit={handleCreateTicket} className="p-8 space-y-6">
                 <div>
-                  <label className="block text-xs font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2">{t("Sujet du ticket")}</label>
+                  <label className="block text-xs font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2">{t("Sujet du ticket")}</label>
                   <input 
                     type="text" 
                     required
@@ -444,7 +507,7 @@ export const BuyerSupport: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-black text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2">{t("Priorité")}</label>
+                  <label className="block text-xs font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2">{t("Priorité")}</label>
                   <select
                     value={newTicketData.priority}
                     onChange={e => setNewTicketData({...newTicketData, priority: e.target.value})}
@@ -458,7 +521,7 @@ export const BuyerSupport: React.FC = () => {
                 <button 
                   type="submit"
                   disabled={creatingTicket || !newTicketData.subject.trim()}
-                  className="w-full py-4 bg-zinc-950 text-white rounded-2xl font-black text-sm uppercase tracking-widest rtl:tracking-normal hover:bg-orange-600 transition-colors shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-zinc-950 text-white rounded-2xl font-kinder text-sm uppercase tracking-widest rtl:tracking-normal hover:bg-orange-600 transition-colors shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {creatingTicket ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
                   {t("Créer le ticket")}</button>

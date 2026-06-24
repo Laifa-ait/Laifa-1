@@ -13,11 +13,13 @@ export const AppGuard: React.FC<AppGuardProps> = ({ requireAuth = false, allowed
   const { currentUser, userProfile, loading } = useAuth();
   const location = useLocation();
   const [tokenRole, setTokenRole] = React.useState<string | null>(null);
-  const [verifyingClaims, setVerifyingClaims] = React.useState(requireAuth);
+  
+  const actualRequireAuth = requireAuth || (allowedRoles && allowedRoles.length > 0) ? true : false;
+  const [verifyingClaims, setVerifyingClaims] = React.useState(actualRequireAuth);
 
   React.useEffect(() => {
     let active = true;
-    if (!currentUser || !requireAuth) {
+    if (!currentUser || !actualRequireAuth) {
       setTokenRole(null);
       setVerifyingClaims(false);
       return;
@@ -45,7 +47,7 @@ export const AppGuard: React.FC<AppGuardProps> = ({ requireAuth = false, allowed
     return () => {
       active = false;
     };
-  }, [currentUser, requireAuth]);
+  }, [currentUser, actualRequireAuth]);
 
   if (loading || verifyingClaims) {
     return (
@@ -55,16 +57,16 @@ export const AppGuard: React.FC<AppGuardProps> = ({ requireAuth = false, allowed
     );
   }
 
-  if (requireAuth && !currentUser) {
+  if (actualRequireAuth && !currentUser) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
   const activeRole = tokenRole || userProfile?.role;
 
-  if (requireAuth && allowedRoles && activeRole) {
-    if (!allowedRoles.includes(activeRole as any)) {
+  if (allowedRoles && allowedRoles.length > 0) {
+    if (!activeRole || !allowedRoles.includes(activeRole as any)) {
       // Redirect to homepage or dashboard safely
-      console.warn(`[Security Alert AppGuard] Unauthorized role ${activeRole} for user ${currentUser?.email}`);
+      console.warn(`[Security Alert AppGuard] Unauthorized or missing role "${activeRole}" for user ${currentUser?.email}`);
       return <Navigate to="/" replace />;
     }
   }

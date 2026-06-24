@@ -115,20 +115,19 @@ export const ShippingCalculator: React.FC = () => {
     <section className="py-12 w-full max-w-[90rem] mx-auto px-4 sm:px-6 md:px-8">
       <div className="bg-white rounded-3xl border border-zinc-100 shadow-xl overflow-hidden grid grid-cols-1 lg:grid-cols-12">
         {/* Simulator Info Column */}
-        <div className="p-8 lg:p-12 lg:col-span-5 bg-gradient-to-b from-[#121315] to-[#0a0b0c] text-white flex flex-col justify-between relative overflow-hidden">
+        <div className="p-8 lg:p-12 lg:col-span-5 bg-gradient-to-b from-[#3C2B22] to-[#0a0b0c] text-white flex flex-col justify-between relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-amber-600/15 via-transparent to-transparent pointer-events-none" />
 
           <div className="space-y-4 relative z-10">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 text-orange-400 text-[10px] rtl:text-[12px] font-bold uppercase tracking-wider rtl:tracking-normal rounded-full">
               <Truck className="w-3.5 h-3.5" />
-              {t("delivery_58_wilayas") || "Logistique Algérie 58 Wilayas"}
+              {t("delivery_58_wilayas")}
             </div>
-            <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight rtl:tracking-normal leading-tight">
-              {t("calc_shipping_fees") || "Calculez vos frais de port instantanément"}
+            <h2 className="text-2xl md:text-3xl font-sans font-bold uppercase tracking-tight rtl:tracking-normal leading-tight">
+              {t("calc_shipping_fees")}
             </h2>
             <p className="text-xs rtl:text-sm text-zinc-300 font-medium leading-relaxed max-w-md">
-              {t("shipping_calculator_desc") ||
-                "Plus besoin d'appeler ou de deviner ! Sélectionnez votre Wilaya pour afficher les tarifs de livraison à domicile et Stop Desk de notre réseau partenaire de transporteurs certifiés."}
+              {t("shipping_calculator_desc")}
             </p>
           </div>
 
@@ -136,13 +135,13 @@ export const ShippingCalculator: React.FC = () => {
             {[
               {
                 icon: ShieldCheck,
-                title: t("cash_on_delivery") || "Paiement à la livraison",
-                desc: t("cash_on_delivery_desc") || "Payez en espèces à réception du colis",
+                title: t("cash_on_delivery"),
+                desc: t("cash_on_delivery_desc"),
               },
               {
                 icon: BadgePercent,
-                title: t("transparent_fees") || "Frais transparents",
-                desc: t("transparent_fees_desc") || "Tarifs calculés au plus juste sans frais cachés",
+                title: t("transparent_fees"),
+                desc: t("transparent_fees_desc"),
               },
             ].map((item, idx) => (
               <div key={idx} className="flex gap-3">
@@ -164,19 +163,19 @@ export const ShippingCalculator: React.FC = () => {
         <div className="p-8 lg:p-12 lg:col-span-7 space-y-8 flex flex-col justify-center">
           <div className="space-y-4">
             <label className="block text-[10px] rtl:text-[12px] font-bold text-stone-500 uppercase tracking-wider rtl:tracking-normal ml-1">
-              {t("step_choose_wilaya") || "Étape 1 : Choisissez votre Wilaya de livraison"}
+              {t("step_choose_wilaya")}
             </label>
             <div className="relative">
               <div
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="w-full px-6 py-4 bg-zinc-50 border border-zinc-200/80 rounded-2xl font-bold text-sm text-[#121315] flex items-center justify-between cursor-pointer hover:border-zinc-300 transition-all select-none"
+                className="w-full px-6 py-4 bg-zinc-50 border border-zinc-200/80 rounded-2xl font-bold text-sm text-[#3C2B22] flex items-center justify-between cursor-pointer hover:border-zinc-300 transition-all select-none"
               >
                 <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-[#F37021]" />
+                  <MapPin className="w-4 h-4 text-[#FF5C00]" />
                   <span>{selectedWilaya}</span>
                 </div>
-                <span className="text-xs rtl:text-sm font-black text-zinc-400 uppercase tracking-wider rtl:tracking-normal">
-                  {t("modify") || "Modifier ▾"}
+                <span className="text-xs rtl:text-sm font-sans font-bold text-zinc-400 uppercase tracking-wider rtl:tracking-normal">
+                  {t("modify")}
                 </span>
               </div>
 
@@ -187,17 +186,17 @@ export const ShippingCalculator: React.FC = () => {
                     <Search className="w-4 h-4 text-zinc-400" />
                     <input
                       type="text"
-                      placeholder={t("search_wilaya_placeholder") || "Saisissez votre Wilaya (Ex: Oran, Alger...)"}
+                      placeholder={t("search_wilaya_placeholder")}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full bg-transparent border-none text-xs rtl:text-sm font-bold outline-none text-[#121315] p-1.5"
+                      className="w-full bg-transparent border-none text-xs rtl:text-sm font-bold outline-none text-[#3C2B22] p-1.5"
                     />
                   </div>
 
                   <div className="flex-1 overflow-y-auto space-y-1 pr-1">
                     {filteredWilayas.length === 0 ? (
                       <p className="text-xs rtl:text-sm font-bold text-zinc-400 text-center py-4">
-                        {t("no_matching_wilaya") || "Aucune Wilaya correspondante."}
+                        {t("no_matching_wilaya")}
                       </p>
                     ) : (
                       filteredWilayas.map((wilaya) => (
@@ -209,12 +208,12 @@ export const ShippingCalculator: React.FC = () => {
                             setIsDropdownOpen(false);
                             setSearchQuery("");
                           }}
-                          className={`w-full text-left px-4 py-3 rounded-xl text-xs rtl:text-sm font-bold uppercase tracking-wider rtl:tracking-normal hover:bg-zinc-100 transition-colors flex items-center justify-between cursor-pointer border-none ${selectedWilaya === wilaya ? "bg-[#F37021]/5 text-[#F37021]" : "bg-transparent text-[#121315]"}`}
+                          className={`w-full text-left px-4 py-3 rounded-xl text-xs rtl:text-sm font-bold uppercase tracking-wider rtl:tracking-normal hover:bg-zinc-100 transition-colors flex items-center justify-between cursor-pointer border-none ${selectedWilaya === wilaya ? "bg-[#FF5C00]/5 text-[#FF5C00]" : "bg-transparent text-[#3C2B22]"}`}
                         >
                           <span>{wilaya}</span>
                           {selectedWilaya === wilaya && (
-                            <span className="text-[10px] rtl:text-[12px] font-black">
-                              {t("active_badge") || "Actif ✓"}
+                            <span className="text-[10px] rtl:text-[12px] font-sans font-bold">
+                              {t("active_badge")}
                             </span>
                           )}
                         </button>
@@ -233,16 +232,16 @@ export const ShippingCalculator: React.FC = () => {
               <div className="flex items-center gap-1.5 mb-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 <span className="text-[9px] rtl:text-[11px] font-bold text-stone-400 uppercase tracking-wider rtl:tracking-normal">
-                  {t("main_option") || "Option principale"}
+                  {t("main_option")}
                 </span>
               </div>
-              <h3 className="text-xs rtl:text-sm font-black text-[#121315] uppercase tracking-wide mb-1">
-                {t("home_delivery") || "Livraison à domicile"}
+              <h3 className="text-xs rtl:text-sm font-sans font-bold text-[#3C2B22] uppercase tracking-wide mb-1">
+                {t("home_delivery")}
               </h3>
               <p className="text-[10px] rtl:text-[12px] text-zinc-400 font-bold mb-4">
-                {t("home_delivery_desc") || "Colis déposé en main propre chez vous."}
+                {t("home_delivery_desc")}
               </p>
-              <div className="text-2xl font-black text-[#121315]">{formatPrice(tariffData.priceDomicile)}</div>
+              <div className="text-2xl font-sans font-bold text-[#3C2B22]">{formatPrice(tariffData.priceDomicile)}</div>
             </div>
 
             {/* Stop desk relay option */}
@@ -250,16 +249,16 @@ export const ShippingCalculator: React.FC = () => {
               <div className="flex items-center gap-1.5 mb-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />
                 <span className="text-[9px] rtl:text-[11px] font-bold text-stone-500 uppercase tracking-wider rtl:tracking-normal">
-                  {t("economic_option") || "Option économique"}
+                  {t("economic_option")}
                 </span>
               </div>
-              <h3 className="text-xs rtl:text-sm font-black text-[#121315] uppercase tracking-wide mb-1">
-                {t("stop_desk") || "Point Relais / Stop Desk"}
+              <h3 className="text-xs rtl:text-sm font-sans font-bold text-[#3C2B22] uppercase tracking-wide mb-1">
+                {t("stop_desk")}
               </h3>
               <p className="text-[10px] rtl:text-[12px] text-zinc-400 font-bold mb-4">
-                {t("stop_desk_desc") || "À récupérer au bureau de transport local."}
+                {t("stop_desk_desc")}
               </p>
-              <div className="text-2xl font-black text-[#F37021]">{formatPrice(tariffData.priceStopDesk)}</div>
+              <div className="text-2xl font-sans font-bold text-[#FF5C00]">{formatPrice(tariffData.priceStopDesk)}</div>
             </div>
           </div>
 
@@ -267,15 +266,15 @@ export const ShippingCalculator: React.FC = () => {
           <div className="bg-orange-50/50 border border-orange-100/60 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <span className="block text-[8px] font-bold text-orange-600 uppercase tracking-wider rtl:tracking-normal mb-0.5">
-                {t("estimated_delay") || "Délai estimé"}
+                {t("estimated_delay")}
               </span>
-              <p className="text-xs rtl:text-sm font-black text-[#121315] uppercase tracking-wide">
-                {t("shipping_under") || "Expédition sous"} {tariffData.delay} ({tariffData.cleanName})
+              <p className="text-xs rtl:text-sm font-sans font-bold text-[#3C2B22] uppercase tracking-wide">
+                {t("shipping_under")} {tariffData.delay} ({tariffData.cleanName})
               </p>
             </div>
             <div className="text-right sm:text-right text-[10px] rtl:text-[12px] font-bold text-zinc-500 uppercase">
-              {t("estimated_by") || "🚀 Estimé d'ici le"}{" "}
-              <strong className="text-orange-600 font-black">{tariffData.estimatedDate}</strong>
+              {t("estimated_by")}{" "}
+              <strong className="text-orange-600 font-sans font-bold">{tariffData.estimatedDate}</strong>
             </div>
           </div>
         </div>

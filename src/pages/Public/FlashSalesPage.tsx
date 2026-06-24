@@ -51,22 +51,22 @@ const CountdownTimer = () => {
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-1 sm:gap-2">
         <div className="flex flex-col items-center">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#121315] rounded-xl flex items-center justify-center border border-stone-800 shadow-md">
-            <span className="text-lg sm:text-xl font-black text-white tabular-nums tracking-tighter rtl:tracking-normal">{h.toString().padStart(2, '0')}</span>
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#3C2B22] rounded-xl flex items-center justify-center border border-stone-800 shadow-md">
+            <span className="text-lg sm:text-xl font-kinder text-white tabular-nums tracking-tighter rtl:tracking-normal">{h.toString().padStart(2, '0')}</span>
           </div>
           <span className="text-[8px] sm:text-[9px] font-bold text-stone-500 uppercase tracking-widest rtl:tracking-normal mt-1">{t("Heures")}</span>
         </div>
-        <span className="text-lg sm:text-xl font-black text-[#F37021] animate-pulse pb-4">:</span>
+        <span className="text-lg sm:text-xl font-kinder text-[#FF5C00] animate-pulse pb-4">:</span>
         <div className="flex flex-col items-center">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#121315] rounded-xl flex items-center justify-center border border-stone-800 shadow-md">
-            <span className="text-lg sm:text-xl font-black text-white tabular-nums tracking-tighter rtl:tracking-normal">{m.toString().padStart(2, '0')}</span>
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#3C2B22] rounded-xl flex items-center justify-center border border-stone-800 shadow-md">
+            <span className="text-lg sm:text-xl font-kinder text-white tabular-nums tracking-tighter rtl:tracking-normal">{m.toString().padStart(2, '0')}</span>
           </div>
           <span className="text-[8px] sm:text-[9px] font-bold text-stone-500 uppercase tracking-widest rtl:tracking-normal mt-1">{t("Min")}</span>
         </div>
-        <span className="text-lg sm:text-xl font-black text-[#F37021] animate-pulse pb-4">:</span>
+        <span className="text-lg sm:text-xl font-kinder text-[#FF5C00] animate-pulse pb-4">:</span>
         <div className="flex flex-col items-center">
           <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-600 rounded-xl flex items-center justify-center border border-red-500 shadow-lg shadow-red-600/20">
-            <span className="text-lg sm:text-xl font-black text-white tabular-nums tracking-tighter rtl:tracking-normal">{s.toString().padStart(2, '0')}</span>
+            <span className="text-lg sm:text-xl font-kinder text-white tabular-nums tracking-tighter rtl:tracking-normal">{s.toString().padStart(2, '0')}</span>
           </div>
           <span className="text-[8px] sm:text-[9px] font-bold text-red-600 uppercase tracking-widest rtl:tracking-normal mt-1">{t("Sec")}</span>
         </div>
@@ -228,7 +228,7 @@ export const FlashSalesPage: React.FC = () => {
 
       {/* Ticker Tape */}
       <div className="relative z-10 w-full overflow-hidden bg-[#B81830] text-white py-2 flex items-center shadow-md">
-        <div className="animate-[marquee_20s_linear_infinite] whitespace-nowrap flex items-center font-black uppercase text-[10px] sm:text-xs tracking-widest rtl:tracking-normal gap-8">
+        <div className="animate-[marquee_20s_linear_infinite] whitespace-nowrap flex items-center font-kinder uppercase text-[10px] sm:text-xs tracking-widest rtl:tracking-normal gap-8">
           {[...Array(10)].map((_, i) => {
             const hasLowStock = filteredProducts.some(p => p.stock && p.stock > 0 && p.stock <= 20);
             const maxDiscount = filteredProducts.length > 0 ? Math.max(...filteredProducts.map(p => (p.originalPrice && p.price < p.originalPrice) ? Math.round((1 - p.price / p.originalPrice) * 100) : 0)) : 0;
@@ -275,20 +275,20 @@ export const FlashSalesPage: React.FC = () => {
                   <Flame className="w-6 h-6 sm:w-8 sm:h-8 text-white fill-current" />
                 </div>
                 <div>
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter rtl:tracking-normal text-[#121315]">
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-kinder tracking-tighter rtl:tracking-normal text-[#3C2B22]">
                     {t("VENTES FLASH")}</h1>
                 </div>
               </div>
               <p className="text-stone-600 font-medium text-sm sm:text-base max-w-xl">
-                {t("Des offres éphémères sur une sélection exclusive de produits. Les stocks disparaissent très vite.")}<strong className="text-[#F37021]">{t("Premier arrivé, premier servi.")}</strong>
+                {t("Des offres éphémères sur une sélection exclusive de produits. Les stocks disparaissent très vite.")}<strong className="text-[#FF5C00]">{t("Premier arrivé, premier servi.")}</strong>
               </p>
 
               {/* Status Gadgets */}
               <div className="flex items-center gap-2 sm:gap-3 mt-1 flex-wrap">
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 text-[9px] sm:text-[10px] font-black uppercase tracking-wider rtl:tracking-normal">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 text-[9px] sm:text-[10px] font-kinder uppercase tracking-wider rtl:tracking-normal">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                   {t("En direct")}</div>
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-600 text-[9px] sm:text-[10px] font-black uppercase tracking-wider rtl:tracking-normal">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-600 text-[9px] sm:text-[10px] font-kinder uppercase tracking-wider rtl:tracking-normal">
                   <Activity className="w-3.5 h-3.5" />
                   {t("+1.2k acheteurs")}</div>
               </div>
@@ -298,7 +298,7 @@ export const FlashSalesPage: React.FC = () => {
             <div className="flex-shrink-0 bg-stone-50/80 p-4 sm:p-5 rounded-3xl border border-stone-200/60 shadow-inner w-full lg:w-auto overflow-x-auto">
               <div className="flex items-center gap-2 mb-3">
                 <Timer className="w-4 h-4 text-red-500" />
-                <h3 className="text-[10px] sm:text-xs font-black text-red-950 uppercase tracking-[0.2em] whitespace-nowrap">{t("Fin des offres dans")}</h3>
+                <h3 className="text-[10px] sm:text-xs font-kinder text-red-950 uppercase tracking-[0.2em] whitespace-nowrap">{t("Fin des offres dans")}</h3>
               </div>
               <CountdownTimer />
             </div>
@@ -319,7 +319,7 @@ export const FlashSalesPage: React.FC = () => {
                     onClick={() => setActiveQuickFilter(f.id)}
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold uppercase tracking-widest rtl:tracking-normal whitespace-nowrap transition-all ${
                       activeQuickFilter === f.id
-                        ? 'bg-[#121315] text-white shadow-md shadow-[#121315]/20'
+                        ? 'bg-[#3C2B22] text-white shadow-md shadow-[#3C2B22]/20'
                         : 'bg-stone-50 text-stone-600 border border-stone-200 hover:bg-stone-100 hover:text-stone-900'
                     }`}
                   >
@@ -332,7 +332,7 @@ export const FlashSalesPage: React.FC = () => {
           <div className="flex items-center gap-2 w-full md:w-auto">
             <div className="relative shrink-0 flex-1 md:flex-none">
               <select 
-                className="w-full md:w-auto pl-4 pr-10 py-2.5 sm:py-3 bg-stone-50 border border-stone-200 rounded-xl outline-none font-bold text-[10px] sm:text-[11px] uppercase tracking-wider rtl:tracking-normal appearance-none cursor-pointer text-[#121315] focus:border-[#B81830] transition-colors"
+                className="w-full md:w-auto pl-4 pr-10 py-2.5 sm:py-3 bg-stone-50 border border-stone-200 rounded-xl outline-none font-bold text-[10px] sm:text-[11px] uppercase tracking-wider rtl:tracking-normal appearance-none cursor-pointer text-[#3C2B22] focus:border-[#B81830] transition-colors"
                 value={sortOption}
                 onChange={(e) => setSortOption(e.target.value)}
               >
@@ -345,7 +345,7 @@ export const FlashSalesPage: React.FC = () => {
 
             <button 
               onClick={() => setShowFilters(true)} 
-              className="px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-black text-[10px] sm:text-[11px] uppercase tracking-widest rtl:tracking-normal bg-white border border-stone-200 text-[#121315] hover:bg-[#121315] hover:text-white flex items-center justify-center gap-2 transition-all shadow-sm shrink-0"
+              className="px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-kinder text-[10px] sm:text-[11px] uppercase tracking-widest rtl:tracking-normal bg-white border border-stone-200 text-[#3C2B22] hover:bg-[#3C2B22] hover:text-white flex items-center justify-center gap-2 transition-all shadow-sm shrink-0"
             >
                <SlidersHorizontal className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                <span className="hidden sm:inline">{t("Affiner")}</span>
@@ -379,14 +379,14 @@ export const FlashSalesPage: React.FC = () => {
                 const isAr = i18n.language === 'ar';
 
                 return (
-                  <div key={product.id} className="h-full bg-white rounded-2xl p-2 border border-orange-100 shadow-sm hover:border-[#F37021]/30 transition-all duration-300 flex flex-col justify-between">
+                  <div key={product.id} className="h-full bg-white rounded-2xl p-2 border border-orange-100 shadow-sm hover:border-[#FF5C00]/30 transition-all duration-300 flex flex-col justify-between">
                     <div>
                       <ProductCard product={product} index={index} variant="flash_sale" />
                     </div>
                     {/* Live stock scarcity bar - only shown if we have valid logical data */}
                     {showProgress && (
                       <div className="mt-3 px-1 pb-1">
-                        <div className="flex justify-between text-[10px] font-black leading-none mb-1">
+                        <div className="flex justify-between text-[10px] font-kinder leading-none mb-1">
                           <span className="text-red-600 animate-pulse flex items-center gap-0.5">
                             <Flame className="w-3 h-3 fill-current inline" />
                             {isAr ? `بقي ${itemsLeft} فقط` : `Plus que ${itemsLeft} restants`}
@@ -395,7 +395,7 @@ export const FlashSalesPage: React.FC = () => {
                         </div>
                         <div className="w-full h-1 bg-stone-100 rounded-full overflow-hidden">
                           <div 
-                            className="h-full bg-gradient-to-r from-red-600 to-[#F37021] rounded-full"
+                            className="h-full bg-gradient-to-r from-red-600 to-[#FF5C00] rounded-full"
                             style={{ width: `${stockPercent}%` }}
                           />
                         </div>
@@ -423,11 +423,11 @@ export const FlashSalesPage: React.FC = () => {
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-stone-50 rounded-3xl flex items-center justify-center text-stone-300 mb-6">
                <SearchX className="w-8 h-8" />
             </div>
-            <h3 className="text-lg sm:text-xl font-black text-stone-800 uppercase tracking-wider rtl:tracking-normal">{t("Stocks épuisés")}</h3>
+            <h3 className="text-lg sm:text-xl font-kinder text-stone-800 uppercase tracking-wider rtl:tracking-normal">{t("Stocks épuisés")}</h3>
             <p className="text-sm font-medium text-stone-500 mt-2 max-w-sm px-4">{t("Aucun produit ne correspond à ces critères ou la vente est terminée pour ces articles.")}</p>
             <button 
               onClick={() => { resetFilters(); setActiveQuickFilter(null); }}
-              className="mt-6 sm:mt-8 px-6 sm:px-8 py-3 sm:py-4 bg-[#B81830] text-white rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest rtl:tracking-normal hover:bg-black hover:scale-105 transition-all shadow-md shadow-red-900/20"
+              className="mt-6 sm:mt-8 px-6 sm:px-8 py-3 sm:py-4 bg-[#B81830] text-white rounded-xl text-[10px] sm:text-xs font-kinder uppercase tracking-widest rtl:tracking-normal hover:bg-black hover:scale-105 transition-all shadow-md shadow-red-900/20"
             >
               {t("Réinitialiser ma recherche")}</button>
           </div>

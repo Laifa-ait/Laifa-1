@@ -35,28 +35,64 @@ import {
 import { getStorage, connectStorageEmulator, FirebaseStorage } from "firebase/storage";
 
 const clientConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCsGYo1B0vavSQbKdFvu0-7jfzILFHvejA",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "original-micron-7sjh2.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "original-micron-7sjh2",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "original-micron-7sjh2.firebasestorage.app",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "76420360525",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:76420360525:web:d6781ea77ef0c2257aef04",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-XQW5YY2C36",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
   firestoreDatabaseId: import.meta.env.VITE_FIREBASE_DATABASE_ID || "(default)",
 };
 
-const app = initializeApp(clientConfig);
+const requiredVars = ['VITE_FIREBASE_API_KEY', 'VITE_FIREBASE_AUTH_DOMAIN', 'VITE_FIREBASE_PROJECT_ID'];
+for (const key of requiredVars) {
+  if (!import.meta.env[key]) {
+    console.warn(`Variable d'environnement manquante : ${key}`);
+  }
+}
 
-export const db = initializeFirestore(
-  app,
-  {
-    experimentalForceLongPolling: true,
-  },
-  clientConfig.firestoreDatabaseId
-);
+let app: FirebaseApp;
+let db: Firestore;
+let auth: Auth;
+let storage: FirebaseStorage;
 
-export const auth = getAuth(app);
-export const storage = getStorage(app);
+try {
+  const dbOptions = process.env.NODE_ENV === 'development' 
+    ? { experimentalForceLongPolling: true } 
+    : {};
+  
+  app = getApps().length === 0 ? initializeApp(clientConfig) : getApp();
+  db = initializeFirestore(app, dbOptions, clientConfig.firestoreDatabaseId);
+  auth = getAuth(app);
+  storage = getStorage(app);
+} catch (err: any) {
+  if (err.code === 'app/duplicate-app') {
+    app = getApp();
+    db = getFirestore(app, clientConfig.firestoreDatabaseId);
+    auth = getAuth(app);
+    storage = getStorage(app);
+  } else {
+    console.error("Firebase initialization failed:", err);
+    // Au lieu de crash (écran blanc ou Vite bloqué), nous utilisons une config factice (dummy)
+    // Cela permet au SDK d'instancier les objets Auth/Firestore sans bloquer l'exécution JS.
+    // L'interface React pourra donc se charger et afficher l'erreur proprement.
+    const fallbackConfig = {
+      apiKey: "AIzaSy_dummy_key_to_prevent_crash",
+      authDomain: "dummy.firebaseapp.com",
+      projectId: "dummy-project",
+      storageBucket: "dummy.appspot.com",
+      messagingSenderId: "123456789012",
+      appId: "1:123456789012:web:1234567890123456789012"
+    };
+    app = initializeApp(fallbackConfig, "DummyAppForErrorRecovery");
+    db = getFirestore(app);
+    auth = getAuth(app);
+    storage = getStorage(app);
+  }
+}
+
+export { app, db, auth, storage };
 
 // FINOPS FIX: Emulators disabled for AI Studio preview environment
 export const googleProvider = new GoogleAuthProvider();

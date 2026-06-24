@@ -128,7 +128,7 @@ export const DBSeedAdmin: React.FC = () => {
   return (
     <div className="max-w-4xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-black text-zinc-900 tracking-tighter rtl:tracking-normal uppercase">
+        <h1 className="text-3xl font-kinder text-zinc-900 tracking-tighter rtl:tracking-normal uppercase">
           {t("Base de données")}
         </h1>
         <p className="text-zinc-500 font-medium mt-2">
@@ -147,7 +147,7 @@ export const DBSeedAdmin: React.FC = () => {
               <Database className="w-6 h-6 text-orange-600" />
             </div>
             <div>
-              <h3 className="text-xl font-black text-zinc-900">{t("Remplissage Automatique (Seed)")}</h3>
+              <h3 className="text-xl font-kinder text-zinc-900">{t("Remplissage Automatique (Seed)")}</h3>
               <p className="text-sm font-medium text-zinc-500 mt-1 max-w-lg leading-relaxed">
                 {t(
                   "Injectez 5 produits phares du terroir algérien (Miel de Ghardaïa, Vase d'Aït Yenni, Tapis de Constantine...) pour peupler immédiatement la marketplace sans créer de vrais comptes vendeurs."
@@ -160,7 +160,7 @@ export const DBSeedAdmin: React.FC = () => {
             <button
               onClick={handleSeed}
               disabled={seeding || clearing}
-              className="w-full sm:w-auto px-8 py-4 bg-zinc-950 text-white rounded-3xl font-black text-[11px] uppercase tracking-widest rtl:tracking-normal hover:bg-zinc-800 transition-all shadow-xl shadow-zinc-950/10 flex items-center justify-center gap-3 disabled:opacity-50"
+              className="w-full sm:w-auto px-8 py-4 bg-zinc-950 text-white rounded-3xl font-kinder text-[11px] uppercase tracking-widest rtl:tracking-normal hover:bg-zinc-800 transition-all shadow-xl shadow-zinc-950/10 flex items-center justify-center gap-3 disabled:opacity-50"
             >
               {seeding ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
               {seeding ? "Injection..." : "Générer les Produits"}
@@ -169,7 +169,7 @@ export const DBSeedAdmin: React.FC = () => {
             <button
               onClick={handleClear}
               disabled={seeding || clearing}
-              className="w-full sm:w-auto px-8 py-4 bg-red-50 text-red-600 border border-red-200 rounded-3xl font-black text-[11px] uppercase tracking-widest rtl:tracking-normal hover:bg-red-100 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+              className="w-full sm:w-auto px-8 py-4 bg-red-50 text-red-600 border border-red-200 rounded-3xl font-kinder text-[11px] uppercase tracking-widest rtl:tracking-normal hover:bg-red-100 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
             >
               {clearing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
               {clearing ? "Suppression..." : "Nettoyer le Seed"}
@@ -180,7 +180,7 @@ export const DBSeedAdmin: React.FC = () => {
             <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
             <p className="text-xs font-semibold text-amber-800 leading-relaxed">
               {t("Ces produits seront créés sous l'identifiant vendeur restreint \"")}
-              <span className="font-black">{t("admin_seed")}</span>
+              <span className="font-kinder">{t("admin_seed")}</span>
               {t('". Le bouton de suppression automatique nettoiera uniquement les produits liés à ce faux vendeur.')}
             </p>
           </div>

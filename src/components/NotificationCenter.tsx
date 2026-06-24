@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { db } from "../lib/firebase";
 import { collection, query, where, onSnapshot, orderBy, limit, doc, updateDoc } from "firebase/firestore";
+import toast from "react-hot-toast";
 import { formatPrice } from "../utils/format";
 import { useTranslation } from "react-i18next";
 
@@ -13,6 +14,7 @@ interface NotificationItem {
   title: string;
   description: string;
   time: string;
+  createdAt: number;
   type:
     | "message"
     | "status_shipped"
@@ -62,6 +64,7 @@ export const NotificationCenter: React.FC = () => {
           description:
             t("notif.welcome_desc") || "La marketplace des créations de nos 58 Wilayas. Vos achats sont protégés.",
           time: t("A l'instant"),
+          createdAt: Date.now(),
           type: "system",
           link: "/shop",
           read: false,
@@ -71,6 +74,7 @@ export const NotificationCenter: React.FC = () => {
           title: t("notif.promo_title") || "Livraison Offerte",
           description: t("notif.promo_desc") || "Profitez de réductions exclusives de la part des vendeurs !",
           time: t("notif.two_hours_ago") || "Il y a 2h",
+          createdAt: Date.now() - 7200000,
           type: "coupon",
           link: "/shop",
           read: false,
@@ -96,9 +100,8 @@ export const NotificationCenter: React.FC = () => {
 
         orderDocs.forEach((order) => {
           const orderIdShort = order.id.substring(0, 8);
-          const orderTime = order.updatedAt?.seconds
-            ? new Date(order.updatedAt.seconds * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-            : t("A l'instant");
+          const orderTimeMs = order.updatedAt?.seconds ? order.updatedAt.seconds * 1000 : Date.now();
+          const orderTime = new Date(orderTimeMs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
           if (order.status === "shipped") {
             newNotifications.push({
@@ -106,6 +109,7 @@ export const NotificationCenter: React.FC = () => {
               title: t("notif.shipped_title") || `🚨 Ça arrive !`,
               description: `${t("notif.shipped_desc") || "L'artisan a remis votre colis au livreur. Préparez les "}${formatPrice(order.total || 0)}${t(" en espèces.")}`,
               time: orderTime,
+              createdAt: orderTimeMs,
               type: "status_shipped",
               link: `/dashboard/buyer`,
               read: localStorage.getItem(`notif_read_shipped-${order.id}`) === "true",
@@ -116,6 +120,7 @@ export const NotificationCenter: React.FC = () => {
               title: t("notif.delivered_title") || `📍 Le livreur est là !`,
               description: `${t("notif.delivered_desc") || "Gardez votre téléphone près de vous aujourd'hui pour réceptionner votre commande #"}${orderIdShort}.`,
               time: orderTime,
+              createdAt: orderTimeMs,
               type: "status_delivered",
               link: `/dashboard/buyer`,
               read: localStorage.getItem(`notif_read_delivered-${order.id}`) === "true",
@@ -126,6 +131,7 @@ export const NotificationCenter: React.FC = () => {
               title: `${t("notif.order_recorded") || "Commande #"} ${orderIdShort} ${t("notif.registered") || "Enregistrée"}`,
               description: t("notif.pending_desc") || `Le vendeur prépare votre colis en paiement CASH à la livraison.`,
               time: orderTime,
+              createdAt: orderTimeMs,
               type: "system",
               link: `/dashboard/buyer`,
               read: localStorage.getItem(`notif_read_pending-${order.id}`) === "true",
@@ -139,6 +145,7 @@ export const NotificationCenter: React.FC = () => {
           title: t("notif.support_title") || "Messagerie Olma active 💬",
           description: t("notif.support_desc") || "Échangez directement avec les artisans depuis le suivi de commande.",
           time: t("notif.permanent") || "Permanent",
+          createdAt: Date.now(),
           type: "message",
           link: "/dashboard/buyer",
           read: localStorage.getItem("notif_read_support-hub") === "true",
@@ -147,7 +154,9 @@ export const NotificationCenter: React.FC = () => {
         setOrderNotifications(newNotifications);
       },
       (error) => {
-        console.warn("NotificationCenter: orders listener skipped or missing indexes:", error);
+        console.error("Erreur Firestore (Orders):", error);
+        toast.error("Impossible de charger l'historique des commandes");
+        setOrderNotifications([]);
       }
     );
 
@@ -186,9 +195,8 @@ export const NotificationCenter: React.FC = () => {
 
         const docs = snapshot.docs.map((doc) => {
           const data = doc.data() as any;
-          const timeStr = data.createdAt?.seconds
-            ? new Date(data.createdAt.seconds * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-            : "À l'instant";
+          const timeMs = data.createdAt?.seconds ? data.createdAt.seconds * 1000 : Date.now();
+          const timeStr = new Date(timeMs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
           // Dynamic multi-language resolution
           const titleText = data.title ? data.title[lang] || data.title.fr || data.title : "Notification";
@@ -212,6 +220,7 @@ export const NotificationCenter: React.FC = () => {
             title: titleText,
             description: descText,
             time: timeStr,
+            createdAt: timeMs,
             type: data.type || "system",
             link: computedLink,
             read: data.read === true,
@@ -221,7 +230,9 @@ export const NotificationCenter: React.FC = () => {
         setDirectNotifications(docs);
       },
       (error) => {
-        console.warn("NotificationCenter: user_notifications listener skipped or missing indexes:", error);
+        console.error("Erreur Firestore (Direct):", error);
+        toast.error("Impossible de charger les notifications directes");
+        setDirectNotifications([]);
       }
     );
 
@@ -238,9 +249,8 @@ export const NotificationCenter: React.FC = () => {
       (snapshot) => {
         const docs = snapshot.docs.map((doc) => {
           const data = doc.data() as any;
-          const timeStr = data.createdAt?.seconds
-            ? new Date(data.createdAt.seconds * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-            : "Récemment";
+          const timeMs = data.createdAt?.seconds ? data.createdAt.seconds * 1000 : Date.now();
+          const timeStr = new Date(timeMs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
           let discountDisplay = "";
           if (data.discountType === "percentage") {
@@ -258,6 +268,7 @@ export const NotificationCenter: React.FC = () => {
               { discount: discountDisplay, min: data.minOrderValue || 0 }
             ),
             time: timeStr,
+            createdAt: timeMs,
             type: "coupon",
             link: "/shop",
             read: localStorage.getItem(`notif_read_global-coupon-${doc.id}`) === "true",
@@ -266,7 +277,9 @@ export const NotificationCenter: React.FC = () => {
         setGlobalCoupons(docs);
       },
       (error) => {
-        console.warn("NotificationCenter: coupons listener skipped", error);
+        console.error("Erreur Firestore (Coupons):", error);
+        toast.error("Impossible de charger les coupons");
+        setGlobalCoupons([]);
       }
     );
 
@@ -279,7 +292,9 @@ export const NotificationCenter: React.FC = () => {
 
   // Combined notifications memo sorted chronologically
   const notifications = useMemo(() => {
-    return [...directNotifications, ...orderNotifications, ...globalCoupons];
+    const all = [...directNotifications, ...orderNotifications, ...globalCoupons];
+    all.sort((a, b) => b.createdAt - a.createdAt);
+    return all.slice(0, 50);
   }, [orderNotifications, directNotifications, globalCoupons]);
 
   const unreadCount = useMemo(() => {
@@ -357,7 +372,7 @@ export const NotificationCenter: React.FC = () => {
       case "dispute":
         return <AlertCircle className="w-4 h-4 text-red-600" />;
       default:
-        return <Bell className="w-4 h-4 text-[#121315]" />;
+        return <Bell className="w-4 h-4 text-[#3C2B22]" />;
     }
   };
 
@@ -365,12 +380,12 @@ export const NotificationCenter: React.FC = () => {
     <div className="relative shrink-0" ref={dropdownRef}>
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-9 h-9 sm:w-10 sm:h-10 rounded-full items-center justify-center bg-white/50 text-[#121315] border border-[#EBE5DF]/50 hover:bg-white transition-all active:scale-95 cursor-pointer relative flex group"
+        className="w-9 h-9 sm:w-10 sm:h-10 rounded-full items-center justify-center bg-white/50 text-[#3C2B22] border border-[#FF5C00]/50 hover:bg-white transition-all active:scale-95 cursor-pointer relative flex group"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         title={t("Notifications") || "Notifications"}
       >
-        <Bell className="w-5 h-5 stroke-[2] text-[#121315]/70 group-hover:text-[#121315]" />
+        <Bell className="w-5 h-5 stroke-[2] text-[#3C2B22]/70 group-hover:text-[#3C2B22]" />
         <AnimatePresence>
           {unreadCount > 0 && (
             <motion.div
@@ -379,8 +394,8 @@ export const NotificationCenter: React.FC = () => {
               exit={{ scale: 0 }}
               className="absolute -top-1 -right-1 w-4 h-4 shrink-0"
             >
-              <span className="absolute inline-flex w-full h-full rounded-full bg-[#F37021] opacity-75 animate-ping" />
-              <span className="relative flex bg-[#F37021] text-white text-[9px] rtl:text-[11px] font-black w-4 h-4 rounded-full items-center justify-center border border-[#FAF8F5] shadow-sm">
+              <span className="absolute inline-flex w-full h-full rounded-full bg-[#FF5C00] opacity-75 animate-ping" />
+              <span className="relative flex bg-[#FF5C00] text-white text-[9px] rtl:text-[11px] font-kinder w-4 h-4 rounded-full items-center justify-center border border-[#FAF8F5] shadow-sm">
                 {unreadCount}
               </span>
             </motion.div>
@@ -394,19 +409,19 @@ export const NotificationCenter: React.FC = () => {
             initial={{ opacity: 0, y: 15, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.95 }}
-            className="absolute end-0 mt-3 w-80 sm:w-96 bg-[#FAF8F5]/95 backdrop-blur-2xl border border-[#EBE5DF] rounded-[2rem] shadow-[0_30px_60px_-15px_rgba(30,67,86,0.15)] z-[100] overflow-hidden flex flex-col py-1"
+            className="absolute end-0 mt-3 w-80 sm:w-96 bg-[#FDF9EC]/95 backdrop-blur-2xl border border-[#FF5C00] rounded-[2rem] shadow-[0_30px_60px_-15px_rgba(30,67,86,0.15)] z-[100] overflow-hidden flex flex-col py-1"
           >
-            <div className="px-6 py-4 border-b border-[#EBE5DF]/50 flex items-center justify-between bg-[#FAF8F5]/60 shrink-0">
+            <div className="px-6 py-4 border-b border-[#FF5C00]/50 flex items-center justify-between bg-[#FDF9EC]/60 shrink-0">
               <div>
-                <h4 className="font-extrabold text-[#121315] text-sm">{t("Notifications")}</h4>
-                <p className="text-[9px] rtl:text-[11px] font-black uppercase text-[#F37021] tracking-widest rtl:tracking-normal mt-0.5">
+                <h4 className="font-extrabold text-[#3C2B22] text-sm">{t("Notifications")}</h4>
+                <p className="text-[9px] rtl:text-[11px] font-kinder uppercase text-[#FF5C00] tracking-widest rtl:tracking-normal mt-0.5">
                   {t("Mélodieux & Direct")}
                 </p>
               </div>
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
-                  className="text-[9px] rtl:text-[11px] font-black uppercase tracking-wider rtl:tracking-normal text-[#121315] hover:text-[#F37021] bg-white border border-[#EBE5DF] px-3 py-1.5 rounded-lg transition-all cursor-pointer"
+                  className="text-[9px] rtl:text-[11px] font-kinder uppercase tracking-wider rtl:tracking-normal text-[#3C2B22] hover:text-[#FF5C00] bg-white border border-[#FF5C00] px-3 py-1.5 rounded-lg transition-all cursor-pointer"
                 >
                   {t("Tout lire (")}
                   {unreadCount})
@@ -417,10 +432,10 @@ export const NotificationCenter: React.FC = () => {
             <div className="max-h-[360px] overflow-y-auto divide-y divide-[#EBE5DF]/30">
               {notifications.length === 0 ? (
                 <div className="p-8 text-center space-y-4">
-                  <div className="w-12 h-12 bg-white/50 border border-[#EBE5DF] rounded-full flex items-center justify-center mx-auto text-stone-400">
+                  <div className="w-12 h-12 bg-white/50 border border-[#FF5C00] rounded-full flex items-center justify-center mx-auto text-stone-400">
                     <Bell className="w-5 h-5" />
                   </div>
-                  <p className="text-[10px] rtl:text-[12px] font-black uppercase tracking-wider rtl:tracking-normal text-[#121315]/60">
+                  <p className="text-[10px] rtl:text-[12px] font-kinder uppercase tracking-wider rtl:tracking-normal text-[#3C2B22]/60">
                     {t("Aucune alerte")}
                   </p>
                 </div>
@@ -430,20 +445,20 @@ export const NotificationCenter: React.FC = () => {
                     <div
                       key={item.id}
                       onClick={() => handleNotificationClick(item)}
-                      className={`flex gap-3.5 p-4 text-start transition-colors cursor-pointer select-none relative ${item.read ? "bg-transparent hover:bg-[#FAF8F5]/35" : "bg-[#F37021]/5 hover:bg-[#F37021]/8"}`}
+                      className={`flex gap-3.5 p-4 text-start transition-colors cursor-pointer select-none relative ${item.read ? "bg-transparent hover:bg-[#FDF9EC]/35" : "bg-[#FF5C00]/5 hover:bg-[#FF5C00]/8"}`}
                     >
-                      <div className="w-9 h-9 rounded-xl bg-white border border-[#EBE5DF]/40 flex items-center justify-center shrink-0 shadow-xs">
+                      <div className="w-9 h-9 rounded-xl bg-white border border-[#FF5C00]/40 flex items-center justify-center shrink-0 shadow-xs">
                         {getIcon(item.type)}
                       </div>
 
                       <div className="flex-1 min-w-0 space-y-1">
                         <div className="flex items-start justify-between gap-2">
                           <p
-                            className={`text-xs rtl:text-sm tracking-tight rtl:tracking-normal truncate leading-tight ${item.read ? "text-[#121315] font-bold" : "text-[#121315] font-extrabold"}`}
+                            className={`text-xs rtl:text-sm tracking-tight rtl:tracking-normal truncate leading-tight ${item.read ? "text-[#3C2B22] font-bold" : "text-[#3C2B22] font-extrabold"}`}
                           >
                             {item.title}
                           </p>
-                          <span className="text-[8px] font-black uppercase tracking-wider rtl:tracking-normal text-stone-400 shrink-0 mt-0.5">
+                          <span className="text-[8px] font-kinder uppercase tracking-wider rtl:tracking-normal text-stone-400 shrink-0 mt-0.5">
                             {item.time}
                           </span>
                         </div>
@@ -454,10 +469,10 @@ export const NotificationCenter: React.FC = () => {
                         {!item.read ? (
                           <button
                             onClick={(e) => markOneAsRead(item.id, e)}
-                            className="w-5 h-5 rounded-full hover:bg-[#F37021]/20 flex items-center justify-center transition-all bg-[#F37021]/10 shrink-0 cursor-pointer"
+                            className="w-5 h-5 rounded-full hover:bg-[#FF5C00]/20 flex items-center justify-center transition-all bg-[#FF5C00]/10 shrink-0 cursor-pointer"
                             title={t("Marquer comme lu") || "Marquer comme lu"}
                           >
-                            <Check className="w-3 h-3 text-[#F37021]" />
+                            <Check className="w-3 h-3 text-[#FF5C00]" />
                           </button>
                         ) : (
                           <span className="w-1.5 h-1.5 bg-stone-300 rounded-full shrink-0" />
@@ -469,7 +484,7 @@ export const NotificationCenter: React.FC = () => {
               )}
             </div>
 
-            <div className="p-3.5 border-t border-[#EBE5DF]/50 bg-[#FAF8F5]/60 text-center shrink-0">
+            <div className="p-3.5 border-t border-[#FF5C00]/50 bg-[#FDF9EC]/60 text-center shrink-0">
               <button
                 onClick={() => {
                   setIsOpen(false);
@@ -477,7 +492,7 @@ export const NotificationCenter: React.FC = () => {
                     currentUser ? (userProfile?.role === "seller" ? "/dashboard/seller" : "/dashboard/buyer") : "/auth"
                   );
                 }}
-                className="text-[9px] rtl:text-[11px] font-black uppercase tracking-widest rtl:tracking-normal text-[#121315]/80 hover:text-[#121315] block w-full text-center py-2 cursor-pointer"
+                className="text-[9px] rtl:text-[11px] font-kinder uppercase tracking-widest rtl:tracking-normal text-[#3C2B22]/80 hover:text-[#3C2B22] block w-full text-center py-2 cursor-pointer"
               >
                 {t("navbar.seller_dashboard") || "Accéder au Tableau de Bord"}
               </button>
