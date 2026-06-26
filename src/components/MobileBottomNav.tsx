@@ -23,7 +23,7 @@ export const MobileBottomNav: React.FC = () => {
 
   return (
     <div
-      className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-2xl border-t border-stone-200 z-50 shadow-[0_-8px_32px_rgba(0,0,0,0.08)] overflow-hidden"
+      className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-2xl border-t border-slate-100 z-50 shadow-[0_-8px_32px_rgba(0,0,0,0.04)] overflow-hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <div className="flex items-center justify-around h-[4.5rem] w-full px-2">
@@ -32,9 +32,9 @@ export const MobileBottomNav: React.FC = () => {
           onClick={() => navigate("/")}
           className="flex flex-col items-center justify-center w-14 h-14 rounded-2xl active:scale-[0.92] transition-all bg-transparent border-none cursor-pointer relative"
         >
-          {isActive("/") && <div className="absolute inset-0 bg-[#FF5C00]/10 rounded-2xl -z-10" />}
+          {isActive("/") && <div className="absolute inset-0 bg-sky-50 rounded-2xl -z-10" />}
           <Home
-            className={`w-6 h-6 transition-colors ${isActive("/") ? "text-[#FF5C00]" : "text-[#3C2B22]/40"}`}
+            className={`w-6 h-6 transition-colors ${isActive("/") ? "text-sky-500" : "text-slate-400"}`}
             strokeWidth={isActive("/") ? 2.5 : 2}
           />
         </button>
@@ -44,9 +44,9 @@ export const MobileBottomNav: React.FC = () => {
           onClick={() => navigate("/categories")}
           className="flex flex-col items-center justify-center w-14 h-14 rounded-2xl active:scale-[0.92] transition-all bg-transparent border-none cursor-pointer relative"
         >
-          {isActive("/categories") && <div className="absolute inset-0 bg-[#FF5C00]/10 rounded-2xl -z-10" />}
+          {isActive("/categories") && <div className="absolute inset-0 bg-sky-50 rounded-2xl -z-10" />}
           <LayoutGrid
-            className={`w-6 h-6 transition-colors ${isActive("/categories") ? "text-[#FF5C00]" : "text-[#3C2B22]/40"}`}
+            className={`w-6 h-6 transition-colors ${isActive("/categories") ? "text-sky-500" : "text-slate-400"}`}
             strokeWidth={isActive("/categories") ? 2.5 : 2}
           />
         </button>
@@ -57,11 +57,11 @@ export const MobileBottomNav: React.FC = () => {
           className="flex flex-col items-center justify-center w-14 h-14 rounded-2xl active:scale-[0.92] transition-all relative bg-transparent border-none cursor-pointer"
         >
           <Heart
-            className={`w-6 h-6 transition-colors ${wishlist.length > 0 ? "text-[#FF5C00] fill-[#FF5C00]/20" : "text-[#3C2B22]/40"}`}
+            className={`w-6 h-6 transition-colors ${wishlist.length > 0 ? "text-pink-500 fill-pink-500/20" : "text-slate-400"}`}
             strokeWidth={wishlist.length > 0 ? 2.5 : 2}
           />
           {wishlist.length > 0 && (
-            <span className="absolute top-2 right-3 w-2 h-2 bg-[#FF5C00] border-2 border-white rounded-full shadow-sm" />
+            <span className="absolute top-2 right-3 w-2 h-2 bg-pink-500 border-2 border-white rounded-full shadow-sm" />
           )}
         </button>
 
@@ -72,11 +72,11 @@ export const MobileBottomNav: React.FC = () => {
         >
           <div className="relative">
             <ShoppingBag
-              className={`w-6 h-6 transition-colors ${cart.length > 0 ? "text-[#FF5C00]" : "text-[#3C2B22]/40"}`}
+              className={`w-6 h-6 transition-colors ${cart.length > 0 ? "text-sky-500" : "text-slate-400"}`}
               strokeWidth={cart.length > 0 ? 2.5 : 2}
             />
             {cart.length > 0 && (
-              <span className="absolute -top-1.5 -right-2 w-4.5 h-4.5 bg-[#FF5C00] text-white text-[9px] rounded-full flex items-center justify-center font-kinder border-[1.5px] border-white shadow-sm">
+              <span className="absolute -top-1.5 -right-2 w-4.5 h-4.5 bg-sky-500 text-white text-[9px] rounded-full flex items-center justify-center font-bold border-[1.5px] border-white shadow-sm">
                 {cart.length}
               </span>
             )}
@@ -101,10 +101,10 @@ export const MobileBottomNav: React.FC = () => {
           className="flex flex-col items-center justify-center w-14 h-14 rounded-2xl active:scale-[0.92] transition-all bg-transparent border-none cursor-pointer relative"
         >
           {location.pathname.startsWith("/dashboard") && (
-            <div className="absolute inset-0 bg-[#FF5C00]/10 rounded-2xl -z-10" />
+            <div className="absolute inset-0 bg-sky-50 rounded-2xl -z-10" />
           )}
           <UserIcon
-            className={`w-6 h-6 transition-colors ${location.pathname.startsWith("/dashboard") ? "text-[#FF5C00]" : "text-[#3C2B22]/40"}`}
+            className={`w-6 h-6 transition-colors ${location.pathname.startsWith("/dashboard") ? "text-sky-500" : "text-slate-400"}`}
             strokeWidth={location.pathname.startsWith("/dashboard") ? 2.5 : 2}
           />
         </button>

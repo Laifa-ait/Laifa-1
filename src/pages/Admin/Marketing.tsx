@@ -21,6 +21,8 @@ import {
   AlertCircle,
   Clock,
   Sparkles,
+  History,
+  Undo2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { PRODUCT_HIERARCHY } from "../../constants";
@@ -38,6 +40,7 @@ import {
   serverTimestamp,
   setDoc,
   getDoc,
+  limit,
 } from "firebase/firestore";
 import { formatPrice } from "../../utils/format";
 import { useAuth } from "../../context/AuthContext";
@@ -63,6 +66,18 @@ export const Marketing: React.FC = () => {
   const [newSubcatNames, setNewSubcatNames] = useState<Record<string, string>>({});
   const [newSubSubcatNames, setNewSubSubcatNames] = useState<Record<string, string>>({});
   const [isTranslating, setIsTranslating] = useState(false);
+
+  // Category history & rollback state variables
+  const [historyLogs, setHistoryLogs] = useState<any[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
+
+  // AI translation preview modal states
+  const [showTranslateModal, setShowTranslateModal] = useState(false);
+  const [translateTerms, setTranslateTerms] = useState<string[]>([]);
+  const [proposedTranslations, setProposedTranslations] = useState<Record<string, { ar: string; en: string; isNew: boolean }>>({});
+  const [loadingTranslations, setLoadingTranslations] = useState(false);
+  const [translationError, setTranslationError] = useState<string | null>(null);
+  const [savingTranslations, setSavingTranslations] = useState(false);
 
   // Coupon management states
   const [coupons, setCoupons] = useState<any[]>([]);
@@ -113,6 +128,35 @@ export const Marketing: React.FC = () => {
       unsubCat();
     };
   }, []);
+
+  // Real-time listener for category history changes
+  useEffect(() => {
+    if (activeTab !== "categories") return;
+
+    const q = query(
+      collection(db, "category_history"),
+      orderBy("createdAt", "desc"),
+      limit(15)
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const logs = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setHistoryLogs(logs);
+        setHistoryLoading(false);
+      },
+      (error) => {
+        console.error("Error fetching category history:", error);
+        setHistoryLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [activeTab]);
 
   const handleCreateCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -193,48 +237,96 @@ export const Marketing: React.FC = () => {
     }
   };
 
-  const saveHierarchy = async (newHierarchy: Record<string, Record<string, string[]>>) => {
-    setHierarchy(newHierarchy);
+  const runHierarchyTransaction = async (
+    actionDescription: string,
+    updateFn: (currentHierarchy: Record<string, Record<string, string[]>>) => Record<string, Record<string, string[]>>
+  ) => {
+    if (!currentUser) {
+      toast.error(t("Non autorisé"));
+      return;
+    }
+
+    const docRef = doc(db, "settings", "categories");
+    const historyRef = collection(db, "category_history");
+
+    const loadingToast = toast.loading(t("Mise à jour de l'arbre en cours..."));
+
     try {
-      await saveCategoryHierarchy(newHierarchy);
-    } catch (err) {
-      console.error("Error saving hierarchy:", err);
+      const { runTransaction } = await import("firebase/firestore");
+      await runTransaction(db, async (transaction) => {
+        const docSnap = await transaction.get(docRef);
+        const currentHierarchy = docSnap.exists() && docSnap.data().hierarchy
+          ? docSnap.data().hierarchy
+          : PRODUCT_HIERARCHY;
+
+        const newHierarchy = updateFn(currentHierarchy);
+
+        // Update settings doc
+        transaction.set(docRef, {
+          hierarchy: newHierarchy,
+          updatedAt: new Date().toISOString(),
+          lastAction: actionDescription,
+          updatedBy: {
+            uid: currentUser.uid,
+            email: currentUser.email,
+          }
+        }, { merge: true });
+
+        // Add to history list
+        const newHistoryDocRef = doc(historyRef);
+        transaction.set(newHistoryDocRef, {
+          hierarchy: newHierarchy,
+          action: actionDescription,
+          updatedBy: {
+            uid: currentUser.uid,
+            email: currentUser.email,
+          },
+          createdAt: new Date().toISOString(),
+        });
+      });
+
+      toast.success(t("Arbre mis à jour avec succès ! ✨"), { id: loadingToast });
+    } catch (err: any) {
+      console.error("Hierarchy transaction failed:", err);
+      toast.error(`${t("Échec de la transaction :")} ${err.message || err}`, { id: loadingToast });
     }
   };
 
-  const handleResetToDefault = () => {
-    if (true) {
-      saveHierarchy(PRODUCT_HIERARCHY);
-      toast.success(t("Arbre des catégories réinitialisé aux valeurs par défaut !"));
+  const handleResetToDefault = async () => {
+    if (window.confirm(t("Voulez-vous réinitialiser l'arbre des catégories aux valeurs par défaut d'OLMART ?"))) {
+      await runHierarchyTransaction(t("Réinitialisation de l'arbre des catégories"), () => PRODUCT_HIERARCHY);
     }
   };
 
   // Level 1 logic
-  const handleAddCat = () => {
+  const handleAddCat = async () => {
     const trimmed = newCatName.trim();
     if (!trimmed) return;
     if (hierarchy[trimmed]) {
       toast.error(t("Cette catégorie existe déjà."));
       return;
     }
-    const updated = { ...hierarchy, [trimmed]: {} };
-    saveHierarchy(updated);
+
+    await runHierarchyTransaction(t("Ajout de la catégorie principale '{{name}}'", { name: trimmed }), (curr) => ({
+      ...curr,
+      [trimmed]: {},
+    }));
     setExpandedCats((prev) => ({ ...prev, [trimmed]: true }));
     setNewCatName("");
-    toast.success(t("Ajouté avec succès."));
   };
 
-  const handleRemoveCat = (catName: string) => {
-    if (true) {
-      const updated = { ...hierarchy };
-      delete updated[catName];
-      saveHierarchy(updated);
-      toast.success(t("Supprimé."));
+  const handleRemoveCat = async (catName: string) => {
+    if (window.confirm(t("Voulez-vous supprimer la catégorie '{{name}}' et toutes ses sous-catégories ?", { name: catName }))) {
+      await runHierarchyTransaction(t("Suppression de la catégorie principale '{{name}}'", { name: catName }), (curr) => {
+        const next = { ...curr };
+        delete next[catName];
+        return next;
+      });
     }
   };
 
   // Level 2 logic
-  const handleAddSubcat = (catName: string) => {
+  const handleAddSubcat = async (catName: string) => {
     const trimmed = (newSubcatNames[catName] || "").trim();
     if (!trimmed) return;
 
@@ -243,29 +335,39 @@ export const Marketing: React.FC = () => {
       return;
     }
 
-    const updated = { ...hierarchy };
-    if (!updated[catName]) updated[catName] = {};
-    updated[catName] = { ...updated[catName], [trimmed]: [] };
+    await runHierarchyTransaction(
+      t("Ajout de la sous-catégorie '{{sub}}' sous '{{cat}}'", { sub: trimmed, cat: catName }),
+      (curr) => {
+        const next = { ...curr };
+        if (!next[catName]) next[catName] = {};
+        next[catName] = { ...next[catName], [trimmed]: [] };
+        return next;
+      }
+    );
 
-    saveHierarchy(updated);
     setExpandedSubs((prev) => ({ ...prev, [`${catName}_${trimmed}`]: true }));
     setNewSubcatNames((prev) => ({ ...prev, [catName]: "" }));
-    toast.success(t("Ajouté avec succès."));
   };
 
-  const handleRemoveSubcat = (catName: string, subcatName: string) => {
-    if (true) {
-      const updated = { ...hierarchy };
-      if (updated[catName]) {
-        delete updated[catName][subcatName];
-        saveHierarchy(updated);
-        toast.success(t("Supprimé."));
-      }
+  const handleRemoveSubcat = async (catName: string, subcatName: string) => {
+    if (window.confirm(t("Voulez-vous supprimer la sous-catégorie '{{sub}}' de '{{cat}}' ?", { sub: subcatName, cat: catName }))) {
+      await runHierarchyTransaction(
+        t("Suppression de la sous-catégorie '{{sub}}' de '{{cat}}'", { sub: subcatName, cat: catName }),
+        (curr) => {
+          const next = { ...curr };
+          if (next[catName]) {
+            const sub = { ...next[catName] };
+            delete sub[subcatName];
+            next[catName] = sub;
+          }
+          return next;
+        }
+      );
     }
   };
 
   // Level 3 logic
-  const handleAddSubSubcat = (catName: string, subcatName: string) => {
+  const handleAddSubSubcat = async (catName: string, subcatName: string) => {
     const key = `${catName}_${subcatName}`;
     const trimmed = (newSubSubcatNames[key] || "").trim();
     if (!trimmed) return;
@@ -276,20 +378,31 @@ export const Marketing: React.FC = () => {
       return;
     }
 
-    const updated = { ...hierarchy };
-    updated[catName][subcatName] = [...list, trimmed];
-    saveHierarchy(updated);
+    await runHierarchyTransaction(
+      t("Ajout de l'élément '{{item}}' sous '{{cat}} > {{sub}}'", { item: trimmed, cat: catName, sub: subcatName }),
+      (curr) => {
+        const next = { ...curr };
+        if (!next[catName]) next[catName] = {};
+        if (!next[catName][subcatName]) next[catName][subcatName] = [];
+        next[catName][subcatName] = [...next[catName][subcatName], trimmed];
+        return next;
+      }
+    );
+
     setNewSubSubcatNames((prev) => ({ ...prev, [key]: "" }));
-    toast.success(t("Ajouté avec succès."));
   };
 
-  const handleRemoveSubSubcat = (catName: string, subcatName: string, itemToRemove: string) => {
-    const updated = { ...hierarchy };
-    if (updated[catName]?.[subcatName]) {
-      updated[catName][subcatName] = updated[catName][subcatName].filter((x) => x !== itemToRemove);
-      saveHierarchy(updated);
-      toast.success(t("Supprimé."));
-    }
+  const handleRemoveSubSubcat = async (catName: string, subcatName: string, itemToRemove: string) => {
+    await runHierarchyTransaction(
+      t("Suppression de l'élément '{{item}}' de '{{cat}} > {{sub}}'", { item: itemToRemove, cat: catName, sub: subcatName }),
+      (curr) => {
+        const next = { ...curr };
+        if (next[catName]?.[subcatName]) {
+          next[catName][subcatName] = next[catName][subcatName].filter((x) => x !== itemToRemove);
+        }
+        return next;
+      }
+    );
   };
 
   const toggleCat = (catName: string) => {
@@ -301,33 +414,117 @@ export const Marketing: React.FC = () => {
     setExpandedSubs((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const handleTranslateAll = async () => {
-    setIsTranslating(true);
+  const getAllCategoryTerms = (currentHierarchy: any) => {
+    const terms = new Set<string>();
+    Object.keys(currentHierarchy).forEach((cat) => {
+      terms.add(cat);
+      Object.keys(currentHierarchy[cat] || {}).forEach((sub) => {
+        terms.add(sub);
+        (currentHierarchy[cat][sub] || []).forEach((subsub: string) => {
+          terms.add(subsub);
+        });
+      });
+    });
+    return Array.from(terms);
+  };
+
+  const startTranslateWorkflow = async () => {
+    const terms = getAllCategoryTerms(hierarchy);
+    if (terms.length === 0) {
+      toast.error(t("Aucun terme de catégorie à traduire."));
+      return;
+    }
+
+    setTranslateTerms(terms);
+    setShowTranslateModal(true);
+    setLoadingTranslations(true);
+    setTranslationError(null);
+
+    await fetchTranslations(terms);
+  };
+
+  const fetchTranslations = async (terms: string[]) => {
     try {
-      const response = await fetch("/api/admin/translate-ui", {
+      const response = await fetch("/api/admin/translate-preview", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${await currentUser?.getIdToken()}`,
         },
-        body: JSON.stringify({
-          harvestedKeys: [], // backend will harvest from settings/categories
-        }),
+        body: JSON.stringify({ terms }),
       });
 
-      if (!response.ok) throw new Error("Erreur lors de la traduction");
+      if (!response.ok) {
+        throw new Error(t("Erreur de l'API de traduction"));
+      }
 
       const data = await response.json();
-      toast.success(`${data.count} termes traduits avec succès !`);
-
-      // Force reload to pick up new translations if needed
-      // window.location.reload();
+      setProposedTranslations(data.translations || {});
     } catch (err: any) {
-      console.error(err);
-      toast.error(err.message || t("Échec de la traduction automatique."));
+      console.error("Error fetching translation preview:", err);
+      setTranslationError(err.message || t("Impossible de générer l'aperçu des traductions."));
     } finally {
-      setIsTranslating(false);
+      setLoadingTranslations(false);
     }
+  };
+
+  const handleEditTranslation = (term: string, lang: "ar" | "en", value: string) => {
+    setProposedTranslations((prev) => ({
+      ...prev,
+      [term]: {
+        ...prev[term],
+        [lang]: value,
+      },
+    }));
+  };
+
+  const handleApplyTranslations = async () => {
+    setSavingTranslations(true);
+    try {
+      const response = await fetch("/api/admin/translate-commit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${await currentUser?.getIdToken()}`,
+        },
+        body: JSON.stringify({ translations: proposedTranslations }),
+      });
+
+      if (!response.ok) {
+        throw new Error(t("Erreur de l'API d'application des traductions"));
+      }
+
+      toast.success(t("Traductions appliquées et enregistrées avec succès ! 🎉"));
+      setShowTranslateModal(false);
+
+      await runHierarchyTransaction(
+        t("Traduction automatique par IA de {{count}} termes appliquée", { count: translateTerms.length }),
+        (curr) => curr
+      );
+    } catch (err: any) {
+      console.error("Error applying translations:", err);
+      toast.error(err.message || t("Impossible d'appliquer les traductions."));
+    } finally {
+      setSavingTranslations(false);
+    }
+  };
+
+  const handleRollback = async (targetLog: any) => {
+    if (
+      !window.confirm(
+        t("Voulez-vous restaurer l'arbre des catégories à la version enregistrée le {{date}} par {{author}} ?", {
+          date: new Date(targetLog.createdAt).toLocaleString("fr-FR"),
+          author: targetLog.updatedBy?.email || "Admin",
+        })
+      )
+    ) {
+      return;
+    }
+
+    await runHierarchyTransaction(
+      t("Rollback vers la version du {{date}}", { date: new Date(targetLog.createdAt).toLocaleString("fr-FR") }),
+      () => targetLog.hierarchy
+    );
   };
 
   return (
@@ -372,12 +569,11 @@ export const Marketing: React.FC = () => {
               </h4>
               <div className="flex items-center gap-3">
                 <button
-                  onClick={handleTranslateAll}
-                  disabled={isTranslating}
+                  onClick={startTranslateWorkflow}
                   className="flex items-center gap-2 text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-white bg-indigo-600 hover:bg-indigo-700 px-5 py-3 rounded-2xl transition-all self-start disabled:opacity-50"
                 >
-                  <Sparkles className={`w-3.5 h-3.5 ${isTranslating ? "animate-spin" : ""}`} />
-                  {isTranslating ? "Traduction en cours..." : "AI Traduire tout le Catalogue"}
+                  <Sparkles className="w-3.5 h-3.5" />
+                  {t("AI Traduire tout le Catalogue")}
                 </button>
                 <button
                   onClick={handleResetToDefault}
@@ -641,6 +837,66 @@ export const Marketing: React.FC = () => {
                     </div>
                   );
                 })
+              )}
+            </div>
+
+            {/* Historique des Modifications & Versioning Panel */}
+            <div className="border-t border-zinc-100 pt-10 mt-10 space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <h5 className="text-lg font-kinder flex items-center gap-3 text-zinc-950">
+                    <History className="w-5 h-5 text-zinc-500" />
+                    {t("Historique & Versioning de l'Arbre")}
+                  </h5>
+                  <p className="text-xs text-zinc-500 font-sans">
+                    {t("Visualisez l'historique des modifications concurrentes et effectuez des restaurations instantanées (Rollback) en cas d'erreur.")}
+                  </p>
+                </div>
+              </div>
+
+              {historyLoading ? (
+                <div className="py-10 text-center text-zinc-400 font-bold uppercase tracking-widest text-xs space-y-2">
+                  <Clock className="w-6 h-6 mx-auto animate-spin text-zinc-300" />
+                  <span>{t("Chargement de l'historique...")}</span>
+                </div>
+              ) : historyLogs.length === 0 ? (
+                <div className="p-8 border-2 border-dashed border-zinc-100/80 rounded-3xl text-center text-zinc-400 font-bold uppercase tracking-widest text-xs">
+                  {t("Aucun historique disponible.")}
+                </div>
+              ) : (
+                <div className="relative border-s border-zinc-100 ms-4 space-y-6">
+                  {historyLogs.map((log) => {
+                    const dateStr = new Date(log.createdAt).toLocaleString("fr-FR");
+                    return (
+                      <div key={log.id} className="relative ps-6 group">
+                        {/* Timeline Bullet */}
+                        <div className="absolute -start-[6.5px] top-1.5 w-3 h-3 rounded-full bg-zinc-200 border border-white group-hover:bg-orange-500 transition-colors" />
+
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-zinc-50/50 p-5 rounded-2xl border border-zinc-100/50 hover:bg-zinc-50 hover:border-zinc-200/60 transition-all">
+                          <div className="space-y-1.5 min-w-0">
+                            <span className="text-[10px] font-mono font-bold text-zinc-400">
+                              {dateStr}
+                            </span>
+                            <p className="text-xs font-semibold text-zinc-800 uppercase tracking-wide">
+                              {log.action}
+                            </p>
+                            <p className="text-[9px] font-mono text-zinc-400 uppercase tracking-widest">
+                              {t("Par :")} <span className="font-bold text-zinc-500">{log.updatedBy?.email || "Admin"}</span>
+                            </p>
+                          </div>
+
+                          <button
+                            onClick={() => handleRollback(log)}
+                            className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-zinc-950 text-zinc-700 hover:text-white border border-zinc-200/80 hover:border-zinc-950 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all self-start sm:self-center shadow-sm"
+                          >
+                            <Undo2 className="w-3.5 h-3.5" />
+                            {t("Restaurer")}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
           </motion.div>
@@ -963,6 +1219,165 @@ export const Marketing: React.FC = () => {
               </p>
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* AI Translation Preview & Edit Modal */}
+      <AnimatePresence>
+        {showTranslateModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            {/* Backdrop with elegant transparency (no blur effects as per OLMART guidelines) */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => !savingTranslations && setShowTranslateModal(false)}
+              className="absolute inset-0 bg-zinc-950/80"
+            />
+
+            {/* Modal Box */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-4xl max-h-[85vh] bg-white rounded-[2.5rem] border border-zinc-200/80 shadow-2xl overflow-hidden flex flex-col"
+            >
+              {/* Header */}
+              <div className="p-8 border-b border-zinc-100 flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-kinder text-zinc-950 flex items-center gap-3">
+                    <Sparkles className="w-6 h-6 text-indigo-500 fill-indigo-100" />
+                    {t("Assistant de Traduction IA — Revue avant Publication")}
+                  </h3>
+                  <p className="text-xs text-zinc-500 font-medium font-sans mt-1">
+                    {t("Examinez et ajustez les traductions proposées par Gemini avant de mettre à jour le catalogue multilingue d'OLMART.")}
+                  </p>
+                </div>
+                {!savingTranslations && (
+                  <button
+                    onClick={() => setShowTranslateModal(false)}
+                    className="p-3 bg-zinc-50 hover:bg-zinc-100 text-zinc-400 hover:text-zinc-800 rounded-full transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* Body Content */}
+              <div className="flex-1 overflow-y-auto p-8 space-y-6">
+                {loadingTranslations ? (
+                  <div className="py-20 text-center space-y-4">
+                    <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                    <p className="text-zinc-500 font-kinder text-xs uppercase tracking-widest animate-pulse">
+                      {t("Consultation de Gemini pour l'aperçu des traductions...")}
+                    </p>
+                    <p className="text-[10px] text-zinc-400 font-mono">
+                      {t("Génération des traductions en Arabe et Anglais, veuillez patienter")}
+                    </p>
+                  </div>
+                ) : translationError ? (
+                  <div className="p-8 bg-red-50 border border-red-200 rounded-3xl space-y-4 max-w-xl mx-auto text-center">
+                    <AlertCircle className="w-12 h-12 text-red-500 mx-auto animate-bounce" />
+                    <h4 className="text-sm font-kinder uppercase text-red-800 tracking-wide">
+                      {t("Échec de la Traduction par l'IA")}
+                    </h4>
+                    <p className="text-xs text-red-600 font-medium">
+                      {translationError}
+                    </p>
+                    <button
+                      onClick={() => {
+                        setLoadingTranslations(true);
+                        setTranslationError(null);
+                        fetchTranslations(translateTerms);
+                      }}
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white text-xs font-kinder uppercase tracking-widest rounded-xl transition-all shadow-md"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      {t("Réessayer la Traduction")}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-3 gap-4 border-b border-zinc-100 pb-3 text-[10px] font-kinder text-zinc-400 uppercase tracking-widest font-mono">
+                      <div>{t("Français (Original)")}</div>
+                      <div>{t("العربية (Arabe)")}</div>
+                      <div>{t("English (Anglais)")}</div>
+                    </div>
+
+                    <div className="space-y-3 divide-y divide-zinc-100/60 max-h-[50vh] overflow-y-auto pr-2">
+                      {translateTerms.map((term) => {
+                        const translation = proposedTranslations[term] || { ar: term, en: term, isNew: true };
+                        return (
+                          <div key={term} className="grid grid-cols-3 gap-4 pt-3 items-center group">
+                            <div className="text-xs font-bold text-zinc-800 uppercase tracking-wide flex items-center gap-2">
+                              <span>{term}</span>
+                              {translation.isNew && (
+                                <span className="bg-indigo-50 text-indigo-600 border border-indigo-100 text-[8px] px-1.5 py-0.5 rounded-full font-black font-mono">
+                                  NEW
+                                </span>
+                              )}
+                            </div>
+                            <div>
+                              <input
+                                type="text"
+                                value={translation.ar}
+                                onChange={(e) => handleEditTranslation(term, "ar", e.target.value)}
+                                className="w-full bg-zinc-50 hover:bg-zinc-100/50 focus:bg-white border border-zinc-200 focus:border-indigo-500 px-3 py-2 rounded-xl text-xs font-semibold text-right text-zinc-800 outline-none"
+                                dir="rtl"
+                              />
+                            </div>
+                            <div>
+                              <input
+                                type="text"
+                                value={translation.en}
+                                onChange={(e) => handleEditTranslation(term, "en", e.target.value)}
+                                className="w-full bg-zinc-50 hover:bg-zinc-100/50 focus:bg-white border border-zinc-200 focus:border-indigo-500 px-3 py-2 rounded-xl text-xs font-semibold text-zinc-800 outline-none"
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer Actions */}
+              {!loadingTranslations && !translationError && (
+                <div className="p-8 border-t border-zinc-100 bg-zinc-50/50 flex items-center justify-between">
+                  <span className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest font-mono">
+                    {t("{{count}} termes configurés", { count: translateTerms.length })}
+                  </span>
+                  <div className="flex items-center gap-4">
+                    <button
+                      disabled={savingTranslations}
+                      onClick={() => setShowTranslateModal(false)}
+                      className="px-6 py-3 border border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-700 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all"
+                    >
+                      {t("Annuler")}
+                    </button>
+                    <button
+                      disabled={savingTranslations}
+                      onClick={handleApplyTranslations}
+                      className="flex items-center gap-2 px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all disabled:opacity-50 shadow-lg"
+                    >
+                      {savingTranslations ? (
+                        <>
+                          <Clock className="w-4 h-4 animate-spin" />
+                          {t("Enregistrement...")}
+                        </>
+                      ) : (
+                        <>
+                          <Check className="w-4 h-4" />
+                          {t("Appliquer & Publier")}
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

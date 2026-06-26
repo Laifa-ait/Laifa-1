@@ -182,7 +182,7 @@ export const BannerCarousel: React.FC<BannerCarouselProps> = ({
     >
       <div
         onClick={handleBannerClick}
-        className="relative w-full overflow-hidden rounded-xl sm:rounded-2xl shadow-[0_24px_70px_rgba(30,67,86,0.12)] group cursor-pointer bg-[#3C2B22] border border-[#FF5C00]/20 transition-all duration-500 hover:border-[#3C2B22]/30"
+        className="relative w-full overflow-hidden rounded-xl sm:rounded-2xl shadow-2xl group cursor-pointer bg-[#3C2B22] border border-[#FF5C00]/20 transition-all duration-500 hover:border-[#3C2B22]/30"
       >
         <div className="relative w-full h-[220px] sm:h-[320px] lg:h-[380px] xl:h-[420px] overflow-hidden">
           <AnimatePresence mode="wait">

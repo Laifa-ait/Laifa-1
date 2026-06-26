@@ -60,7 +60,7 @@ export const ProductCard = React.memo(
         transition={{ delay: (index % 10) * 0.05 }}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
-        className={`group flex flex-col bg-[#FFFBF5] rounded-2xl overflow-hidden shadow-[0_8px_30px_rgba(26,20,16,0.06)] hover:shadow-[0_16px_48px_rgba(26,20,16,0.10)] border border-[#E5DED4] hover:border-[#D4A574]/30 transition-all duration-500 cursor-pointer h-full ${sectionStyle || ""}`}
+        className={`group flex flex-col bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl border border-slate-100 hover:border-sky-500/30 transition-all duration-500 cursor-pointer h-full ${sectionStyle || ""}`}
         onClick={() => defaultClick(product)}
       >
         {variant === "premium_immersive" ? (
@@ -82,7 +82,7 @@ export const ProductCard = React.memo(
             {/* Badges Overlay */}
             <div className="absolute top-3 right-3 flex items-center gap-1.5 z-20">
               {product.promoPrice && product.promoPrice < product.price && (
-                <span className="bg-[#C95D3B] text-white px-2 py-1 text-[10px] rtl:text-[12px] font-bold rounded">
+                <span className="bg-rose-500 text-white px-2 py-1 text-[10px] rtl:text-[12px] font-bold rounded">
                   -{Math.round(((product.price - product.promoPrice) / product.price) * 100)}%
                 </span>
               )}
@@ -95,7 +95,7 @@ export const ProductCard = React.memo(
                 className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white transition-all shadow-sm hover:bg-white/20 active:scale-90"
               >
                 <Heart
-                  className={`w-4 h-4 sm:w-5 sm:h-5 ${wishlist.includes(product.id) ? "fill-[#C75C1A] text-[#C75C1A] stroke-[#C75C1A]" : "stroke-[2]"}`}
+                  className={`w-4 h-4 sm:w-5 sm:h-5 ${wishlist.includes(product.id) ? "fill-pink-500 text-pink-500 stroke-pink-500" : "stroke-[2]"}`}
                 />
               </button>
             </div>
@@ -109,7 +109,7 @@ export const ProductCard = React.memo(
                 {getSpelledCorrectly(getTranslatedField(product, "name", lang))}
               </h3>
               <div className="flex items-center gap-1.5 text-zinc-300 mb-2 font-sans font-bold text-[10px] rtl:text-[12px] tracking-wider rtl:tracking-normal uppercase">
-                <Store className="w-3.5 h-3.5 text-[#C75C1A]" />
+                <Store className="w-3.5 h-3.5 text-sky-500" />
                 <span className="truncate max-w-[120px]">{product.sellerName || "Olma Seller"}</span>
               </div>
 
@@ -118,7 +118,7 @@ export const ProductCard = React.memo(
                   {formatPrice(product.promoPrice || product.price)}
                 </span>
                 {product.promoPrice && product.promoPrice < product.price && (
-                  <span className="font-sans font-bold text-[12px] text-[#8B7355] line-through">{formatPrice(product.price)}</span>
+                  <span className="font-sans font-bold text-[12px] text-slate-400 line-through">{formatPrice(product.price)}</span>
                 )}
               </div>
             </div>
@@ -126,7 +126,7 @@ export const ProductCard = React.memo(
         ) : (
           <>
             {/* Top: Image Section -> Vertical ratio */}
-            <div className="relative aspect-[4/5] bg-[#F5F0E8] overflow-hidden shrink-0">
+            <div className="relative aspect-[4/5] bg-slate-50 overflow-hidden shrink-0">
               <div className="w-full h-full relative rounded-none overflow-hidden">
                 <img
                   loading="lazy"
@@ -147,12 +147,12 @@ export const ProductCard = React.memo(
               <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-20">
                 <div className="flex flex-col gap-2">
                   {product.isSponsored && (
-                    <span className="inline-flex items-center gap-1 bg-[#2C2118] text-white font-sans font-bold text-[9px] rtl:text-[11px] uppercase tracking-widest rtl:tracking-normal px-2.5 py-1 rounded-full shadow-sm">
+                    <span className="inline-flex items-center gap-1 bg-slate-900 text-white font-sans font-bold text-[9px] rtl:text-[11px] uppercase tracking-widest rtl:tracking-normal px-2.5 py-1 rounded-full shadow-sm">
                       <Zap className="w-3 h-3 fill-white" /> {t("SPONSORED")}
                     </span>
                   )}
                   {isProductFlashActive ? (
-                    <span className="inline-flex items-center gap-1 bg-[#C75C1A] text-white font-sans text-[9px] sm:text-[10px] font-kinder uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md animate-pulse border border-white">
+                    <span className="inline-flex items-center gap-1 bg-rose-500 text-white font-sans text-[9px] sm:text-[10px] font-kinder uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md animate-pulse border border-white">
                       <Flame className="w-3 h-3 fill-current" />
                       {t("VENTE FLASH")} -
                       {Math.round(((product.price - (product.flashPrice || product.price)) / product.price) * 100)}%
@@ -160,17 +160,17 @@ export const ProductCard = React.memo(
                   ) : (
                     product.promoPrice &&
                     product.promoPrice < product.price && (
-                      <span className="inline-block bg-[#C75C1A] text-white font-sans font-bold text-[10px] rtl:text-[12px] tracking-widest rtl:tracking-normal px-2.5 py-1 rounded-full shadow-sm border border-white">
+                      <span className="inline-block bg-rose-500 text-white font-sans font-bold text-[10px] rtl:text-[12px] tracking-widest rtl:tracking-normal px-2.5 py-1 rounded-full shadow-sm border border-white">
                         -{Math.round(((product.price - product.promoPrice) / product.price) * 100)}%
                       </span>
                     )
                   )}
                   {product.stock <= 0 ? (
-                    <span className="inline-block bg-[#2C2118] text-white font-sans font-bold text-[9px] rtl:text-[11px] uppercase tracking-widest rtl:tracking-normal px-2.5 py-1 rounded-full shadow-sm border border-white">
+                    <span className="inline-block bg-slate-900 text-white font-sans font-bold text-[9px] rtl:text-[11px] uppercase tracking-widest rtl:tracking-normal px-2.5 py-1 rounded-full shadow-sm border border-white">
                       {t("SOLD OUT")}
                     </span>
                   ) : product.stock <= 5 ? (
-                    <span className="inline-block bg-[#FFF0E5] text-[#C75C1A] font-sans font-kinder text-[9px] rtl:text-[11px] uppercase tracking-widest rtl:tracking-normal px-2.5 py-1 rounded-full shadow-sm border border-white">
+                    <span className="inline-block bg-rose-50 text-rose-500 font-sans font-kinder text-[9px] rtl:text-[11px] uppercase tracking-widest rtl:tracking-normal px-2.5 py-1 rounded-full shadow-sm border border-white">
                       {t("DROP LIMITÉ")}
                     </span>
                   ) : null}
@@ -182,10 +182,10 @@ export const ProductCard = React.memo(
                     e.stopPropagation();
                     toggleWishlist(product.id);
                   }}
-                  className="w-9 h-9 rounded-full bg-white backdrop-blur-md border border-[#C75C1A]/60 flex items-center justify-center text-[#2C2118] hover:text-[#C75C1A] hover:bg-[#FDF9EC] transition-colors shadow-md"
+                  className="w-9 h-9 rounded-full bg-white backdrop-blur-md border border-slate-200 flex items-center justify-center text-slate-900 hover:text-pink-500 hover:bg-slate-50 transition-colors shadow-md"
                 >
                   <Heart
-                    className={`w-4 h-4 ${wishlist.includes(product.id) ? "fill-[#C75C1A] text-[#C75C1A]" : "stroke-[2]"}`}
+                    className={`w-4 h-4 ${wishlist.includes(product.id) ? "fill-pink-500 text-pink-500" : "stroke-[2]"}`}
                   />
                 </button>
               </div>
@@ -194,28 +194,28 @@ export const ProductCard = React.memo(
             {/* Bottom: Content Section */}
             <div className="p-4 sm:p-5 flex flex-col flex-1 bg-white">
               <div className="flex items-center justify-between gap-1.5 sm:gap-2 mb-2">
-                <span className="font-sans font-bold text-[9px] rtl:text-[11px] uppercase tracking-widest rtl:tracking-normal text-[#2C2118]/60 px-2 py-0.5 bg-[#FDF9EC] rounded-full">
+                <span className="font-sans font-bold text-[9px] rtl:text-[11px] uppercase tracking-widest rtl:tracking-normal text-slate-500 px-2 py-0.5 bg-slate-50 rounded-full">
                   {getCategoryTranslation(product.category, t) || product.category || "Mode"}
                 </span>
               </div>
 
-              <h3 className="font-kinder text-[#2C2118] text-[15px] sm:text-[17px] leading-tight line-clamp-2 mb-2 group-hover:text-[#C75C1A] transition-colors">
+              <h3 className="font-kinder text-slate-900 text-[15px] sm:text-[17px] leading-tight line-clamp-2 mb-2 group-hover:text-sky-500 transition-colors">
                 {getSpelledCorrectly(getTranslatedField(product, "name", lang))}
               </h3>
 
-              <div className="flex items-center gap-1.5 text-[#2C2118]/60 mb-4 font-sans font-bold text-[10px] rtl:text-[12px] tracking-wider rtl:tracking-normal uppercase">
-                <Store className="w-3.5 h-3.5 text-[#C75C1A]" />
+              <div className="flex items-center gap-1.5 text-slate-500 mb-4 font-sans font-bold text-[10px] rtl:text-[12px] tracking-wider rtl:tracking-normal uppercase">
+                <Store className="w-3.5 h-3.5 text-sky-500" />
                 <span className="truncate max-w-[120px]">{product.sellerName || "Olma Seller"}</span>
               </div>
 
               <div className="mt-auto flex flex-col gap-3">
                 <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                  <span className="font-kinder text-[#2C2118] text-[18px] sm:text-[20px]">
+                  <span className="font-kinder text-slate-900 text-[18px] sm:text-[20px]">
                     {formatPrice(isProductFlashActive ? product.flashPrice : product.promoPrice || product.price)}
                   </span>
                   {((product.promoPrice && product.promoPrice < product.price) ||
                     (isProductFlashActive && product.flashPrice && product.flashPrice < product.price)) && (
-                    <span className="font-sans font-bold text-[12px] text-[#2C2118]/40 line-through">
+                    <span className="font-sans font-bold text-[12px] text-slate-400 line-through">
                       {formatPrice(product.price)}
                     </span>
                   )}
@@ -223,15 +223,15 @@ export const ProductCard = React.memo(
 
                 {isFlashSale && (
                   <div className="flex flex-col gap-1.5 mt-2">
-                    <div className="flex items-center justify-between font-sans font-kinder text-[9px] rtl:text-[11px] uppercase text-[#C75C1A]">
+                    <div className="flex items-center justify-between font-sans font-kinder text-[9px] rtl:text-[11px] uppercase text-rose-500">
                       <span className="animate-pulse flex items-center gap-1">{t("⏱️ VITE!")}</span>
                       <span className="flex items-center gap-1 bg-red-50 px-2 py-0.5 border border-red-100 rounded-full">
                         🔥 {Math.min(9, ((parseInt(product.id.slice(-1), 16) || 4) % 6) + 2)} {t("RESTANTS")}
                       </span>
                     </div>
-                    <div className="h-1.5 w-full bg-[#FDF9EC] rounded-full overflow-hidden">
+                    <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-orange-400 to-[#FF5C00]"
+                        className="h-full bg-gradient-to-r from-rose-400 to-rose-600"
                         style={{
                           width: `${Math.max(25, ((parseInt(product.id.slice(0, 2), 16) || 75) % 65) + 20)}%`,
                         }}

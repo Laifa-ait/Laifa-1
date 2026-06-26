@@ -89,7 +89,7 @@ export function useUserHabits() {
       if (auth.currentUser) {
         const userRef = doc(db, "user_habits", auth.currentUser.uid);
         setDoc(userRef, habitudes, { merge: true }).catch((err) =>
-          (process.env.NODE_ENV === "debug" ? console.log : function () {})("Habits up error", err)
+          (process.env.NODE_ENV === "development" ? console.log : function () {})("Habits up error", err)
         );
       }
     }

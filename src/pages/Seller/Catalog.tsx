@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import Papa from 'papaparse';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Package, Search, Filter, Trash2, Edit2, Sparkles, X, ChevronRight, Video, ImageIcon, Upload, Loader2, ShieldCheck, Zap } from 'lucide-react';
+import { Plus, Package, Search, Filter, Trash2, Edit2, Sparkles, X, ChevronRight, Video, ImageIcon, Upload, Loader2, ShieldCheck, Zap, UploadCloud, Copy } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../lib/firebase';
@@ -63,19 +64,19 @@ export const Catalog: React.FC = () => {
       try {
         const prodQ = query(
           collection(db, "products"), 
-          where("sellerId", "==", currentUser.uid),
-          limit(250)
+          where("sellerId", "==", currentUser.uid)
         );
         const prodSnap = await getDocs(prodQ);
         if (!cancelled) {
           const fetched = prodSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as SellerProduct));
+          // Sort in memory to avoid composite index requirement
           fetched.sort((a, b) => {
-            const tA = a.createdAt?.seconds || 0;
-            const tB = b.createdAt?.seconds || 0;
-            return tB - tA;
+            const dateA = a.createdAt?.seconds || 0;
+            const dateB = b.createdAt?.seconds || 0;
+            return dateB - dateA;
           });
           setProducts(fetched);
-          setLastVisible(null); // No need for Firestore pagination with small catalogs
+          setLastVisible(prodSnap.docs[prodSnap.docs.length - 1] || null);
         }
         
         // Fetch Categories
@@ -116,8 +117,32 @@ export const Catalog: React.FC = () => {
   }, [currentUser]);
 
   const loadMoreProducts = async () => {
-    // Left as safe no-op since all products are pre-fetched
-    return;
+    if (!currentUser || !lastVisible || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const prodQ = query(
+        collection(db, "products"),
+        where("sellerId", "==", currentUser.uid)
+      );
+      const prodSnap = await getDocs(prodQ);
+      const fetched = prodSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as SellerProduct[];
+      
+      fetched.sort((a, b) => {
+        const dateA = a.createdAt?.seconds || 0;
+        const dateB = b.createdAt?.seconds || 0;
+        return dateB - dateA;
+      });
+      setProducts(fetched);
+      setLastVisible(null); // Loaded all
+    } catch (err) {
+      console.error("Erreur chargement:", err);
+      toast.error("Impossible de charger plus de produits");
+    } finally {
+      setLoadingMore(false);
+    }
   };
 
   const handleSaveSuccess = async () => {
@@ -128,23 +153,132 @@ export const Catalog: React.FC = () => {
     try {
       const prodQ = query(
         collection(db, "products"),
-        where("sellerId", "==", currentUser.uid),
-        limit(250)
+        where("sellerId", "==", currentUser.uid)
       );
       const prodSnap = await getDocs(prodQ);
-      const fetched = prodSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as SellerProduct));
+      const fetched = prodSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as SellerProduct[];
+      
       fetched.sort((a, b) => {
-        const tA = a.createdAt?.seconds || 0;
-        const tB = b.createdAt?.seconds || 0;
-        return tB - tA;
+        const dateA = a.createdAt?.seconds || 0;
+        const dateB = b.createdAt?.seconds || 0;
+        return dateB - dateA;
       });
       setProducts(fetched);
       setLastVisible(null);
+      toast.success("Produit ajouté avec succès !");
     } catch (err) {
       console.error(err);
+      toast.error("Produit ajouté mais erreur de rafraîchissement");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDuplicateProduct = async (product: SellerProduct) => {
+    if (!currentUser) return;
+    try {
+      toast.loading(t("Duplication en cours..."), { id: 'dup' });
+      const docRef = doc(db, "products", product.id);
+      const snap = await getDoc(docRef);
+      if (!snap.exists()) {
+         toast.error("Produit introuvable");
+         return;
+      }
+      const data = snap.data();
+      const { id, createdAt, updatedAt, ...restData } = data;
+      const duplicatedData = {
+        ...restData,
+        name: `${data.name} (Copie)`,
+        status: 'draft', // duplicated products should start as draft
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      };
+      
+      await addDoc(collection(db, "products"), duplicatedData);
+      toast.success(t("Produit dupliqué avec succès !"), { id: 'dup' });
+      handleSaveSuccess(); // refresh list
+    } catch (err) {
+      console.error("Duplicate error:", err);
+      toast.error(t("Erreur lors de la duplication"), { id: 'dup' });
+    }
+  };
+
+  const handleCsvImport = async (file: File) => {
+     if (!currentUser) return;
+     toast.loading(t("Analyse du fichier CSV en cours..."), { id: 'csv' });
+     
+     Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: async (results) => {
+           try {
+              if (results.errors.length > 0) {
+                 console.error("CSV Errors:", results.errors);
+                 throw new Error("Format CSV invalide. Vérifiez les séparateurs.");
+              }
+              const data = results.data as any[];
+              if (data.length === 0) throw new Error("Fichier sans données");
+              
+              const requiredColumns = ['name', 'price'];
+              const headers = Object.keys(data[0] || {}).map(k => k.toLowerCase().trim());
+              
+              const missing = requiredColumns.filter(col => !headers.includes(col));
+              if (missing.length > 0) {
+                 throw new Error(`Colonnes obligatoires manquantes : ${missing.join(', ')}`);
+              }
+              
+              let imported = 0;
+              for (const row of data) {
+                 // Normalize keys
+                 const normalizedRow: any = {};
+                 Object.keys(row).forEach(k => {
+                    normalizedRow[k.toLowerCase().trim()] = row[k];
+                 });
+                 
+                 const name = normalizedRow.name?.trim();
+                 const price = parseFloat(normalizedRow.price);
+                 const stock = parseInt(normalizedRow.stock) || 0;
+                 const sku = normalizedRow.sku?.trim() || '';
+                 const category = normalizedRow.category?.trim() || 'Non classé';
+                 const metaTitle = normalizedRow.metatitle?.trim() || '';
+                 const metaDescription = normalizedRow.metadescription?.trim() || '';
+                 
+                 if (name && !isNaN(price)) {
+                    await addDoc(collection(db, "products"), {
+                       name,
+                       price,
+                       stock: isNaN(stock) ? 0 : stock,
+                       sku,
+                       category,
+                       metaTitle,
+                       metaDescription,
+                       slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
+                       status: 'draft',
+                       sellerId: currentUser.uid,
+                       sellerName: userProfile?.displayName || userProfile?.shopName || '',
+                       variants: [],
+                       images: [],
+                       createdAt: Timestamp.now(),
+                       updatedAt: Timestamp.now()
+                    });
+                    imported++;
+                 }
+              }
+              toast.success(`${imported} produit(s) importé(s) avec succès en brouillon !`, { id: 'csv' });
+              handleSaveSuccess();
+           } catch (err: any) {
+              console.error("CSV error:", err);
+              toast.error(err.message || t("Erreur de lecture du CSV"), { id: 'csv' });
+           }
+        },
+        error: (err) => {
+           console.error("PapaParse error:", err);
+           toast.error(t("Impossible de parser le fichier CSV"), { id: 'csv' });
+        }
+     });
   };
 
   const filteredProducts = products.filter(p => {
@@ -182,18 +316,70 @@ export const Catalog: React.FC = () => {
         </div>
       )}
 
+      {/* Seller Stats Header */}
+      <div className="bg-white rounded-[2rem] border border-[#E5DED4] p-6 shadow-sm flex flex-col md:flex-row items-center gap-6 justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 rounded-full bg-[#FDF6EC] border-2 border-[#C75C1A] flex items-center justify-center shrink-0 overflow-hidden">
+            {userProfile?.shopLogo ? (
+              <img src={userProfile.shopLogo} alt={userProfile?.shopName} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-[#C75C1A] text-2xl font-bold">
+                {userProfile?.shopName?.charAt(0) || userProfile?.name?.charAt(0) || "B"}
+              </span>
+            )}
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-[#2C2118]">{userProfile?.shopName || "Votre Boutique"}</h2>
+            <p className="text-sm text-[#8B7355]">
+              {products.length} {t("produits en ligne")} • {t("Vendeur OLMART")}
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-4">
+          <div className="text-center px-4 py-2 bg-[#FFFBF5] rounded-xl border border-[#E5DED4]">
+            <p className="text-xs text-[#8B7355] font-semibold uppercase tracking-wider">{t("Actifs")}</p>
+            <p className="text-lg font-black text-[#2C2118]">{products.filter(p => p.status === 'active').length}</p>
+          </div>
+          <div className="text-center px-4 py-2 bg-[#FFFBF5] rounded-xl border border-[#E5DED4]">
+            <p className="text-xs text-[#8B7355] font-semibold uppercase tracking-wider">{t("En rupture")}</p>
+            <p className="text-lg font-black text-[#C75C1A]">{products.filter(p => p.stock === 0).length}</p>
+          </div>
+        </div>
+      </div>
+
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h2 className="text-3xl font-kinder tracking-tight rtl:tracking-normal text-zinc-950">{t("Mon Catalogue")}</h2>
           <p className="text-zinc-500 font-medium">{t("Gérez vos articles en vente sur Olma.")}</p>
         </div>
-        <button 
-          onClick={() => { setEditingProduct(null); setIsAddMode(true); }}
-          disabled={!isShopValidated}
-          className={`px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest rtl:tracking-normal flex items-center gap-3 shadow-xl transition-all ${isShopValidated ? 'bg-[#ea580c] text-white shadow-orange-500/20 hover:scale-105' : 'bg-zinc-200 text-zinc-400 cursor-not-allowed opacity-50'}`}
-        >
-          <Plus className="w-5 h-5" />
-          {t("Ajouter un Produit")}</button>
+        <div className="flex gap-3">
+          <button 
+            disabled={!isShopValidated}
+            onClick={() => {
+              const fileInput = document.createElement('input');
+              fileInput.type = 'file';
+              fileInput.accept = '.csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel';
+              fileInput.onchange = async (e: any) => {
+                const file = e.target.files[0];
+                if (file) {
+                  handleCsvImport(file);
+                }
+              };
+              fileInput.click();
+            }}
+            className={`px-6 py-4 rounded-2xl font-black text-sm uppercase tracking-widest rtl:tracking-normal flex items-center gap-2 shadow-sm transition-all border ${isShopValidated ? 'bg-white text-slate-700 border-[#E5DED4] hover:bg-slate-50 hover:scale-105' : 'bg-zinc-100 text-zinc-400 cursor-not-allowed opacity-50 border-zinc-200'}`}
+          >
+            <UploadCloud className="w-5 h-5" />
+            <span className="hidden sm:inline">{t("Import Masse")}</span>
+          </button>
+          <button 
+            onClick={() => { setEditingProduct(null); setIsAddMode(true); }}
+            disabled={!isShopValidated}
+            className={`px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest rtl:tracking-normal flex items-center gap-3 shadow-xl transition-all ${isShopValidated ? 'bg-[#C75C1A] text-white shadow-[#C75C1A]/20 hover:scale-105' : 'bg-zinc-200 text-zinc-400 cursor-not-allowed opacity-50'}`}
+          >
+            <Plus className="w-5 h-5" />
+            {t("Ajouter un Produit")}</button>
+        </div>
       </div>
 
       {/* Filters & Search */}
@@ -226,9 +412,22 @@ export const Catalog: React.FC = () => {
       <div className="bg-white rounded-[2.5rem] border border-zinc-100 shadow-sm overflow-hidden">
         <div className="divide-y divide-zinc-50">
           {filteredProducts.length === 0 ? (
-            <div className="p-20 text-center">
-              <Package className="w-16 h-16 text-zinc-100 mx-auto mb-4" />
-              <p className="text-zinc-400 font-bold">{t("Aucun produit trouvé.")}</p>
+            <div className="text-center py-16 px-4">
+              <div className="w-20 h-20 bg-[#FDF6EC] rounded-full flex items-center justify-center mx-auto mb-6">
+                <Package className="w-10 h-10 text-[#C75C1A]" />
+              </div>
+              <h3 className="font-serif text-xl font-bold text-[#2C2118] mb-2">
+                {t("catalog.empty.title", "Votre boutique vous attend !")}
+              </h3>
+              <p className="text-[#8B7355] max-w-sm mx-auto mb-6">
+                {t("catalog.empty.subtitle", "Ajoutez votre premier produit et commencez à vendre à travers les 58 wilayas.")}
+              </p>
+              <button
+                onClick={() => { setIsAddMode(true); setEditingProduct(null); }}
+                className="bg-[#C75C1A] text-white font-bold px-8 py-3 rounded-full hover:bg-[#A64D16] transition-all shadow-lg shadow-[#C75C1A]/25"
+              >
+                {t("catalog.empty.cta", "Ajouter mon premier produit")}
+              </button>
             </div>
           ) : (
             filteredProducts.map((p) => {
@@ -333,14 +532,12 @@ export const Catalog: React.FC = () => {
                                 disabled={p.status === 'pending_deletion'}
                                 onClick={() => { 
                                   if (p.status === 'pending_deletion') return;
-                                  const { id, createdAt, updatedAt, ...cloneData } = p;
-                                  setEditingProduct({ ...cloneData, name: `${p.name} (Copie)` } as SellerProduct); 
-                                  setIsAddMode(true); 
+                                  handleDuplicateProduct(p);
                                 }}
                                 title={p.status === 'pending_deletion' ? "Duplication impossible" : "Dupliquer"}
                                 className={`p-2.5 sm:p-3 bg-white border rounded-xl active:scale-95 transition-all shadow-sm flex items-center justify-center shrink-0 ${p.status === 'pending_deletion' ? 'text-zinc-300 border-zinc-100 cursor-not-allowed opacity-50' : 'border-zinc-150 text-zinc-500 hover:text-emerald-600 hover:border-emerald-100'}`}
                               >
-                                <Plus className="w-5 h-5" />
+                                <Copy className="w-5 h-5" />
                               </button>
                               <button 
                                 disabled={p.status === 'pending_deletion'}

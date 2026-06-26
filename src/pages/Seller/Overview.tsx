@@ -65,7 +65,7 @@ export const Overview: React.FC = () => {
       const productsSnap = await safeFetch(() => getDocs(pQ), { docs: [] } as any);
       const productCount = productsSnap.docs.length;
 
-      // 2. Fetch orders simply (single-field filter, no index issues)
+      // 2. Fetch orders simply (single-field filter, no index issues) for charts
       const oQ = query(collection(db, "orders"), where("sellerIds", "array-contains", currentUser.uid), limit(250));
       const ordersSnap = await safeFetch(() => getDocs(oQ), { docs: [] } as any);
       const allOrders = ordersSnap.docs.map((d: any) => ({ id: d.id, ...d.data() })) as any[];
@@ -80,15 +80,33 @@ export const Overview: React.FC = () => {
       });
       if (!cancelled) setOutOfStockCount(outOfStock);
 
-      // Compute Global Stats In Memory
+      // Fetch Global Stats from financial_summary (to avoid client-side aggregation issues)
+      const { doc, getDoc } = await import("firebase/firestore");
       let totalSales = 0;
+      let orderCount = 0;
       let pendingReturns = 0;
-      allOrders.forEach((o: any) => {
-        totalSales += (o.total || 0);
-        if (o.status === "RETURN_REQUESTED") {
-          pendingReturns++;
+      try {
+        const summaryDoc = await getDoc(doc(db, `financial_summary/${currentUser.uid}`));
+        if (summaryDoc.exists()) {
+          const data = summaryDoc.data();
+          totalSales = data.totalSales || 0;
+          orderCount = data.orderCount || 0;
+          pendingReturns = data.pendingReturns || 0;
+        } else {
+           // Fallback to client-side if doc doesn't exist yet
+           orderCount = allOrders.length;
+           allOrders.forEach((o: any) => {
+             totalSales += (o.total || 0);
+             if (o.status === "RETURN_REQUESTED") pendingReturns++;
+           });
         }
-      });
+      } catch (e) {
+         orderCount = allOrders.length;
+         allOrders.forEach((o: any) => {
+           totalSales += (o.total || 0);
+           if (o.status === "RETURN_REQUESTED") pendingReturns++;
+         });
+      }
 
       // 3. True Growth and Sales Calculation from the retrieved list of orders
       const now = new Date();
@@ -130,7 +148,7 @@ export const Overview: React.FC = () => {
       if (!cancelled) {
         setStats({
           totalSales,
-          orderCount: allOrders.length,
+          orderCount,
           productCount,
           growth: growthCalc,
           pendingReturns

@@ -6,8 +6,11 @@ import { ALGERIA_WILAYAS } from "../../../constants";
 interface OrderFiltersProps {
   searchId: string;
   setSearchId: (val: string) => void;
+  clientSearch: string;
+  setClientSearch: (val: string) => void;
   selectedWilaya: string;
   setSelectedWilaya: (val: string) => void;
+  dynamicWilayas: string[];
   selectedStatus: string;
   setSelectedStatus: (val: string) => void;
   sellerSearch: string;
@@ -23,8 +26,11 @@ interface OrderFiltersProps {
 export const OrderFilters: React.FC<OrderFiltersProps> = ({
   searchId,
   setSearchId,
+  clientSearch,
+  setClientSearch,
   selectedWilaya,
   setSelectedWilaya,
+  dynamicWilayas,
   selectedStatus,
   setSelectedStatus,
   sellerSearch,
@@ -39,7 +45,13 @@ export const OrderFilters: React.FC<OrderFiltersProps> = ({
   const { t } = useTranslation();
 
   const isFiltering =
-    searchId || selectedWilaya !== "all" || selectedStatus !== "all" || sellerSearch || startDate || endDate;
+    searchId ||
+    clientSearch ||
+    selectedWilaya !== "all" ||
+    selectedStatus !== "all" ||
+    sellerSearch ||
+    startDate ||
+    endDate;
 
   return (
     <div className="p-6 bg-zinc-50 border border-zinc-200 rounded-3xl space-y-4">
@@ -48,7 +60,7 @@ export const OrderFilters: React.FC<OrderFiltersProps> = ({
         {t("Filtres Analytiques & Recherche")}
       </h3>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-3">
         {/* Reference Search */}
         <div className="space-y-1">
           <label className="block text-[10px] font-kinder text-zinc-450 uppercase tracking-wider">
@@ -66,6 +78,23 @@ export const OrderFilters: React.FC<OrderFiltersProps> = ({
           </div>
         </div>
 
+        {/* Client Search */}
+        <div className="space-y-1">
+          <label className="block text-[10px] font-kinder text-zinc-450 uppercase tracking-wider">
+            {t("Client (Nom/Tel)")}
+          </label>
+          <div className="bg-white border border-zinc-200 rounded-xl px-3 py-2 flex items-center gap-2">
+            <Search className="w-3.5 h-3.5 text-zinc-400" />
+            <input
+              type="text"
+              value={clientSearch}
+              onChange={(e) => setClientSearch(e.target.value)}
+              placeholder={t("Nom ou Téléphone...")}
+              className="w-full text-xs font-bold bg-transparent outline-none text-zinc-800"
+            />
+          </div>
+        </div>
+
         {/* Wilaya Filter */}
         <div className="space-y-1">
           <label className="block text-[10px] font-kinder text-zinc-450 uppercase tracking-wider">
@@ -76,8 +105,8 @@ export const OrderFilters: React.FC<OrderFiltersProps> = ({
             onChange={(e) => setSelectedWilaya(e.target.value)}
             className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-2.5 text-xs font-bold outer-none text-zinc-700 outline-none cursor-pointer"
           >
-            <option value="all">{t("Toutes (Les 58 Wilayas)")}</option>
-            {ALGERIA_WILAYAS.map((w) => (
+            <option value="all">{t("Toutes les wilayas actives")}</option>
+            {dynamicWilayas.sort().map((w) => (
               <option key={w} value={w}>
                 {w}
               </option>

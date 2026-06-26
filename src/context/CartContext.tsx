@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useRe
 import { Product, CartItem } from "../types";
 import { useAuth } from "./AuthContext";
 import { analyticsEngine } from "../utils/analyticsEngine";
-import { db } from "../lib/firebase";
+import { db, withTimeout } from "../lib/firebase";
 import { doc, setDoc, getDoc, collection, writeBatch, getDocs, query, where, documentId } from "firebase/firestore";
 import toast from "react-hot-toast";
 
@@ -24,7 +24,12 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const auth = useAuth() || { currentUser: null };
+  let auth: any;
+  try {
+    auth = useAuth();
+  } catch (e) {
+    auth = { currentUser: null };
+  }
   const prevUserRef = useRef<any>(null);
   const getWishlistKey = () => (auth.currentUser ? `olma_wishlist_${auth.currentUser.uid}` : "olma_wishlist_guest");
   const getCartKey = () => (auth.currentUser ? `olma_cart_${auth.currentUser.uid}` : "olma_cart_guest");
@@ -99,63 +104,86 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const guestWishlistJson = localStorage.getItem("olma_wishlist_guest");
       const guestWishlist = safeParse(guestWishlistJson, []);
 
-      if (auth.currentUser) {
-        // User is logged in
-        const userCartKey = getCartKey();
-        const userWishlistKey = getWishlistKey();
+      try {
+        if (auth.currentUser) {
+          // User is logged in
+          const userCartKey = getCartKey();
+          const userWishlistKey = getWishlistKey();
 
-        // 1. Fetch user data from Cloud
-        const cartRef = doc(db, `users/${auth.currentUser.uid}/cart`, "active");
-        const wishRef = doc(db, `users/${auth.currentUser.uid}/wishlist`, "active");
+          // 1. Fetch user data from Cloud
+          const cartRef = doc(db, `users/${auth.currentUser.uid}/cart`, "active");
+          const wishRef = doc(db, `users/${auth.currentUser.uid}/wishlist`, "active");
 
-        const [cartSnap, wishSnap] = await Promise.all([getDoc(cartRef), getDoc(wishRef)]);
-
-        let cloudCart = cartSnap.exists() ? cartSnap.data().items || [] : [];
-        let cloudWishlist = wishSnap.exists() ? wishSnap.data().items || [] : [];
-
-        // 2. Fallback to localStorage if cloud is empty
-        if (cloudCart.length === 0) {
-          const localUserCart = localStorage.getItem(userCartKey);
-          if (localUserCart) cloudCart = safeParse(localUserCart, []);
-        }
-        if (cloudWishlist.length === 0) {
-          const localUserWish = localStorage.getItem(userWishlistKey);
-          if (localUserWish) cloudWishlist = safeParse(localUserWish, []);
-        }
-
-        // 3. MERGE Guest Cart into User Cart if transition just happened
-        if (!prevUserRef.current && guestCart.length > 0) {
-          guestCart.forEach((gItem: any) => {
-            const existingMerge = cloudCart.find(
-              (c: any) => c.id === gItem.id && c.selectedVariant === gItem.selectedVariant
+          let cartSnap: any = null;
+          let wishSnap: any = null;
+          try {
+            const [cSnap, wSnap] = await withTimeout(
+              Promise.all([getDoc(cartRef), getDoc(wishRef)]),
+              15000,
+              "Le chargement de votre panier et de votre liste d'envies a expiré."
             );
-            if (existingMerge) {
-              existingMerge.quantity += gItem.quantity || 1;
-            } else {
-              cloudCart.push(gItem);
-            }
-          });
-          localStorage.removeItem("olma_cart_guest");
+            cartSnap = cSnap;
+            wishSnap = wSnap;
+          } catch (err) {
+            console.warn("CartContext: Firestore fetch failed or timed out. Falling back to local storage.", err);
+          }
+
+          let cloudCart = cartSnap && cartSnap.exists() ? cartSnap.data().items || [] : [];
+          let cloudWishlist = wishSnap && wishSnap.exists() ? wishSnap.data().items || [] : [];
+
+          // 2. Fallback to localStorage if cloud is empty
+          if (cloudCart.length === 0) {
+            const localUserCart = localStorage.getItem(userCartKey);
+            if (localUserCart) cloudCart = safeParse(localUserCart, []);
+          }
+          if (cloudWishlist.length === 0) {
+            const localUserWish = localStorage.getItem(userWishlistKey);
+            if (localUserWish) cloudWishlist = safeParse(localUserWish, []);
+          }
+
+          // 3. MERGE Guest Cart into User Cart if transition just happened
+          if (!prevUserRef.current && guestCart.length > 0) {
+            guestCart.forEach((gItem: any) => {
+              const existingMerge = cloudCart.find(
+                (c: any) => c.id === gItem.id && c.selectedVariant === gItem.selectedVariant
+              );
+              if (existingMerge) {
+                existingMerge.quantity += gItem.quantity || 1;
+              } else {
+                cloudCart.push(gItem);
+              }
+            });
+            localStorage.removeItem("olma_cart_guest");
+          }
+
+          // Merge wishlist
+          if (!prevUserRef.current && guestWishlist.length > 0) {
+            guestWishlist.forEach((wId: string) => {
+              if (!cloudWishlist.includes(wId)) cloudWishlist.push(wId);
+            });
+            localStorage.removeItem("olma_wishlist_guest");
+          }
+
+          finalCart = cloudCart;
+          finalWishlist = cloudWishlist;
+        } else {
+          // User is guest
+          finalCart = guestCart;
+          finalWishlist = guestWishlist;
         }
 
-        // Merge wishlist
-        if (!prevUserRef.current && guestWishlist.length > 0) {
-          guestWishlist.forEach((wId: string) => {
-            if (!cloudWishlist.includes(wId)) cloudWishlist.push(wId);
-          });
-          localStorage.removeItem("olma_wishlist_guest");
+        // Hydrate
+        try {
+          finalCart = await hydrateCart(finalCart);
+        } catch (hydErr) {
+          console.warn("CartContext: Hydration error, using raw cart:", hydErr);
         }
-
-        finalCart = cloudCart;
-        finalWishlist = cloudWishlist;
-      } else {
-        // User is guest
+      } catch (globalErr) {
+        console.error("CartContext: Error during auth change sync:", globalErr);
+        // Fail-safe: use guest cart as absolute fallback to prevent UI blocking
         finalCart = guestCart;
         finalWishlist = guestWishlist;
       }
-
-      // Hydrate
-      finalCart = await hydrateCart(finalCart);
 
       setCart(finalCart);
       setWishlist(finalWishlist);

@@ -7,6 +7,7 @@ interface ImageMagnifierProps {
   zoomLevel?: number;
   magnifierHeight?: number;
   magnifierWidth?: number;
+  onClick?: () => void;
 }
 
 export const ImageMagnifier: React.FC<ImageMagnifierProps> = ({
@@ -16,6 +17,7 @@ export const ImageMagnifier: React.FC<ImageMagnifierProps> = ({
   zoomLevel = 2.5,
   magnifierHeight = 160,
   magnifierWidth = 160,
+  onClick,
 }) => {
   const [[x, y], setXY] = useState([0, 0]);
   const [[imgWidth, imgHeight], setSize] = useState([0, 0]);
@@ -45,12 +47,13 @@ export const ImageMagnifier: React.FC<ImageMagnifierProps> = ({
       onMouseEnter={handleMouseEnter}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => setShowMagnifier(false)}
+      onClick={onClick}
     >
       <img
         loading="lazy"
         src={src}
         draggable={false}
-        className="w-full h-full object-cover select-none pointer-events-none"
+        className="w-full h-full object-contain bg-slate-100 p-4 select-none pointer-events-none"
         alt={alt}
       />
 

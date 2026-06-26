@@ -7,6 +7,9 @@ export interface AnalyticsEvent {
 }
 
 class AnalyticsEngine {
+  private eventQueue: AnalyticsEvent[] = [];
+  private flushTimeout: any = null;
+
   private getStorageKey(): string {
     return 'olma_marketplace_analytics';
   }
@@ -20,7 +23,6 @@ class AnalyticsEngine {
     try {
       const savedEvents = this.getEvents();
       
-      // Keep it under 500 events to prevent localStorage overflow
       const trimmed = savedEvents.slice(-499);
       
       const newEvent: AnalyticsEvent = {
@@ -33,10 +35,13 @@ class AnalyticsEngine {
 
       trimmed.push(newEvent);
       localStorage.setItem(this.getStorageKey(), JSON.stringify(trimmed));
+      
+      // Add to queue for server sync
+      this.eventQueue.push(newEvent);
+      this.scheduleFlush();
 
-      // Logger for development transparency
-      if ((import.meta as any).env?.DEV) {
-        (process.env.NODE_ENV === 'debug' ? console.log : function(){})(
+      if (process.env.NODE_ENV === "development") {
+        (process.env.NODE_ENV === 'development' ? console.log : function(){})(
           `%c[Olma Analytics Engine] %cTracked "${name}"`,
           'color: #ea580c; font-weight: bold;',
           'color: #3f3f46;',
@@ -45,6 +50,28 @@ class AnalyticsEngine {
       }
     } catch (err) {
       console.error('Failed to log analytics event', err);
+    }
+  }
+
+  private scheduleFlush() {
+    if (this.flushTimeout) clearTimeout(this.flushTimeout);
+    this.flushTimeout = setTimeout(() => this.flushEvents(), 3000);
+  }
+
+  private async flushEvents() {
+    if (this.eventQueue.length === 0) return;
+    const eventsToSend = [...this.eventQueue];
+    this.eventQueue = [];
+    
+    try {
+      await fetch('/api/analytics/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ events: eventsToSend })
+      });
+    } catch (err) {
+      console.error("Failed to sync analytics events", err);
+      // Revert events if failed? Simple fallback: don't revert for now.
     }
   }
 

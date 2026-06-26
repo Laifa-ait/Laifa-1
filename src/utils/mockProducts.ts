@@ -32,8 +32,8 @@ export const cacheEngine = new LocalMemoryCache();
  * Returns a gorgeous customized message in dev mode of the active safe-by-design layer
  */
 export function handleDevQuotaLogger(context: string, isFromCache: boolean) {
-  if ((import.meta as any).env?.DEV) {
-    (process.env.NODE_ENV === 'debug' ? console.log : function(){})(
+  if (process.env.NODE_ENV === "development") {
+    (process.env.NODE_ENV === 'development' ? console.log : function(){})(
       `%c[Olma Dev-Safe Layer] %c${context} %c${isFromCache ? "⚡ SWR CACHED" : "📦 LIVE (Firestore)"}`,
       "color: #C95D3B; font-weight: bold;",
       "color: inherit;",

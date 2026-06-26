@@ -754,6 +754,49 @@ router.post('/admin/products/recalculate-scores', authenticateToken, authorizeAd
   }
 });
 
+// Helper to detect forbidden external contact details (email, phone, URLs, direct messaging keywords)
+function checkProductExternalContact(p: any): { found: boolean; reason?: string } {
+  if (!p) return { found: false };
+  
+  const fieldsToCheck = [
+    p.name,
+    p.description,
+    p.category,
+    p.shopName,
+    ...(p.tags || []),
+    ...(p.variants || []).map((v: any) => typeof v === 'string' ? v : (v.name || ''))
+  ].filter(Boolean).map(val => String(val).toLowerCase());
+
+  // Email regex
+  const emailRegex = /\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b/;
+  
+  // Algerian/General phone pattern (matches sequences of 8+ digits, formatted phone numbers)
+  const phoneRegex = /(?:\+213|00213|[0][567])\s*\d[\s\d\-]{7,}\d|\b\d{2}[-.\s]?\d{2}[-.\s]?\d{2}[-.\s]?\d{2}[-.\s]?\d{2}\b/;
+
+  // Social media URLs / domain names and short links
+  const urlRegex = /https?:\/\/\S+|www\.\S+|\b(?:facebook|fb|instagram|insta|tiktok|twitter|linkedin|ouedkniss|viber|whatsapp|telegram|tg|snapchat)\.(?:com|dz|net|fr|org|me|info)\b|\bwa\.me\/\S+|\bt\.me\/\S+/;
+
+  // Contact triggers (forbids direct communication instructions)
+  const keywordRegex = /\b(?:whatsapp|viber|telegram|téléphone|telephone|phone|numéro|numero|contactez-moi|contactez moi|appelez-moi|appelez moi|contact me|call me|mon numéro|mon numero|mon num|mon tel|mon viber|mon snap)\b/;
+
+  for (const field of fieldsToCheck) {
+    if (emailRegex.test(field)) {
+      return { found: true, reason: 'Coordonnée interdite détectée : Adresse e-mail.' };
+    }
+    if (phoneRegex.test(field)) {
+      return { found: true, reason: 'Coordonnée interdite détectée : Numéro de téléphone.' };
+    }
+    if (urlRegex.test(field)) {
+      return { found: true, reason: 'Coordonnée interdite détectée : Lien ou site externe.' };
+    }
+    if (keywordRegex.test(field)) {
+      return { found: true, reason: 'Coordonnée interdite détectée : Mots-clés de contact externe (WhatsApp, Viber, etc.).' };
+    }
+  }
+
+  return { found: false };
+}
+
 router.post('/admin/products/:id/approve', authenticateToken, authorizeAdmin, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const productId = req.params.id;
@@ -762,6 +805,15 @@ router.post('/admin/products/:id/approve', authenticateToken, authorizeAdmin, as
     if (!productSnap.exists) return res.status(404).json({ error: 'Not found' });
     
     const p = productSnap.data();
+    
+    // Server-side mandatory security Regex filters (rejection of external contact details to avoid off-platform transactions)
+    const securityCheck = checkProductExternalContact(p);
+    if (securityCheck.found) {
+      return res.status(400).json({ 
+        error: 'Approbation refusée par le système de sécurité OLMART. ' + securityCheck.reason 
+      });
+    }
+
     const salesCount = p?.salesCount || 0;
     const viewsCount = p?.viewsCount || 0;
     const sellerRating = p?.sellerRating || 4.5;

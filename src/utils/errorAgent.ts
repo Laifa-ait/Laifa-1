@@ -38,11 +38,11 @@ const sendErrorToAgent = async (errorInfo: Omit<ErrorInfo, 'timestamp' | 'url' |
       window.location.hostname.includes('-dev-') || 
       window.location.hostname.includes('-pre-') || 
       window.location.hostname.includes('.run.app') ||
-      (import.meta as any).env?.DEV;
+      process.env.NODE_ENV === "development";
 
     // Optional: Avoid spamming database with dev errors
     // if (isDevOrPreview) {
-    //   (process.env.NODE_ENV === 'debug' ? console.log : function(){})('[ErrorAgent Detached in Dev/Preview]:', errorInfo);
+    //   (process.env.NODE_ENV === 'development' ? console.log : function(){})('[ErrorAgent Detached in Dev/Preview]:', errorInfo);
     //   return;
     // }
 
@@ -55,7 +55,7 @@ const sendErrorToAgent = async (errorInfo: Omit<ErrorInfo, 'timestamp' | 'url' |
       timestamp: serverTimestamp(),
       resolved: false,
     });
-    (process.env.NODE_ENV === 'debug' ? console.log : function(){})('[ErrorAgent] Erreur reportée avec succès.');
+    (process.env.NODE_ENV === 'development' ? console.log : function(){})('[ErrorAgent] Erreur reportée avec succès.');
   } catch (err) {
     console.error('[ErrorAgent] Impossible de reporter l\'erreur :', err);
   }

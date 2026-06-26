@@ -780,9 +780,9 @@ export const OrderDetails: React.FC = () => {
       {/* Contact Seller Floating action */}
       <button 
          onClick={() => setChatOpen(true)}
-         className="fixed bottom-8 right-8 w-16 h-16 bg-zinc-950 text-white rounded-[2rem] shadow-2xl flex items-center justify-center hover:scale-105 transition-transform active:scale-95 group z-50"
+         className="fixed bottom-8 right-8 w-14 h-14 bg-sky-500 text-white rounded-full shadow-lg shadow-sky-500/30 flex items-center justify-center hover:scale-105 hover:bg-sky-600 transition-all active:scale-95 group z-50 border-none cursor-pointer"
       >
-         <MessageCircle className="w-6 h-6 group-hover:scale-110 transition-transform" />
+         <MessageCircle className="w-6 h-6 group-hover:scale-110 transition-transform stroke-[2]" />
       </button>
 
       <LiveChatDrawer 

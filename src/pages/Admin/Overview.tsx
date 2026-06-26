@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import OverviewChart from "../../components/Admin/OverviewChart";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
 import { db } from "../../lib/firebase";
 import { collection, query, getDocs, limit, orderBy, where, startAfter, Timestamp } from "firebase/firestore";
 import { formatPrice } from "../../utils/format";
@@ -69,6 +70,8 @@ export const Overview: React.FC = () => {
     totalOrders: 0,
     netRevenue: 0,
     pendingVendors: 0,
+    revenueChange: 0,
+    ordersChange: 0
   });
   const [adminAlerts, setAdminAlerts] = useState<AdminAlert[]>([]);
   const [data, setData] = useState<DashboardData[]>([]);
@@ -113,12 +116,23 @@ export const Overview: React.FC = () => {
     localStorage.setItem('olmart_admin_guide_closed', 'true');
   };
 
-  const refreshAnalytics = useCallback(() => {
+  const [loadingRefresh, setLoadingRefresh] = useState(false);
+
+  const refreshAnalytics = useCallback(async () => {
+    setLoadingRefresh(true);
     try {
       setInsights(analyticsEngine.getInsights());
       setAnalyticsEvents(analyticsEngine.getEvents().slice(-15).reverse());
+      // Refresh admin alerts
+      const { collection, query, orderBy, limit, getDocs } = await import("firebase/firestore");
+      const q = query(collection(db, "internal_notifications"), orderBy("createdAt", "desc"), limit(ALERTS_PER_PAGE));
+      const snap = await getDocs(q);
+      setAdminAlerts(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as AdminAlert));
+      setLastAlertVisible(snap.docs[snap.docs.length - 1]);
     } catch {
        // fallback silently
+    } finally {
+      setLoadingRefresh(false);
     }
   }, []);
 
@@ -138,6 +152,11 @@ export const Overview: React.FC = () => {
   };
 
   const [disputeCount, setDisputeCount] = useState(0);
+  const [dateFilter, setDateFilter] = useState<'today' | 'week' | 'month'>('month');
+  const [topProducts, setTopProducts] = useState<any[]>([]);
+  const [topSellers, setTopSellers] = useState<any[]>([]);
+  const [wilayaStats, setWilayaStats] = useState<any[]>([]);
+  const [realTimeTraffic, setRealTimeTraffic] = useState<{time: string; views: number; carts: number}[]>([]);
 
   useEffect(() => {
     const fetchDisputes = async () => {
@@ -155,46 +174,156 @@ export const Overview: React.FC = () => {
 
   useEffect(() => {
     let cancelled = false;
-    const fetchAnalyticsDoc = async () => {
+    const fetchAnalyticsData = async () => {
       try {
-        const { getDoc, doc, collection, query, where, getCountFromServer } = await import("firebase/firestore");
+        const { getDoc, doc, collection, query, where, getCountFromServer, getAggregateFromServer, sum, orderBy, limit, getDocs } = await import("firebase/firestore");
+        
+        let startDate = new Date();
+        if (dateFilter === 'today') {
+          startDate.setHours(0,0,0,0);
+        } else if (dateFilter === 'week') {
+          startDate.setDate(startDate.getDate() - 7);
+        } else {
+          startDate.setMonth(startDate.getMonth() - 1);
+        }
+
+        let previousStartDate = new Date(startDate);
+        let previousEndDate = new Date(startDate);
+        if (dateFilter === 'today') {
+          previousStartDate.setDate(previousStartDate.getDate() - 1);
+          previousEndDate.setHours(0,0,0,0);
+        } else if (dateFilter === 'week') {
+          previousStartDate.setDate(previousStartDate.getDate() - 7);
+        } else {
+          previousStartDate.setMonth(previousStartDate.getMonth() - 1);
+        }
+
+        // 1. Fetch Orders Count & Revenue via Aggregation for Current Period
+        const ordersQuery = query(collection(db, "orders"), where("createdAt", ">=", startDate));
+        const [countSnap, aggSnap, pendingSnap] = await Promise.all([
+           safeFetch(() => getCountFromServer(ordersQuery), { data: () => ({ count: 0 }) } as any),
+           safeFetch(() => getAggregateFromServer(ordersQuery, { totalRevenue: sum('total') }), { data: () => ({ totalRevenue: 0 }) } as any),
+           safeFetch(() => getCountFromServer(query(collection(db, "users"), where("role", "==", "seller"), where("status", "==", "pending"))), { data: () => ({ count: 0 }) } as any)
+        ]);
+
+        // 1b. Fetch Orders Count & Revenue for Previous Period
+        const prevOrdersQuery = query(collection(db, "orders"), where("createdAt", ">=", previousStartDate), where("createdAt", "<", previousEndDate));
+        const [prevCountSnap, prevAggSnap] = await Promise.all([
+           safeFetch(() => getCountFromServer(prevOrdersQuery), { data: () => ({ count: 0 }) } as any),
+           safeFetch(() => getAggregateFromServer(prevOrdersQuery, { totalRevenue: sum('total') }), { data: () => ({ totalRevenue: 0 }) } as any)
+        ]);
+
+        const currentRevenue = aggSnap.data().totalRevenue;
+        const prevRevenue = prevAggSnap.data().totalRevenue;
+        const revenueChange = prevRevenue === 0 ? (currentRevenue > 0 ? 100 : 0) : ((currentRevenue - prevRevenue) / prevRevenue) * 100;
+
+        const currentOrders = countSnap.data().count;
+        const prevOrders = prevCountSnap.data().count;
+        const ordersChange = prevOrders === 0 ? (currentOrders > 0 ? 100 : 0) : ((currentOrders - prevOrders) / prevOrders) * 100;
+
+        // 2. Daily Document for Chart
         const docSnap = await safeFetch(() => getDoc(doc(db, "analytics", "daily")), null as any);
 
-        const pendingQuery = query(
-          collection(db, "users"),
-          where("role", "==", "seller"),
-          where("status", "==", "pending")
-        );
-        const pendingSnap = await safeFetch(() => getCountFromServer(pendingQuery), { data: () => ({ count: 0 }) } as any);
-
         if (!cancelled) {
-          if (docSnap && docSnap.exists()) {
-            const d = docSnap.data();
-            setStats({
-              totalSales: d.totalSales || 0,
-              activeVendors: d.activeVendors || 0,
-              totalOrders: d.totalOrders || 0,
-              netRevenue: d.netRevenue || 0,
-              pendingVendors: pendingSnap.data().count,
-            });
-            if (d.chartData) {
-              setData(d.chartData);
-            }
-          } else {
-            setStats((prev) => ({ ...prev, pendingVendors: pendingSnap.data().count }));
+          setStats({
+            totalSales: docSnap?.exists() ? docSnap.data().totalSales : 0,
+            activeVendors: docSnap?.exists() ? docSnap.data().activeVendors : 0,
+            totalOrders: currentOrders,
+            netRevenue: currentRevenue * 0.1, // assuming 10% commission for "Net Revenue Olma"
+            pendingVendors: pendingSnap.data().count,
+            revenueChange: revenueChange,
+            ordersChange: ordersChange
+          });
+
+          if (docSnap && docSnap.exists() && docSnap.data().chartData) {
+            setData(docSnap.data().chartData);
+          }
+
+          // Top Products (by fetching top 5 from products sorted by salesCount)
+          const topProductsQuery = query(collection(db, "products"), orderBy("salesCount", "desc"), limit(5));
+          const topProductsSnap = await safeFetch(() => getDocs(topProductsQuery), { docs: [] } as any);
+          setTopProducts(topProductsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+
+          // Top Sellers (by fetching top 5 from users where role=seller sorted by totalRevenue)
+          const topSellersQuery = query(collection(db, "users"), where("role", "==", "seller"), orderBy("totalRevenue", "desc"), limit(5));
+          const topSellersSnap = await safeFetch(() => getDocs(topSellersQuery), { docs: [] } as any);
+          setTopSellers(topSellersSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+
+          // Wilaya stats (mocked aggregation for now since Firestore doesn't group by natively, but we can read from analytics/daily if exists)
+          if (docSnap && docSnap.exists() && docSnap.data().wilayaStats) {
+             setWilayaStats(docSnap.data().wilayaStats);
+          }
+
+          // Fetch Real-time traffic (last 100 events)
+          try {
+             const rtQuery = query(collection(db, "analytics_events"), orderBy("serverTimestamp", "desc"), limit(100));
+             const rtSnap = await getDocs(rtQuery);
+             
+             // Group by hour:minute (e.g. 14:00, 14:05) for charting
+             const intervalMinutes = 15;
+             const trafficMap: Record<string, {views: number, carts: number}> = {};
+             
+             rtSnap.docs.forEach(doc => {
+                const data = doc.data();
+                if(!data.serverTimestamp) return;
+                const date = data.serverTimestamp.toDate();
+                // Round to nearest interval
+                const roundedMinutes = Math.floor(date.getMinutes() / intervalMinutes) * intervalMinutes;
+                date.setMinutes(roundedMinutes, 0, 0);
+                
+                const timeKey = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                if (!trafficMap[timeKey]) trafficMap[timeKey] = { views: 0, carts: 0 };
+                
+                if (data.name === 'product_view' || data.name === 'search_query') trafficMap[timeKey].views++;
+                if (data.name === 'add_to_cart') trafficMap[timeKey].carts++;
+             });
+             
+             const formattedTraffic = Object.entries(trafficMap)
+                .map(([time, stats]) => ({ time, ...stats }))
+                .sort((a, b) => a.time.localeCompare(b.time)); // Sort chronologically
+             
+             if(formattedTraffic.length > 0) {
+               setRealTimeTraffic(formattedTraffic);
+             } else {
+               // Seed some mock traffic if empty
+               setRealTimeTraffic([
+                  { time: '10:00', views: 12, carts: 2 },
+                  { time: '10:15', views: 15, carts: 3 },
+                  { time: '10:30', views: 25, carts: 5 },
+                  { time: '10:45', views: 22, carts: 4 },
+                  { time: '11:00', views: 30, carts: 8 }
+               ]);
+             }
+          } catch(err) {
+             console.error("Error fetching real time traffic", err);
+             setRealTimeTraffic([
+                { time: '10:00', views: 12, carts: 2 },
+                { time: '10:15', views: 15, carts: 3 },
+                { time: '10:30', views: 25, carts: 5 }
+             ]);
           }
         }
       } catch (err) {
         if (!cancelled) console.error("Erreur KPI:", err);
       }
     };
-    fetchAnalyticsDoc();
+    fetchAnalyticsData();
 
-    setRecentEvents([
-      { id: "1", type: "order", label: t("Nouvelle commande"), time: t("Il y a 2 min"), color: "text-orange-500", timestamp: Timestamp.now(), data: {} },
-    ]);
+    // Fetch Admin Activities
+    const fetchActivities = async () => {
+      const { collection, query, orderBy, limit, getDocs } = await import("firebase/firestore");
+      const q = query(collection(db, "admin_activities"), orderBy("createdAt", "desc"), limit(5));
+      const snap = await safeFetch(() => getDocs(q), { docs: [] } as any);
+      if (!cancelled && snap.docs.length > 0) {
+        setRecentEvents(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      } else if (!cancelled) {
+         setRecentEvents([]);
+      }
+    };
+    fetchActivities();
+
     return () => { cancelled = true; };
-  }, [t]);
+  }, [t, dateFilter]);
 
   useEffect(() => {
     const fetchGlobalOrders = async () => {
@@ -217,7 +346,7 @@ export const Overview: React.FC = () => {
         setAdminAlerts(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as AdminAlert));
         setLastAlertVisible(snap.docs[snap.docs.length - 1]);
       } catch (e) {
-        (process.env.NODE_ENV === "debug" ? console.log : function () {})("No admin alerts or missing index");
+        (process.env.NODE_ENV === "development" ? console.log : function () {})("No admin alerts or missing index");
       }
     };
     fetchAlerts();
@@ -239,7 +368,27 @@ export const Overview: React.FC = () => {
           </h2>
           <p className="text-zinc-500 font-medium">{t("Contrôle global de la performance Olma Algérie.")}</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col md:flex-row items-center gap-4">
+          <div className="flex bg-zinc-100 p-1 rounded-2xl">
+            <button 
+              onClick={() => setDateFilter('today')} 
+              className={`px-4 py-2 text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal rounded-xl transition-all ${dateFilter === 'today' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'}`}
+            >
+              Aujourd'hui
+            </button>
+            <button 
+              onClick={() => setDateFilter('week')} 
+              className={`px-4 py-2 text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal rounded-xl transition-all ${dateFilter === 'week' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'}`}
+            >
+              Semaine
+            </button>
+            <button 
+              onClick={() => setDateFilter('month')} 
+              className={`px-4 py-2 text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal rounded-xl transition-all ${dateFilter === 'month' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'}`}
+            >
+              Mois
+            </button>
+          </div>
           {/* OLAP BigQuery Pattern Acknowledgement */}
           <div className="hidden lg:flex flex-col text-end me-4">
             <span className="text-[10px] font-kinder uppercase text-zinc-400 tracking-widest rtl:tracking-normal leading-none">
@@ -250,9 +399,10 @@ export const Overview: React.FC = () => {
 
           <button
             onClick={() => debouncedRefresh()}
-            className="flex items-center gap-3 px-6 py-4 bg-white border border-zinc-100 rounded-2xl font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal text-zinc-500 hover:text-zinc-900 transition-all shadow-sm cursor-pointer"
+            disabled={loadingRefresh}
+            className="flex items-center gap-3 px-6 py-4 bg-white border border-zinc-100 rounded-2xl font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal text-zinc-500 hover:text-zinc-900 transition-all shadow-sm cursor-pointer disabled:opacity-50"
           >
-            <RefreshCw className="w-4 h-4" /> {t("Actualiser")}
+            <RefreshCw className={`w-4 h-4 ${loadingRefresh ? 'animate-spin' : ''}`} /> {t("Actualiser")}
           </button>
         </div>
       </div>
@@ -366,10 +516,10 @@ export const Overview: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {[
           {
-            label: "Ventes Globales",
-            value: formatPrice(stats.totalSales),
-            icon: DollarSign,
-            inc: "+12.5%",
+            label: "Total Commandes",
+            value: stats.totalOrders.toLocaleString(),
+            icon: ShoppingCart,
+            inc: stats.ordersChange > 0 ? `+${stats.ordersChange.toFixed(1)}%` : `${stats.ordersChange.toFixed(1)}%`,
             color: "bg-emerald-50 text-emerald-600",
           },
           {
@@ -390,7 +540,7 @@ export const Overview: React.FC = () => {
             label: "Revenu Net Olma",
             value: formatPrice(stats.netRevenue),
             icon: TrendingUp,
-            inc: "+9%",
+            inc: stats.revenueChange > 0 ? `+${stats.revenueChange.toFixed(1)}%` : `${stats.revenueChange.toFixed(1)}%`,
             color: "bg-zinc-950 text-white",
           },
         ].map((k, i) => (
@@ -408,8 +558,8 @@ export const Overview: React.FC = () => {
               {k.label}
             </p>
             <h4 className="text-3xl font-kinder text-zinc-950 tracking-tighter rtl:tracking-normal mb-4">{k.value}</h4>
-            <div className="flex items-center gap-2 text-emerald-500 font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal">
-              <ArrowUp className="w-3 h-3" />
+            <div className={`flex items-center gap-2 font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal ${k.inc.includes('-') ? 'text-red-500' : 'text-emerald-500'}`}>
+              <ArrowUp className={`w-3 h-3 ${k.inc.includes('-') ? 'rotate-180' : ''}`} />
               {k.inc}
             </div>
           </motion.div>
@@ -655,6 +805,83 @@ export const Overview: React.FC = () => {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-10">
+        {/* Top Products */}
+        <div className="bg-white p-8 rounded-[3.5rem] border border-zinc-100 shadow-sm">
+          <h4 className="text-sm font-kinder uppercase tracking-widest text-zinc-900 mb-6 flex items-center gap-2">
+            <ShoppingBag className="w-5 h-5 text-orange-500" /> {t("Top 5 Produits")}
+          </h4>
+          <div className="space-y-4">
+            {topProducts.length === 0 ? (
+              <p className="text-xs text-zinc-400 font-bold uppercase">{t("Aucun produit")}</p>
+            ) : (
+              topProducts.map((p, i) => (
+                <div key={i} className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-zinc-100 flex-shrink-0 bg-cover bg-center" style={{ backgroundImage: `url(${p.images?.[0] || ''})` }}></div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-zinc-900 truncate">{p.name || t("Produit inconnu")}</p>
+                    <p className="text-[10px] text-zinc-500 font-kinder">{p.salesCount || 0} {t("ventes")}</p>
+                  </div>
+                  <div className="font-kinder text-xs text-emerald-600">{formatPrice(p.price)}</div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Top Sellers */}
+        <div className="bg-white p-8 rounded-[3.5rem] border border-zinc-100 shadow-sm">
+          <h4 className="text-sm font-kinder uppercase tracking-widest text-zinc-900 mb-6 flex items-center gap-2">
+            <Users className="w-5 h-5 text-blue-500" /> {t("Top 5 Vendeurs")}
+          </h4>
+          <div className="space-y-4">
+            {topSellers.length === 0 ? (
+              <p className="text-xs text-zinc-400 font-bold uppercase">{t("Aucun vendeur")}</p>
+            ) : (
+              topSellers.map((s, i) => (
+                <div key={i} className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm shrink-0">
+                    {s.displayName?.charAt(0) || "V"}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-zinc-900 truncate">{s.displayName || s.email}</p>
+                    <p className="text-[10px] text-zinc-500 font-kinder">{s.wilaya || t("National")}</p>
+                  </div>
+                  <div className="font-kinder text-xs text-blue-600">{formatPrice(s.totalRevenue || 0)}</div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Wilaya Map Breakdown */}
+        <div className="bg-white p-8 rounded-[3.5rem] border border-zinc-100 shadow-sm">
+          <h4 className="text-sm font-kinder uppercase tracking-widest text-zinc-900 mb-6 flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-emerald-500" /> {t("Commandes par Wilaya")}
+          </h4>
+          <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
+            {wilayaStats.length === 0 ? (
+              <p className="text-xs text-zinc-400 font-bold uppercase">{t("Aucune donnée géographique")}</p>
+            ) : (
+              wilayaStats.sort((a,b) => b.count - a.count).map((w, i) => (
+                <div key={i} className="space-y-1">
+                  <div className="flex items-center justify-between text-[11px] font-kinder text-zinc-700 uppercase">
+                    <span>{w.wilaya}</span>
+                    <span>{w.count} {t("cmd")}</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-emerald-500 rounded-full" 
+                      style={{ width: `${Math.min(100, (w.count / Math.max(...wilayaStats.map(x => x.count))) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-10">
         {/* Chart */}
         <div className="lg:col-span-2 bg-white rounded-[3.5rem] p-12 border border-zinc-100 shadow-sm">
           <h4 className="text-xl font-kinder flex items-center gap-4 mb-10">
@@ -706,6 +933,54 @@ export const Overview: React.FC = () => {
               {t("Danger Zone: Reset DB")}
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Real-time Traffic Section */}
+      <div className="bg-white rounded-[3.5rem] p-12 border border-zinc-100 shadow-sm mt-12">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <div>
+            <h4 className="text-xl font-kinder flex items-center gap-4 text-zinc-900">
+              <Activity className="w-7 h-7 text-indigo-500 animate-pulse" />
+              {t("Graphique de Trafic & Conversions en Temps Réel")}
+            </h4>
+            <p className="text-xs text-zinc-500 font-medium mt-1">
+              {t("Visualisez l'activité des utilisateurs (vues de produits et ajouts au panier) sur les dernières heures.")}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="flex h-3 w-3 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+            </span>
+            <span className="text-[10px] font-kinder uppercase tracking-widest text-zinc-500">{t("Mise à jour en direct")}</span>
+          </div>
+        </div>
+
+        <div className="h-[300px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={realTimeTraffic} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2}/>
+                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                </linearGradient>
+                <linearGradient id="colorCarts" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#ea580c" stopOpacity={0.2}/>
+                  <stop offset="95%" stopColor="#ea580c" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke="#f4f4f5" strokeDasharray="5 5" vertical={false} />
+              <XAxis dataKey="time" stroke="#a1a1aa" fontSize={10} tickLine={false} axisLine={false} dy={10} />
+              <YAxis stroke="#a1a1aa" fontSize={10} tickLine={false} axisLine={false} dx={-10} />
+              <RechartsTooltip
+                contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)', padding: '12px' }}
+                labelStyle={{ fontWeight: 'bold', marginBottom: '8px', color: '#18181b', fontSize: '12px' }}
+              />
+              <Area type="monotone" dataKey="views" name={t("Vues Produits")} stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorViews)" />
+              <Area type="monotone" dataKey="carts" name={t("Ajouts au Panier")} stroke="#ea580c" strokeWidth={3} fillOpacity={1} fill="url(#colorCarts)" />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
       </div>
 

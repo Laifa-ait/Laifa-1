@@ -52,6 +52,9 @@ export const SellerModeration: React.FC = () => {
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectReasons, setRejectReasons] = useState<string[]>([]);
   const [rejectComment, setRejectComment] = useState('');
+  const [previewDocUrl, setPreviewDocUrl] = useState<string | null>(null);
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrResult, setOcrResult] = useState<any>(null);
 
   const SELLERS_PER_PAGE = 50;
 
@@ -509,24 +512,75 @@ export const SellerModeration: React.FC = () => {
                                  </div>
                                  <div className="space-y-4 pt-4 border-t border-zinc-200">
                                     {selectedSeller.documents?.fileRC && (
-                                       <button onClick={() => forceDownload(selectedSeller.documents.fileRC, `RC_${selectedSeller.shopName || selectedSeller.displayName}.jpg`)} className="bg-transparent border-none p-0 cursor-pointer flex items-center gap-3 text-emerald-600 font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal hover:translate-x-2 transition-transform">
-                                          <Download className="w-4 h-4" /> {t("Registre de Commerce (RC)")}</button>
+                                       <div className="flex items-center gap-4">
+                                          <button onClick={() => setPreviewDocUrl(selectedSeller.documents.fileRC)} className="bg-transparent border-none p-0 cursor-pointer flex items-center gap-3 text-zinc-600 font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal hover:text-zinc-950 transition-colors">
+                                             <Eye className="w-4 h-4" /> {t("Aperçu Registre de Commerce (RC)")}</button>
+                                          <button onClick={() => forceDownload(selectedSeller.documents.fileRC, `RC_${selectedSeller.shopName || selectedSeller.displayName}.jpg`)} className="bg-transparent border-none p-0 cursor-pointer flex items-center gap-2 text-emerald-600 hover:text-emerald-700 transition-colors">
+                                             <Download className="w-3.5 h-3.5" /></button>
+                                       </div>
                                     )}
                                     {selectedSeller.documents?.fileId && (
-                                       <button onClick={() => forceDownload(selectedSeller.documents.fileId, `ID_${selectedSeller.shopName || selectedSeller.displayName}.jpg`)} className="bg-transparent border-none p-0 cursor-pointer flex items-center gap-3 text-emerald-600 font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal hover:translate-x-2 transition-transform">
-                                          <Download className="w-4 h-4" /> {t("Pièce d'Identité")}</button>
+                                       <div className="space-y-4">
+                                       <div className="flex items-center gap-4">
+                                          <button onClick={() => setPreviewDocUrl(selectedSeller.documents.fileId)} className="bg-transparent border-none p-0 cursor-pointer flex items-center gap-3 text-zinc-600 font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal hover:text-zinc-950 transition-colors">
+                                             <Eye className="w-4 h-4" /> {t("Aperçu Pièce d'Identité")}</button>
+                                          <button onClick={() => forceDownload(selectedSeller.documents.fileId as string, `ID_${selectedSeller.shopName || selectedSeller.displayName}.jpg`)} className="bg-transparent border-none p-0 cursor-pointer flex items-center gap-2 text-emerald-600 hover:text-emerald-700 transition-colors">
+                                             <Download className="w-3.5 h-3.5" /></button>
+                                          <button 
+                                                onClick={async () => {
+                                                  setOcrLoading(true);
+                                                  try {
+                                                     const token = await currentUser?.getIdToken();
+                                                     const res = await fetch(`/api/admin/sellers/${selectedSeller.id}/ocr`, {
+                                                        method: "POST",
+                                                        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+                                                        body: JSON.stringify({ documentUrl: selectedSeller.documents.fileId })
+                                                     });
+                                                     const data = await res.json();
+                                                     if (!res.ok) throw new Error(data.error || "Erreur OCR");
+                                                     setOcrResult(data.result);
+                                                     toast.success(t("Analyse OCR terminée"));
+                                                  } catch (err) {
+                                                     toast.error(t("Échec de l'analyse OCR"));
+                                                  } finally {
+                                                     setOcrLoading(false);
+                                                  }
+                                                }}
+                                                disabled={ocrLoading}
+                                                className="bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-lg cursor-pointer flex items-center gap-2 text-indigo-600 font-bold text-[10px] uppercase tracking-widest hover:bg-indigo-100 transition-colors disabled:opacity-50 ml-auto"
+                                              >
+                                                {ocrLoading ? "Analyse..." : "Analyse IA (OCR)"}
+                                          </button>
+                                       </div>
+                                       {ocrResult && (
+                                              <div className="mt-2 p-4 bg-indigo-50/50 border border-indigo-100 rounded-xl space-y-2">
+                                                 <p className="text-[10px] font-bold text-indigo-800 uppercase tracking-widest">{t("Résultats de l'analyse OCR")}</p>
+                                                 <div className="grid grid-cols-2 gap-2 text-xs">
+                                                    <div><span className="text-zinc-500">Nom complet:</span> <span className="font-bold">{ocrResult.fullName}</span></div>
+                                                    <div><span className="text-zinc-500">N° Document:</span> <span className="font-bold">{ocrResult.documentNumber}</span></div>
+                                                    <div><span className="text-zinc-500">Date Naissance:</span> <span className="font-bold">{ocrResult.dateOfBirth}</span></div>
+                                                    <div><span className="text-zinc-500">Date Expiration:</span> <span className="font-bold">{ocrResult.expiryDate}</span></div>
+                                                 </div>
+                                                 <div className="flex items-center gap-2 pt-2 border-t border-indigo-100/50">
+                                                    <span className="text-xs font-medium text-zinc-600">Authenticité:</span>
+                                                    {ocrResult.isAuthentic ? <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase rounded-full">Authentique</span> : <span className="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold uppercase rounded-full">Douteux</span>}
+                                                    <span className="text-xs font-medium text-zinc-600 ml-auto">Confiance: {ocrResult.OCRConfidence}%</span>
+                                                 </div>
+                                              </div>
+                                           )}
+                                       </div>
                                     )}
                                     {selectedSeller.documents?.fileRib && (
-                                       <button onClick={() => forceDownload(selectedSeller.documents.fileRib, `RIB_${selectedSeller.shopName || selectedSeller.displayName}.jpg`)} className="bg-transparent border-none p-0 cursor-pointer flex items-center gap-3 text-emerald-600 font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal hover:translate-x-2 transition-transform">
-                                          <Download className="w-4 h-4" /> {t("Attestation RIB")}</button>
+                                       <div className="flex items-center gap-4">
+                                          <button onClick={() => setPreviewDocUrl(selectedSeller.documents.fileRib)} className="bg-transparent border-none p-0 cursor-pointer flex items-center gap-3 text-zinc-600 font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal hover:text-zinc-950 transition-colors">
+                                             <Eye className="w-4 h-4" /> {t("Aperçu Attestation RIB")}</button>
+                                          <button onClick={() => forceDownload(selectedSeller.documents.fileRib, `RIB_${selectedSeller.shopName || selectedSeller.displayName}.jpg`)} className="bg-transparent border-none p-0 cursor-pointer flex items-center gap-2 text-emerald-600 hover:text-emerald-700 transition-colors">
+                                             <Download className="w-3.5 h-3.5" /></button>
+                                       </div>
                                     )}
                                     {(!selectedSeller.documents || Object.keys(selectedSeller.documents).length === 0) && (
                                        <div className="space-y-4">
                                           <p className="text-[10px] font-kinder text-red-500 uppercase tracking-widest rtl:tracking-normal">{t("Aucun document chargé")}</p>
-                                          <details className="mt-2 text-[8px] font-mono bg-zinc-100 p-2 rounded">
-                                             <summary className="cursor-pointer text-zinc-400">{t("Voir data brute (Debug)")}</summary>
-                                             <pre className="mt-1 overflow-auto max-h-40">{JSON.stringify(selectedSeller, null, 2)}</pre>
-                                          </details>
                                        </div>
                                     )}
                                  </div>
@@ -560,8 +614,53 @@ export const SellerModeration: React.FC = () => {
                         </div>
 
                         <div className="space-y-4">
+                           <p className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2">{t("Notes Internes")}</p>
+                           <div className="relative">
+                              <textarea
+                                value={selectedSeller.internalNotes || ""}
+                                onChange={(e) => {
+                                  setSelectedSeller({ ...selectedSeller, internalNotes: e.target.value });
+                                }}
+                                onBlur={async () => {
+                                  try {
+                                    await updateDoc(doc(db, "users", selectedSeller.id), { internalNotes: selectedSeller.internalNotes || "" });
+                                    toast.success(t("Notes internes sauvegardées"));
+                                  } catch (err) {
+                                    toast.error(t("Erreur de sauvegarde"));
+                                  }
+                                }}
+                                placeholder={t("Notes pour l'équipe (invisibles au vendeur)...")}
+                                className="w-full bg-white border border-zinc-200 rounded-2xl p-4 font-bold text-xs outline-none resize-none h-24"
+                              />
+                           </div>
+                        </div>
+
+                        <div className="space-y-4">
                            <p className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-2">{t("Actions de Modération")}</p>
                            
+                           <button 
+                             onClick={async () => {
+                               try {
+                                 if (!selectedSeller.nifNumber) {
+                                   toast.error(t("Aucun NIF spécifié pour ce vendeur."));
+                                   return;
+                                 }
+                                 const q = query(collection(db, "users"), where("nifNumber", "==", selectedSeller.nifNumber));
+                                 const snap = await getDocs(q);
+                                 if (snap.docs.length > 1) {
+                                    toast.error(t(`Attention: ${snap.docs.length - 1} autre(s) compte(s) trouvé(s) avec ce NIF!`));
+                                 } else {
+                                    toast.success(t("Aucun doublon trouvé pour ce NIF."));
+                                 }
+                               } catch (err) {
+                                 toast.error(t("Erreur lors de la vérification."));
+                               }
+                             }}
+                             className="w-full bg-amber-100 text-amber-700 py-4 rounded-[2rem] font-kinder uppercase tracking-widest rtl:tracking-normal text-[10px] active:scale-95 transition-all flex items-center justify-center gap-2"
+                           >
+                              <Search className="w-4 h-4" /> {t("Vérifier Doublons (NIF)")}
+                           </button>
+
                            {/* Plannifier Entretien Meet */}
                            <button 
                              onClick={() => handleScheduleMeet(selectedSeller.id, selectedSeller.email)} 
@@ -608,10 +707,31 @@ export const SellerModeration: React.FC = () => {
                        </label>
                      ))}
                    </div>
-                   <textarea placeholder={t("Commentaire optionnel pour le vendeur...") || "Commentaire optionnel pour le vendeur..."} value={rejectComment} onChange={e => setRejectComment(e.target.value)} className="w-full bg-zinc-50 border border-zinc-100 rounded-2xl p-4 font-bold text-sm outline-none resize-none mb-6" rows={3}></textarea>
+                   <div className="relative mb-6">
+                     <textarea maxLength={500} placeholder={t("Commentaire optionnel pour le vendeur...") || "Commentaire optionnel pour le vendeur..."} value={rejectComment} onChange={e => setRejectComment(e.target.value)} className="w-full bg-zinc-50 border border-zinc-100 rounded-2xl p-4 font-bold text-sm outline-none resize-none" rows={3}></textarea>
+                     <div className="absolute bottom-3 end-4 text-[10px] text-zinc-400 font-bold">{rejectComment.length}/500</div>
+                   </div>
                    <div className="flex items-center gap-4">
                      <button onClick={() => handleUpdateStatus(selectedSeller.id, 'rejected')} className="flex-1 bg-red-600 text-white py-4 rounded-xl font-kinder text-[11px] uppercase tracking-widest rtl:tracking-normal shadow-xl shadow-red-500/20">{t("Confirmer Rejet")}</button>
                      <button onClick={() => setRejectModalOpen(false)} className="px-6 py-4 bg-zinc-100 text-zinc-600 rounded-xl font-kinder text-[11px] uppercase tracking-widest rtl:tracking-normal">{t("Annuler")}</button>
+                   </div>
+                 </motion.div>
+               )}
+
+               {previewDocUrl && (
+                 <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="absolute z-[60] bg-white w-full max-w-4xl rounded-[2rem] shadow-2xl overflow-hidden flex flex-col h-[80vh]">
+                   <div className="flex items-center justify-between p-6 border-b border-zinc-100">
+                     <h4 className="text-xl font-kinder text-zinc-950">{t("Aperçu du Document")}</h4>
+                     <button onClick={() => setPreviewDocUrl(null)} className="p-2 bg-zinc-100 text-zinc-600 rounded-xl hover:bg-zinc-200 transition-colors">
+                       <XCircle className="w-5 h-5" />
+                     </button>
+                   </div>
+                   <div className="flex-1 bg-zinc-950 flex items-center justify-center p-4 relative">
+                     {previewDocUrl.includes('.pdf') ? (
+                       <iframe src={previewDocUrl} className="w-full h-full rounded-xl bg-white" title="Document Preview" />
+                     ) : (
+                       <img loading="lazy" src={previewDocUrl} className="max-w-full max-h-full object-contain" alt="Document Preview" />
+                     )}
                    </div>
                  </motion.div>
                )}

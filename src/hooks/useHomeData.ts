@@ -36,7 +36,7 @@ export const useHomeData = () => {
           );
           const list = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
           if (list.length > 0) sessionStorage.setItem("home_custom_categories", JSON.stringify(list));
-          (process.env.NODE_ENV === "debug" ? console.log : function () {})(
+          (process.env.NODE_ENV === "development" ? console.log : function () {})(
             "Fetched custom categories length:",
             list.length
           );
@@ -75,7 +75,7 @@ export const useHomeData = () => {
             .filter((b: any) => b.is_active !== false && b.isActive !== false)
             .sort((a: any, b: any) => (a.sort_order ?? a.orderIndex ?? 0) - (b.sort_order ?? b.orderIndex ?? 0));
 
-          (process.env.NODE_ENV === "debug" ? console.log : function () {})(
+          (process.env.NODE_ENV === "development" ? console.log : function () {})(
             "Fetched banners length:",
             activeBanners.length
           );
@@ -123,7 +123,7 @@ export const useHomeData = () => {
           }
 
           cacheEngine.set(cacheKey, finalProducts);
-          (process.env.NODE_ENV === "debug" ? console.log : function () {})(
+          (process.env.NODE_ENV === "development" ? console.log : function () {})(
             "Fetched featured products length:",
             finalProducts.length
           );

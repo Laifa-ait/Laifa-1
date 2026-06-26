@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
-import { db } from "../lib/firebase";
+import { db, withTimeout } from "../lib/firebase";
 
 export function useFilteredProducts(categoryId: string, activeFilters: Record<string, any>) {
   const [products, setProducts] = useState<any[]>([]);
@@ -44,7 +44,7 @@ export function useFilteredProducts(categoryId: string, activeFilters: Record<st
 
         // Final Query Object
         const finalQuery = query(prodRef, ...qConstraints);
-        const snapshot = await getDocs(finalQuery);
+        const snapshot = await withTimeout(getDocs(finalQuery));
 
         if (isMounted) {
           const list = snapshot.docs.map((doc) => ({

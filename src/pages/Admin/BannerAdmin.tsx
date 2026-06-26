@@ -52,6 +52,12 @@ export interface DbBanner {
   is_active: boolean;
   featured_products?: string[];
   created_at?: any;
+  start_date?: string | null;
+  end_date?: string | null;
+  views?: number;
+  clicks?: number;
+  ab_group?: "all" | "A" | "B";
+  zone?: "carousel_main" | "grid_top" | "grid_bottom" | "sidebar";
 }
 
 export interface TagType {
@@ -92,6 +98,17 @@ export const BannerAdmin: React.FC = () => {
   // Deep Targeting States
   const [bannerTargetUserType, setBannerTargetUserType] = useState<"all" | "new" | "logged_in">("all");
   const [bannerTargetRegions, setBannerTargetRegions] = useState<string[]>([]);
+
+  // OLMART Missing Features States
+  const [bannerStartDate, setBannerStartDate] = useState("");
+  const [bannerEndDate, setBannerEndDate] = useState("");
+  const [bannerAbGroup, setBannerAbGroup] = useState<"all" | "A" | "B">("all");
+  const [bannerZone, setBannerZone] = useState<"carousel_main" | "grid_top" | "grid_bottom" | "sidebar">("carousel_main");
+
+  // Previewer States
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [previewBannerData, setPreviewBannerData] = useState<DbBanner | null>(null);
+  const [previewDeviceMode, setPreviewDeviceMode] = useState<"desktop" | "tablet" | "mobile">("desktop");
 
   // Search state for product selector
   const [productSearchTerm, setProductSearchTerm] = useState("");
@@ -277,10 +294,13 @@ export const BannerAdmin: React.FC = () => {
 
       // Attempt Firebase Storage upload
       try {
-        (process.env.NODE_ENV === "debug" ? console.log : function () {})(
+        (process.env.NODE_ENV === "development" ? console.log : function () {})(
           "Attempting Firebase Storage image upload..."
         );
-        const storageRef = ref(storage, `banners/${Date.now()}_${type}_${file.name.replace(/\s+/g, "_")}`);
+        const uuid = (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") 
+          ? crypto.randomUUID() 
+          : Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        const storageRef = ref(storage, `banners/${uuid}_${type}_${file.name.replace(/\s+/g, "_")}`);
 
         finalUrl = await new Promise((resolve, reject) => {
           const uploadTask = uploadBytesResumable(storageRef, blob);
@@ -303,7 +323,7 @@ export const BannerAdmin: React.FC = () => {
           );
         });
 
-        (process.env.NODE_ENV === "debug" ? console.log : function () {})("Firebase Storage success:", finalUrl);
+        (process.env.NODE_ENV === "development" ? console.log : function () {})("Firebase Storage success:", finalUrl);
       } catch (storageErr: any) {
         console.error("Firebase Storage failed:", storageErr);
         throw new Error("Échec du téléchargement vers Firebase Storage: " + (storageErr.message || ""));
@@ -346,6 +366,10 @@ export const BannerAdmin: React.FC = () => {
       setBannerFeaturedProducts(banner.featured_products || []);
       setBannerTargetUserType((banner as any).targetUserType || "all");
       setBannerTargetRegions((banner as any).targetRegions || []);
+      setBannerStartDate(banner.start_date || "");
+      setBannerEndDate(banner.end_date || "");
+      setBannerAbGroup(banner.ab_group || "all");
+      setBannerZone(banner.zone || "carousel_main");
     } else {
       // Create mode default fields
       setBannerTitle("");
@@ -362,6 +386,10 @@ export const BannerAdmin: React.FC = () => {
       setBannerFeaturedProducts([]);
       setBannerTargetUserType("all");
       setBannerTargetRegions([]);
+      setBannerStartDate("");
+      setBannerEndDate("");
+      setBannerAbGroup("all");
+      setBannerZone("carousel_main");
     }
     setIsBannerModalOpen(true);
   };
@@ -375,7 +403,7 @@ export const BannerAdmin: React.FC = () => {
     }
 
     try {
-      const payload = {
+      const payload: any = {
         title: bannerTitle.trim(),
         title_color: bannerTitleColor,
         subtitle: bannerSubtitle.trim(),
@@ -390,15 +418,20 @@ export const BannerAdmin: React.FC = () => {
         featured_products: bannerFeaturedProducts,
         targetUserType: bannerTargetUserType,
         targetRegions: bannerTargetRegions,
+        start_date: bannerStartDate || null,
+        end_date: bannerEndDate || null,
+        ab_group: bannerAbGroup,
+        zone: bannerZone,
       };
 
-      let res;
       if (selectedBanner) {
         // Edit
         await updateDoc(doc(db, "banners", selectedBanner.id), payload);
         toast.success("Bannière modifiée !");
       } else {
         // Create
+        payload.views = 0;
+        payload.clicks = 0;
         await addDoc(collection(db, "banners"), { ...payload, sort_order: banners.length + 1 });
         toast.success("Bannière créée avec succès !");
       }
@@ -551,16 +584,46 @@ export const BannerAdmin: React.FC = () => {
             <div className="bg-white rounded-3xl border border-zinc-100 shadow-sm overflow-hidden">
               <div className="p-4 bg-zinc-50/50 border-b border-zinc-100 text-[10px] uppercase font-kinder tracking-widest rtl:tracking-normal text-zinc-400 grid grid-cols-1 md:grid-cols-12 gap-4 hidden md:grid">
                 <div className="col-span-1 text-center">{t("Tri")}</div>
-                <div className="col-span-4">{t("Visuels (bureau / mobile)")}</div>
+                <div className="col-span-3">{t("Visuels (bureau / mobile)")}</div>
                 <div className="col-span-3">{t("Détails Marketing")}</div>
-                <div className="col-span-2 text-center">{t("Tag Lié")}</div>
-                <div className="col-span-1 text-center">{t("Statut")}</div>
-                <div className="col-span-1 text-center">{t("Actions")}</div>
+                <div className="col-span-2 text-center">{t("CTR & Performance")}</div>
+                <div className="col-span-1.5 text-center">{t("Statut / Plannif")}</div>
+                <div className="col-span-1.5 text-center">{t("Actions")}</div>
               </div>
 
               <div className="divide-y divide-zinc-100">
                 {banners.map((banner, index) => {
                   const associatedTag = tags.find((t) => t.id === banner.tag_id);
+                  
+                  // CTR metrics helper
+                  const views = banner.views || 0;
+                  const clicks = banner.clicks || 0;
+                  const ctr = views > 0 ? ((clicks / views) * 100).toFixed(1) : "0.0";
+
+                  // Scheduling status helper
+                  let schedStatus = "illimite";
+                  const now = new Date();
+                  if (banner.start_date || banner.end_date) {
+                    const start = banner.start_date ? new Date(banner.start_date) : null;
+                    const end = banner.end_date ? new Date(banner.end_date) : null;
+                    if (start && now < start) {
+                      schedStatus = "attente";
+                    } else if (end && now > end) {
+                      schedStatus = "expire";
+                    } else {
+                      schedStatus = "actif";
+                    }
+                  }
+
+                  // Zone translation helper
+                  const zoneNames: any = {
+                    carousel_main: t("Carrousel Principal"),
+                    grid_top: t("Grille Haute"),
+                    grid_bottom: t("Grille Basse"),
+                    sidebar: t("Bannière Latérale"),
+                  };
+                  const displayZone = zoneNames[banner.zone || "carousel_main"] || t("Carrousel Principal");
+
                   return (
                     <div
                       key={banner.id}
@@ -596,9 +659,9 @@ export const BannerAdmin: React.FC = () => {
                       </div>
 
                       {/* Micro visual previews */}
-                      <div className="col-span-full md:col-span-4 space-y-2">
+                      <div className="col-span-full md:col-span-3 space-y-2">
                         <div className="flex gap-2.5 justify-center md:justify-start">
-                          <div className="relative aspect-[21/9] w-32 rounded-lg overflow-hidden bg-zinc-100 border border-zinc-200 shrink-0">
+                          <div className="relative aspect-[21/9] w-28 rounded-lg overflow-hidden bg-zinc-100 border border-zinc-200 shrink-0">
                             <img
                               loading="lazy"
                               src={banner.desktop_image}
@@ -606,12 +669,12 @@ export const BannerAdmin: React.FC = () => {
                               className="w-full h-full object-cover"
                               referrerPolicy="no-referrer"
                             />
-                            <div className="absolute top-1 start-1 px-1 bg-black/60 rounded text-[8px] text-white uppercase font-kinder">
+                            <div className="absolute top-1 start-1 px-1 bg-black/60 rounded text-[7px] text-white uppercase font-kinder">
                               {t("Desktop")}
                             </div>
                           </div>
                           {banner.mobile_image ? (
-                            <div className="relative aspect-[4/5] w-12 rounded-lg overflow-hidden bg-zinc-100 border border-zinc-200 shrink-0">
+                            <div className="relative aspect-[4/5] w-10 rounded-lg overflow-hidden bg-zinc-100 border border-zinc-200 shrink-0">
                               <img
                                 loading="lazy"
                                 src={banner.mobile_image}
@@ -619,13 +682,13 @@ export const BannerAdmin: React.FC = () => {
                                 className="w-full h-full object-cover"
                                 referrerPolicy="no-referrer"
                               />
-                              <div className="absolute top-1 start-1 px-1 bg-black/60 rounded text-[8px] text-white uppercase font-kinder">
+                              <div className="absolute top-1 start-1 px-1 bg-black/60 rounded text-[7px] text-white uppercase font-kinder">
                                 {t("Mobile")}
                               </div>
                             </div>
                           ) : (
                             <div
-                              className="w-12 aspect-[4/5] rounded-lg border border-dashed border-zinc-200 flex flex-col items-center justify-center text-[8px] text-zinc-400 font-bold text-center uppercase p-1 leading-none shrink-0"
+                              className="w-10 aspect-[4/5] rounded-lg border border-dashed border-zinc-200 flex flex-col items-center justify-center text-[7px] text-zinc-400 font-bold text-center uppercase p-1 leading-none shrink-0"
                               title={
                                 t("Pas de visuel mobile, fallback desktop activé") ||
                                 "Pas de visuel mobile, fallback desktop activé"
@@ -639,59 +702,135 @@ export const BannerAdmin: React.FC = () => {
                       </div>
 
                       {/* Content strings text */}
-                      <div className="col-span-full md:col-span-3 space-y-1 text-center md:text-start">
-                        <h4 className="text-sm font-extrabold truncate" style={{ color: banner.title_color }}>
-                          {banner.title}
-                        </h4>
-                        <div className="flex items-center justify-center md:justify-start gap-1.5 text-[10px] font-bold text-zinc-500 uppercase">
-                          <span>{t("Bouton :")}</span>
-                          <span className="bg-zinc-100 text-zinc-700 px-2 py-0.5 rounded">{banner.button_text}</span>
+                      <div className="col-span-full md:col-span-3 space-y-1.5 text-center md:text-start">
+                        <div className="space-y-0.5">
+                          <div className="flex flex-wrap items-center gap-1.5 justify-center md:justify-start">
+                            <h4 className="text-sm font-extrabold truncate max-w-[180px]" style={{ color: banner.title_color }}>
+                              {banner.title}
+                            </h4>
+                            <span className="text-[8px] font-bold uppercase px-1.5 py-0.5 rounded bg-zinc-150 text-zinc-800">
+                              {displayZone}
+                            </span>
+                          </div>
+                          {banner.subtitle && (
+                            <p className="text-[10px] text-zinc-400 font-semibold truncate max-w-[200px]">{banner.subtitle}</p>
+                          )}
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-1.5 text-[9px] font-bold text-zinc-500 uppercase">
+                          <span>{t("Redirection :")}</span>
+                          {associatedTag ? (
+                            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 font-bold">
+                              <Tag className="w-2.5 h-2.5 shrink-0" />
+                              {associatedTag.name}
+                            </span>
+                          ) : (
+                            <span className="text-red-500 bg-red-50 px-2 py-0.5 rounded-full flex items-center gap-0.5 font-bold">
+                              <AlertCircle className="w-2.5 h-2.5 shrink-0" />
+                              {t("Tag orphelin")}
+                            </span>
+                          )}
+
+                          {banner.ab_group && banner.ab_group !== "all" && (
+                            <span className="bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded-full text-[8px] font-extrabold border border-purple-100">
+                              {t("Test A/B : Variant ")}{banner.ab_group}
+                            </span>
+                          )}
                         </div>
                       </div>
 
-                      {/* Associated redirection tag */}
-                      <div className="col-span-full md:col-span-2 flex items-center justify-center md:block">
-                        {associatedTag ? (
-                          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-orange-50 text-orange-600 text-[10px] uppercase font-bold tracking-wider rtl:tracking-normal">
-                            <Tag className="w-3 h-3 shrink-0" />
-                            {associatedTag.name}
+                      {/* CTR & Performance metrics rendering */}
+                      <div className="col-span-full md:col-span-2 text-center">
+                        <div className="inline-block bg-zinc-50 border border-zinc-150 rounded-2xl p-2.5 space-y-1 text-center min-w-[120px]">
+                          <div className="flex justify-between gap-4 text-[9px] font-bold text-zinc-400 uppercase">
+                            <span>{t("Vues")}</span>
+                            <span>{t("Clics")}</span>
+                          </div>
+                          <div className="flex justify-between gap-4 text-xs font-black text-zinc-800 font-mono">
+                            <span>{views}</span>
+                            <span>{clicks}</span>
+                          </div>
+                          <div className="pt-1 border-t border-zinc-200/60 flex justify-between items-center text-[10px] font-extrabold text-zinc-900 uppercase">
+                            <span>{t("Taux CTR")}</span>
+                            <span className="text-orange-600 font-mono">{ctr}%</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Status / Schedule details */}
+                      <div className="col-span-full md:col-span-1.5 text-center space-y-1.5">
+                        <div className="flex flex-col items-center gap-1 justify-center">
+                          <span
+                            className={`inline-flex px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest ${
+                              banner.is_active ? "bg-emerald-50 text-emerald-600 border border-emerald-150" : "bg-zinc-100 text-zinc-400 border border-zinc-200"
+                            }`}
+                          >
+                            {banner.is_active ? t("Publié") : t("Brouillon")}
                           </span>
-                        ) : (
-                          <span className="text-[10px] uppercase font-bold text-red-500 bg-red-50 px-3 py-1 rounded-full flex items-center gap-1 mx-auto md:mx-0 w-fit">
-                            <AlertCircle className="w-3 h-3 shrink-0" />
-                            {t("Tag inexistant")}
-                          </span>
+
+                          {/* Scheduling Badge */}
+                          {schedStatus === "illimite" ? (
+                            <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-wider">{t("Permanent (Illimité)")}</span>
+                          ) : schedStatus === "attente" ? (
+                            <span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full text-[8px] font-extrabold uppercase border border-blue-100 animate-pulse">
+                              {t("Planifié")}
+                            </span>
+                          ) : schedStatus === "expire" ? (
+                            <span className="bg-red-50 text-red-600 px-2 py-0.5 rounded-full text-[8px] font-extrabold uppercase border border-red-100">
+                              {t("Expiré")}
+                            </span>
+                          ) : (
+                            <span className="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full text-[8px] font-extrabold uppercase border border-emerald-100">
+                              {t("En cours")}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Visual dates helper if set */}
+                        {(banner.start_date || banner.end_date) && (
+                          <div className="text-[8px] text-zinc-400 font-bold font-mono space-y-0.5 leading-none">
+                            {banner.start_date && (
+                              <div className="truncate" title={banner.start_date}>
+                                s: {new Date(banner.start_date).toLocaleDateString()}
+                              </div>
+                            )}
+                            {banner.end_date && (
+                              <div className="truncate" title={banner.end_date}>
+                                e: {new Date(banner.end_date).toLocaleDateString()}
+                              </div>
+                            )}
+                          </div>
                         )}
                       </div>
 
-                      {/* Active published state indicator */}
-                      <div className="col-span-full md:col-span-1 text-center">
-                        <span
-                          className={`inline-flex px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest rtl:tracking-normal ${
-                            banner.is_active ? "bg-emerald-50 text-emerald-600" : "bg-zinc-100 text-zinc-400"
-                          }`}
-                        >
-                          {banner.is_active ? "Publié" : "Brouillon"}
-                        </span>
-                      </div>
-
                       {/* CRUD Modifying Actions */}
-                      <div className="col-span-full md:col-span-1 flex items-center justify-center gap-1.5 text-zinc-400">
+                      <div className="col-span-full md:col-span-1.5 flex items-center justify-center gap-1 text-zinc-400">
+                        {/* Preview button */}
+                        <button
+                          onClick={() => {
+                            setPreviewBannerData(banner);
+                            setPreviewDeviceMode("desktop");
+                            setIsPreviewModalOpen(true);
+                          }}
+                          className="p-2 bg-zinc-100 text-zinc-800 hover:bg-zinc-200 hover:text-zinc-950 rounded-xl transition-all cursor-pointer flex items-center gap-1"
+                          title={t("Prévisualiser sur appareil") || "Prévisualiser"}
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                        
                         <button
                           onClick={() => handleOpenBannerModal(banner)}
-                          className="p-2.5 bg-zinc-100 md:bg-transparent text-zinc-800 md:text-zinc-400 hover:bg-zinc-200 hover:text-zinc-950 rounded-xl transition-all cursor-pointer flex items-center gap-1 px-4 md:px-2"
+                          className="p-2 bg-zinc-100 text-zinc-800 hover:bg-zinc-200 hover:text-zinc-950 rounded-xl transition-all cursor-pointer flex items-center gap-1"
                           title={t("Modifier") || "Modifier"}
                         >
-                          <Edit className="w-4 h-4" />
-                          <span className="text-[10px] font-bold uppercase md:hidden">{t("Modifier")}</span>
+                          <Edit className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleDeleteBanner(banner.id, banner.title)}
-                          className="p-2.5 bg-red-50 md:bg-transparent text-red-600 md:text-zinc-400 hover:bg-red-100 hover:text-red-600 rounded-xl transition-all cursor-pointer flex items-center gap-1 px-4 md:px-2"
+                          className="p-2 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 rounded-xl transition-all cursor-pointer flex items-center gap-1"
                           title={t("Supprimer") || "Supprimer"}
                         >
-                          <Trash2 className="w-4 h-4" />
-                          <span className="text-[10px] font-bold uppercase md:hidden">{t("Supprimer")}</span>
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
@@ -1312,6 +1451,85 @@ export const BannerAdmin: React.FC = () => {
                   )}
                 </div>
 
+                {/* Programmation de la publication (Date de début & fin) */}
+                <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-100 space-y-3">
+                  <div className="space-y-0.5">
+                    <label className="text-xs font-extrabold text-zinc-950 uppercase flex items-center gap-1.5">
+                      <span>{t("📅 Programmation temporelle")}</span>
+                    </label>
+                    <p className="text-[10px] font-bold text-zinc-500 uppercase">
+                      {t("Configurez la période d'activité de la bannière")}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-start">
+                    <div>
+                      <label className="block text-[9px] font-kinder uppercase tracking-wider text-zinc-700 mb-1">
+                        {t("Date de début")}
+                      </label>
+                      <input
+                        type="datetime-local"
+                        value={bannerStartDate}
+                        onChange={(e) => setBannerStartDate(e.target.value)}
+                        className="w-full px-2 py-1.5 rounded-lg border border-zinc-200 focus:outline-none focus:border-zinc-800 font-bold text-[10px] bg-white text-zinc-850"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-kinder uppercase tracking-wider text-zinc-700 mb-1">
+                        {t("Date de fin")}
+                      </label>
+                      <input
+                        type="datetime-local"
+                        value={bannerEndDate}
+                        onChange={(e) => setBannerEndDate(e.target.value)}
+                        className="w-full px-2 py-1.5 rounded-lg border border-zinc-200 focus:outline-none focus:border-zinc-800 font-bold text-[10px] bg-white text-zinc-850"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* A/B Testing & Zone de Bannière */}
+                <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-100 space-y-3">
+                  <div className="space-y-0.5">
+                    <label className="text-xs font-extrabold text-zinc-950 uppercase flex items-center gap-1.5">
+                      <span>{t("📊 Zone d'affichage & Test A/B")}</span>
+                    </label>
+                    <p className="text-[10px] font-bold text-zinc-500 uppercase">
+                      {t("Associez la bannière à une zone et un groupe de test")}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-start">
+                    <div>
+                      <label className="block text-[9px] font-kinder uppercase tracking-wider text-zinc-700 mb-1">
+                        {t("Zone d'affichage")}
+                      </label>
+                      <select
+                        value={bannerZone}
+                        onChange={(e) => setBannerZone(e.target.value as any)}
+                        className="w-full px-2.5 py-1.5 rounded-lg border border-zinc-200 focus:outline-none focus:border-zinc-800 font-bold text-[10px] bg-white text-zinc-850"
+                      >
+                        <option value="carousel_main">{t("Carrousel Principal")}</option>
+                        <option value="grid_top">{t("Grille Haute")}</option>
+                        <option value="grid_bottom">{t("Grille Basse")}</option>
+                        <option value="sidebar">{t("Bannière Latérale")}</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-kinder uppercase tracking-wider text-zinc-700 mb-1">
+                        {t("Groupe de Test A/B")}
+                      </label>
+                      <select
+                        value={bannerAbGroup}
+                        onChange={(e) => setBannerAbGroup(e.target.value as any)}
+                        className="w-full px-2.5 py-1.5 rounded-lg border border-zinc-200 focus:outline-none focus:border-zinc-800 font-bold text-[10px] bg-white text-zinc-850"
+                      >
+                        <option value="all">{t("Tous (Pas d'A/B test)")}</option>
+                        <option value="A">{t("Groupe de test A")}</option>
+                        <option value="B">{t("Groupe de test B")}</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Confirm saving */}
                 <button
                   type="submit"
@@ -1453,6 +1671,317 @@ export const BannerAdmin: React.FC = () => {
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MULTI-DEVICE RESPONSIVE PREVIEW MODAL */}
+      {isPreviewModalOpen && previewBannerData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+          <div className="bg-white rounded-3xl border border-zinc-150 shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 text-start">
+            
+            {/* Header */}
+            <div className="px-6 py-4 bg-zinc-50 border-b border-zinc-150 flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-extrabold text-zinc-950 uppercase tracking-wider">
+                  {t("🖥️ Simulateur de Rendu Responsive OLMART")}
+                </h3>
+                <p className="text-[10px] font-bold text-zinc-500 uppercase">
+                  {t("Visualisation exacte du visuel sur Desktop, Tablette et Téléphone")}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setIsPreviewModalOpen(false);
+                  setPreviewBannerData(null);
+                }}
+                className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-600 flex items-center justify-center transition-colors cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Main content grid */}
+            <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 overflow-hidden">
+              
+              {/* Left simulator viewport */}
+              <div className="lg:col-span-3 p-6 bg-zinc-100 flex flex-col items-center justify-center overflow-y-auto space-y-6">
+                
+                {/* Selector segment */}
+                <div className="flex bg-white p-1 rounded-xl border border-zinc-200 shadow-sm gap-1 select-none">
+                  <button
+                    onClick={() => setPreviewDeviceMode("desktop")}
+                    className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${
+                      previewDeviceMode === "desktop" ? "bg-zinc-950 text-white" : "text-zinc-500 hover:text-zinc-950"
+                    }`}
+                  >
+                    {t("💻 Ordinateur (21:9)")}
+                  </button>
+                  <button
+                    onClick={() => setPreviewDeviceMode("tablet")}
+                    className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${
+                      previewDeviceMode === "tablet" ? "bg-zinc-950 text-white" : "text-zinc-500 hover:text-zinc-950"
+                    }`}
+                  >
+                    {t("📟 Tablette (16:10)")}
+                  </button>
+                  <button
+                    onClick={() => setPreviewDeviceMode("mobile")}
+                    className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${
+                      previewDeviceMode === "mobile" ? "bg-zinc-950 text-white" : "text-zinc-500 hover:text-zinc-950"
+                    }`}
+                  >
+                    {t("📱 Téléphone (4:5)")}
+                  </button>
+                </div>
+
+                {/* Viewport Frame simulator */}
+                <div className="w-full flex justify-center items-center flex-1">
+                  {previewDeviceMode === "desktop" && (
+                    <div className="w-full max-w-3xl aspect-[2.4/1] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-300 relative shadow-lg">
+                      <img
+                        loading="lazy"
+                        src={previewBannerData.desktop_image}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
+                      <div className="absolute inset-y-0 start-0 w-2/3 bg-gradient-to-r from-black/60 via-black/10 to-transparent" />
+                      <div className="absolute inset-0 flex flex-col justify-end p-6 text-white text-start">
+                        {tags.find((tg) => tg.id === previewBannerData.tag_id) && (
+                          <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded bg-white/15 tracking-widest uppercase font-kinder text-[8px] w-fit mb-1.5">
+                            {tags.find((tg) => tg.id === previewBannerData.tag_id)?.name}
+                          </span>
+                        )}
+                        <h3 className="text-lg font-kinder uppercase leading-tight tracking-tight mb-1" style={{ color: previewBannerData.title_color }}>
+                          {previewBannerData.title}
+                        </h3>
+                        {previewBannerData.subtitle && (
+                          <p className="text-xs font-semibold leading-normal mb-2 max-w-lg tracking-wide opacity-90" style={{ color: previewBannerData.subtitle_color }}>
+                            {previewBannerData.subtitle}
+                          </p>
+                        )}
+                        <button
+                          style={{ backgroundColor: previewBannerData.btn_bg_color || "#FFFFFF", color: previewBannerData.btn_text_color || "#18181B" }}
+                          className="rounded-xl py-1.5 px-4 text-[9px] uppercase tracking-widest font-kinder shrink-0 w-fit pointer-events-none mt-1 shadow-md"
+                        >
+                          {previewBannerData.button_text}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {previewDeviceMode === "tablet" && (
+                    <div className="w-[500px] aspect-[1.6/1] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-300 relative shadow-lg">
+                      <img
+                        loading="lazy"
+                        src={previewBannerData.desktop_image}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
+                      <div className="absolute inset-y-0 start-0 w-2/3 bg-gradient-to-r from-black/60 via-black/10 to-transparent" />
+                      <div className="absolute inset-0 flex flex-col justify-end p-5 text-white text-start">
+                        {tags.find((tg) => tg.id === previewBannerData.tag_id) && (
+                          <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded bg-white/15 tracking-widest uppercase font-kinder text-[7px] w-fit mb-1">
+                            {tags.find((tg) => tg.id === previewBannerData.tag_id)?.name}
+                          </span>
+                        )}
+                        <h3 className="text-base font-kinder uppercase leading-tight mb-1" style={{ color: previewBannerData.title_color }}>
+                          {previewBannerData.title}
+                        </h3>
+                        {previewBannerData.subtitle && (
+                          <p className="text-[10px] font-semibold leading-normal mb-2 opacity-90" style={{ color: previewBannerData.subtitle_color }}>
+                            {previewBannerData.subtitle}
+                          </p>
+                        )}
+                        <button
+                          style={{ backgroundColor: previewBannerData.btn_bg_color || "#FFFFFF", color: previewBannerData.btn_text_color || "#18181B" }}
+                          className="rounded-lg py-1 px-3 text-[8px] uppercase tracking-widest font-kinder shrink-0 w-fit pointer-events-none mt-1 shadow-sm"
+                        >
+                          {previewBannerData.button_text}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {previewDeviceMode === "mobile" && (
+                    <div className="w-64 aspect-[4/5] rounded-3xl overflow-hidden bg-zinc-900 border border-zinc-300 relative shadow-lg">
+                      {previewBannerData.mobile_image ? (
+                        <img
+                          loading="lazy"
+                          src={previewBannerData.mobile_image}
+                          alt=""
+                          className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <div className="w-full h-full relative">
+                          <img
+                            loading="lazy"
+                            src={previewBannerData.desktop_image}
+                            alt=""
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                          <div className="absolute top-2 start-2 px-1.5 py-0.5 bg-orange-600/95 rounded text-[7px] font-kinder text-white uppercase tracking-wider leading-none select-none">
+                            {t("Desktop Fallback")}
+                          </div>
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-transparent" />
+                      <div className="absolute inset-0 flex flex-col justify-end p-4 text-white text-start">
+                        {tags.find((tg) => tg.id === previewBannerData.tag_id) && (
+                          <span className="inline-block tracking-widest uppercase font-kinder text-[6px] text-zinc-300 mb-0.5">
+                            {tags.find((tg) => tg.id === previewBannerData.tag_id)?.name}
+                          </span>
+                        )}
+                        <h4 className="text-xs font-kinder uppercase leading-tight mb-0.5 truncate" style={{ color: previewBannerData.title_color }}>
+                          {previewBannerData.title}
+                        </h4>
+                        {previewBannerData.subtitle && (
+                          <p className="text-[8px] font-semibold leading-tight mb-1 opacity-90 truncate" style={{ color: previewBannerData.subtitle_color }}>
+                            {previewBannerData.subtitle}
+                          </p>
+                        )}
+                        <button
+                          style={{ backgroundColor: previewBannerData.btn_bg_color || "#FFFFFF", color: previewBannerData.btn_text_color || "#18181B" }}
+                          className="rounded py-1 px-2.5 text-[7px] uppercase tracking-widest font-kinder shrink-0 w-fit pointer-events-none block shadow-sm mt-1"
+                        >
+                          {previewBannerData.button_text}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Right panel metadata stats */}
+              <div className="p-6 border-t lg:border-t-0 lg:border-l border-zinc-150 space-y-5 overflow-y-auto">
+                <div>
+                  <h4 className="text-[10px] font-kinder uppercase tracking-widest text-zinc-400">{t("Analyse de la Fiche")}</h4>
+                  <p className="text-xs font-extrabold text-zinc-900 mt-0.5 truncate">{previewBannerData.title}</p>
+                </div>
+
+                <div className="pt-4 border-t border-zinc-150 space-y-3">
+                  <h5 className="text-[10px] font-black uppercase text-zinc-900 tracking-wider">{t("📊 Statistiques réelles")}</h5>
+                  
+                  <div className="grid grid-cols-2 gap-2 text-center">
+                    <div className="p-2.5 bg-zinc-50 border border-zinc-150 rounded-xl">
+                      <span className="block text-[8px] font-bold text-zinc-400 uppercase">{t("Vues")}</span>
+                      <span className="text-sm font-black text-zinc-800 font-mono">{previewBannerData.views || 0}</span>
+                    </div>
+                    <div className="p-2.5 bg-zinc-50 border border-zinc-150 rounded-xl">
+                      <span className="block text-[8px] font-bold text-zinc-400 uppercase">{t("Clics")}</span>
+                      <span className="text-sm font-black text-zinc-800 font-mono">{previewBannerData.clicks || 0}</span>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-orange-50 border border-orange-100 rounded-xl flex items-center justify-between text-orange-800 font-bold uppercase text-[10px]">
+                    <span>{t("Taux de Clics (CTR)")}</span>
+                    <span className="font-mono text-xs font-black">
+                      {previewBannerData.views && previewBannerData.views > 0 
+                        ? ((previewBannerData.clicks || 0) / previewBannerData.views * 100).toFixed(1) 
+                        : "0.0"}%
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-zinc-150 space-y-3.5 text-xs text-zinc-700">
+                  <h5 className="text-[10px] font-black uppercase text-zinc-900 tracking-wider">{t("🎯 Paramètres de Ciblage")}</h5>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-zinc-400 uppercase text-[9px] font-bold">{t("Zone d'affichage")}</span>
+                      <span className="font-extrabold text-zinc-900 text-[9px] uppercase">
+                        {previewBannerData.zone === "grid_top" 
+                          ? t("Grille Haute") 
+                          : previewBannerData.zone === "grid_bottom" 
+                          ? t("Grille Basse") 
+                          : previewBannerData.zone === "sidebar" 
+                          ? t("Latérale") 
+                          : t("Carrousel Principal")}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="text-zinc-400 uppercase text-[9px] font-bold">{t("Groupe A/B Test")}</span>
+                      <span className="font-extrabold text-zinc-900 text-[9px] uppercase">
+                        {previewBannerData.ab_group && previewBannerData.ab_group !== "all" 
+                          ? `${t("Groupe ")}${previewBannerData.ab_group}` 
+                          : t("Tous (Pas d'A/B test)")}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="text-zinc-400 uppercase text-[9px] font-bold">{t("Cible Visiteur")}</span>
+                      <span className="font-extrabold text-zinc-900 text-[9px] uppercase">
+                        {(previewBannerData as any).targetUserType === "new" 
+                          ? t("Nouveaux") 
+                          : (previewBannerData as any).targetUserType === "logged_in" 
+                          ? t("Connectés") 
+                          : t("Tous")}
+                      </span>
+                    </div>
+
+                    <div className="space-y-1">
+                      <span className="text-zinc-400 uppercase text-[9px] font-bold block">{t("Wilayas Ciblées")}</span>
+                      <div className="flex flex-wrap gap-1 max-h-[80px] overflow-y-auto">
+                        {(previewBannerData as any).targetRegions && (previewBannerData as any).targetRegions.length > 0 ? (
+                          (previewBannerData as any).targetRegions.map((w: string) => (
+                            <span key={w} className="px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-800 text-[8px] font-bold uppercase">
+                              {w}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-[8px] text-zinc-500 uppercase font-bold">{t("Toutes les Wilayas (58)")}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1 pt-1.5 border-t border-dashed border-zinc-200">
+                      <span className="text-zinc-400 uppercase text-[9px] font-bold block">{t("Planification horaire")}</span>
+                      {previewBannerData.start_date || previewBannerData.end_date ? (
+                        <div className="text-[9px] font-bold text-zinc-800 font-mono space-y-0.5 leading-tight">
+                          {previewBannerData.start_date && (
+                            <div>DEBUT: {new Date(previewBannerData.start_date).toLocaleString()}</div>
+                          )}
+                          {previewBannerData.end_date && (
+                            <div>FIN: {new Date(previewBannerData.end_date).toLocaleString()}</div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-[8px] text-emerald-600 uppercase font-black">{t("Permanent (Illimité)")}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-zinc-150 space-y-2">
+                  <h5 className="text-[10px] font-black uppercase text-zinc-900 tracking-wider">{t("🏷️ Tag de redirection")}</h5>
+                  {tags.find((tg) => tg.id === previewBannerData.tag_id) ? (
+                    <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-xl flex items-center gap-2">
+                      <Tag className="w-4 h-4 text-orange-600" />
+                      <div>
+                        <p className="text-[10px] font-extrabold text-zinc-900 uppercase">
+                          {tags.find((tg) => tg.id === previewBannerData.tag_id)?.name}
+                        </p>
+                        <p className="text-[8px] font-mono text-zinc-400 leading-none mt-0.5">
+                          slug: /{tags.find((tg) => tg.id === previewBannerData.tag_id)?.slug}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-red-600 font-bold uppercase text-[8px]">
+                      {t("Tag orphelin (aucune redirection)")}
+                    </div>
+                  )}
+                </div>
+
               </div>
             </div>
           </div>

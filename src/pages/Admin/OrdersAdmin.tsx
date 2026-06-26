@@ -62,6 +62,7 @@ export const OrdersAdmin: React.FC = () => {
 
   // Filters State
   const [searchId, setSearchId] = useState("");
+  const [clientSearch, setClientSearch] = useState("");
   const [selectedWilaya, setSelectedWilaya] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [sellerSearch, setSellerSearch] = useState("");
@@ -72,8 +73,15 @@ export const OrdersAdmin: React.FC = () => {
   const [sellersNetPayout, setSellersNetPayout] = useState(0);
   const [calculatedOrdersMap, setCalculatedOrdersMap] = useState<Record<string, CalculatedOrder>>({});
 
+  const [dynamicWilayas, setDynamicWilayas] = useState<string[]>([]);
+
   // Multi-selection (Bulk Actions) State
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+
+  // Pagination State
+  const [lastVisible, setLastVisible] = useState<any>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const ORDERS_PER_PAGE = 20;
 
   // Detail Modal State
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -118,29 +126,83 @@ export const OrdersAdmin: React.FC = () => {
   };
 
   // Fetch orders
-  useEffect(() => {
-    const fetchOrders = async () => {
-      setLoading(true);
-      try {
-        const q = query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(200));
-        const snap = await getDocs(q);
-        const fetched = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as Order);
-        setOrders(fetched);
-      } catch (error) {
-        console.error("Error fetching admin orders:", error);
-        toast.error(t("Erreur de chargement des commandes."));
-      } finally {
-        setLoading(false);
+  const fetchOrders = async (isLoadMore = false) => {
+    setLoading(true);
+    try {
+      const { startAfter, where } = await import("firebase/firestore");
+      let baseQueryConstraints: any[] = [];
+
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        baseQueryConstraints.push(where("createdAt", ">=", start));
       }
-    };
-    fetchOrders();
-  }, [refreshTrigger]);
+
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        baseQueryConstraints.push(where("createdAt", "<=", end));
+      }
+
+      // If we use where("createdAt"), we MUST order by createdAt first.
+      baseQueryConstraints.push(orderBy("createdAt", "desc"));
+
+      let q = query(collection(db, "orders"), ...baseQueryConstraints, limit(ORDERS_PER_PAGE));
+
+      if (isLoadMore && lastVisible) {
+        q = query(collection(db, "orders"), ...baseQueryConstraints, startAfter(lastVisible), limit(ORDERS_PER_PAGE));
+      }
+
+      const snap = await getDocs(q);
+      const fetched = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as Order);
+
+      if (isLoadMore) {
+        setOrders((prev) => {
+          const newOrders = [...prev, ...fetched];
+          extractWilayas(newOrders);
+          return newOrders;
+        });
+      } else {
+        setOrders(fetched);
+        extractWilayas(fetched);
+      }
+
+      setLastVisible(snap.docs[snap.docs.length - 1]);
+      setHasMore(snap.docs.length === ORDERS_PER_PAGE);
+    } catch (error) {
+      console.error("Error fetching admin orders:", error);
+      toast.error(t("Erreur de chargement des commandes."));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const extractWilayas = (ordersData: Order[]) => {
+    const wilayas = Array.from(new Set(ordersData.map((o) => o.shippingAddress?.wilaya).filter(Boolean))) as string[];
+    setDynamicWilayas(wilayas);
+  };
+
+  useEffect(() => {
+    setLastVisible(null);
+    setHasMore(true);
+    fetchOrders(false);
+  }, [refreshTrigger, startDate, endDate]);
 
   // Reactive filtering
-  const filteredOrders = orders.filter((order) => {
+  const filteredOrders = React.useMemo(() => orders.filter((order) => {
     // 1. Order ID Search
     if (searchId && !order.id.toLowerCase().includes(searchId.toLowerCase())) {
       return false;
+    }
+
+    // Client Search (Name/Phone)
+    if (clientSearch) {
+      const qStr = clientSearch.toLowerCase();
+      const name = (order.shippingAddress?.fullName || order.shippingAddress?.name || "").toLowerCase();
+      const phone = (order.shippingAddress?.phone || "").toLowerCase();
+      if (!name.includes(qStr) && !phone.includes(qStr)) {
+        return false;
+      }
     }
 
     // 2. Status Match
@@ -186,7 +248,7 @@ export const OrdersAdmin: React.FC = () => {
     }
 
     return true;
-  });
+  }), [orders, searchId, clientSearch, selectedStatus, selectedWilaya, sellerSearch, startDate, endDate]);
 
   // Reactive Bookkeeping Calculations (comptabilité instantanée)
 
@@ -252,7 +314,7 @@ export const OrdersAdmin: React.FC = () => {
 
   // Direct single order status update handler (using secure server-side endpoint)
   const handleUpdateOrderStatus = async (orderId: string, newStatus: OrderStatus) => {
-    if (!currentUser || userProfile?.role !== 'admin') {
+    if (!currentUser || userProfile?.role !== "admin") {
       toast.error(t("Veuillez vous authentifier d'abord."));
       return;
     }
@@ -299,11 +361,13 @@ export const OrdersAdmin: React.FC = () => {
   // Bulk Status Update Handler (using secure server-side endpoint)
   const handleBulkStatusChange = async (newStatus: OrderStatus) => {
     if (selectedOrderIds.length === 0) return;
-    if (!currentUser || userProfile?.role !== 'admin') {
+    if (!currentUser || userProfile?.role !== "admin") {
       toast.error(t("Veuillez vous authentifier d'abord."));
       return;
     }
-    const confirmed = await showConfirmModal(`Modifier le statut de ${selectedOrderIds.length} commandes en "${statusLabels[newStatus]}" ?`);
+    const confirmed = await showConfirmModal(
+      `Modifier le statut de ${selectedOrderIds.length} commandes en "${statusLabels[newStatus]}" ?`
+    );
     if (!confirmed) return;
 
     const progressToast = toast.loading(
@@ -486,8 +550,60 @@ export const OrdersAdmin: React.FC = () => {
     }, 400);
   };
 
+  const handleExportCSV = () => {
+    if (filteredOrders.length === 0) {
+      toast.error(t("Aucune commande à exporter."));
+      return;
+    }
+    const headers = [
+      "ID",
+      "Date",
+      "Statut",
+      "Client",
+      "Téléphone",
+      "Wilaya",
+      "Commune",
+      "Montant (DA)",
+      "Frais Livraison",
+      "Nb Articles",
+    ];
+    const rows = filteredOrders.map((o) => [
+      o.id,
+      getOrderDate(o.createdAt)?.toISOString() || "",
+      statusLabels[o.status?.toLowerCase()] || o.status,
+      o.shippingAddress?.fullName || o.shippingAddress?.name || "",
+      o.shippingAddress?.phone || "",
+      o.shippingAddress?.wilaya || "",
+      o.shippingAddress?.commune || "",
+      o.total,
+      o.shippingCost || 0,
+      o.items?.reduce((acc, it) => acc + (it.quantity || 1), 0) || 0,
+    ]);
+
+    const csvContent =
+      "data:text/csv;charset=utf-8,\uFEFF" +
+      [
+        headers.join(","),
+        ...rows.map((e) =>
+          e
+            .map(String)
+            .map((s) => `"${s.replace(/"/g, '""')}"`)
+            .join(",")
+        ),
+      ].join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `olmart_orders_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-8" dir={isRtl ? "rtl" : "ltr"}>
+      <ConfirmationDialog />
       {/* Dynamic Print Iframe */}
       <iframe id="print-iframe-stealth-bulk" className="hidden" style={{ display: "none" }} />
 
@@ -505,6 +621,13 @@ export const OrdersAdmin: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={handleExportCSV}
+            className="p-3 bg-zinc-950 hover:bg-zinc-800 text-white rounded-xl transition-all cursor-pointer flex items-center gap-2 font-bold text-xs uppercase"
+          >
+            <FileText className="w-4 h-4" />
+            {t("Exporter CSV")}
+          </button>
           <button
             onClick={() => {
               setRefreshTrigger((prev) => prev + 1);
@@ -593,8 +716,11 @@ export const OrdersAdmin: React.FC = () => {
       <OrderFilters
         searchId={searchId}
         setSearchId={setSearchId}
+        clientSearch={clientSearch}
+        setClientSearch={setClientSearch}
         selectedWilaya={selectedWilaya}
         setSelectedWilaya={setSelectedWilaya}
+        dynamicWilayas={dynamicWilayas}
         selectedStatus={selectedStatus}
         setSelectedStatus={setSelectedStatus}
         sellerSearch={sellerSearch}
@@ -617,19 +743,38 @@ export const OrdersAdmin: React.FC = () => {
       />
 
       {/* Orders List Table Card */}
-      <OrderTable
-        loading={loading}
-        ordersCount={orders.length}
-        filteredOrders={filteredOrders}
-        selectedOrderIds={selectedOrderIds}
-        calculatedOrdersMap={calculatedOrdersMap}
-        statusLabels={statusLabels}
-        statusColors={statusColors}
-        handleSelectAll={handleSelectAll}
-        handleSelectOrder={handleSelectOrder}
-        setSelectedOrder={setSelectedOrder}
-        getOrderDate={getOrderDate}
-      />
+      <div className="space-y-4">
+        <OrderTable
+          loading={loading && orders.length === 0}
+          ordersCount={orders.length}
+          filteredOrders={filteredOrders}
+          selectedOrderIds={selectedOrderIds}
+          calculatedOrdersMap={calculatedOrdersMap}
+          statusLabels={statusLabels}
+          statusColors={statusColors}
+          handleSelectAll={handleSelectAll}
+          handleSelectOrder={handleSelectOrder}
+          setSelectedOrder={setSelectedOrder}
+          getOrderDate={getOrderDate}
+        />
+        {hasMore && !loading && (
+          <div className="flex justify-center mt-4">
+            <button
+              onClick={() => fetchOrders(true)}
+              className="px-6 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-kinder text-xs uppercase tracking-widest rounded-xl transition-colors font-bold cursor-pointer"
+            >
+              {t("Charger plus de commandes")}
+            </button>
+          </div>
+        )}
+        {loading && orders.length > 0 && (
+          <div className="flex justify-center mt-4">
+            <span className="text-zinc-500 font-bold text-xs uppercase animate-pulse">
+              {t("Chargement en cours...")}
+            </span>
+          </div>
+        )}
+      </div>
 
       {/* Floating Bottom Massive Bulk Actions Controller */}
       {selectedOrderIds.length > 0 && (
@@ -839,7 +984,7 @@ export const OrdersAdmin: React.FC = () => {
 
                   <select
                     disabled={isUpdatingStatus}
-                    value={selectedOrder.status}
+                    value={selectedOrder.status?.toLowerCase() || ""}
                     onChange={(e) => handleUpdateOrderStatus(selectedOrder.id, e.target.value as OrderStatus)}
                     className="p-3 border border-zinc-200 bg-white rounded-xl text-xs font-kinder uppercase tracking-wider text-zinc-800 outline-none cursor-pointer"
                   >
@@ -849,6 +994,65 @@ export const OrdersAdmin: React.FC = () => {
                       </option>
                     ))}
                   </select>
+                </div>
+                
+                {/* Logistics & Delivery Boy assignment */}
+                <div className="pt-4 border-t border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <strong className="block text-xs uppercase tracking-wider text-zinc-705 font-kinder flex items-center gap-2">
+                      <Truck className="w-4 h-4 text-orange-500" />
+                      {t("Attribution Logistique")}
+                    </strong>
+                    <span className="text-[10px] text-zinc-400 block mt-1">
+                      {selectedOrder.deliveryBoyId 
+                         ? t("Assigné au livreur : ") + (selectedOrder.deliveryBoyName || selectedOrder.deliveryBoyId)
+                         : t("Aucun livreur assigné.")}
+                    </span>
+                  </div>
+                  <button 
+                     onClick={() => {
+                        const name = prompt(t("Entrez le nom ou l'ID du livreur :"));
+                        if(name) {
+                           // In a real scenario, this updates via an API. Using Firestore directly for mock.
+                           updateDoc(doc(db, "orders", selectedOrder.id), {
+                              deliveryBoyId: name,
+                              deliveryBoyName: name,
+                              updatedAt: serverTimestamp()
+                           });
+                           setSelectedOrder({...selectedOrder, deliveryBoyId: name, deliveryBoyName: name});
+                           toast.success(t("Livreur assigné !"));
+                        }
+                     }}
+                     className="px-4 py-2 bg-orange-50 text-orange-600 hover:bg-orange-100 font-kinder text-[10px] uppercase tracking-widest rounded-xl transition-colors border border-orange-200"
+                  >
+                     {selectedOrder.deliveryBoyId ? t("Changer Livreur") : t("Assigner un livreur")}
+                  </button>
+                </div>
+                
+                {/* Simplified Delivery Logs */}
+                <div className="pt-4 border-t border-zinc-100">
+                   <h5 className="text-[10px] font-kinder uppercase text-zinc-500 mb-3">{t("Journal Logistique (Delivery Logs)")}</h5>
+                   <div className="space-y-2">
+                      <div className="flex items-center gap-3 text-xs">
+                         <div className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+                         <span className="text-zinc-500">{selectedOrder.createdAt ? getOrderDate(selectedOrder.createdAt)?.toLocaleString() : ''}</span>
+                         <strong className="text-zinc-800">{t("Commande créée")}</strong>
+                      </div>
+                      {selectedOrder.status?.toUpperCase() !== "NEW" && (
+                         <div className="flex items-center gap-3 text-xs">
+                            <div className="w-2 h-2 rounded-full bg-orange-500 shrink-0" />
+                            <span className="text-zinc-500">{new Date().toLocaleString()}</span>
+                            <strong className="text-zinc-800">{t("Mise à jour : ")} {statusLabels[selectedOrder.status] || selectedOrder.status}</strong>
+                         </div>
+                      )}
+                      {selectedOrder.deliveryBoyId && (
+                         <div className="flex items-center gap-3 text-xs">
+                            <div className="w-2 h-2 rounded-full bg-purple-500 shrink-0" />
+                            <span className="text-zinc-500">{new Date().toLocaleString()}</span>
+                            <strong className="text-zinc-800">{t("Assigné au livreur")} {selectedOrder.deliveryBoyName}</strong>
+                         </div>
+                      )}
+                   </div>
                 </div>
               </div>
             </div>

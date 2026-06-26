@@ -36,17 +36,28 @@ export const SearchOverlay: React.FC = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
+  const [visibleCount, setVisibleCount] = useState(9);
+  const [apiError, setApiError] = useState(false);
   const trendingSearches = useTrendingSearches();
 
   const inputRef = useRef<HTMLInputElement>(null);
   const isRtl = i18n.language === "ar";
 
-  // Global Ctrl+K / Cmd+K listener
+  // Global '/' listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
-        e.preventDefault();
-        setIsSearchOpen(!isSearchOpen);
+      if (e.key === "/") {
+        // Prevent opening if user is already typing in an input/textarea/contenteditable
+        const activeEl = document.activeElement;
+        const isInput = activeEl && (
+          activeEl.tagName === "INPUT" ||
+          activeEl.tagName === "TEXTAREA" ||
+          (activeEl as HTMLElement).isContentEditable
+        );
+        if (!isInput) {
+          e.preventDefault();
+          setIsSearchOpen(true);
+        }
       }
       if (e.key === "Escape") {
         setIsSearchOpen(false);
@@ -54,7 +65,7 @@ export const SearchOverlay: React.FC = () => {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isSearchOpen, setIsSearchOpen]);
+  }, [setIsSearchOpen]);
 
   // Handle opening state, scroll lock, and autofocus
   useEffect(() => {
@@ -63,13 +74,14 @@ export const SearchOverlay: React.FC = () => {
       setTimeout(() => inputRef.current?.focus(), 150);
 
       // Load recent searches
-      const saved = localStorage.getItem("olma_recent_searches");
-      if (saved) {
-        try {
+      try {
+        const saved = localStorage.getItem("olma_recent_searches");
+        if (saved) {
           setRecentSearches(JSON.parse(saved));
-        } catch (e) {
-          setRecentSearches([]);
         }
+      } catch (e) {
+        console.warn("localStorage loading failed in search-overlay:", e);
+        setRecentSearches([]);
       }
 
       // Load recommended / trending creations as fallbacks
@@ -89,36 +101,53 @@ export const SearchOverlay: React.FC = () => {
       document.body.style.overflow = "";
       setLocalSearch("");
       setResults([]);
+      setApiError(false);
     }
     return () => {
       document.body.style.overflow = "";
     };
   }, [isSearchOpen]);
 
-  // Debounced live typing search
+  // Debounced live typing search with AbortController
   useEffect(() => {
     if (!localSearch.trim()) {
       setResults([]);
+      setMatchedStores([]);
+      setApiError(false);
       return;
     }
 
+    const controller = new AbortController();
+
     const delayDebounceFn = setTimeout(async () => {
       setIsSearching(true);
+      setApiError(false);
       try {
-        const response = await fetch(`/api/search?q=${encodeURIComponent(localSearch)}`);
+        const response = await fetch(`/api/search?q=${encodeURIComponent(localSearch)}`, {
+          signal: controller.signal,
+        });
         if (response.ok) {
           const data = await response.json();
           setResults(data.products || []);
           setMatchedStores(data.stores || []);
+          setVisibleCount(9); // Reset visible products count on new query
+        } else {
+          throw new Error("HTTP search error");
         }
-      } catch (err) {
-        console.error("Live search overlay error:", err);
+      } catch (err: any) {
+        if (err.name !== "AbortError") {
+          console.error("Live search overlay error:", err);
+          setApiError(true);
+        }
       } finally {
         setIsSearching(false);
       }
     }, 300);
 
-    return () => clearTimeout(delayDebounceFn);
+    return () => {
+      clearTimeout(delayDebounceFn);
+      controller.abort();
+    };
   }, [localSearch]);
 
   const saveSearchTerm = (term: string) => {
@@ -126,7 +155,11 @@ export const SearchOverlay: React.FC = () => {
     if (!trimmed) return;
     const updated = [trimmed, ...recentSearches.filter((s) => s !== trimmed)].slice(0, 5);
     setRecentSearches(updated);
-    localStorage.setItem("olma_recent_searches", JSON.stringify(updated));
+    try {
+      localStorage.setItem("olma_recent_searches", JSON.stringify(updated));
+    } catch (e) {
+      console.warn("localStorage item set failed:", e);
+    }
   };
 
   const handleSearchSubmit = (e?: React.FormEvent) => {
@@ -151,7 +184,11 @@ export const SearchOverlay: React.FC = () => {
     e.stopPropagation();
     const updated = recentSearches.filter((s) => s !== term);
     setRecentSearches(updated);
-    localStorage.setItem("olma_recent_searches", JSON.stringify(updated));
+    try {
+      localStorage.setItem("olma_recent_searches", JSON.stringify(updated));
+    } catch (err) {
+      console.warn("localStorage recent search delete failed:", err);
+    }
   };
 
   const navigateToProduct = (id: string, name: string) => {
@@ -162,7 +199,8 @@ export const SearchOverlay: React.FC = () => {
 
   const highlightMatch = (text: string, query: string) => {
     if (!query) return text;
-    const parts = text.split(new RegExp(`(${query})`, "gi"));
+    const escapedQuery = query.replace(/[.+*?^${}()|[\]\\]/g, "\\$&");
+    const parts = text.split(new RegExp(`(${escapedQuery})`, "gi"));
     return (
       <span>
         {parts.map((part, i) =>
@@ -193,13 +231,12 @@ export const SearchOverlay: React.FC = () => {
           <div className="w-full max-w-7xl mx-auto px-4 md:px-8 py-6 flex items-center justify-between border-b border-[#FF5C00] shrink-0">
             <div className="flex items-center gap-3">
               <Compass className="w-6 h-6 text-[#FF5C00] animate-pulse" />
-              <span className="font-serif italic text-lg tracking-wide uppercase text-[#3C2B22]/90">
+              <span className="font-display italic text-lg tracking-wide uppercase text-[#3C2B22]/90">
                 {t("search_global") || "Recherche globale"}
               </span>
               <div className="hidden sm:flex items-center gap-1 bg-[#3C2B22]/5 border border-[#3C2B22]/10 px-2 py-0.5 rounded-lg text-[10px] rtl:text-[12px] text-zinc-500 font-mono">
-                <span>{t("Ctrl")}</span>
-                <span>+</span>
-                <span>{t("common.key_k", "K")}</span>
+                <span>{t("common.shortcut_prefix", "Appuyer sur")}</span>
+                <span className="font-bold text-[#FF5C00]">/</span>
               </div>
             </div>
 
@@ -221,7 +258,7 @@ export const SearchOverlay: React.FC = () => {
             >
               <form onSubmit={handleSearchSubmit} className="relative group">
                 <div
-                  className={`absolute inset-y-0 ${isRtl ? "right-6" : "left-6"} flex items-center pointer-events-none text-zinc-400 group-focus-within:text-[#FF5C00] transition-all`}
+                  className={`absolute inset-y-0 ${isRtl ? "right-4 sm:right-6" : "left-4 sm:left-6"} flex items-center pointer-events-none text-zinc-400 group-focus-within:text-[#FF5C00] transition-all`}
                 >
                   {isSearching ? (
                     <Loader2 className="w-7 h-7 animate-spin text-[#FF5C00]" />
@@ -236,7 +273,7 @@ export const SearchOverlay: React.FC = () => {
                   value={localSearch}
                   onChange={(e) => setLocalSearch(e.target.value)}
                   placeholder={t("search_today_prompt") || "Que recherchez-vous aujourd'hui ?"}
-                  className={`w-full bg-white hover:bg-stone-50 border border-[#FF5C00] focus:border-[#FF5C00]/60 text-[#3C2B22] placeholder-zinc-400 rounded-3xl py-5 sm:py-6 ${isRtl ? "pr-16 pl-32" : "pl-16 pr-32"} text-lg sm:text-2xl font-medium outline-none focus:bg-white transition-all duration-300 shadow-xl`}
+                  className={`w-full bg-white hover:bg-stone-50 border border-[#FF5C00] focus:border-[#FF5C00]/60 text-[#3C2B22] placeholder-zinc-400 rounded-3xl py-4 sm:py-6 ${isRtl ? "pr-12 sm:pr-16 pl-24 sm:pl-36" : "pl-12 sm:pl-16 pr-24 sm:pr-36"} text-base sm:text-2xl font-medium outline-none focus:bg-white transition-all duration-300 shadow-xl`}
                 />
 
                 <div className={`absolute inset-y-2 ${isRtl ? "left-2" : "right-2"} flex items-center`}>
@@ -251,7 +288,7 @@ export const SearchOverlay: React.FC = () => {
                   )}
                   <button
                     type="submit"
-                    className="h-full px-6 bg-[#3C2B22] hover:bg-[#FF5C00] text-white hover:text-white font-bold text-xs rtl:text-sm uppercase tracking-widest rtl:tracking-normal rounded-2xl transition-all duration-300 cursor-pointer shadow-md"
+                    className="h-full px-4 sm:px-6 bg-[#3C2B22] hover:bg-[#FF5C00] text-white hover:text-white font-bold text-xs rtl:text-sm uppercase tracking-widest rtl:tracking-normal rounded-2xl transition-all duration-300 cursor-pointer shadow-md"
                   >
                     {t("search") || "Rechercher"}
                   </button>
@@ -260,7 +297,7 @@ export const SearchOverlay: React.FC = () => {
 
               <p className="mt-3 text-xs rtl:text-sm text-zinc-500 text-center flex items-center justify-center gap-1.5 font-sans">
                 <Info className="w-3.5 h-3.5 text-[#FF5C00]/70" />
-                {t("search_shortcut") || "Appuyez sur ⌘K pour orienter vos recherches"}
+                {t("search_shortcut_slash") || "Appuyez sur la touche / (slash) pour orienter vos recherches"}
               </p>
             </motion.div>
 
@@ -401,7 +438,7 @@ export const SearchOverlay: React.FC = () => {
                           </div>
 
                           <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {results.slice(0, 9).map((product) => {
+                            {results.slice(0, visibleCount).map((product) => {
                               return (
                                 <li key={product.id}>
                                   <button
@@ -425,7 +462,7 @@ export const SearchOverlay: React.FC = () => {
                                         {product.category} {t("• Wilaya")}
                                         {product.wilaya ? product.wilaya : "58"}
                                       </span>
-                                      <span className="text-sm font-serif italic text-stone-700 mt-1 font-bold">
+                                      <span className="text-sm font-display italic text-stone-700 mt-1 font-bold">
                                         {formatPrice(product.price)}
                                       </span>
                                     </div>
@@ -437,6 +474,37 @@ export const SearchOverlay: React.FC = () => {
                               );
                             })}
                           </ul>
+
+                          {results.length > visibleCount && (
+                            <div className="pt-4 flex justify-center">
+                              <button
+                                type="button"
+                                onClick={() => setVisibleCount((prev) => prev + 9)}
+                                className="px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-[#3C2B22] border border-[#FF5C00] hover:bg-[#FF5C00] hover:text-white rounded-full transition-all cursor-pointer bg-white"
+                              >
+                                {t("load_more") || "Charger plus de créations"}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* API Error Live Alert (R19) */}
+                      {apiError && (
+                        <div className="bg-red-50 border border-red-200 rounded-3xl p-6 flex flex-col items-center justify-center text-center space-y-3 max-w-lg mx-auto">
+                          <span className="text-red-800 font-semibold">{t("service_unavailable") || "Service de recherche temporairement indisponible"}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setApiError(false);
+                              const temp = localSearch;
+                              setLocalSearch("");
+                              setTimeout(() => setLocalSearch(temp), 50);
+                            }}
+                            className="px-4 py-2 text-xs bg-red-800 text-white rounded-full font-bold cursor-pointer transition-colors hover:bg-red-900 border-none"
+                          >
+                            {t("retry") || "Réessayer"}
+                          </button>
                         </div>
                       )}
 

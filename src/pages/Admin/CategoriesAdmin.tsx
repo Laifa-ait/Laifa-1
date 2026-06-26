@@ -13,6 +13,13 @@ import {
   Sparkles,
   ArrowRight,
   Plus,
+  ChevronDown,
+  ChevronRight,
+  Folder,
+  FolderOpen,
+  ArrowUpDown,
+  Layers,
+  Settings,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { auth, db, storage } from "../../lib/firebase";
@@ -102,12 +109,35 @@ export const CategoriesAdmin: React.FC = () => {
   const [catSubtitle, setCatSubtitle] = useState("");
   const [catImage, setCatImage] = useState("");
   const [colorTheme, setColorTheme] = useState("");
+  const [seoMetaDescription, setSeoMetaDescription] = useState("");
 
   // Products associated values
   const [categoryProducts, setCategoryProducts] = useState<Product[]>([]);
   const [featuredProductIds, setFeaturedProductIds] = useState<string[]>([]);
   const [subCategoryImages, setSubCategoryImages] = useState<Record<string, string>>({});
   const [uploadingSub, setUploadingSub] = useState<string | null>(null);
+
+  // Drag & Drop
+  const [draggedCategory, setDraggedCategory] = useState<string | null>(null);
+
+  // Category Fusion
+  const [isMerging, setIsMerging] = useState(false);
+  const [mergeSource, setMergeSource] = useState("");
+  const [mergeTarget, setMergeTarget] = useState("");
+
+  // Product Moving
+  const [selectedProductIdsToMove, setSelectedProductIdsToMove] = useState<string[]>([]);
+  const [targetCategoryForMove, setTargetCategoryForMove] = useState("");
+
+  // Collapsible Tree Nodes
+  const [collapsedNodes, setCollapsedNodes] = useState<Record<string, boolean>>({});
+
+  const toggleNode = (nodeId: string) => {
+    setCollapsedNodes((prev) => ({
+      ...prev,
+      [nodeId]: !prev[nodeId],
+    }));
+  };
 
   // States
   const [isLoading, setIsLoading] = useState(false);
@@ -149,6 +179,7 @@ export const CategoriesAdmin: React.FC = () => {
         setFeaturedProductIds(data.featuredProductIds || []);
         setSubCategoryImages(data.subCategoryImages || {});
         setColorTheme(data.color_theme || "");
+        setSeoMetaDescription(data.seoMetaDescription || "");
       } else {
         setCatTitle(defaultMeta.title);
         setCatSubtitle(defaultMeta.subtitle);
@@ -156,6 +187,7 @@ export const CategoriesAdmin: React.FC = () => {
         setFeaturedProductIds([]);
         setSubCategoryImages({});
         setColorTheme("");
+        setSeoMetaDescription("");
       }
 
       // 2. Fetch category products
@@ -240,6 +272,7 @@ export const CategoriesAdmin: React.FC = () => {
           title: catTitle.trim(),
           subtitle: catSubtitle.trim(),
           image: catImage,
+          seoMetaDescription: seoMetaDescription.trim(),
           gradient: "from-[#1h4356]/80 via-zinc-950/20 to-transparent",
           featuredProductIds: featuredProductIds,
           subCategoryImages: subCategoryImages,
@@ -251,10 +284,12 @@ export const CategoriesAdmin: React.FC = () => {
 
       // 2. Save Hierarchy
       const hierarchyRef = doc(db, "settings", "categories");
+      const keysOrder = Object.keys(hierarchy);
       await setDoc(
         hierarchyRef,
         {
           hierarchy,
+          sortOrder: keysOrder,
           updatedAt: new Date().toISOString(),
         },
         { merge: true }
@@ -356,38 +391,188 @@ export const CategoriesAdmin: React.FC = () => {
     );
   }, [categoryProducts, featuredProductIds, searchQuery]);
 
+  // Drag & Drop
+  const handleDragStart = (e: React.DragEvent, catName: string) => {
+    setDraggedCategory(catName);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent, targetCatName: string) => {
+    e.preventDefault();
+    if (!draggedCategory || draggedCategory === targetCatName) return;
+
+    const keys = Object.keys(hierarchy);
+    const draggedIndex = keys.indexOf(draggedCategory);
+    const targetIndex = keys.indexOf(targetCatName);
+
+    if (draggedIndex !== -1 && targetIndex !== -1) {
+      const newKeys = [...keys];
+      newKeys.splice(draggedIndex, 1);
+      newKeys.splice(targetIndex, 0, draggedCategory);
+
+      const newHierarchy: Record<string, Record<string, string[]>> = {};
+      newKeys.forEach((k) => {
+        newHierarchy[k] = hierarchy[k];
+      });
+
+      setHierarchy(newHierarchy);
+      setHierarchyCategories(newKeys);
+      toast.success(isArabic ? "تم تغيير الترتيب بنجاح" : `Ordre mis à jour : "${draggedCategory}" déplacée.`);
+    }
+    setDraggedCategory(null);
+  };
+
   // Hierarchy Management Functions
   const addCategory = () => {
     const promptText = isArabic ? "اسم الفئة الجديدة:" : "Nom de la nouvelle catégorie :";
     const name = prompt(promptText);
-    if (!name || hierarchy[name]) return;
-    setHierarchy((prev) => ({ ...prev, [name]: {} }));
-    toast.success(isArabic ? `تمت إضافة الفئة "${name}" بنجاح.` : `Catégorie "${name}" ajoutée.`);
+    if (!name) return;
+    const trimmed = name.trim();
+    if (!trimmed) return;
+
+    // Case-insensitive uniqueness validation
+    const exists = Object.keys(hierarchy).some(
+      (cat) => cat.toLowerCase() === trimmed.toLowerCase()
+    );
+    if (exists) {
+      toast.error(
+        isArabic
+          ? "هذه الفئة موجودة بالفعل!"
+          : "Cette catégorie existe déjà (validation insensible à la casse) !"
+      );
+      return;
+    }
+
+    setHierarchy((prev) => ({ ...prev, [trimmed]: {} }));
+    setHierarchyCategories((prev) => [...prev, trimmed]);
+    if (!selectedCategory) setSelectedCategory(trimmed);
+    toast.success(isArabic ? `تمت إضافة الفئة "${trimmed}" بنجاح.` : `Catégorie "${trimmed}" ajoutée.`);
   };
 
-  const removeCategory = (name: string) => {
-    const confirmText = isArabic
-      ? `هل تريد حذف الفئة "${name}" وجميع فئاتها الفرعية؟`
-      : `Supprimer la catégorie "${name}" et toutes ses sous-catégories ?`;
-    if (!window.confirm(confirmText)) return;
+  const renameCategory = (oldName: string) => {
+    const promptText = isArabic ? `الاسم الجديد للفئة "${oldName}":` : `Nouveau nom pour la catégorie "${oldName}" :`;
+    const name = prompt(promptText, oldName);
+    if (!name) return;
+    const trimmed = name.trim();
+    if (!trimmed || trimmed === oldName) return;
+
+    // Case-insensitive check
+    const exists = Object.keys(hierarchy).some(
+      (cat) => cat.toLowerCase() === trimmed.toLowerCase() && cat !== oldName
+    );
+    if (exists) {
+      toast.error(t("Cette catégorie existe déjà !"));
+      return;
+    }
+
     setHierarchy((prev) => {
       const updated = { ...prev };
-      delete updated[name];
+      updated[trimmed] = updated[oldName];
+      delete updated[oldName];
       return updated;
     });
-    if (selectedCategory === name) setSelectedCategory("");
-    toast.success(isArabic ? `تم حذف الفئة "${name}".` : `Catégorie "${name}" supprimée.`);
+
+    setHierarchyCategories((prev) => prev.map((c) => (c === oldName ? trimmed : c)));
+    if (selectedCategory === oldName) setSelectedCategory(trimmed);
+    toast.success(t("Catégorie renommée !"));
+  };
+
+  const removeCategory = async (name: string) => {
+    if (!name) return;
+
+    const toastId = toast.loading(isArabic ? "جاري التحقق من المنتجات..." : "Vérification des produits associés...");
+    try {
+      const { getCountFromServer, query, collection, where } = await import("firebase/firestore");
+      const q = query(collection(db, "products"), where("category", "==", name));
+      const snap = await getCountFromServer(q);
+      const productCount = snap.data().count;
+
+      toast.dismiss(toastId);
+
+      if (productCount > 0) {
+        toast.error(
+          isArabic
+            ? `لا يمكن حذف هذه الفئة! هناك ${productCount} منتج(منتجات) مرتبط بها حالياً. الرجاء نقل المنتجات أو دمج الفئة.`
+            : `Impossible de supprimer cette catégorie car ${productCount} produit(s) y sont actuellement associés ! Utilisez la fusion ou déplacez les produits.`
+        );
+        return;
+      }
+
+      const confirmText = isArabic
+        ? `هل تريد حذف الفئة "${name}" وجميع فئاتها الفرعية؟`
+        : `Supprimer la catégorie "${name}" et toutes ses sous-catégories ?`;
+      if (!window.confirm(confirmText)) return;
+
+      setHierarchy((prev) => {
+        const updated = { ...prev };
+        delete updated[name];
+        return updated;
+      });
+      setHierarchyCategories((prev) => prev.filter((c) => c !== name));
+      if (selectedCategory === name) {
+        const remaining = Object.keys(hierarchy).filter((c) => c !== name);
+        setSelectedCategory(remaining[0] || "");
+      }
+      toast.success(isArabic ? `تم حذف الفئة "${name}".` : `Catégorie "${name}" supprimée.`);
+    } catch (err) {
+      toast.dismiss(toastId);
+      console.error("Error removing category check:", err);
+      toast.error(t("Erreur de communication avec la base de données"));
+    }
   };
 
   const addSubCategory = (catName: string) => {
     const promptText = isArabic ? `اسم الفئة الفرعية لـ "${catName}":` : `Nom de la sous-catégorie pour "${catName}" :`;
     const name = prompt(promptText);
-    if (!name || hierarchy[catName][name]) return;
+    if (!name) return;
+    const trimmed = name.trim();
+    if (!trimmed) return;
+
+    // Case-insensitive check
+    const exists = Object.keys(hierarchy[catName] || {}).some(
+      (sub) => sub.toLowerCase() === trimmed.toLowerCase()
+    );
+    if (exists) {
+      toast.error(t("Cette sous-catégorie existe déjà !"));
+      return;
+    }
+
     setHierarchy((prev) => ({
       ...prev,
-      [catName]: { ...prev[catName], [name]: [] },
+      [catName]: { ...prev[catName], [trimmed]: [] },
     }));
-    toast.success(isArabic ? `تمت إضافة الفئة الفرعية "${name}".` : `Sous-catégorie "${name}" ajoutée.`);
+    toast.success(isArabic ? `تمت إضافة الفئة الفرعية "${trimmed}".` : `Sous-catégorie "${trimmed}" ajoutée.`);
+  };
+
+  const renameSubCategory = (catName: string, oldSubName: string) => {
+    const promptText = isArabic ? `الاسم الجديد للفئة الفرعية "${oldSubName}":` : `Nouveau nom pour la sous-catégorie "${oldSubName}" :`;
+    const newSubName = prompt(promptText, oldSubName);
+    if (!newSubName) return;
+    const trimmed = newSubName.trim();
+    if (!trimmed || trimmed === oldSubName) return;
+
+    const exists = Object.keys(hierarchy[catName] || {}).some(
+      (sub) => sub.toLowerCase() === trimmed.toLowerCase() && sub !== oldSubName
+    );
+    if (exists) {
+      toast.error(t("Cette sous-catégorie existe déjà !"));
+      return;
+    }
+
+    setHierarchy((prev) => {
+      const updatedSub = { ...prev[catName] };
+      updatedSub[trimmed] = updatedSub[oldSubName];
+      delete updatedSub[oldSubName];
+      return {
+        ...prev,
+        [catName]: updatedSub,
+      };
+    });
+    toast.success(t("Sous-catégorie renommée !"));
   };
 
   const removeSubCategory = (catName: string, subName: string) => {
@@ -405,15 +590,25 @@ export const CategoriesAdmin: React.FC = () => {
   const addSubSubCategory = (catName: string, subName: string) => {
     const promptText = isArabic ? `اسم العنصر لـ "${subName}":` : `Nom de l'élément pour "${subName}" :`;
     const name = prompt(promptText);
-    if (!name || hierarchy[catName][subName].includes(name)) return;
+    if (!name) return;
+    const trimmed = name.trim();
+    if (!trimmed) return;
+
+    const subList = hierarchy[catName]?.[subName] || [];
+    const exists = subList.some((s) => s.toLowerCase() === trimmed.toLowerCase());
+    if (exists) {
+      toast.error(t("Cet élément existe déjà !"));
+      return;
+    }
+
     setHierarchy((prev) => ({
       ...prev,
       [catName]: {
         ...prev[catName],
-        [subName]: [...prev[catName][subName], name],
+        [subName]: [...subList, trimmed],
       },
     }));
-    toast.success(isArabic ? `تمت إضافة العنصر "${name}".` : `Élément "${name}" ajouté.`);
+    toast.success(isArabic ? `تمت إضافة العنصر "${trimmed}".` : `Élément "${trimmed}" ajouté.`);
   };
 
   const removeSubSubCategory = (catName: string, subName: string, subSubName: string) => {
@@ -424,6 +619,121 @@ export const CategoriesAdmin: React.FC = () => {
         [subName]: prev[catName][subName].filter((s) => s !== subSubName),
       },
     }));
+  };
+
+  // Category Merge Handler
+  const handleMergeCategories = async () => {
+    if (!mergeSource || !mergeTarget) {
+      toast.error(t("Veuillez sélectionner les deux catégories pour la fusion."));
+      return;
+    }
+    if (mergeSource === mergeTarget) {
+      toast.error(t("La catégorie source et cible ne peuvent pas être identiques."));
+      return;
+    }
+
+    const confirmMsg = isArabic
+      ? `هل أنت متأكد من دمج "${mergeSource}" في "${mergeTarget}"؟ سيتم نقل جميع المنتجات وحذف الفئة المصدر.`
+      : `Êtes-vous sûr de fusionner "${mergeSource}" dans "${mergeTarget}" ? Tous les produits associés seront transférés vers "${mergeTarget}" et la catégorie source "${mergeSource}" sera supprimée.`;
+
+    if (!window.confirm(confirmMsg)) return;
+
+    setIsMerging(true);
+    const toastId = toast.loading(t("Fusion en cours, transfert des produits..."));
+
+    try {
+      const { collection, query, where, getDocs, writeBatch } = await import("firebase/firestore");
+
+      // 1. Fetch all products of source category
+      const q = query(collection(db, "products"), where("category", "==", mergeSource));
+      const snap = await getDocs(q);
+      const productsToUpdate = snap.docs;
+
+      // 2. Perform updates in batches
+      const batch = writeBatch(db);
+      productsToUpdate.forEach((prodDoc) => {
+        batch.update(prodDoc.ref, { category: mergeTarget });
+      });
+      await batch.commit();
+
+      // 3. Merge subcategories in hierarchy
+      const sourceSubcategories = hierarchy[mergeSource] || {};
+      const targetSubcategories = { ...(hierarchy[mergeTarget] || {}) };
+
+      // Merge subcategories and sub-subcategories
+      Object.entries(sourceSubcategories).forEach(([subName, subSubs]) => {
+        if (targetSubcategories[subName]) {
+          const mergedSubSubs = Array.from(new Set([...targetSubcategories[subName], ...subSubs]));
+          targetSubcategories[subName] = mergedSubSubs;
+        } else {
+          targetSubcategories[subName] = subSubs;
+        }
+      });
+
+      // 4. Update hierarchy state and delete source
+      const newHierarchy = { ...hierarchy };
+      newHierarchy[mergeTarget] = targetSubcategories;
+      delete newHierarchy[mergeSource];
+
+      setHierarchy(newHierarchy);
+      setHierarchyCategories(Object.keys(newHierarchy));
+      if (selectedCategory === mergeSource) {
+        setSelectedCategory(mergeTarget);
+      }
+
+      toast.success(
+        isArabic
+          ? `تم دمج الفئات بنجاح! تم نقل ${productsToUpdate.length} منتج.`
+          : `Fusion réussie ! ${productsToUpdate.length} produit(s) transféré(s) de "${mergeSource}" vers "${mergeTarget}".`,
+        { id: toastId }
+      );
+
+      setMergeSource("");
+      setMergeTarget("");
+    } catch (err) {
+      console.error("Error during merge:", err);
+      toast.error(t("Une erreur est survenue lors de la fusion."), { id: toastId });
+    } finally {
+      setIsMerging(false);
+    }
+  };
+
+  // Product category movement
+  const handleMoveProducts = async (targetCategory: string) => {
+    if (selectedProductIdsToMove.length === 0) {
+      toast.error(t("Veuillez sélectionner au moins un produit à déplacer."));
+      return;
+    }
+    if (!targetCategory) {
+      toast.error(t("Veuillez choisir une catégorie cible."));
+      return;
+    }
+
+    const confirmMsg = isArabic
+      ? `هل تريد نقل ${selectedProductIdsToMove.length} منتج إلى فئة "${targetCategory}"؟`
+      : `Déplacer ${selectedProductIdsToMove.length} produit(s) vers la catégorie "${targetCategory}" ?`;
+
+    if (!window.confirm(confirmMsg)) return;
+
+    const toastId = toast.loading(t("Déplacement des produits..."));
+    try {
+      const { doc, updateDoc } = await import("firebase/firestore");
+
+      await Promise.all(
+        selectedProductIdsToMove.map(async (id) => {
+          const productRef = doc(db, "products", id);
+          await updateDoc(productRef, { category: targetCategory });
+        })
+      );
+
+      await loadCategoryData(selectedCategory);
+      setSelectedProductIdsToMove([]);
+      setTargetCategoryForMove("");
+      toast.success(t("Produits déplacés avec succès ! 🎉"), { id: toastId });
+    } catch (err) {
+      console.error("Error moving products:", err);
+      toast.error(t("Erreur lors du déplacement des produits."), { id: toastId });
+    }
   };
 
   return (
@@ -507,100 +817,269 @@ export const CategoriesAdmin: React.FC = () => {
       </div>
 
       {activeTab === "hierarchy" ? (
-        <div className="bg-white rounded-3xl border border-[#FF5C00] p-8 shadow-sm space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-xl font-kinder text-[#3C2B22] uppercase tracking-wider rtl:tracking-normal">
-                {t("Structure du Catalogue")}
-              </h3>
-              <p className="text-xs font-bold text-zinc-400 mt-1">
-                {t("Ajoutez, modifiez ou supprimez les catégories et sous-catégories de votre boutique.")}
-              </p>
+        <div className="space-y-8 animate-fade-in">
+          {/* Card 1: Fusion de catégories */}
+          <div className="bg-[#FDF9EC]/50 rounded-3xl border border-orange-200 p-6 md:p-8 space-y-4">
+            <div className="flex items-center gap-3">
+              <Layers className="w-6 h-6 text-[#FF5C00]" />
+              <div>
+                <h3 className="text-base font-kinder text-[#3C2B22] uppercase tracking-wider rtl:tracking-normal">
+                  {t("Fusion de Catégories")}
+                </h3>
+                <p className="text-xs text-zinc-500">
+                  {t("Fusionnez une catégorie source dans une catégorie cible. Tous les produits seront transférés automatiquement.")}
+                </p>
+              </div>
             </div>
-            <button
-              onClick={addCategory}
-              className="flex items-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-kinder uppercase tracking-widest rtl:tracking-normal transition-all border-none cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              {t("Catégorie")}
-            </button>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end bg-white p-5 rounded-2xl border border-zinc-100">
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-kinder uppercase text-zinc-500 tracking-wider">
+                  {t("Catégorie Source (à supprimer)")}
+                </label>
+                <select
+                  value={mergeSource}
+                  onChange={(e) => setMergeSource(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-zinc-200 focus:outline-none focus:border-[#FF5C00] rounded-xl font-bold text-xs"
+                >
+                  <option value="">-- {t("Choisir la source")} --</option>
+                  {hierarchyCategories.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-kinder uppercase text-zinc-500 tracking-wider">
+                  {t("Catégorie Cible (réceptrice)")}
+                </label>
+                <select
+                  value={mergeTarget}
+                  onChange={(e) => setMergeTarget(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-zinc-200 focus:outline-none focus:border-[#FF5C00] rounded-xl font-bold text-xs"
+                >
+                  <option value="">-- {t("Choisir la cible")} --</option>
+                  {hierarchyCategories.map((c) => (
+                    <option key={c} value={c} disabled={c === mergeSource}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleMergeCategories}
+                disabled={isMerging || !mergeSource || !mergeTarget}
+                className="w-full py-2.5 bg-[#FF5C00] hover:bg-[#A94320] text-white rounded-xl font-kinder text-xs uppercase tracking-widest disabled:bg-zinc-200 disabled:text-zinc-400 transition-colors border-none cursor-pointer h-[42px] flex items-center justify-center gap-2"
+              >
+                {isMerging ? (
+                  <div className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                ) : (
+                  <Check className="w-4 h-4" />
+                )}
+                {t("Fusionner")}
+              </button>
+            </div>
           </div>
 
-          <div className="space-y-6 mt-8">
-            {Object.entries(hierarchy).map(([catName, subCats]) => (
-              <div key={catName} className="border border-zinc-100 rounded-3xl p-6 bg-zinc-50/30">
-                <div className="flex items-center justify-between border-b border-zinc-100 pb-4 mb-4">
-                  <div className="flex items-center gap-3">
-                    <LayoutGrid className="w-5 h-5 text-[#FF5C00]" />
-                    <h4 className="text-base font-kinder text-[#3C2B22] uppercase">{catName}</h4>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => addSubCategory(catName)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-zinc-600 hover:text-black border border-zinc-200 rounded-lg text-[10px] font-kinder uppercase cursor-pointer"
-                    >
-                      <Plus className="w-3.5 h-3.5" /> {t("Sous-catégorie")}
-                    </button>
-                    <button
-                      onClick={() => removeCategory(catName)}
-                      className="p-1.5 text-zinc-400 hover:text-red-500 bg-transparent border-none cursor-pointer"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
+          {/* Card 2: Tree View Structure */}
+          <div className="bg-white rounded-3xl border border-[#FF5C00] p-6 md:p-8 shadow-sm space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-100 pb-5">
+              <div>
+                <h3 className="text-xl font-kinder text-[#3C2B22] uppercase tracking-wider rtl:tracking-normal">
+                  {t("Arborescence Visuelle")}
+                </h3>
+                <p className="text-xs font-bold text-zinc-400 mt-1">
+                  {t("Faites glisser-déposer les catégories pour les réordonner. Cliquez pour déplier la structure.")}
+                </p>
+              </div>
+              <button
+                onClick={addCategory}
+                className="flex items-center gap-2 px-4 py-2.5 bg-[#FF5C00] hover:bg-[#A94320] text-white rounded-xl text-xs font-kinder uppercase tracking-widest rtl:tracking-normal transition-all border-none cursor-pointer shadow-sm self-start sm:self-center"
+              >
+                <Plus className="w-4 h-4" />
+                {t("Nouvelle Catégorie")}
+              </button>
+            </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Object.entries(subCats).map(([subName, subSubs]) => {
-                    return (
-                      <div key={subName} className="bg-white border border-zinc-100 rounded-2xl p-4 shadow-sm">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-[11px] font-kinder text-[#3C2B22] uppercase truncate pe-2">
-                            {subName}
-                          </span>
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => addSubSubCategory(catName, subName)}
-                              className="p-1 text-zinc-400 hover:text-green-600 bg-transparent border-none cursor-pointer"
-                            >
-                              <Plus className="w-3 h-3" />
-                            </button>
-                            <button
-                              onClick={() => removeSubCategory(catName, subName)}
-                              className="p-1 text-zinc-400 hover:text-red-500 bg-transparent border-none cursor-pointer"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </div>
+            <div className="space-y-4">
+              {hierarchyCategories.map((catName) => {
+                const subCats = hierarchy[catName] || {};
+                const isCatCollapsed = collapsedNodes[catName] ?? false;
+                const hasSubs = Object.keys(subCats).length > 0;
+
+                return (
+                  <div
+                    key={catName}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, catName)}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, catName)}
+                    className={`border rounded-2xl transition-all ${
+                      draggedCategory === catName
+                        ? "border-dashed border-orange-500 bg-orange-50/20 opacity-55"
+                        : "border-zinc-200/80 bg-zinc-50/25 hover:border-zinc-300"
+                    }`}
+                  >
+                    {/* Category Node Head */}
+                    <div className="flex items-center justify-between p-4 bg-zinc-50/60 rounded-t-2xl border-b border-zinc-100/70">
+                      <div className="flex items-center gap-3 min-w-0">
+                        {/* Drag Handle */}
+                        <div className="cursor-grab text-zinc-400 hover:text-zinc-600 px-1 py-1 shrink-0">
+                          <ArrowUpDown className="w-4 h-4" />
                         </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {subSubs.map((subSub) => (
-                            <div
-                              key={subSub}
-                              className="flex items-center gap-1 px-2 py-1 bg-zinc-50 border border-zinc-200 rounded-lg group"
-                            >
-                              <span className="text-[9px] font-bold text-zinc-500">{subSub}</span>
-                              <button
-                                onClick={() => removeSubSubCategory(catName, subName, subSub)}
-                                className="p-0.5 text-zinc-300 group-hover:text-red-500 bg-transparent border-none cursor-pointer"
-                              >
-                                <X className="w-2.5 h-2.5" />
-                              </button>
-                            </div>
-                          ))}
-                          {subSubs.length === 0 && <span className="text-[9px] italic text-zinc-300">{t("Vide")}</span>}
+
+                        {/* Expand/Collapse Trigger */}
+                        <button
+                          type="button"
+                          onClick={() => toggleNode(catName)}
+                          className="p-1 hover:bg-zinc-100 rounded-lg text-zinc-500 shrink-0 border-none bg-transparent cursor-pointer"
+                        >
+                          {isCatCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        </button>
+
+                        {/* Folder icon & Title */}
+                        <div className="flex items-center gap-2 min-w-0">
+                          {isCatCollapsed ? (
+                            <Folder className="w-4.5 h-4.5 text-[#FF5C00]" />
+                          ) : (
+                            <FolderOpen className="w-4.5 h-4.5 text-[#FF5C00]" />
+                          )}
+                          <span className="font-kinder text-xs text-[#3C2B22] uppercase tracking-wider truncate">
+                            {catName}
+                          </span>
                         </div>
                       </div>
-                    );
-                  })}
-                  {Object.keys(subCats).length === 0 && (
-                    <div className="col-span-full py-4 text-center text-zinc-400 text-[10px] font-bold border border-dashed border-zinc-200 rounded-2xl">
-                      {t("Aucune sous-catégorie définie.")}
+
+                      {/* Head Actions */}
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => addSubCategory(catName)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-zinc-600 hover:text-black border border-zinc-200 hover:border-zinc-300 rounded-xl text-[9px] font-kinder uppercase cursor-pointer"
+                        >
+                          <Plus className="w-3 h-3" /> {t("Sous-catégorie")}
+                        </button>
+                        <button
+                          onClick={() => renameCategory(catName)}
+                          className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg cursor-pointer bg-transparent border-none"
+                          title={t("Renommer")}
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => removeCategory(catName)}
+                          className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-lg cursor-pointer bg-transparent border-none"
+                          title={t("Supprimer")}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
-                  )}
-                </div>
-              </div>
-            ))}
+
+                    {/* Category Body (Subcategories) */}
+                    {!isCatCollapsed && (
+                      <div className="p-4 space-y-3 ps-8 border-t border-zinc-100 bg-white rounded-b-2xl">
+                        {!hasSubs ? (
+                          <div className="text-zinc-400 text-[10px] font-bold italic py-2 ps-4">
+                            {t("Aucune sous-catégorie définie.")}
+                          </div>
+                        ) : (
+                          Object.entries(subCats).map(([subName, subSubs]) => {
+                            const isSubCollapsed = collapsedNodes[`${catName}/${subName}`] ?? false;
+                            const hasSubSubs = Array.isArray(subSubs) && subSubs.length > 0;
+
+                            return (
+                              <div
+                                key={subName}
+                                className="border border-zinc-100 rounded-xl bg-zinc-50/15 overflow-hidden"
+                              >
+                                {/* Subcategory Head */}
+                                <div className="flex items-center justify-between p-3 bg-zinc-50/40 border-b border-zinc-100/70">
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleNode(`${catName}/${subName}`)}
+                                      className="p-1 hover:bg-zinc-100 rounded-lg text-zinc-500 shrink-0 border-none bg-transparent cursor-pointer"
+                                    >
+                                      {isSubCollapsed ? (
+                                        <ChevronRight className="w-3.5 h-3.5" />
+                                      ) : (
+                                        <ChevronDown className="w-3.5 h-3.5" />
+                                      )}
+                                    </button>
+                                    <span className="text-zinc-400 font-bold shrink-0">↳</span>
+                                    <span className="text-[11px] font-kinder text-zinc-700 uppercase tracking-tight truncate">
+                                      {subName}
+                                    </span>
+                                  </div>
+
+                                  {/* Sub Actions */}
+                                  <div className="flex items-center gap-1.5">
+                                    <button
+                                      onClick={() => addSubSubCategory(catName, subName)}
+                                      className="p-1 text-zinc-400 hover:text-green-600 hover:bg-zinc-100 rounded-lg bg-transparent border-none cursor-pointer"
+                                      title={t("Ajouter un élément")}
+                                    >
+                                      <Plus className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => renameSubCategory(catName, subName)}
+                                      className="p-1 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg bg-transparent border-none cursor-pointer"
+                                      title={t("Renommer")}
+                                    >
+                                      <Edit2 className="w-3 h-3" />
+                                    </button>
+                                    <button
+                                      onClick={() => removeSubCategory(catName, subName)}
+                                      className="p-1 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-lg bg-transparent border-none cursor-pointer"
+                                      title={t("Supprimer")}
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* Subcategory Body (Sub-subcategories) */}
+                                {!isSubCollapsed && (
+                                  <div className="p-3 ps-8 bg-white/50 border-t border-zinc-100/50 flex flex-wrap gap-2">
+                                    {!hasSubSubs ? (
+                                      <span className="text-[10px] text-zinc-400 italic font-bold">
+                                        {t("Aucun élément.")}
+                                      </span>
+                                    ) : (
+                                      subSubs.map((subSubName) => (
+                                        <div
+                                          key={subSubName}
+                                          className="flex items-center gap-1.5 px-3 py-1 bg-white border border-zinc-200/80 rounded-xl group hover:border-zinc-350 transition-colors"
+                                        >
+                                          <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-tight">
+                                            {subSubName}
+                                          </span>
+                                          <button
+                                            type="button"
+                                            onClick={() => removeSubSubCategory(catName, subName, subSubName)}
+                                            className="p-0.5 text-zinc-300 group-hover:text-red-500 rounded-md bg-transparent border-none cursor-pointer hover:bg-zinc-50"
+                                          >
+                                            <X className="w-2.5 h-2.5" />
+                                          </button>
+                                        </div>
+                                      ))
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       ) : (

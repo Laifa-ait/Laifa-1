@@ -54,11 +54,11 @@ export async function checkSellerVelocityLimit(sellerId: string) {
           if (hasSuccessfulPurchase || isOldAccount) {
             pendingCount++;
           } else {
-            (process.env.NODE_ENV === 'debug' ? console.log : function(){})(`[VELOCITY DOS DEFENSE] Ignored unverified/guest/new COD order ${doc.id} for seller ${sellerId} to prevent malicious shutdown attacks.`);
+            (process.env.NODE_ENV === 'development' ? console.log : function(){})(`[VELOCITY DOS DEFENSE] Ignored unverified/guest/new COD order ${doc.id} for seller ${sellerId} to prevent malicious shutdown attacks.`);
           }
         } else {
           // Anonymous or untracked buyer accounts are ignored from velocity counts to block bots
-          (process.env.NODE_ENV === 'debug' ? console.log : function(){})(`[VELOCITY DOS DEFENSE] Ignored untracked buyer order ${doc.id} for seller ${sellerId} to prevent malicious shutdowns.`);
+          (process.env.NODE_ENV === 'development' ? console.log : function(){})(`[VELOCITY DOS DEFENSE] Ignored untracked buyer order ${doc.id} for seller ${sellerId} to prevent malicious shutdowns.`);
         }
       }
     }
@@ -84,7 +84,7 @@ export async function checkSellerVelocityLimit(sellerId: string) {
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         resolved: false
       });
-      (process.env.NODE_ENV === 'debug' ? console.log : function(){})(`[KILL SWITCH] Suspended seller ${sellerId} (${pendingCount} pending orders).`);
+      (process.env.NODE_ENV === 'development' ? console.log : function(){})(`[KILL SWITCH] Suspended seller ${sellerId} (${pendingCount} pending orders).`);
     } else if (pendingCount <= 5 && sellerData?.velocitySuspended) {
       await sellerRef.update({
         isActive: true,
@@ -92,7 +92,7 @@ export async function checkSellerVelocityLimit(sellerId: string) {
         velocitySuspended: false,
         bgSuspended_reason: null
       });
-      (process.env.NODE_ENV === 'debug' ? console.log : function(){})(`[KILL SWITCH] Realigned seller ${sellerId} (${pendingCount} pending orders).`);
+      (process.env.NODE_ENV === 'development' ? console.log : function(){})(`[KILL SWITCH] Realigned seller ${sellerId} (${pendingCount} pending orders).`);
     }
   } catch (err) {
     console.error("Error in checkSellerVelocityLimit:", err);

@@ -42,9 +42,9 @@ export const InstallPrompt: React.FC = () => {
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
-      (process.env.NODE_ENV === 'debug' ? console.log : function(){})('User accepted the install prompt');
+      (process.env.NODE_ENV === 'development' ? console.log : function(){})('User accepted the install prompt');
     } else {
-      (process.env.NODE_ENV === 'debug' ? console.log : function(){})('User dismissed the install prompt');
+      (process.env.NODE_ENV === 'development' ? console.log : function(){})('User dismissed the install prompt');
     }
     setDeferredPrompt(null);
   };
@@ -61,7 +61,7 @@ export const InstallPrompt: React.FC = () => {
           initial={{ opacity: 0, y: 50, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 50, scale: 0.95 }}
-          className="fixed bottom-24 md:bottom-6 start-4 end-4 md:start-auto md:w-[350px] bg-white rounded-3xl p-5 shadow-[0_20px_50px_rgba(0,0,0,0.15)] z-[100] border border-zinc-100 flex gap-4 items-start"
+          className="fixed bottom-24 md:bottom-6 start-4 end-4 md:start-auto md:w-[350px] bg-white rounded-3xl p-5 shadow-2xl z-[100] border border-zinc-100 flex gap-4 items-start"
         >
           <div className="w-12 h-12 bg-orange-50 text-[#FF5C00] rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-orange-100">
              <Smartphone className="w-6 h-6" />

@@ -23,7 +23,7 @@ try {
       clientDb = getClientFirestore(clientApp, firebaseConfig.firestoreDatabaseId || "(default)");
     }
   } else {
-    (process.env.NODE_ENV === "debug" ? console.log : function () {})(
+    (process.env.NODE_ENV === "development" ? console.log : function () {})(
       "firebase-applet-config.json introuvable, initialisation du client ignorée."
     );
   }
@@ -32,7 +32,7 @@ try {
 }
 
 // Initialize Firebase Admin
-(process.env.NODE_ENV === "debug" ? console.log : function () {})(
+(process.env.NODE_ENV === "development" ? console.log : function () {})(
   "------------------ FIREBASE INITIALIZATION ------------------"
 );
 // Prioritize Environment Project ID as it is guaranteed to match the Ambient Credentials (ADC)
@@ -40,14 +40,14 @@ const envProjectId = process.env.FIREBASE_PROJECT_ID;
 const configProjectId = firebaseConfig.projectId;
 const targetProjectId = envProjectId || configProjectId;
 
-(process.env.NODE_ENV === "debug" ? console.log : function () {})("Environment Project ID:", envProjectId);
-(process.env.NODE_ENV === "debug" ? console.log : function () {})("Config Project ID:", configProjectId);
-(process.env.NODE_ENV === "debug" ? console.log : function () {})("Effective Target Project ID:", targetProjectId);
+(process.env.NODE_ENV === "development" ? console.log : function () {})("Environment Project ID:", envProjectId);
+(process.env.NODE_ENV === "development" ? console.log : function () {})("Config Project ID:", configProjectId);
+(process.env.NODE_ENV === "development" ? console.log : function () {})("Effective Target Project ID:", targetProjectId);
 
 try {
   if (admin.apps.length > 0) {
     const existingApp = admin.app();
-    (process.env.NODE_ENV === "debug" ? console.log : function () {})(
+    (process.env.NODE_ENV === "development" ? console.log : function () {})(
       "Firebase: Reusing existing [DEFAULT] app:",
       existingApp.name
     );
@@ -59,13 +59,13 @@ try {
         "Firebase: targetProjectId is undefined. Provide FIREBASE_PROJECT_ID env var or firebase-applet-config.json"
       );
     }
-    (process.env.NODE_ENV === "debug" ? console.log : function () {})(
+    (process.env.NODE_ENV === "development" ? console.log : function () {})(
       "Firebase: Initializing with project ID:",
       runtimeProjectId
     );
 
     if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-      (process.env.NODE_ENV === "debug" ? console.log : function () {})(
+      (process.env.NODE_ENV === "development" ? console.log : function () {})(
         "Firebase: Initializing with explicit Service Account credentials."
       );
       let serviceAccount;
@@ -99,14 +99,14 @@ const setupFirestore = () => {
     const adminApp = admin.app();
     const configDatabaseId = firebaseConfig.firestoreDatabaseId;
 
-    (process.env.NODE_ENV === "debug" ? console.log : function () {})(
+    (process.env.NODE_ENV === "development" ? console.log : function () {})(
       "Firestore: Initializing for project",
       adminApp.options.projectId
     );
 
     // Attempt with named database if provided
     if (configDatabaseId && configDatabaseId !== "(default)") {
-      (process.env.NODE_ENV === "debug" ? console.log : function () {})(
+      (process.env.NODE_ENV === "development" ? console.log : function () {})(
         "Firestore: Attempting with Target database ID:",
         configDatabaseId
       );
@@ -115,7 +115,7 @@ const setupFirestore = () => {
         // We don't await here to avoid blocking startup excessively,
         // but we will use this logic to set 'db'
         db = testDb;
-        (process.env.NODE_ENV === "debug" ? console.log : function () {})(
+        (process.env.NODE_ENV === "development" ? console.log : function () {})(
           "Firestore: Initialized with Named DB:",
           configDatabaseId
         );
@@ -125,7 +125,7 @@ const setupFirestore = () => {
       }
     } else {
       db = adminApp.firestore();
-      (process.env.NODE_ENV === "debug" ? console.log : function () {})("Firestore: Using (default) database.");
+      (process.env.NODE_ENV === "development" ? console.log : function () {})("Firestore: Using (default) database.");
     }
   } catch (err: any) {
     console.error("Firestore: Critical setup failure:", err.message);
@@ -138,10 +138,10 @@ export const verifyAndFixDb = async () => {
   }
   // Try a tiny read to check permissions
   await db.collection("products").limit(1).get();
-  (process.env.NODE_ENV === "debug" ? console.log : function () {})("Firestore: Connection verified.");
+  (process.env.NODE_ENV === "development" ? console.log : function () {})("Firestore: Connection verified.");
 };
 
 setupFirestore();
-(process.env.NODE_ENV === "debug" ? console.log : function () {})("-----------------------------------------");
+(process.env.NODE_ENV === "development" ? console.log : function () {})("-----------------------------------------");
 
 export { admin, clientCollection, clientGetDocs };

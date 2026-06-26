@@ -10,7 +10,7 @@ import {
   updateProfile,
   sendEmailVerification,
 } from "firebase/auth";
-import { auth, db } from "../lib/firebase";
+import { auth, db, withTimeout } from "../lib/firebase";
 import { doc, onSnapshot, getDoc, setDoc, serverTimestamp, collection, addDoc } from "firebase/firestore";
 import { ALGERIA_WILAYAS, ALGERIA_SHIPPING_DATA } from "../constants";
 import { UserProfile } from "../types";
@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             const userDocRef = doc(db, "users", user.uid);
             let userDoc;
             try {
-              userDoc = await getDoc(userDocRef);
+              userDoc = await withTimeout(getDoc(userDocRef));
             } catch (err) {
               console.warn("AuthContext: getDoc failed", err);
               throw err;
@@ -139,7 +139,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       // Create/update user doc
       const userDocRef = doc(db, "users", user.uid);
-      const userDoc = await getDoc(userDocRef);
+      const userDoc = await withTimeout(getDoc(userDocRef));
 
       if (!userDoc.exists()) {
         const userRole = checkIsAdminEmail(user.email) ? "admin" : role || "buyer";
@@ -200,7 +200,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Ensure doc exists ONLY if verified
     if (user.emailVerified) {
       const userDocRef = doc(db, "users", user.uid);
-      const userDoc = await getDoc(userDocRef);
+      const userDoc = await withTimeout(getDoc(userDocRef));
       if (!userDoc.exists()) {
         const pendingRole = localStorage.getItem("olmart_pending_registration_role") || "buyer";
         const userRole = pendingRole === "seller" ? "seller" : "buyer";
@@ -302,7 +302,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       signUpWithEmail,
       logout,
     }),
-    [currentUser, userProfile]
+    [currentUser, userProfile, loading]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -311,7 +311,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    console.warn("useAuth used outside AuthProvider");
+    return { currentUser: null, userProfile: null, loading: false } as unknown as AuthContextType;
   }
   return context;
 };

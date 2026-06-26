@@ -4,29 +4,18 @@ import { Search, X, Loader2, ArrowRight, Clock, Star, TrendingUp, History } from
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useShop } from "../../context/ShopContext";
-import { collection, query, limit, getDocs } from "firebase/firestore";
+import { collection, query, limit, getDocs, where, orderBy } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { Product } from "../../types";
 import { formatPrice } from "../../utils/format";
 import { useTrendingSearches } from "../../hooks/useTrendingSearches";
 import { getOptimizedImageUrl } from "../../utils/imageUtils";
+import { useDebounce } from "../../hooks/useDebounce";
 
 interface AdvancedSearchbarProps {
   className?: string;
   isMobile?: boolean;
   variant?: "default" | "glass";
-}
-
-// Custom hook for debouncing
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-    return () => clearTimeout(handler);
-  }, [value, delay]);
-  return debouncedValue;
 }
 
 export const AdvancedSearchbar: React.FC<AdvancedSearchbarProps> = ({
@@ -46,6 +35,8 @@ export const AdvancedSearchbar: React.FC<AdvancedSearchbarProps> = ({
   const [isSearching, setIsSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [totalProductsCount, setTotalProductsCount] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
 
   const isOverlayActive = isFocused || showDropdown;
 
@@ -57,35 +48,41 @@ export const AdvancedSearchbar: React.FC<AdvancedSearchbarProps> = ({
 
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
   useEffect(() => {
-    let resizeTimer: any;
+    let resizeTimer: number | undefined;
     const handleResize = () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
         setIsMobileView(window.innerWidth < 768);
       }, 100);
     };
     window.addEventListener("resize", handleResize, { passive: true });
     return () => {
-      clearTimeout(resizeTimer);
+      window.clearTimeout(resizeTimer);
       window.removeEventListener("resize", handleResize);
     };
   }, []);
 
   // Load recent searches and fallback recommendations on mount
   useEffect(() => {
-    const saved = localStorage.getItem("olma_recent_searches");
-    if (saved) {
-      try {
+    try {
+      const saved = localStorage.getItem("olma_recent_searches");
+      if (saved) {
         setRecentSearches(JSON.parse(saved));
-      } catch (e) {
-        setRecentSearches([]);
       }
+    } catch (e) {
+      console.warn("localStorage loading failed in search-bar:", e);
+      setRecentSearches([]);
     }
 
     // Pre-fetch a few popular/fallback products for zero results or empty state recommendations
     const fetchFallbacks = async () => {
       try {
-        const q = query(collection(db, "products"), limit(4));
+        const q = query(
+          collection(db, "products"),
+          where("status", "==", "active"),
+          orderBy("createdAt", "desc"),
+          limit(4)
+        );
         const snap = await getDocs(q);
         const prods = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as unknown as Product);
         setFallbackProducts(prods);
@@ -127,6 +124,7 @@ export const AdvancedSearchbar: React.FC<AdvancedSearchbarProps> = ({
     const performSearch = async () => {
       if (!debouncedQuery.trim()) {
         setResults([]);
+        setTotalProductsCount(0);
         return;
       }
 
@@ -139,6 +137,7 @@ export const AdvancedSearchbar: React.FC<AdvancedSearchbarProps> = ({
         }
         const data = await response.json();
         const found = data.products || [];
+        setTotalProductsCount(found.length);
         setResults(found.slice(0, 5)); // Show up to 5 visual results
         setMatchedStores(data.stores || []);
       } catch (error) {
@@ -149,6 +148,7 @@ export const AdvancedSearchbar: React.FC<AdvancedSearchbarProps> = ({
     };
 
     performSearch();
+    setSelectedIndex(-1); // reset selection index on query change
   }, [debouncedQuery]);
 
   const saveSearchTerm = (term: string) => {
@@ -156,7 +156,25 @@ export const AdvancedSearchbar: React.FC<AdvancedSearchbarProps> = ({
     if (!trimmed) return;
     const updated = [trimmed, ...recentSearches.filter((s) => s !== trimmed)].slice(0, 5);
     setRecentSearches(updated);
-    localStorage.setItem("olma_recent_searches", JSON.stringify(updated));
+    try {
+      localStorage.setItem("olma_recent_searches", JSON.stringify(updated));
+    } catch (e) {
+      console.warn("localStorage item set failed:", e);
+    }
+  };
+
+  const getNavigationItems = () => {
+    if (!localQuery.trim()) {
+      return [
+        ...recentSearches.map(term => ({ type: "recent" as const, value: term })),
+        ...trendingSearches.map(term => ({ type: "trending" as const, value: term }))
+      ];
+    } else {
+      return [
+        ...matchedStores.map(store => ({ type: "store" as const, value: store.id || store.uid, name: store.shopName || store.displayName })),
+        ...results.map(prod => ({ type: "product" as const, value: prod.id, name: prod.name }))
+      ];
+    }
   };
 
   const handleSearchSubmit = () => {
@@ -170,8 +188,33 @@ export const AdvancedSearchbar: React.FC<AdvancedSearchbarProps> = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleSearchSubmit();
+    const items = getNavigationItems();
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedIndex(prev => Math.min(prev + 1, items.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedIndex(prev => Math.max(prev - 1, -1));
+    } else if (e.key === "Enter") {
+      if (selectedIndex >= 0 && selectedIndex < items.length) {
+        e.preventDefault();
+        const item = items[selectedIndex];
+        if (item.type === "recent" || item.type === "trending") {
+          selectTrendingOrRecent(item.value);
+        } else if (item.type === "store") {
+          navigate(`/store/${item.value}`);
+          setShowDropdown(false);
+          setIsFocused(false);
+        } else if (item.type === "product") {
+          navigateToProduct(item.value, item.name || "");
+        }
+      } else {
+        handleSearchSubmit();
+      }
+    } else if (e.key === "Escape") {
+      setShowDropdown(false);
+      setIsFocused(false);
+      inputRef.current?.blur();
     }
   };
 
@@ -201,12 +244,17 @@ export const AdvancedSearchbar: React.FC<AdvancedSearchbarProps> = ({
     e.stopPropagation();
     const updated = recentSearches.filter((s) => s !== term);
     setRecentSearches(updated);
-    localStorage.setItem("olma_recent_searches", JSON.stringify(updated));
+    try {
+      localStorage.setItem("olma_recent_searches", JSON.stringify(updated));
+    } catch (err) {
+      console.warn("localStorage recent search delete failed:", err);
+    }
   };
 
   const highlightMatch = (text: string, query: string) => {
     if (!query) return text;
-    const parts = text.split(new RegExp(`(${query})`, "gi"));
+    const escapedQuery = query.replace(/[.+*?^${}()|[\]\\]/g, "\\$&");
+    const parts = text.split(new RegExp(`(${escapedQuery})`, "gi"));
     return (
       <span>
         {parts.map((part, i) =>
@@ -243,19 +291,19 @@ export const AdvancedSearchbar: React.FC<AdvancedSearchbarProps> = ({
         className={`relative w-full transition-all duration-500 ease-out ${isOverlayActive ? "z-[50] sm:scale-[1.02]" : "z-[10]"} ${className}`}
       >
         <div
-          className={`flex items-center w-full transition-all duration-300 ease-out group h-10 sm:h-12 border-b ${
+          className={`flex items-center w-full transition-all duration-300 ease-out group h-10 sm:h-11 rounded-full px-1 ${
             isOverlayActive
-              ? "bg-white/50 border-[#FF5C00]"
+              ? "bg-white border border-slate-200 shadow-lg"
               : variant === "glass"
-                ? "bg-transparent border-[#FF5C00] hover:border-[#FF5C00]/50"
-                : "bg-transparent border-[#FF5C00]"
+                ? "bg-white/10 backdrop-blur-md border border-white/20 text-white"
+                : "bg-slate-100 border border-transparent hover:bg-slate-200/80"
           }`}
         >
           <button
             onClick={handleSearchSubmit}
-            className={`ps-2 pe-3 flex items-center justify-center shrink-0 cursor-pointer bg-transparent border-none transition-colors duration-300 ${isOverlayActive ? "text-[#FF5C00]" : "text-[#3C2B22]/40 hover:text-[#FF5C00]"}`}
+            className={`ps-3 pe-2 flex items-center justify-center shrink-0 cursor-pointer bg-transparent border-none transition-colors duration-300 ${isOverlayActive ? "text-sky-500" : "text-slate-400 group-hover:text-slate-500"}`}
           >
-            <Search className="w-4 h-4 sm:w-5 sm:h-5 stroke-[1.5]" />
+            <Search className="w-4 h-4 sm:w-[18px] sm:h-[18px] stroke-[1.5]" />
           </button>
 
           <input
@@ -272,13 +320,13 @@ export const AdvancedSearchbar: React.FC<AdvancedSearchbarProps> = ({
             }}
             onKeyDown={handleKeyDown}
             placeholder={isMobileView ? t("search") || "Recherche" : t("search_placeholder") || "Recherche..."}
-            className={`bg-transparent border-none text-[15px] focus:outline-none w-full h-full px-2 font-medium shadow-none text-[#3C2B22] placeholder:text-[#3C2B22]/40 text-ellipsis whitespace-nowrap`}
+            className={`bg-transparent border-none text-[14px] sm:text-[15px] focus:outline-none w-full h-full px-2 font-medium shadow-none text-slate-800 placeholder:text-slate-400 text-ellipsis whitespace-nowrap`}
           />
 
           {localQuery && (
             <button
               onClick={clearSearch}
-              className="p-1 hover:text-[#FF5C00] text-[#3C2B22]/30 transition-colors bg-transparent border-none flex items-center justify-center cursor-pointer me-2"
+              className="p-1.5 hover:text-sky-500 text-slate-400 transition-colors bg-transparent border-none flex items-center justify-center cursor-pointer me-1 rounded-full hover:bg-slate-100"
             >
               <X className="w-4 h-4 stroke-[1.5]" />
             </button>
@@ -287,7 +335,7 @@ export const AdvancedSearchbar: React.FC<AdvancedSearchbarProps> = ({
 
         {/* Predictive & Interactive Mega Search Dropdown Overlay */}
         {isOverlayActive && (
-          <div className="fixed inset-x-0 top-[57px] sm:top-[73px] md:absolute md:inset-auto md:top-[calc(100%+0.5rem)] md:left-1/2 md:-translate-x-1/2 md:w-[850px] lg:w-[950px] bg-[#FDF9EC] border-b border-[#FF5C00]/80 shadow-[0_30px_60px_-15px_rgba(44,30,22,0.15)] z-[150] rounded-b-[1.5rem] rounded-t-none md:rounded-[2rem] overflow-hidden md:backdrop-blur-xl max-h-[85vh] overflow-y-auto">
+          <div className="fixed inset-x-0 top-[57px] sm:top-[73px] md:absolute md:inset-auto md:top-[calc(100%+0.5rem)] md:left-1/2 md:-translate-x-1/2 md:w-[850px] lg:w-[950px] bg-[#FDF9EC] border-b border-[#FF5C00]/80 shadow-2xl z-[150] rounded-b-[1.5rem] rounded-t-none md:rounded-[2rem] overflow-hidden md:backdrop-blur-xl max-h-[85vh] overflow-y-auto">
             <div className="p-4 md:p-8 space-y-4 md:space-y-8">
               {/* Overlay Header for Mobile/Quick Exit */}
               <div className="flex items-center justify-end pb-2 md:hidden">
@@ -416,9 +464,16 @@ export const AdvancedSearchbar: React.FC<AdvancedSearchbarProps> = ({
                       {/* Products Section */}
                       {results.length > 0 && (
                         <div className="space-y-4">
-                          <h4 className="text-sm font-semibold text-[#3C2B22]">
-                            {t("matching_creations") || "Créations correspondantes"}
-                          </h4>
+                          <div className="flex items-center justify-between border-b border-[#FF5C00]/30 pb-2">
+                            <h4 className="text-sm font-semibold text-[#3C2B22]">
+                              {t("matching_creations") || "Créations correspondantes"}
+                            </h4>
+                            {totalProductsCount > 5 && (
+                              <span className="text-xs text-[#3C2B22]/60 font-medium">
+                                {t("showing_5_of_total", { count: totalProductsCount }) || `Affichage de 5 sur ${totalProductsCount} créations`}
+                              </span>
+                            )}
+                          </div>
                           <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                             {results.map((product) => {
                               return (

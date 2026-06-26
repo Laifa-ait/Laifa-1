@@ -7,7 +7,34 @@ import { authenticateToken, authorizeSeller } from "../middlewares/auth";
 import { ALGERIA_WILAYAS, ALGERIA_SHIPPING_DATA } from "../constants";
 import { placeOrderSchema } from "../utils/validation";
 import { checkSellerVelocityLimit } from "../utils/velocity";
-import { firestoreBreaker } from "../utils/circuitBreaker";
+import { orderBreaker } from "../utils/circuitBreaker";
+import nodemailer from "nodemailer";
+
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'smtp.ethereal.email',
+  port: Number(process.env.SMTP_PORT) || 587,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  }
+});
+
+const sendLowStockEmail = async (sellerEmail: string, message: string) => {
+   try {
+     if (!process.env.SMTP_USER) {
+        console.log("Mock Email Sent (SMTP not configured). To:", sellerEmail, "Message:", message);
+        return;
+     }
+     await transporter.sendMail({
+       from: '"Olmart" <noreply@olmart.dz>',
+       to: sellerEmail,
+       subject: "⚠️ Alerte Stock Critique - Olmart",
+       text: message
+     });
+   } catch (err) {
+     console.error("Failed to send stock alert email", err);
+   }
+};
 
 const router = Router();
 
@@ -75,8 +102,10 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
 
     let sellerIdsArray: string[] = [];
     const shopSnapshots = new Map<string, any>();
+    const emailAlerts: {sellerId: string, message: string}[] = [];
 
-    const result = await firestoreBreaker.execute(() => db.runTransaction(async (t: any) => {
+    const result = await orderBreaker.execute(() => db.runTransaction(async (t: any) => {
+      emailAlerts.length = 0; // Clear on retry
       // --- ÉTAPE 1 : LECTURES TRANSACTIONNELLES PURES ---
       let couponDoc: any = null;
       
@@ -205,7 +234,7 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
         if (variantInfo) {
            productData.variants = productData.variants.map((v: any) => {
               if (v.name === variantInfo.name) {
-                 return { ...v, stock: (Number(v.stock) - cartItem.quantity).toString() };
+                 return { ...v, stock: Number(v.stock) - cartItem.quantity };
               }
               return v;
            });
@@ -221,16 +250,57 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
       for (const pId of uniqueProductIds) {
         const finalData = productInMemoryStates.get(pId);
         const ref = productRefs.get(pId);
+        const stockThreshold = Number(finalData.lowStockAlert) || 5;
+        
+        let needsAlert = false;
+        let alertMessage = "";
+        
         if (finalData.variants) {
+           const lowVariants = finalData.variants.filter((v: any) => v.isActive !== false && Number(v.stock) <= stockThreshold);
+           if (lowVariants.length > 0) {
+              needsAlert = true;
+              alertMessage = `Alerte: La(es) variante(s) ${lowVariants.map((v:any)=>v.name).join(', ')} du produit "${finalData.name}" a atteint le stock critique (<= ${stockThreshold}).`;
+           }
            stockUpdates.push({ ref, update: { 
               variants: finalData.variants,
               hasOutOfStockVariants: finalData.hasOutOfStockVariants,
               stock: finalData.stock
            }});
         } else {
+           if (finalData.stock <= stockThreshold) {
+              needsAlert = true;
+              alertMessage = `Alerte: Le produit "${finalData.name}" a atteint le stock critique (${finalData.stock} restants, seuil: ${stockThreshold}).`;
+           }
            stockUpdates.push({ ref, update: { 
               stock: finalData.stock
            }});
+        }
+
+        if (needsAlert) {
+           emailAlerts.push({ sellerId: finalData.sellerId, message: alertMessage });
+           
+           const alertRef = db.collection("internal_notifications").doc();
+           t.set(alertRef, {
+              type: "LOW_STOCK_ALERT",
+              title: "⚠️ Stock Critique",
+              message: alertMessage,
+              sellerId: finalData.sellerId,
+              productId: pId,
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              read: false,
+              priority: "high"
+           });
+           
+           // Mock trigger for push/email
+           const pushRef = db.collection("push_queue").doc();
+           t.set(pushRef, {
+              userId: finalData.sellerId,
+              title: "⚠️ Stock Critique",
+              body: alertMessage,
+              type: "inventory",
+              status: "pending",
+              createdAt: admin.firestore.FieldValue.serverTimestamp()
+           });
         }
       }
 
@@ -558,11 +628,26 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
       t.set(masterOrderRef, masterOrderData);
 
       return { orderId: subOrdersToCreate[0].ref.id, total: grandTotalBeforeWallet, walletDeducted, codAmount };
-    }));
+    }), userId);
 
     // Enforce instant velocity limits right after placing the order
     for (const sellerId of sellerIdsSet) {
        await checkSellerVelocityLimit(sellerId);
+    }
+
+    // Process out-of-band email alerts asynchronously
+    if (emailAlerts.length > 0) {
+       Promise.all(emailAlerts.map(async alert => {
+          try {
+             const userSnap = await db.collection("users").doc(alert.sellerId).get();
+             const email = userSnap.data()?.email;
+             if (email) {
+                await sendLowStockEmail(email, alert.message);
+             }
+          } catch (e) {
+             console.error("Erreur lors de l'envoi de l'email de stock bas", e);
+          }
+       })).catch(console.error);
     }
 
     res.json({ 
@@ -602,15 +687,21 @@ router.post("/validate-coupon", authenticateToken, async (req: AuthenticatedRequ
       return res.status(400).json({ error: "Ce code promo n'est plus actif." });
     }
     
-    if (new Date(couponData.expiryDate) <= new Date()) {
-      return res.status(400).json({ error: "Ce code promo est expiré." });
+    const now = new Date();
+    const expiryDateRaw = couponData.expiresAt || couponData.expiryDate;
+    const expiresAt = expiryDateRaw?.toDate ? expiryDateRaw.toDate() : (expiryDateRaw ? new Date(expiryDateRaw) : undefined);
+    
+    if (expiresAt && expiresAt < now) {
+      return res.status(400).json({ error: "Ce code promo a expiré." });
     }
     
     if (subtotal < (couponData.minOrderValue || 0)) {
-      return res.status(400).json({ error: `Un minimum de commande de ${couponData.minOrderValue} DA est requis.` });
+      return res.status(400).json({ error: `Un minimum de commande de ${couponData.minOrderValue || 0} DA est requis.` });
     }
     
-    if (couponData.usageLimit && (couponData.usageCount || 0) >= couponData.usageLimit) {
+    const currentUses = Number(couponData.usedCount || couponData.usageCount || 0);
+    const maxUsesLimit = Number(couponData.maxUses || couponData.usageLimit || 0);
+    if (maxUsesLimit > 0 && currentUses >= maxUsesLimit) {
       return res.status(400).json({ error: "Ce code promo a atteint sa limite d'utilisation." });
     }
     
@@ -721,12 +812,62 @@ router.post('/calculate-commissions', authenticateToken, async (req: Authenticat
     const { orders } = req.body;
     if (!orders || !Array.isArray(orders)) return res.status(400).json({ error: 'Valid orders array required' });
     
+    // 1. Role-Based Access Validation Middleware / Integrity Check
+    const userRole = req.user?.role;
+    const userId = req.user?.uid;
+    if (userRole !== 'admin' && userRole !== 'seller') {
+      return res.status(403).json({ error: 'Accès refusé. Autorisation insuffisante pour calculer les commissions.' });
+    }
+
+    // 2. Fetch authentic order data from Firestore DB to override incoming client data
+    const incomingOrderIds = orders.map(o => o.id || o.orderId).filter(Boolean);
+    const dbOrdersMap = new Map<string, any>();
+    
+    if (incomingOrderIds.length > 0) {
+      // Chunk size of 30 due to Firestore "in" operator limits
+      const chunks: string[][] = [];
+      for (let i = 0; i < incomingOrderIds.length; i += 30) {
+        chunks.push(incomingOrderIds.slice(i, i + 30));
+      }
+      for (const chunk of chunks) {
+        const snap = await db.collection('orders').where(admin.firestore.FieldPath.documentId(), 'in', chunk).get();
+        snap.docs.forEach(doc => {
+          dbOrdersMap.set(doc.id, { id: doc.id, ...doc.data() });
+        });
+      }
+    }
+
+    // 3. Absolute Integrity Sanitization: Overwrite parameters with values from DB, and filter out unauthorized data
+    const validatedOrders: any[] = [];
+    for (const o of orders) {
+      const oid = o.id || o.orderId;
+      if (oid && dbOrdersMap.has(oid)) {
+        const dbOrder = dbOrdersMap.get(oid);
+        
+        // If caller is a seller, they can ONLY calculate commission on their own products/orders
+        if (userRole === 'seller') {
+          const isMyOrder = dbOrder.sellerId === userId || 
+                            (dbOrder.sellerIds && dbOrder.sellerIds.includes(userId)) ||
+                            (dbOrder.items && dbOrder.items.some((item: any) => item.sellerId === userId));
+          if (!isMyOrder) {
+            continue; // Silently filter out other seller data to protect client VIP database
+          }
+        }
+        validatedOrders.push(dbOrder);
+      } else {
+        // Fallback for mock/simulation if and only if caller is Admin (debugging/diagnostics)
+        if (userRole === 'admin') {
+          validatedOrders.push(o);
+        }
+      }
+    }
+
     let totalVolume = 0;
     let totalCommission = 0;
     
     // Fetch all sellers in one go to minimize DB calls
-    const sellerIds = new Set();
-    orders.forEach(o => {
+    const sellerIds = new Set<string>();
+    validatedOrders.forEach(o => {
        if (o.sellerIds) o.sellerIds.forEach(id => sellerIds.add(id));
        else if (o.sellerId) sellerIds.add(o.sellerId);
        o.items?.forEach(i => { if (i.sellerId) sellerIds.add(i.sellerId); });
@@ -745,7 +886,7 @@ router.post('/calculate-commissions', authenticateToken, async (req: Authenticat
       });
     }
 
-    const calculatedOrders = orders.map(order => {
+    const calculatedOrders = validatedOrders.map(order => {
        let orderCommission = 0;
        
        if (order.items && order.items.length > 0) {

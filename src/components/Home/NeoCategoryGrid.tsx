@@ -30,7 +30,7 @@ export const NeoCategoryGrid: React.FC<{
               setActiveCategory(card.key);
               navigate("/shop");
             }}
-            className={`relative shrink-0 snap-center w-[85vw] sm:w-[400px] md:w-auto rounded-[3rem] overflow-hidden cursor-pointer shadow-[0_16px_48px_rgba(26,20,16,0.10)] border border-[#E5DED4]/30 group ${
+            className={`relative shrink-0 snap-center w-[85vw] sm:w-[400px] md:w-auto rounded-3xl overflow-hidden cursor-pointer shadow-sm border border-slate-200 group ${
               index === 0 ? "md:col-span-2 md:row-span-2 h-[260px] md:h-[624px]" : "h-[260px] md:h-[300px]"
             }`}
           >
@@ -42,19 +42,20 @@ export const NeoCategoryGrid: React.FC<{
               referrerPolicy="no-referrer"
             />
             
-            {/* Playful color gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#1A1410]/80 via-[#1A1410]/20 to-transparent opacity-90 group-hover:opacity-100 transition-opacity duration-500" />
+            {/* Uniform dark filter for contrast + Playful color gradient overlay */}
+            <div className="absolute inset-0 bg-black/30 transition-colors duration-500 group-hover:bg-black/40 z-0" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity duration-500 z-0" />
 
             <div className="absolute inset-x-0 bottom-0 p-8 flex flex-col justify-end items-start z-10">
               {card.key === favoriteCategory && (
-                <span className="mb-4 bg-[#D4A574]/20 px-4 py-1.5 rounded-full font-sans text-[11px] rtl:text-[12px] font-serif uppercase tracking-widest rtl:tracking-normal text-[#D4A574] border border-[#D4A574]/30 backdrop-blur-sm">
+                <span className="mb-4 bg-sky-50/20 px-4 py-1.5 rounded-full font-sans text-[11px] rtl:text-[12px] font-bold uppercase tracking-widest rtl:tracking-normal text-sky-400 border border-sky-400/30 backdrop-blur-sm">
                   {t("home.category.recommended_star")} 
                 </span>
               )}
-              <h3 className="text-4xl md:text-6xl font-serif text-white tracking-tighter rtl:tracking-normal mb-2 uppercase drop-shadow-sm group-hover:text-[#F5F0E8] transition-colors leading-none">
+              <h3 className="text-4xl md:text-6xl font-display font-bold text-white tracking-tighter rtl:tracking-normal mb-2 uppercase drop-shadow-sm group-hover:text-slate-100 transition-colors leading-none">
                 {card.title}
               </h3>
-              <span className="font-sans font-bold text-[#F5F0E8] text-xs rtl:text-sm tracking-widest rtl:tracking-normal uppercase mt-1">
+              <span className="font-sans font-medium text-slate-200 text-xs rtl:text-sm tracking-widest rtl:tracking-normal uppercase mt-1">
                 {card.subtitle}
               </span>
             </div>

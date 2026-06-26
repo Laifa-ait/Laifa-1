@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { motion, AnimatePresence } from "motion/react";
 import { Product, Shop } from "../../../types";
 import { formatPrice } from "../../../utils/format";
 import { DYNAMIC_CATEGORIES } from "../../../config/dynamicFilters";
@@ -87,6 +88,13 @@ export const ProductInfo: React.FC<InfoProps> = ({
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+
+  const [openAccordion, setOpenAccordion] = useState<string | null>("description");
+  const [isDescExpanded, setIsDescExpanded] = useState(false);
+
+  const toggleAccordion = (section: string) => {
+    setOpenAccordion(openAccordion === section ? null : section);
+  };
 
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
   const isProductFlashActive = !!(
@@ -238,67 +246,29 @@ export const ProductInfo: React.FC<InfoProps> = ({
       />
       {/* HEADER SECTION */}
       <div className="space-y-4">
-        <div className="flex flex-wrap items-center gap-3">
-           <span className="px-4 py-1.5 bg-[#FDF9EC] text-[#3C2B22] border-2 border-white shadow-sm rounded-full font-bold text-[10px] rtl:text-[12px] uppercase tracking-widest rtl:tracking-normal">
-            {product.category}
-          </span>
-          {product.subcategory && (
-             <span className="px-4 py-1.5 bg-white text-[#3C2B22]/80 border-2 border-white shadow-sm rounded-full font-bold text-[10px] rtl:text-[12px] uppercase tracking-widest rtl:tracking-normal">
-              {product.subcategory}
-            </span>
-          )}
-          {product.subSubCategory && (
-             <span className="px-4 py-1.5 bg-white text-[#3C2B22]/80 border-2 border-white shadow-sm rounded-full font-bold text-[10px] rtl:text-[12px] uppercase tracking-widest rtl:tracking-normal">
-              {product.subSubCategory}
-            </span>
-          )}
-          {product.gender && product.gender !== "mixed" && (
-             <span className="px-4 py-1.5 bg-white text-[#3C2B22]/80 border-2 border-white shadow-sm rounded-full font-medium text-[10px] rtl:text-[12px] uppercase tracking-wider rtl:tracking-normal">
-              {product.gender}
-            </span>
-          )}
-          {product.tags &&
-            product.tags.length > 0 &&
-            product.tags.map((tag: any, idx: number) => (
-               <span
-                key={`tag-${idx}`}
-                className="px-4 py-1.5 bg-white text-[#3C2B22]/80 border-2 border-white shadow-sm rounded-full font-medium text-[10px] rtl:text-[12px] uppercase tracking-wider rtl:tracking-normal"
-              >
-                {tag.label || tag}
-              </span>
-            ))}
-          {product.materials && product.materials.length > 0 && (
-             <span className="px-4 py-1.5 bg-white text-[#3C2B22]/80 border-2 border-white shadow-sm rounded-full font-medium text-[10px] rtl:text-[12px] uppercase tracking-wider rtl:tracking-normal">
-              {MATERIAL_TRANSLATIONS[product.materials[0]]?.[currentLang] || product.materials[0]}
-            </span>
-          )}
-          {product.brand && (
-             <span className="px-4 py-1.5 bg-white text-[#3C2B22]/80 border-2 border-white shadow-sm rounded-full font-medium text-[10px] rtl:text-[12px] uppercase tracking-wider rtl:tracking-normal">
-              {product.brand}
-            </span>
-          )}
-          {product.condition && (
-             <span className="px-4 py-1.5 bg-[#FF5C00]/10 text-[#FF5C00] border-2 border-[#FF5C00]/20 shadow-sm rounded-full font-bold text-[10px] rtl:text-[12px] uppercase tracking-wider rtl:tracking-normal">
+        {product.condition && (
+          <div className="flex flex-wrap items-center gap-2">
+             <span className="text-[10px] rtl:text-[12px] uppercase tracking-widest text-black/60 font-medium">
               {product.condition}
             </span>
-          )}
-        </div>
+          </div>
+        )}
 
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-kinder text-[#3C2B22] uppercase tracking-wide drop-shadow-sm leading-[1.1]">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-sans text-black uppercase tracking-wide leading-tight break-words">
           {productName}
         </h1>
 
-        <div className="flex items-end gap-4 pt-2">
-           <div className="text-4xl sm:text-5xl font-kinder text-[#FF5C00] tracking-wide drop-shadow-sm">
+        <div className="flex items-end gap-3 pt-1">
+           <div className="text-2xl sm:text-3xl font-sans font-medium text-black">
             {formatPrice(currentPrice)}
           </div>
           {isProductFlashActive ? (
-             <div className="text-xl sm:text-2xl font-bold text-[#3C2B22]/50 line-through mb-1.5 font-sans">
+             <div className="text-lg sm:text-xl text-black/40 line-through mb-1 font-sans">
               {formatPrice(product.price)}
             </div>
           ) : (
             product.onSale && (
-               <div className="text-xl sm:text-2xl font-bold text-[#3C2B22]/50 line-through mb-1.5 font-sans">
+               <div className="text-lg sm:text-xl text-black/40 line-through mb-1 font-sans">
                 {formatPrice(currentPrice * 1.2)}
               </div>
             )
@@ -307,71 +277,61 @@ export const ProductInfo: React.FC<InfoProps> = ({
       </div>
 
       {isProductFlashActive && (
-         <div className="border-[3px] border-[#FF5C00]/30 bg-[#FDF9EC] p-6 rounded-[2rem] shadow-sm mb-6 relative overflow-hidden">
-          {/* Flame warning banner */}
-          <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-[#FF5C00] via-[#FF5C00] to-yellow-500" />
-
+         <div className="border border-black/10 p-4 sm:p-5 mb-6 relative">
           <div className="flex flex-col gap-4 relative z-10">
             {/* Header badges and title */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b-[3px] border-[#FF5C00]/20 pb-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/10 pb-3">
               <div className="flex items-center gap-2">
-                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FF5C00] text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider animate-bounce shadow-sm">
-                  <Flame className="w-3.5 h-3.5 fill-current animate-pulse" />
+                 <span className="text-[10px] sm:text-[11px] font-medium uppercase tracking-widest text-black">
                   {t("VENTE FLASH EXCLUSIVE")}
                 </span>
-                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FF5C00]/10 text-[#FF5C00] text-[10px] sm:text-[11px] font-bold uppercase tracking-wider border border-[#FF5C00]/20">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#FF5C00] animate-ping" />
-                  {t("STOCK ULTRA-LIMITÉ")}
+                 <span className="text-[10px] sm:text-[11px] font-medium uppercase tracking-widest text-red-600">
+                  {t("STOCK LIMITÉ")}
                 </span>
               </div>
-               <div className="text-[12px] font-kinder text-[#FF5C00] uppercase">
-                -{Math.round(((product.price - currentPrice) / product.price) * 100)}% {t("SÉLECTION")}
+               <div className="text-[11px] font-sans font-medium tracking-tight text-black uppercase">
+                -{Math.round(((product.price - currentPrice) / product.price) * 100)}%
               </div>
             </div>
 
             {/* Warning Message */}
-             <p className="text-xs sm:text-sm font-bold text-[#3C2B22]/70 leading-relaxed">
+             <p className="text-xs text-black/60 leading-relaxed font-sans">
               {currentLang === "ar"
-                ? "⚠️ انتبه! هذا معروض بسعر تخفيض لاهب ولفترة محدودة للغاية. بمجرد انتهاء العداد، سيعود هذا المنتج تلقائيًا وبشكل فوري إلى سعره الأصلي ولن تتمكن من الاستفادة من هذا السعر مجددًا."
-                : "⚠️ Attention ! Ce produit d'exception bénéficie d'un tarif Flash ultra-limité. Dès que le compte à rebours s'achève, cet article repassera automatiquement à son tarif d'origine sans aucun préavis."}
+                ? "⚠️ انتبه! هذا معروض بسعر تخفيض لاهب ولفترة محدودة للغاية."
+                : "⚠️ Offre à durée limitée. Le prix d'origine sera rétabli à la fin du compte à rebours."}
             </p>
 
             {/* Countdown grid & scarcity metrics */}
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center bg-white p-4 rounded-[1.5rem] border-2 border-white shadow-sm">
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
               {/* Chrono */}
-              <div className="flex flex-col gap-1.5">
-                 <span className="text-[10px] font-bold text-[#3C2B22]/60 uppercase tracking-widest">
-                  {t("L'OFFRE EXPIRE DANS :")}
+              <div className="flex flex-col gap-1">
+                 <span className="text-[10px] font-medium text-black/40 uppercase tracking-widest">
+                  {t("EXPIRE DANS")}
                 </span>
-                <div className="flex items-center gap-1.5 font-kinder text-lg">
-                   <div className="bg-[#3C2B22] text-white px-3 py-1.5 rounded-[1rem] shadow-sm">
+                <div className="flex items-center gap-1 font-sans font-medium text-lg">
+                   <div className="text-black">
                     {String(timeLeft.hours).padStart(2, "0")}
                   </div>
-                   <span className="text-[#FF5C00] font-kinder animate-pulse">:</span>
-                  <div className="bg-[#3C2B22] text-white font-mono font-kinder text-base px-2 py-0.5 rounded shadow">
+                   <span className="text-black/40">:</span>
+                  <div className="text-black">
                     {String(timeLeft.minutes).padStart(2, "0")}
                   </div>
-                  <span className="text-red-500 font-kinder animate-pulse">:</span>
-                  <div className="bg-red-600 text-white font-mono font-kinder text-base px-2 py-0.5 rounded shadow animate-pulse">
+                  <span className="text-black/40">:</span>
+                  <div className="text-black">
                     {String(timeLeft.seconds).padStart(2, "0")}
                   </div>
                 </div>
               </div>
 
               {/* simulated metric */}
-              <div className="flex flex-col gap-1.5 border-t sm:border-t-0 sm:border-l border-orange-200/40 pt-3 sm:pt-0 sm:pl-4">
-                <div className="flex justify-between text-[11px] font-kinder text-[#3C2B22]">
-                  <span className="text-red-600 animate-pulse flex items-center gap-1">
-                    <Flame className="w-3.5 h-3.5 fill-current inline animate-pulse" />
-                    {currentLang === "ar" ? "بقي منتجات قليلة جداً!" : "Derniers articles en stock !"}
-                  </span>
-                  <span className="opacity-80 text-stone-500">
-                    92% {currentLang === "ar" ? "محجوز" : "déjà réservé"}
-                  </span>
+              <div className="flex flex-col gap-2 border-t sm:border-t-0 sm:border-l border-black/10 pt-3 sm:pt-0 sm:pl-4">
+                <div className="flex justify-between text-[10px] font-medium uppercase tracking-widest text-black/60">
+                  <span>{currentLang === "ar" ? "محجوز" : "Réservé"}</span>
+                  <span>92%</span>
                 </div>
-                <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden border border-stone-200/50">
+                <div className="w-full h-[2px] bg-black/5 overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-red-600 to-[#FF5C00] rounded-full"
+                    className="h-full bg-black"
                     style={{ width: "92%" }}
                   />
                 </div>
@@ -383,22 +343,22 @@ export const ProductInfo: React.FC<InfoProps> = ({
 
       {/* SELLER PROMINENCE */}
       {shop && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-white rounded-2xl border border-stone-200 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 border-y border-black/10">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-[#3C2B22]/5 flex items-center justify-center overflow-hidden border border-stone-100">
+            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center overflow-hidden border border-black/10">
               {shop.logoUrl ? (
-                <img loading="lazy" src={shop.logoUrl} alt={shop.shopName} className="w-full h-full object-cover" />
+                <img loading="lazy" src={shop.logoUrl} alt={shop.shopName} className="w-full h-full object-cover mix-blend-multiply" />
               ) : (
-                <Store className="w-6 h-6 text-[#3C2B22]" />
+                <Store className="w-5 h-5 text-black" />
               )}
             </div>
             <div>
-              <p className="text-[10px] rtl:text-[12px] font-bold text-stone-500 uppercase tracking-wider rtl:tracking-normal mb-0.5">
+              <p className="text-[10px] rtl:text-[12px] font-medium text-black/40 uppercase tracking-widest rtl:tracking-normal mb-0.5">
                 {t("product.details.sold_by") || "Vendu par"}
               </p>
               <Link
                 to={`/shop/${shop.id}`}
-                className="text-sm font-kinder text-[#3C2B22] hover:text-[#FF5C00] transition-colors line-clamp-1"
+                className="text-sm font-sans font-medium text-black hover:underline transition-all line-clamp-1"
               >
                 {shop.shopName}
               </Link>
@@ -408,125 +368,96 @@ export const ProductInfo: React.FC<InfoProps> = ({
             <button
               onClick={handleFollowToggle}
               disabled={followLoading}
-              className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-xs rtl:text-sm transition-all ${
+              className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 font-medium text-[11px] uppercase tracking-widest transition-all border ${
                 isFollowing
-                  ? "bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-red-500"
-                  : "bg-[#3C2B22] text-white hover:bg-[#1f150f] shadow-md shadow-[#3C2B22]/10"
+                  ? "bg-white text-black border-black/20"
+                  : "bg-black text-white border-black hover:bg-white hover:text-black"
               }`}
             >
               {isFollowing ? (
                 <>
-                  <UserCheck className="w-3.5 h-3.5" />
                   {t("product.details.following") || "Abonné"}
                 </>
               ) : (
                 <>
-                  <UserPlus className="w-3.5 h-3.5" />
                   {t("product.details.follow") || "Suivre"}
                 </>
               )}
             </button>
             <Link
               to={`/shop/${shop.id}`}
-              className="flex-1 sm:flex-none text-center px-4 py-2.5 bg-stone-50 hover:bg-stone-100 text-stone-700 rounded-xl text-xs rtl:text-sm font-bold transition-colors"
+              className="flex-1 sm:flex-none text-center px-4 py-2 bg-white text-black border border-black/20 text-[11px] font-medium uppercase tracking-widest transition-colors hover:border-black"
             >
-              {t("product.details.view_shop") || "Voir la boutique"}
+              {t("product.details.view_shop") || "Boutique"}
             </Link>
           </div>
         </div>
       )}
 
-      {/* DESCRIPTION */}
-      <div className="bg-white/60 backdrop-blur-md rounded-2xl p-5 border border-stone-200">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-8 h-8 rounded-full bg-[#FF5C00]/10 flex items-center justify-center">
-            <Info className="w-4 h-4 text-[#FF5C00]" />
-          </div>
-          <h3 className="text-[11px] font-kinder uppercase tracking-[0.2em] text-[#3C2B22]">
-            {t("product.details.seller_word") || "Le mot du créateur"}
-          </h3>
-        </div>
-        <p className="text-stone-600 leading-relaxed font-medium text-sm sm:text-base whitespace-pre-wrap">
-          {productDescription}
-        </p>
-      </div>
-
       {/* VARIANTS (COLOR/SIZE) */}
       {(product.colors?.length > 0 || product.sizes?.length > 0) && (
-        <div className="grid sm:grid-cols-2 gap-8 p-6 bg-white rounded-3xl border border-stone-200 shadow-sm">
+        <div className="space-y-6 py-4">
           {product.colors && product.colors.length > 0 && (
-            <div className="space-y-4">
-              <h4 className="text-[10px] rtl:text-[12px] font-bold uppercase tracking-wider rtl:tracking-normal text-stone-500 ms-1">
-                {t("product.details.nuances") || "Nuances Disponibles"}
+            <div className="space-y-3">
+              <h4 className="text-[10px] rtl:text-[12px] font-medium uppercase tracking-widest text-black/60">
+                {t("product.details.nuances") || "Couleurs"}
               </h4>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-2">
                 {product.colors.map((c: string) => {
                   const matchingColor = PRODUCT_COLORS.find(
                     (pc) => pc.name.toLowerCase().trim() === c.toLowerCase().trim()
                   );
                   const isHex = /^#([0-9A-F]{3}){1,2}$/i.test(c);
                   const isRgb = /^rgb/i.test(c);
-                  const hasValidColorValue = matchingColor || isHex || isRgb;
                   const colorHex = matchingColor ? matchingColor.hex : isHex || isRgb ? c : "#FFFFFF";
                   const isWhiteOrLight =
                     colorHex.toLowerCase() === "#ffffff" ||
                     colorHex.toLowerCase() === "#fde68a" ||
                     colorHex.toLowerCase() === "#facc15";
 
-                  if (hasValidColorValue) {
-                    return (
-                      <button
-                        key={c}
-                        disabled={isColorOutOfStock(c) && selectedColor !== c}
-                        onClick={() => onSelectColor(c)}
-                        title={c}
-                        className={`w-12 h-12 rounded-full border-[3px] transition-all flex items-center justify-center ${selectedColor === c ? "border-[#FF5C00] scale-110 shadow-lg shadow-[#FF5C00]/20" : "border-stone-100 hover:border-stone-300"} ${isColorOutOfStock(c) ? "opacity-30 cursor-not-allowed relative overflow-hidden" : ""}`}
+                  return (
+                    <button
+                      key={c}
+                      disabled={isColorOutOfStock(c) && selectedColor !== c}
+                      onClick={() => onSelectColor(c)}
+                      className={`flex items-center justify-center p-0.5 border transition-all ${
+                        selectedColor === c 
+                          ? "border-black" 
+                          : "border-transparent hover:border-black/30"
+                      } ${isColorOutOfStock(c) ? "opacity-30 cursor-not-allowed" : ""}`}
+                    >
+                      <div 
+                        className="w-8 h-8 border border-black/10 flex items-center justify-center relative"
                         style={{ background: colorHex }}
                       >
                         {selectedColor === c && (
-                          <Check className={`w-5 h-5 ${isWhiteOrLight ? "text-slate-900" : "text-white"}`} />
+                          <Check className={`w-3.5 h-3.5 ${isWhiteOrLight ? "text-black" : "text-white"}`} />
                         )}
                         {isColorOutOfStock(c) && (
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-full h-0.5 bg-red-500 rotate-45"></div>
+                            <div className="w-full h-[1px] bg-black rotate-45"></div>
                           </div>
                         )}
-                      </button>
-                    );
-                  } else {
-                    // Render text pill if it's a custom text color like "Bleu foncé"
-                    return (
-                      <button
-                        key={c}
-                        disabled={isColorOutOfStock(c) && selectedColor !== c}
-                        onClick={() => onSelectColor(c)}
-                        className={`px-4 py-2.5 rounded-xl font-bold text-xs rtl:text-sm uppercase tracking-wider rtl:tracking-normal transition-all ${selectedColor === c ? "bg-[#3C2B22] text-white shadow-md shadow-[#3C2B22]/20 border border-[#3C2B22]" : "bg-white text-stone-600 border border-stone-200 hover:border-[#3C2B22]"} ${isColorOutOfStock(c) ? "opacity-30 cursor-not-allowed relative overflow-hidden" : ""}`}
-                      >
-                        {c}
-                        {isColorOutOfStock(c) && (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-full h-[1.5px] bg-red-500 rotate-45"></div>
-                          </div>
-                        )}
-                      </button>
-                    );
-                  }
+                      </div>
+                    </button>
+                  );
                 })}
               </div>
             </div>
           )}
+          
           {product.sizes && product.sizes.length > 0 && (
-            <div className="space-y-4">
+            <div className="space-y-3 pt-4 border-t border-black/10">
               <div className="flex items-center justify-between">
-                <h4 className="text-[10px] rtl:text-[12px] font-bold uppercase tracking-wider rtl:tracking-normal text-stone-500 ms-1">
-                  {t("product.details.sizes") || "Tailles / Dimensions"}
+                <h4 className="text-[10px] rtl:text-[12px] font-medium uppercase tracking-widest text-black/60">
+                  {t("product.details.sizes") || "Tailles"}
                 </h4>
                 <button
                   type="button"
                   onClick={() => setIsSizeGuideOpen(true)}
-                  className="text-[10px] rtl:text-[12px] font-kinder uppercase tracking-wider rtl:tracking-normal text-orange-600 hover:text-orange-700 transition-colors flex items-center gap-1 cursor-pointer"
+                  className="text-[10px] rtl:text-[12px] font-medium uppercase tracking-widest text-black hover:underline transition-all cursor-pointer"
                 >
-                  {t("product.details.size_guide") || "📐 Guide des correspondances"}
+                  {t("product.details.size_guide") || "Guide des tailles"}
                 </button>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -535,7 +466,11 @@ export const ProductInfo: React.FC<InfoProps> = ({
                     key={s}
                     disabled={isSizeOutOfStock(s) && selectedSize !== s}
                     onClick={() => onSelectSize(s)}
-                    className={`px-6 py-3 rounded-2xl font-kinder text-[11px] uppercase tracking-widest rtl:tracking-normal transition-all ${selectedSize === s ? "bg-[#3C2B22] text-white shadow-lg shadow-[#3C2B22]/20" : "bg-stone-50 border border-stone-200 text-stone-600 hover:bg-stone-100"} ${isSizeOutOfStock(s) ? "opacity-40 cursor-not-allowed" : ""}`}
+                    className={`px-6 py-2.5 font-sans font-medium text-[11px] uppercase tracking-widest rtl:tracking-normal transition-all border ${
+                      selectedSize === s 
+                        ? "bg-black text-white border-black" 
+                        : "bg-white border-black/20 text-black hover:border-black"
+                    } ${isSizeOutOfStock(s) ? "opacity-30 cursor-not-allowed" : ""}`}
                   >
                     {s}
                   </button>
@@ -546,217 +481,194 @@ export const ProductInfo: React.FC<InfoProps> = ({
         </div>
       )}
 
-      {/* DYNAMIC ATTRIBUTES BENTO GRID */}
-      {detailedAttributes.length > 0 && (
-        <div className="space-y-4">
-          <h4 className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider rtl:tracking-normal text-stone-500 ms-1">
-            <Tag className="w-3.5 h-3.5" /> {t("product.details.caract") || "Caractéristiques du produit"}
-          </h4>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {detailedAttributes.map((attr, idx) => (
-              <div key={idx} className="bg-white p-4 rounded-2xl border border-stone-200">
-                <p className="text-[10px] rtl:text-[12px] font-bold text-stone-500 uppercase tracking-wider rtl:tracking-normal mb-1 line-clamp-1">
-                  {attr.label}
-                </p>
-                <p className="text-sm font-kinder text-[#3C2B22] line-clamp-2">
-                  {attr.value} {attr.unit}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* FICHE TECHNIQUE & ENGAGEMENTS DE LA MAISON */}
-      {(product.sku ||
-        (product.materials && product.materials.length > 0) ||
-        product.season ||
-        product.weight ||
-        product.dimensions ||
-        shop?.avgPreparationTime ||
-        shop?.returnPolicy) && (
-        <div className="space-y-4 pt-4">
-          <h4 className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider rtl:tracking-normal text-stone-500 ms-1">
-            <FileText className="w-3.5 h-3.5" />{" "}
-            {t("product.details.fiche_technique") || "Fiche Technique & Garanties OLMART"}
-          </h4>
-          <div className="bg-white/40 backdrop-blur-md border border-stone-200/60 rounded-3xl p-5 sm:p-6 space-y-5 shadow-sm">
-            <div className="grid grid-cols-2 gap-4 text-start">
-              {product.sku && (
-                <div className="space-y-1">
-                  <p className="text-[10px] rtl:text-[12px] font-bold text-stone-500 uppercase tracking-widest rtl:tracking-normal flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-[#3C2B22]" /> {t("product.details.sku") || "Référence SKU"}
+      {/* ACCORDIONS (DESCRIPTION/FIT, COMPOSITION/CARE, DELIVERY/RETURNS) */}
+      <div className="space-y-0 border-t border-b border-black/10 py-0">
+        {/* Accordion 1: Description / taillant */}
+        <div className="border-b border-black/10">
+          <button
+            onClick={() => toggleAccordion("description")}
+            className="w-full flex items-center justify-between py-4 text-start font-sans font-medium text-[11px] uppercase tracking-widest text-black"
+          >
+            <span>
+              {t("Description / taillant")}
+            </span>
+            <span className="text-black/40 font-light text-lg transition-transform duration-200">
+              {openAccordion === "description" ? "−" : "+"}
+            </span>
+          </button>
+          
+          <AnimatePresence initial={false}>
+            {openAccordion === "description" && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="pb-5 px-1 space-y-4">
+                  <p className="text-black/80 text-sm whitespace-pre-wrap leading-relaxed font-sans font-light">
+                    {productDescription}
                   </p>
-                  <p className="text-xs rtl:text-sm font-kinder text-[#3C2B22] font-mono select-all bg-stone-50/80 px-2 py-1 rounded w-max">
-                    {product.sku}
-                  </p>
-                </div>
-              )}
-              {product.season && (
-                <div className="space-y-1">
-                  <p className="text-[10px] rtl:text-[12px] font-bold text-stone-500 uppercase tracking-widest rtl:tracking-normal flex items-center gap-1">
-                    <CalendarDays className="w-3 h-3 text-[#3C2B22]" />{" "}
-                    {t("product.details.collection") || "Collection / Saison"}
-                  </p>
-                  <p className="text-xs rtl:text-sm font-extrabold text-[#3C2B22]">{getTranslatedSeason()}</p>
-                </div>
-              )}
-              {product.materials && product.materials.length > 0 && (
-                <div className="space-y-1 col-span-2 sm:col-span-1">
-                  <p className="text-[10px] rtl:text-[12px] font-bold text-stone-500 uppercase tracking-widest rtl:tracking-normal flex items-center gap-1">
-                    <Layers className="w-3 h-3 text-[#3C2B22]" />{" "}
-                    {t("product.details.materials") || "Composition & Matière"}
-                  </p>
-                  <p className="text-xs rtl:text-sm font-extrabold text-[#3C2B22] truncate">
-                    {getTranslatedMaterials()}
-                    {product.otherMaterial ? ` (${product.otherMaterial})` : ""}
-                  </p>
-                </div>
-              )}
-              {(product.dimensions || product.weight) && (
-                <div className="space-y-1 col-span-2 sm:col-span-1">
-                  <p className="text-[10px] rtl:text-[12px] font-bold text-stone-500 uppercase tracking-widest rtl:tracking-normal flex items-center gap-1">
-                    <Maximize2 className="w-3 h-3 text-[#3C2B22]" />{" "}
-                    {t("product.details.logistics") || "Logistique & Dimensions"}
-                  </p>
-                  <p className="text-xs rtl:text-sm font-extrabold text-[#3C2B22]">
-                    {product.weight ? `${t("product.details.weight") || "Poids"}: ${product.weight} kg` : ""}
-                    {product.weight && product.dimensions ? " | " : ""}
-                    {product.dimensions ? `${t("product.details.format") || "Format"}: ${product.dimensions}` : ""}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {(product.warranty ||
-              shop?.legalStatus ||
-              product.preparationTime ||
-              shop?.avgPreparationTime ||
-              product.returnPolicy ||
-              shop?.returnPolicy) && (
-              <div className="border-t border-stone-200/50 pt-4 space-y-3 text-start">
-                {product.warranty && (
-                  <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 shrink-0 rounded-full bg-emerald-50 flex items-center justify-center mt-0.5">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] rtl:text-[12px] font-bold text-stone-500 uppercase tracking-wider rtl:tracking-normal">
-                        {t("Garantie & Support")}
-                      </p>
-                      <p className="text-xs rtl:text-sm font-extrabold text-[#3C2B22]">{product.warranty}</p>
-                    </div>
-                  </div>
-                )}
-                {shop?.legalStatus && (
-                  <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 shrink-0 rounded-full bg-zinc-100 flex items-center justify-center mt-0.5">
-                      <Store className="w-3.5 h-3.5 text-zinc-500" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] rtl:text-[12px] font-bold text-stone-500 uppercase tracking-wider rtl:tracking-normal">
-                        {t("product.details.vendor_status") || "Statut Légal"}
-                      </p>
-                      <p className="text-xs rtl:text-sm font-extrabold text-[#3C2B22]">{shop.legalStatus}</p>
-                    </div>
-                  </div>
-                )}
-                {(product.preparationTime || shop?.avgPreparationTime) && (
-                  <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 shrink-0 rounded-full bg-[#FF5C00]/5 flex items-center justify-center mt-0.5">
-                      <Truck className="w-3.5 h-3.5 text-[#FF5C00]" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] rtl:text-[12px] font-bold text-stone-500 uppercase tracking-wider rtl:tracking-normal">
-                        {t("product.details.prep_time") || "Délai Moyen de Préparation"}
-                      </p>
-                      <p className="text-xs rtl:text-sm font-extrabold text-[#3C2B22]">
-                        {t("product.details.prep_text", {
-                          days: product.preparationTime || shop?.avgPreparationTime,
-                        }) || "Prêt pour expédition"}
-                      </p>
-                      {product.wilaya && (
-                        <p className="text-[10px] rtl:text-[12px] font-medium text-stone-500 mt-0.5">
-                          {t("product.details.shipped_from") || "Expédié depuis :"}{" "}
-                          <span className="font-bold">{product.wilaya}</span>
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 shrink-0 rounded-full bg-blue-50 flex items-center justify-center mt-0.5">
-                    <Undo2 className="w-3.5 h-3.5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] rtl:text-[12px] font-bold text-stone-500 uppercase tracking-wider rtl:tracking-normal">
-                      {t("product.details.return_policy") || "Politique de Retour & Échange"}
-                    </p>
-                    <p className="text-xs rtl:text-sm font-extrabold text-[#3C2B22] italic">
-                      {product.returnPolicy
-                        ? t("product.details.return_14j") || "Retours acceptés sous 14 jours (Politique du produit)"
-                        : shop?.returnPolicy ||
-                          t("product.details.return_default") ||
-                          "Voir les conditions au niveau du vendeur"}
-                    </p>
+                  <div className="flex items-center justify-between pt-3 border-t border-black/10">
+                    <span className="text-[10px] font-medium text-black/60 uppercase tracking-widest">
+                      {t("Coupe standard / Regular Fit")}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsSizeGuideOpen(true)}
+                      className="text-[10px] font-medium text-black hover:underline uppercase tracking-widest flex items-center gap-1 cursor-pointer"
+                    >
+                      {t("Guide des tailles")}
+                    </button>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             )}
-          </div>
+          </AnimatePresence>
         </div>
-      )}
 
-      {/* SHIPPING INFOS */}
-      <div className="grid sm:grid-cols-2 gap-4">
-        <div className="flex items-start gap-4 p-5 bg-white border border-stone-200 rounded-2xl">
-          <div className="w-10 h-10 shrink-0 rounded-full bg-emerald-50 flex items-center justify-center">
-            <Truck className="w-5 h-5 text-emerald-600" />
-          </div>
-          <div>
-            <h4 className="text-sm font-bold text-[#3C2B22] mb-1">
-              {t("product.details.national_shipping") || "Livraison Nationale"}
-            </h4>
-            <p className="text-xs rtl:text-sm font-medium text-stone-500">
-              {t("product.details.national_shipping_desc") || "Expédition disponible sur les 58 Wilayas d'Algérie."}
-            </p>
-          </div>
+        {/* Accordion 2: Composition / entretien */}
+        <div className="border-b border-black/10">
+          <button
+            onClick={() => toggleAccordion("composition")}
+            className="w-full flex items-center justify-between py-4 text-start font-sans font-medium text-[11px] uppercase tracking-widest text-black"
+          >
+            <span>
+              {t("Composition / entretien")}
+            </span>
+            <span className="text-black/40 font-light text-lg transition-transform duration-200">
+              {openAccordion === "composition" ? "−" : "+"}
+            </span>
+          </button>
+          
+          <AnimatePresence initial={false}>
+            {openAccordion === "composition" && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="pb-5 px-1 space-y-3 text-sm text-black/80 font-light font-sans">
+                  {product.sku && (
+                    <div className="flex justify-between border-b border-black/5 pb-2">
+                      <span className="text-black/40 font-medium text-[10px] uppercase tracking-widest">{t("Référence / SKU")}</span>
+                      <span className="font-mono text-xs text-black select-all">{product.sku}</span>
+                    </div>
+                  )}
+                  {product.materials && product.materials.length > 0 && (
+                    <div className="flex justify-between border-b border-black/5 pb-2">
+                      <span className="text-black/40 font-medium text-[10px] uppercase tracking-widest">{t("Matière principale")}</span>
+                      <span className="text-black">
+                        {getTranslatedMaterials()}
+                        {product.otherMaterial ? ` (${product.otherMaterial})` : ""}
+                      </span>
+                    </div>
+                  )}
+                  {(product.weight || product.dimensions) && (
+                    <div className="flex justify-between border-b border-black/5 pb-2">
+                      <span className="text-black/40 font-medium text-[10px] uppercase tracking-widest">{t("Dimensions & Poids")}</span>
+                      <span className="text-black">
+                        {product.weight ? `${product.weight} kg` : ""}
+                        {product.weight && product.dimensions ? " | " : ""}
+                        {product.dimensions ? `${product.dimensions}` : ""}
+                      </span>
+                    </div>
+                  )}
+                  {product.brand && (
+                    <div className="flex justify-between border-b border-black/5 pb-2">
+                      <span className="text-black/40 font-medium text-[10px] uppercase tracking-widest">{t("Marque")}</span>
+                      <span className="text-black">{product.brand}</span>
+                    </div>
+                  )}
+                  <div className="pt-2 text-xs font-light leading-relaxed text-black/60 italic">
+                    {t("Conseil d'entretien : Laver sur l'envers à 30°C avec des coloris similaires. Repassage doux recommandé.")}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-        <div className="flex items-start gap-4 p-5 bg-white border border-stone-200 rounded-2xl">
-          <div className="w-10 h-10 shrink-0 rounded-full bg-blue-50 flex items-center justify-center">
-            <ShieldCheck className="w-5 h-5 text-blue-600" />
-          </div>
-          <div>
-            <h4 className="text-sm font-bold text-[#3C2B22] mb-1">
-              {t("product.details.secure_purchase") || "Achat Sécurisé"}
-            </h4>
-            <p className="text-xs rtl:text-sm font-medium text-stone-500">
-              {t("product.details.secure_purchase_desc") || "Plateforme de confiance. Protection de l'acheteur."}
-            </p>
-          </div>
+
+        {/* Accordion 3: Livraison / retour */}
+        <div className="border-b-0">
+          <button
+            onClick={() => toggleAccordion("shipping")}
+            className="w-full flex items-center justify-between py-4 text-start font-sans font-medium text-[11px] uppercase tracking-widest text-black"
+          >
+            <span>
+              {t("Livraison / retour")}
+            </span>
+            <span className="text-black/40 font-light text-lg transition-transform duration-200">
+              {openAccordion === "shipping" ? "−" : "+"}
+            </span>
+          </button>
+          
+          <AnimatePresence initial={false}>
+            {openAccordion === "shipping" && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="pb-5 px-1 space-y-4 text-sm text-black/80 font-light font-sans">
+                  <div className="flex gap-3 items-start">
+                    <div className="w-5 h-5 rounded-full border border-black/20 flex items-center justify-center text-black font-medium text-[10px] shrink-0 mt-0.5">✓</div>
+                    <div>
+                      <p className="font-medium text-black">{t("Livraison sur les 58 Wilayas d'Algérie")}</p>
+                      <p className="text-xs text-black/60">{t("Paiement sécurisé en espèces à la livraison.")}</p>
+                    </div>
+                  </div>
+                  {(product.preparationTime || shop?.avgPreparationTime) && (
+                    <div className="flex gap-3 items-start border-t border-black/5 pt-3">
+                      <div className="w-5 h-5 rounded-full border border-black/20 flex items-center justify-center text-black font-medium text-[10px] shrink-0 mt-0.5">⏱</div>
+                      <div>
+                        <p className="font-medium text-black">{t("Délai de préparation du vendeur")}</p>
+                        <p className="text-xs text-black/60">
+                          {t("Prêt pour expédition en")} {product.preparationTime || shop?.avgPreparationTime || "24-48h"}.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex gap-3 items-start border-t border-black/5 pt-3">
+                    <div className="w-5 h-5 rounded-full border border-black/20 flex items-center justify-center text-black font-medium text-[10px] shrink-0 mt-0.5">↺</div>
+                    <div>
+                      <p className="font-medium text-black">{t("Politique d'échange et retour d'Olmart")}</p>
+                      <p className="text-xs text-black/60">
+                        {product.returnPolicy
+                          ? t("Retours acceptés sous 14 jours si le produit est dans son emballage d'origine.")
+                          : t("Les retours et échanges dépendent des conditions générales du vendeur.")}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
       {isSizeGuideOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-sm">
-          <div className="bg-white rounded-[2.5rem] max-w-2xl w-full p-8 md:p-10 border border-zinc-100 shadow-2xl relative animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 md:p-10 border border-slate-100 shadow-2xl relative animate-in zoom-in-95 duration-200">
             <button
               onClick={() => setIsSizeGuideOpen(false)}
-              className="absolute top-6 right-6 text-stone-400 hover:text-stone-600 font-bold p-2 text-sm cursor-pointer"
+              className="absolute top-6 right-6 text-stone-400 hover:text-slate-800 font-bold p-2 text-sm cursor-pointer transition-colors"
             >
               {t("common.close") || "✕ Fermer"}
             </button>
-            <h3 className="text-2xl font-kinder text-[#3C2B22] tracking-tight rtl:tracking-normal mb-4">
+            <h3 className="text-2xl font-sans font-bold tracking-tight text-slate-800 tracking-tight rtl:tracking-normal mb-4">
               {t("product.details.size_guide_title") || "📐 Guide des Correspondances de Tailles"}
             </h3>
             <p className="text-xs rtl:text-sm text-stone-500 mb-6 leading-relaxed">
               {t("product.details.size_guide_desc") ||
                 "En Algérie, les articles d'importation (Chine vs. Turquie/EUR) ou de fabrication locale ont des coupes différentes. Référez-vous à ce tableau pour éviter les erreurs de taille :"}
             </p>
-            <div className="overflow-x-auto rounded-2xl border border-stone-100 mb-6">
+            <div className="overflow-x-auto rounded-3xl border border-stone-100 mb-6">
               <table className="w-full text-left border-collapse text-xs rtl:text-sm">
                 <thead>
-                  <tr className="bg-stone-50 border-b border-stone-150 font-kinder text-[#3C2B22]">
+                  <tr className="bg-slate-50 border-b border-stone-150 font-sans font-bold tracking-tight text-slate-800">
                     <th className="p-3">{t("Taille EUR/Turquie")}</th>
                     <th className="p-3">{t("Équivalence Chine")}</th>
                     <th className="p-3">{t("Coupe Algérie")}</th>
@@ -791,7 +703,7 @@ export const ProductInfo: React.FC<InfoProps> = ({
                 </tbody>
               </table>
             </div>
-            <div className="bg-amber-50 border border-amber-200/50 p-4 rounded-xl text-[11px] text-[#3C2B22] leading-relaxed font-semibold">
+            <div className="bg-amber-50 border border-amber-200/50 p-4 rounded-xl text-[11px] text-slate-800 leading-relaxed font-semibold">
               💡 <strong>{t("product.details.size_guide_tip_title") || "Astuce :"}</strong>{" "}
               {t("product.details.size_guide_tip_content") ||
                 "Le standard Turquie correspond parfaitement aux tailles européennes classiques. Pour la Chine, commandez systématiquement une taille au-dessus."}

@@ -52,17 +52,13 @@ export const Wallet: React.FC = () => {
         const q = query(
           collection(db, "withdrawals"),
           where("sellerId", "==", currentUser.uid),
-          limit(250)
+          orderBy("createdAt", "desc"),
+          limit(20)
         );
         const snap = await getDocs(q);
         const fetched = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as WithdrawalRequest));
-        fetched.sort((a, b) => {
-          const tA = a.createdAt?.seconds || 0;
-          const tB = b.createdAt?.seconds || 0;
-          return tB - tA;
-        });
         setWithdrawals(fetched);
-        setLastVisible(null);
+        setLastVisible(snap.docs[snap.docs.length - 1]);
       } catch (err) {
         console.error(err);
       } finally {
@@ -73,17 +69,39 @@ export const Wallet: React.FC = () => {
   }, [currentUser]);
 
   const loadMoreWithdrawals = async () => {
-    // Left as safe no-op since all withdrawals are pre-fetched
-    return;
+    if (!lastVisible) return;
+    setLoadingMore(true);
+    try {
+      const q = query(
+        collection(db, "withdrawals"),
+        where("sellerId", "==", currentUser.uid),
+        orderBy("createdAt", "desc"),
+        startAfter(lastVisible),
+        limit(20)
+      );
+      const snap = await getDocs(q);
+      const fetched = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as WithdrawalRequest));
+      setWithdrawals(prev => [...prev, ...fetched]);
+      setLastVisible(snap.docs.length > 0 ? snap.docs[snap.docs.length - 1] : null);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingMore(false);
+    }
   };
 
   const handleRequestWithdrawal = async () => {
     const val = safeParseFloat(amount);
     const balance = userProfile?.walletBalance || 0;
     
-    if (val === null || val < 2000) return toast.error(isArabic ? "الحد الأدنى للسحب هو 2000 د.ج." : "Le montant minimum est de 2000 DA.");
-    if (val > balance) return toast.error(isArabic ? "الرصيد غير كافٍ." : "Solde insuffisant.");
+    if (val === null || val < 5000) return toast.error(isArabic ? "الحد الأدنى للسحب هو 5000 د.ج." : "Le montant minimum est de 5000 DA.");
+    if (val > balance) return toast.error(isArabic ? "الرصيد غير كافٍ." : "Solde insuffisant. Vous ne pouvez pas demander un retrait supérieur à votre solde disponible.");
     if (!userProfile?.rib) return toast.error(isArabic ? "يرجى إعداد رمز RIB الخاص بك في قسم التحقق." : "Veuillez configurer votre RIB dans la section Vérification.");
+    
+    const cleanRib = userProfile.rib.replace(/\s+/g, '');
+    if (!/^\d{20,24}$/.test(cleanRib)) {
+      return toast.error(isArabic ? "تنسيق RIB/CCP غير صالح (يجب أن يكون بين 20 و 24 رقمًا)." : "Format RIB/CCP invalide (doit contenir entre 20 et 24 chiffres).");
+    }
 
     const confirmed = await showConfirmModal(
       isArabic ? `هل تؤكد سحب ${val} د.ج؟` : `Confirmer le retrait de ${val} DA ?`
@@ -289,10 +307,11 @@ export const Wallet: React.FC = () => {
                                             href={w.receiptUrl} 
                                             target="_blank" 
                                             rel="noopener noreferrer"
-                                            className="flex items-center gap-2 text-zinc-500 hover:text-orange-600 text-xs font-bold transition-colors"
+                                            download={`Justificatif_${w.id}.pdf`}
+                                            className="flex items-center gap-2 text-zinc-500 hover:text-orange-600 text-[10px] font-bold uppercase tracking-widest transition-colors"
                                           >
                                              <Download className="w-4 h-4" />
-                                             {t("Reçu PDF")}</a>
+                                             {t("Télécharger justificatif")}</a>
                                        )}
                                     </div>
                                  </div>

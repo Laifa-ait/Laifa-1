@@ -167,6 +167,9 @@ service cloud.firestore {
     match /analytics/{id} {
       allow read, write: if isAdmin();
     }
+    match /analytics_events/{id} {
+      allow read, write: if isAdmin();
+    }
 
     // -------------------------------------------------------------------------
     // PRODUCTS COLLECTION

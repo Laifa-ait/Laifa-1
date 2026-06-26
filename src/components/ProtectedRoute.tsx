@@ -25,7 +25,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
     setVerifyingClaims(true);
     // Securely retrieve cryptographically-signed custom claims directly from Firebase auth session
     currentUser
-      .getIdTokenResult(true)
+      .getIdTokenResult(false)
       .then((idTokenResult) => {
         if (active) {
           const role = idTokenResult.claims.role as string;

@@ -28,7 +28,7 @@ export const AppGuard: React.FC<AppGuardProps> = ({ requireAuth = false, allowed
     setVerifyingClaims(true);
     // Cryptographically verified token signature check
     currentUser
-      .getIdTokenResult(true)
+      .getIdTokenResult(false)
       .then((idTokenResult) => {
         if (active) {
           const role = idTokenResult.claims.role as string;
@@ -59,6 +59,10 @@ export const AppGuard: React.FC<AppGuardProps> = ({ requireAuth = false, allowed
 
   if (actualRequireAuth && !currentUser) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+
+  if (actualRequireAuth && currentUser && !currentUser.emailVerified && location.pathname !== "/verify-email") {
+    return <Navigate to="/verify-email" replace />;
   }
 
   const activeRole = tokenRole || userProfile?.role;

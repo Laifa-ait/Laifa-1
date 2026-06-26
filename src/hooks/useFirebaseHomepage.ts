@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { db, storage } from "../lib/firebase";
+import { db, storage, withTimeout } from "../lib/firebase";
 import {
   collection,
   doc,
@@ -22,7 +22,7 @@ export const useFirebaseHomepage = () => {
     setIsLoading(true);
     try {
       const q = query(collection(db, collectionName), orderBy("orderIndex", "asc"));
-      const snap = await getDocs(q);
+      const snap = await withTimeout(getDocs(q));
       return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     } catch (err) {
       toast.error("Erreur de chargement");

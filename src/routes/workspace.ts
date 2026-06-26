@@ -56,6 +56,23 @@ router.post("/sheets/export-premium", requireGoogleToken, async (req: Authentica
         throw new Error("Impossible de créer le document");
     }
 
+    // Universal server-side sensitive data masking for exports (anti-data leakage of VIP clients)
+    const maskCell = (val: any): any => {
+      if (typeof val !== "string") return val;
+      
+      // Mask Emails: lai***@gmail.com
+      let masked = val.replace(/([a-zA-Z0-9._%+-]{1,3})([a-zA-Z0-9._%+-]*)@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g, "$1***@$3");
+      
+      // Mask Algerian and general phone numbers
+      masked = masked.replace(/(?:\+213|00213|[0][567])\s*(\d)\s*[\s\d\-]{4,}(\d{2})/g, (match, first, last) => {
+        if (match.startsWith('+213')) return '+213 ' + first + '***' + last;
+        if (match.startsWith('00213')) return '00213 ' + first + '***' + last;
+        return match.substring(0, 2) + '***' + last;
+      });
+      
+      return masked;
+    };
+
     // 2. Assemblage des données (Metadata + Espace + Headers + Rows + Totals)
     const emptyRow = Array(headers.length).fill("");
     
@@ -63,7 +80,8 @@ router.post("/sheets/export-premium", requireGoogleToken, async (req: Authentica
     let allValues: any[] = [];
     
     const metaStartIndex = 0;
-    const metaDatas = metadata || [];
+    const rawMetadata = metadata || [];
+    const metaDatas = rawMetadata.map((row: any[]) => row.map(cell => maskCell(cell)));
     allValues = allValues.concat(metaDatas);
     
     allValues.push(emptyRow); // Space before table
@@ -72,10 +90,12 @@ router.post("/sheets/export-premium", requireGoogleToken, async (req: Authentica
     allValues.push(headers);
     
     const rowsStartIndex = allValues.length;
-    allValues = allValues.concat(rows);
+    const maskedRows = (rows || []).map((row: any[]) => row.map(cell => maskCell(cell)));
+    allValues = allValues.concat(maskedRows);
     
     const totalsStartIndex = allValues.length;
-    allValues = allValues.concat(totals);
+    const maskedTotals = (totals || []).map((row: any[]) => row.map(cell => maskCell(cell)));
+    allValues = allValues.concat(maskedTotals);
 
     // 3. Injection simple des valeurs d'abord
     await sheets.spreadsheets.values.update({

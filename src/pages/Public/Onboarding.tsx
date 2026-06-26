@@ -115,7 +115,7 @@ export const Onboarding: React.FC = () => {
 
       batch.set(userRef, updateObj, { merge: true });
       await batch.commit();
-      (process.env.NODE_ENV === 'debug' ? console.log : function(){})("Onboarding: Success via Client SDK");
+      (process.env.NODE_ENV === 'development' ? console.log : function(){})("Onboarding: Success via Client SDK");
 
       // 2. Server-side notification (Fully optional / non-blocking)
       try {

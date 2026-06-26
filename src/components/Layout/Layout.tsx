@@ -8,14 +8,12 @@ import { CartDrawer } from "../Cart/CartDrawer";
 import { WishlistDrawer } from "../Wishlist/WishlistDrawer";
 import { MobileMenu } from "./MobileMenu";
 import { useUI } from "../../context/UIContext";
-import { FloatingActionBar } from "./FloatingActionBar";
 import { SearchOverlay } from "../Search/SearchOverlay";
 import { RecentlyViewedDrawer } from "../RecentlyViewed/RecentlyViewedDrawer";
 import { useAuth } from "../../context/AuthContext";
-import { AlertCircle, ArrowRight, ShieldCheck } from "lucide-react";
+import { AlertCircle, ArrowRight, ShieldCheck, WifiOff } from "lucide-react";
 import { VerificationModal } from "../Auth/VerificationModal";
-
-import { SupportFAB } from "../SupportFAB";
+import { useOnlineStatus } from "../../hooks/useOnlineStatus";
 
 interface LayoutProps {
   children: ReactNode;
@@ -24,6 +22,7 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { i18n } = useTranslation();
   const location = useLocation();
+  const isOnline = useOnlineStatus();
   const { isCartOpen, setIsCartOpen, isWishlistOpen, setIsWishlistOpen, isMobileMenuOpen, setIsMobileMenuOpen } =
     useUI();
   const { currentUser, userProfile } = useAuth();
@@ -56,6 +55,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const isHomepage = location.pathname === "/";
   const isPremiumCollection = location.pathname.includes("/collection/");
 
+  const isCheckoutPage = location.pathname === "/checkout";
+
   const isShop =
     location.pathname.startsWith("/shop") ||
     location.pathname.startsWith("/catalogue") ||
@@ -67,7 +68,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   if (hideNavigation) {
     return (
       <div
-        className={`min-h-screen w-full font-sans selection:bg-[#EBE5DF] ${i18n.language === "ar" ? "rtl" : "ltr"} ${isAuthPage ? "bg-[#FDF9EC]" : ""}`}
+        className={`min-h-screen w-full font-sans selection:bg-slate-200 ${i18n.language === "ar" ? "rtl" : "ltr"} ${isAuthPage ? "bg-slate-50" : ""}`}
         dir={i18n.language === "ar" ? "rtl" : "ltr"}
       >
         {children}
@@ -77,19 +78,23 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div
-      className={`min-h-screen overflow-x-clip w-full max-w-full bg-[#FDF9EC] text-[#3C2B22] font-sans selection:bg-[#EBE5DF] pb-0 sm:pb-0 ${i18n.language === "ar" ? "rtl" : "ltr"}`}
+      className={`min-h-screen overflow-x-clip w-full max-w-full bg-slate-50 text-slate-900 font-sans selection:bg-slate-200 pb-0 sm:pb-0 ${i18n.language === "ar" ? "rtl" : "ltr"}`}
       dir={i18n.language === "ar" ? "rtl" : "ltr"}
     >
-      {!isPremiumCollection && <Navbar />}
+      {!isPremiumCollection && !isCheckoutPage && <Navbar />}
 
       <main className="min-h-[calc(100vh-200px)] relative">{children}</main>
 
-      {isHomepage && <Footer isHomepage={isHomepage} />}
+      {!isCheckoutPage && <Footer isHomepage={isHomepage} />}
 
-      {isHomepage && <MobileBottomNav />}
+      <MobileBottomNav />
 
-      <SupportFAB />
-      <FloatingActionBar />
+      {!isOnline && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full z-50 flex items-center gap-2 shadow-lg">
+          <WifiOff className="w-4 h-4" />
+          <span className="text-sm font-medium">Mode hors ligne</span>
+        </div>
+      )}
 
       <SearchOverlay />
       <RecentlyViewedDrawer />

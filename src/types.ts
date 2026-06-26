@@ -273,6 +273,8 @@ export interface Order {
   id: string;
   userId: string;
   sellerIds: string[];
+  deliveryBoyId?: string;
+  deliveryBoyName?: string;
 
   // Break down items per seller for multi-seller orders
   items: {

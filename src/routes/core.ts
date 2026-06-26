@@ -51,74 +51,31 @@ const dualWrite = (lang: string, content: any) => {
 
 const router = Router();
 
+router.post("/api/analytics/track", async (req: Request, res: Response) => {
+  try {
+    const { events } = req.body;
+    if (!events || !Array.isArray(events)) {
+      return res.status(400).json({ error: "Invalid events payload" });
+    }
+
+    const batch = admin.firestore().batch();
+    events.forEach((evt: any) => {
+       const ref = admin.firestore().collection("analytics_events").doc();
+       batch.set(ref, {
+         ...evt,
+         serverTimestamp: admin.firestore.FieldValue.serverTimestamp()
+       });
+    });
+
+    await batch.commit();
+    res.json({ success: true, count: events.length });
+  } catch (error) {
+    console.error("Analytics track error:", error);
+    res.status(500).json({ error: "Failed to track events" });
+  }
+});
+
 // --- Checkout & Order Processing ---
-
-router.post(
-  "/api/validate-coupon",
-  authenticateToken,
-  async (req: AuthenticatedRequest, res: Response) => {
-    const { code, subtotal } = req.body;
-
-    if (!code) {
-      return res.status(400).json({ error: "Code requis" });
-    }
-
-    try {
-      const q = await db
-        .collection("coupons")
-        .where("code", "==", code.toUpperCase())
-        .get();
-
-      if (q.empty) {
-        return res
-          .status(400)
-          .json({ error: "Code promo invalide ou expiré." });
-      }
-
-      const couponDoc = q.docs[0];
-      const couponData = { id: couponDoc.id, ...couponDoc.data() } as any;
-
-      if (!couponData.isActive) {
-        return res
-          .status(400)
-          .json({ error: "Ce code promo n'est plus actif." });
-      }
-
-      const now = new Date();
-      const expiresAt = couponData.expiresAt?.toDate ? couponData.expiresAt.toDate() : (couponData.expiresAt ? new Date(couponData.expiresAt) : undefined);
-
-      if (expiresAt && expiresAt < now) {
-        return res.status(400).json({ error: "Ce coupon a expiré" });
-      }
-
-      if (couponData.maxUses && (couponData.usedCount || 0) >= couponData.maxUses) {
-        return res.status(400).json({ error: "Ce coupon a atteint sa limite d'utilisation" });
-      }
-
-      if (subtotal < (couponData.minOrderValue || 0)) {
-        return res
-          .status(400)
-          .json({
-            error: `Un minimum de commande de ${couponData.minOrderValue || 0} DA est requis.`,
-          });
-      }
-
-      if (
-        couponData.usageLimit &&
-        (couponData.usedCount || 0) >= couponData.usageLimit
-      ) {
-        return res
-          .status(400)
-          .json({ error: "Ce code promo a atteint sa limite d'utilisation." });
-      }
-
-      res.json({ success: true, coupon: couponData });
-    } catch (error: any) {
-      console.error("Coupon validation error:", error);
-      res.status(500).json({ error: "Erreur serveur lors de la validation." });
-    }
-  },
-);
 
 router.post(
   "/api/admin/danger-zone-wipe",
@@ -580,7 +537,7 @@ router.post(
                 if (v.name === item.selectedVariant) {
                   return {
                     ...v,
-                    stock: (Number(v.stock || 0) + item.quantity).toString(),
+                    stock: Number(v.stock || 0) + item.quantity,
                   };
                 }
                 return v;
@@ -1024,6 +981,138 @@ router.post(
       res.status(500).json({ error: finalMessage });
     }
   },
+);
+
+router.post(
+  "/api/admin/translate-preview",
+  authenticateToken,
+  authorizeAdmin,
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { terms } = req.body;
+      if (!Array.isArray(terms) || terms.length === 0) {
+        return res.status(400).json({ error: "Liste de termes requise" });
+      }
+
+      const arPath = path.join(process.cwd(), "public/locales/ar.json");
+      const enPath = path.join(process.cwd(), "public/locales/en.json");
+
+      let arContent: Record<string, string> = {};
+      let enContent: Record<string, string> = {};
+
+      if (fs.existsSync(arPath)) arContent = JSON.parse(fs.readFileSync(arPath, "utf8"));
+      if (fs.existsSync(enPath)) enContent = JSON.parse(fs.readFileSync(enPath, "utf8"));
+
+      const result: Record<string, { ar: string; en: string; isNew: boolean }> = {};
+      const termsToTranslate: string[] = [];
+
+      terms.forEach((term) => {
+        const arExisting = arContent[term];
+        const enExisting = enContent[term];
+
+        const isArabic = (text: string) => /[\u0600-\u06FF]/.test(text || "");
+        const containsAr = typeof arExisting === "string" && isArabic(arExisting);
+
+        const isMissingAr = !arExisting || arExisting === "" || arExisting === term || !containsAr || arExisting.endsWith(" (AR)");
+        const isMissingEn = !enExisting || enExisting === "" || enExisting === term || enExisting.endsWith(" (EN)");
+
+        if (isMissingAr || isMissingEn) {
+          termsToTranslate.push(term);
+        } else {
+          result[term] = {
+            ar: arExisting,
+            en: enExisting,
+            isNew: false,
+          };
+        }
+      });
+
+      if (termsToTranslate.length > 0) {
+        const BATCH_SIZE = 30;
+        for (let i = 0; i < termsToTranslate.length; i += BATCH_SIZE) {
+          const batch = termsToTranslate.slice(i, i + BATCH_SIZE);
+          const objToTranslate: Record<string, string> = {};
+          batch.forEach((t) => {
+            objToTranslate[t] = t;
+          });
+
+          const response = await ai.models.generateContent({
+            model: "gemini-3.5-flash",
+            contents: `Translate the following JSON object values from French to Arabic and English. Return ONLY a pure JSON object mapping the same keys to an object with "ar" and "en" properties. JSON format: { "key1": {"ar": "...", "en": "..."}, "key2": ... }.\n\n${JSON.stringify(objToTranslate)}`,
+            config: { responseMimeType: "application/json" },
+          });
+
+          const resultText = response.text || "{}";
+          const jsonStr = resultText.match(/\{[\s\S]*\}/)?.[0] || resultText;
+          const parsed = JSON.parse(jsonStr);
+
+          batch.forEach((term) => {
+            const arVal = parsed[term]?.ar || term;
+            const enVal = parsed[term]?.en || term;
+            result[term] = {
+              ar: arVal,
+              en: enVal,
+              isNew: true,
+            };
+          });
+        }
+      }
+
+      res.json({ translations: result });
+    } catch (error: any) {
+      console.error("Translate Preview Error:", error);
+      res.status(500).json({ error: error.message || error.toString() });
+    }
+  }
+);
+
+router.post(
+  "/api/admin/translate-commit",
+  authenticateToken,
+  authorizeAdmin,
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { translations } = req.body;
+      if (!translations || typeof translations !== "object") {
+        return res.status(400).json({ error: "Traductions requises" });
+      }
+
+      const frPath = path.join(process.cwd(), "public/locales/fr.json");
+      const arPath = path.join(process.cwd(), "public/locales/ar.json");
+      const enPath = path.join(process.cwd(), "public/locales/en.json");
+
+      let frContent: Record<string, string> = {};
+      let arContent: Record<string, string> = {};
+      let enContent: Record<string, string> = {};
+
+      if (fs.existsSync(frPath)) frContent = JSON.parse(fs.readFileSync(frPath, "utf8"));
+      if (fs.existsSync(arPath)) arContent = JSON.parse(fs.readFileSync(arPath, "utf8"));
+      if (fs.existsSync(enPath)) enContent = JSON.parse(fs.readFileSync(enPath, "utf8"));
+
+      let modified = false;
+
+      Object.entries(translations).forEach(([term, trans]) => {
+        const tAny = trans as any;
+        if (!frContent[term]) {
+          frContent[term] = term;
+          modified = true;
+        }
+        arContent[term] = tAny.ar;
+        enContent[term] = tAny.en;
+      });
+
+      if (modified) {
+        dualWrite("fr", frContent);
+      }
+      dualWrite("ar", arContent);
+      dualWrite("en", enContent);
+
+      res.json({ message: "Traductions appliquées et enregistrées avec succès !" });
+    } catch (error: any) {
+      console.error("Translate Commit Error:", error);
+      res.status(500).json({ error: error.message || error.toString() });
+    }
+  }
 );
 
 router.post(
@@ -1584,7 +1673,7 @@ router.post(
             Date.now() + 10 * 60 * 1000,
           ),
         });
-      (process.env.NODE_ENV === 'debug' ? console.log : function(){})(`[SIMULATION] Sending code ${code} to user ${userId}`);
+      (process.env.NODE_ENV === 'development' ? console.log : function(){})(`[SIMULATION] Sending code ${code} to user ${userId}`);
       res.json({ success: true, method: "email" });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -1983,7 +2072,7 @@ router.get("/api/products-by-tag", async (req, res) => {
     const cacheKey = `products_tag_obj_${tag}`;
     const cachedData = cache.get(cacheKey);
     if (cachedData) {
-      (process.env.NODE_ENV === 'debug' ? console.log : function(){})(`[Cache Hit] Serving ${cacheKey} from memory`);
+      (process.env.NODE_ENV === 'development' ? console.log : function(){})(`[Cache Hit] Serving ${cacheKey} from memory`);
       return res.json(cachedData);
     }
 
@@ -2040,7 +2129,7 @@ router.get("/api/products", async (req, res, next) => {
   // Check if we have a cached response (simulating Redis)
   const cachedData = cache.get(cacheKey);
   if (cachedData) {
-    (process.env.NODE_ENV === 'debug' ? console.log : function(){})(`[Cache Hit] Serving ${cacheKey} from memory`);
+    (process.env.NODE_ENV === 'development' ? console.log : function(){})(`[Cache Hit] Serving ${cacheKey} from memory`);
     return res.json(cachedData);
   }
 
@@ -2107,22 +2196,30 @@ router.get("/api/products", async (req, res, next) => {
   }
 });
 
-// PUBLIC: Advanced Search using Fuse.js (Memory Cached)
+// PUBLIC: Advanced Search using Fuse.js (Memory Cached with pagination, synonyms, and logs)
 router.get("/api/search", async (req, res, next) => {
   const { q } = req.query;
   if (!q || typeof q !== "string") {
-    return res.json({ products: [] });
+    return res.json({ products: [], total: 0, page: 1, limit: 10, hasMore: false });
   }
 
   const queryStr = q.trim();
+  const page = parseInt(req.query.page as string) || 1;
+  const limitVal = parseInt(req.query.limit as string) || 50;
+
+  // Post search filter query params (R31)
+  const minPrice = req.query.minPrice ? parseFloat(req.query.minPrice as string) : null;
+  const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice as string) : null;
+  const wilayaFilter = req.query.wilaya ? req.query.wilaya as string : null;
+  const categoryFilter = req.query.category ? req.query.category as string : null;
 
   try {
-    // Fetch Products
+    // Fetch Products (TTL reduced to 60s for R24)
     const CACHE_KEY = `products_all`;
     let allProducts = cache.get<any>(CACHE_KEY);
 
     if (!allProducts) {
-      (process.env.NODE_ENV === 'debug' ? console.log : function(){})(
+      (process.env.NODE_ENV === 'development' ? console.log : function(){})(
         `[Search Engine] Fetching all products to build search index...`,
       );
       try {
@@ -2143,14 +2240,14 @@ router.get("/api/search", async (req, res, next) => {
           }));
         }
         allProducts = { products };
-        cache.set(CACHE_KEY, allProducts, 600); // 10 mins cache
+        cache.set(CACHE_KEY, allProducts, 60); // Reduced to 60s (R24)
       } catch (innerErr: any) {
         console.error(
           "[Search Engine] Firestore fetch products failed:",
           innerErr.message,
         );
         allProducts = { products: [] };
-        cache.set(CACHE_KEY, allProducts, 60);
+        cache.set(CACHE_KEY, allProducts, 10);
       }
     }
 
@@ -2158,7 +2255,7 @@ router.get("/api/search", async (req, res, next) => {
     const STORES_CACHE_KEY = `stores_all`;
     let allStores = cache.get<any>(STORES_CACHE_KEY);
     if (!allStores) {
-       (process.env.NODE_ENV === 'debug' ? console.log : function(){})(`[Search Engine] Fetching all sellers for store indexing...`);
+       (process.env.NODE_ENV === 'development' ? console.log : function(){})(`[Search Engine] Fetching all sellers for store indexing...`);
        try {
          let stores = [];
          if (clientDb) {
@@ -2176,8 +2273,7 @@ router.get("/api/search", async (req, res, next) => {
        }
     }
 
-    // Initialize Fuse.js with the products
-    // We attach shopName and trustScore to products during indexing memory if possible
+    // Prepare products with store info attached
     let productsToIndex = allProducts.products;
     if (allStores && allStores.stores) {
        productsToIndex = productsToIndex.map((p: any) => {
@@ -2188,16 +2284,46 @@ router.get("/api/search", async (req, res, next) => {
                        ...p, 
                        shopName: store.shopName || store.displayName || p.shopName,
                        sellerTrustScore: store.trustScore ?? 50
-                   };
-               }
-           }
-           return { ...p, sellerTrustScore: p.sellerTrustScore ?? 50 };
-       });
-       
-       // 🔴 SÉCURITÉ & EXPÉRIENCE: Filtrer ou pénaliser les vendeurs avec un Trust Score extrêmement bas (< 20)
-       productsToIndex = productsToIndex.filter((p: any) => p.sellerTrustScore >= 20);
+                    };
+                }
+            }
+            return { ...p, sellerTrustScore: p.sellerTrustScore ?? 50 };
+        });
+        
+        // 🔴 SÉCURITÉ & EXPÉRIENCE: Filtrer ou pénaliser les vendeurs avec un Trust Score extrêmement bas (< 20)
+        productsToIndex = productsToIndex.filter((p: any) => p.sellerTrustScore >= 20);
+     }
+
+      // Fetch custom synonyms from Firestore or use defaults (R26)
+    let dbSynonymGroups = [];
+    try {
+      const synDoc = await db.collection("settings").doc("search_synonyms").get();
+      if (synDoc.exists && Array.isArray(synDoc.data()?.groups)) {
+        dbSynonymGroups = synDoc.data().groups;
+      }
+    } catch (err) {
+      // Fallback silent
     }
 
+    const synonymGroups = dbSynonymGroups.length > 0 ? dbSynonymGroups : [
+      ['chaussure', 'chaussures', 'soulier', 'souliers', 'basket', 'baskets', 'sneaker', 'sneakers', 'botte', 'bottes', 'sandale', 'sandales', 'shoes', 'shoe', 'حذاء', 'احذيه', 'سباط'],
+      ['vetement', 'vetements', 'habit', 'habits', 'clothes', 'clothing', 'ملابس', 'لباس', 'كسوه'],
+      ['pantalon', 'pantalons', 'pants', 'trousers', 'سروال', 'سراويل'],
+      ['chemise', 'chemises', 'shirt', 'shirts', 'قميص', 'قمصان'],
+      ['tshirt', 'tshirts', 't-shirt', 't-shirts', 'تيشيرت', 'تي شيرت'],
+      ['veste', 'vestes', 'manteau', 'manteaux', 'jacket', 'coat', 'ستره', 'معطف', 'فيستا'],
+      ['robe', 'robes', 'dress', 'dresses', 'فستان', 'فساتين', 'روبه'],
+      ['telephone', 'telephones', 'smartphone', 'smartphones', 'portable', 'portables', 'mobile', 'mobiles', 'phone', 'phones', 'هاتف', 'هواتف', 'تليفون', 'موبايل'],
+      ['pc', 'ordinateur', 'ordinateurs', 'laptop', 'laptops', 'macbook', 'computer', 'حاسوب', 'كمبيوتر', 'ميكرو'],
+      ['velo', 'velos', 'bicyclette', 'bicyclettes', 'vtt', 'bike', 'bicycle', 'دراجه', 'دراجات', 'فيلو'],
+      ['montre', 'montres', 'horloge', 'horloges', 'smartwatch', 'watch', 'watches', 'ساعه', 'ساعات', 'مكانه'],
+      ['femme', 'femmes', 'fille', 'filles', 'dame', 'dames', 'women', 'woman', 'girl', 'امراه', 'نساء', 'بنت', 'بنات'],
+      ['homme', 'hommes', 'garcon', 'garcons', 'monsieur', 'men', 'man', 'boy', 'رجل', 'رجال', 'ولد', 'اولاد'],
+      ['enfant', 'enfants', 'bebe', 'bebes', 'kids', 'child', 'children', 'baby', 'طفل', 'اطفال', 'رضيع'],
+      ['sac', 'sacs', 'bag', 'bags', 'حقيبه', 'حقائب', 'ساك']
+    ];
+
+    // Initialize Fuse.js directly to avoid cache synchronization errors and guarantee real-time data accuracy (R25)
     const fuseOptions = {
       keys: [
         { name: "name", weight: 3 },
@@ -2217,154 +2343,195 @@ router.get("/api/search", async (req, res, next) => {
       threshold: 0.45,
       ignoreLocation: true,
       minMatchCharLength: 2,
+      includeScore: true
     };
-
     const fuse = new Fuse(productsToIndex, fuseOptions);
     let searchResults = fuse.search(queryStr);
 
-    // Provide a token-based multi-lingual smart search if Fuse yields too few results,
-    // since Fuse's standard string distance fails for multi-word queries spanning different fields.
-    if (searchResults.length < 5) {
-      const normalizeText = (text?: string): string => {
-        if (!text) return "";
-        return text.toString()
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "") // Remove Latin diacritics
-          .replace(/[\u064B-\u065F]/g, "") // Remove Arabic diacritics (tashkeel)
-          .replace(/[أإآ]/g, "ا") // Normalize Arabic Alef
-          .replace(/ة/g, "ه") // Normalize Teh Marbuta
-          .toLowerCase();
-      };
+    // Smart Multilingual & Phonetic Fallback logic (R28, R29)
+    const normalizeText = (text?: string): string => {
+      if (!text) return "";
+      return text.toString()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "") // Remove Latin diacritics
+        .replace(/[\u064B-\u065F]/g, "") // Remove Arabic diacritics (tashkeel)
+        .replace(/[أإآا]/g, "ا") // Standard Alif normalization (R28)
+        .replace(/[ىي]/g, "ي") // Standard Yaa normalization (R28)
+        .replace(/ة/g, "ه") // Standard Teh Marbuta normalization (R28)
+        .replace(/ؤ/g, "ء")
+        .replace(/ئ/g, "ء")
+        .toLowerCase();
+    };
 
-      const synonymGroups = [
-        ['chaussure', 'chaussures', 'soulier', 'souliers', 'basket', 'baskets', 'sneaker', 'sneakers', 'botte', 'bottes', 'sandale', 'sandales', 'shoes', 'shoe', 'حذاء', 'احذيه', 'سباط'],
-        ['vetement', 'vetements', 'habit', 'habits', 'clothes', 'clothing', 'ملابس', 'لباس', 'كسوه'],
-        ['pantalon', 'pantalons', 'pants', 'trousers', 'سروال', 'سراويل'],
-        ['chemise', 'chemises', 'shirt', 'shirts', 'قميص', 'قمصان'],
-        ['tshirt', 'tshirts', 't-shirt', 't-shirts', 'تيشيرت', 'تي شيرت'],
-        ['veste', 'vestes', 'manteau', 'manteaux', 'jacket', 'coat', 'ستره', 'معطف', 'فيستا'],
-        ['robe', 'robes', 'dress', 'dresses', 'فستان', 'فساتين', 'روبه'],
-        ['telephone', 'telephones', 'smartphone', 'smartphones', 'portable', 'portables', 'mobile', 'mobiles', 'phone', 'phones', 'هاتف', 'هواتف', 'تليفون', 'موبايل'],
-        ['pc', 'ordinateur', 'ordinateurs', 'laptop', 'laptops', 'macbook', 'computer', 'حاسوب', 'كمبيوتر', 'ميكرو'],
-        ['velo', 'velos', 'bicyclette', 'bicyclettes', 'vtt', 'bike', 'bicycle', 'دراجه', 'دراجات', 'فيلو'],
-        ['montre', 'montres', 'horloge', 'horloges', 'smartwatch', 'watch', 'watches', 'ساعه', 'ساعات', 'مكانه'],
-        ['femme', 'femmes', 'fille', 'filles', 'dame', 'dames', 'women', 'woman', 'girl', 'امراه', 'نساء', 'بنت', 'بنات'],
-        ['homme', 'hommes', 'garcon', 'garcons', 'monsieur', 'men', 'man', 'boy', 'رجل', 'رجال', 'ولد', 'اولاد'],
-        ['enfant', 'enfants', 'bebe', 'bebes', 'kids', 'child', 'children', 'baby', 'طفل', 'اطفال', 'رضيع'],
-        ['sac', 'sacs', 'bag', 'bags', 'حقيبه', 'حقائب', 'ساك']
-      ];
+    // Phonetic Soundex generator for French / Transliterated Arabic (R29)
+    const getSoundex = (word: string): string => {
+      const w = word.toLowerCase().trim().replace(/[^a-z]/g, "");
+      if (w.length === 0) return "";
+      const first = w.charAt(0).toUpperCase();
+      const codes = {
+        b: 1, f: 1, p: 1, v: 1,
+        c: 2, g: 2, j: 2, k: 2, q: 2, s: 2, x: 2, z: 2,
+        d: 3, t: 3,
+        l: 4,
+        m: 5, n: 5,
+        r: 6
+      } as any;
+      let res = first;
+      for (let i = 1; i < w.length; i++) {
+        const char = w.charAt(i);
+        const code = codes[char];
+        if (code && code !== codes[w.charAt(i - 1)]) {
+          res += code;
+        }
+      }
+      return (res + "0000").slice(0, 4);
+    };
 
-      const queryTokens = normalizeText(queryStr).split(/\s+/).filter(Boolean);
+    const queryTokens = normalizeText(queryStr).split(/\s+/).filter(Boolean);
 
-      if (queryTokens.length > 0) {
-        const fallbackResults = productsToIndex
-          .map((p: any) => {
-            const searchableText = normalizeText([
-              p.name,
-              p.category,
-              p.subcategory,
-              p.subSubCategory,
-              p.subsubcategory,
-              p.gender,
-              p.brand,
-              p.sku,
-              p.season,
-              p.shopName,
-              p.sellerName,
-              ...(p.tags || []),
-              ...(p.colors || []),
-              ...(p.sizes || []),
-              ...(p.materials || []),
-            ].filter(Boolean).join(" "));
+    if (queryTokens.length > 0 && searchResults.length < 15) {
+      const fallbackResults = productsToIndex
+        .map((p: any) => {
+          const searchableText = normalizeText([
+            p.name,
+            p.category,
+            p.subcategory,
+            p.subSubCategory,
+            p.subsubcategory,
+            p.gender,
+            p.brand,
+            p.sku,
+            p.season,
+            p.shopName,
+            p.sellerName,
+            ...(p.tags || []),
+            ...(p.colors || []),
+            ...(p.sizes || []),
+            ...(p.materials || []),
+          ].filter(Boolean).join(" "));
 
-            let matchCount = 0;
-            queryTokens.forEach((term) => {
-              // Exact check
-              if (searchableText.includes(term)) {
-                matchCount++;
-                return;
+          let matchScore = 0;
+          queryTokens.forEach((term) => {
+            // 1. Exact or partial match (1.0 weight)
+            if (searchableText.includes(term)) {
+              matchScore += 1.0;
+              return;
+            }
+            // 2. Custom Synonyms weight match (0.7x penalty) (R27)
+            for (const group of synonymGroups) {
+              if (group.some(g => g.includes(term) || term.includes(g))) {
+                 if (group.some(syn => searchableText.includes(syn))) {
+                   matchScore += 0.7; // Lower synonym weight (R27)
+                   return;
+                 }
               }
-              // Synonym check
-              for (const group of synonymGroups) {
-                if (group.some(g => g.includes(term) || term.includes(g))) {
-                   if (group.some(syn => searchableText.includes(syn))) {
-                     matchCount++;
-                     return;
-                   }
-                }
-              }
-              // Plural check
-              if (term.endsWith('s') || term.endsWith('x')) {
-                const singular = term.slice(0, -1);
-                if (searchableText.includes(singular)) {
-                  matchCount++;
+            }
+            // 3. Phonetic Soundex homophone check (0.6x weight) (R29)
+            const querySoundex = getSoundex(term);
+            if (querySoundex) {
+              const productWords = searchableText.split(/\s+/);
+              for (const word of productWords) {
+                if (getSoundex(word) === querySoundex) {
+                  matchScore += 0.6;
                   return;
                 }
               }
-              // Stemming check
-              if (term.length > 4 && searchableText.includes(term.slice(0, -1))) {
-                matchCount++;
+            }
+            // 4. Plural handling
+            if (term.endsWith('s') || term.endsWith('x')) {
+              const singular = term.slice(0, -1);
+              if (searchableText.includes(singular)) {
+                matchScore += 0.9;
                 return;
               }
-              if (term.length > 5 && searchableText.includes(term.slice(0, -2))) {
-                matchCount++;
-                return;
-              }
-            });
+            }
+            // 5. Light Stemming
+            if (term.length > 4 && searchableText.includes(term.slice(0, -1))) {
+              matchScore += 0.8;
+              return;
+            }
+          });
 
-            return { product: p, matchCount };
-          })
-          .filter((r: any) => r.matchCount === queryTokens.length) // Require all terms to match something
-          .sort((a: any, b: any) => b.matchCount - a.matchCount)
-          .map((r: any) => r.product);
+          return { product: p, score: matchScore };
+        })
+        .filter((r: any) => r.score >= 0.5)
+        .sort((a: any, b: any) => b.score - a.score)
+        .map((r: any) => r.product);
 
-        // We map fallback results to match Fuse's output structure, appending only those not already found
-        const existingIds = new Set(
-          searchResults.map((r) => (r.item as any).id),
-        );
-        fallbackResults.forEach((p: any) => {
-          if (!existingIds.has(p.id)) {
-            searchResults.push({ item: p, refIndex: 0, score: 0.5 });
-            existingIds.add(p.id);
-          }
-        });
-      }
+      // Deduplicate and merge into searchResults
+      const existingIds = new Set(searchResults.map((r) => (r.item as any).id));
+      fallbackResults.forEach((p: any) => {
+        if (!existingIds.has(p.id)) {
+          searchResults.push({ item: p, refIndex: 0, score: 0.5 });
+          existingIds.add(p.id);
+        }
+      });
     }
 
-    // Limit results, e.g. top 50 matches
-    const limitedResults = searchResults
-      .slice(0, 50)
-      .map((result) => result.item);
+    // Sort combining Fuse scores, Seller Trust and product popularity metrics (R30)
+    let processedResults = searchResults.map((r) => {
+       const p = r.item as any;
+       const textScore = 1 - (r.score ?? 0.5); // Higher text matches first
+       
+       // Extrapolate popularity metrics safely
+       const salesScore = Math.min((p.salesCount ?? 0) / 100, 1.0);
+       const ratingScore = Math.min((p.rating ?? 4.0) / 5.0, 1.0);
+       const trustScore = Math.min((p.sellerTrustScore ?? 50) / 100, 1.0);
+
+       // Combined weighted score for ranking (60% text match, 20% ratings/sales, 20% seller trust)
+       const combinedRankingScore = (textScore * 0.6) + ((salesScore * 0.5 + ratingScore * 0.5) * 0.2) + (trustScore * 0.2);
+
+       return { item: p, ranking: combinedRankingScore };
+    });
+
+    // Sort descending by highest weighted score
+    processedResults.sort((a, b) => b.ranking - a.ranking);
+
+    let finalProducts = processedResults.map((r) => r.item);
+
+    // Apply Post-Search Filters if specified (R31)
+    if (minPrice !== null) {
+      finalProducts = finalProducts.filter((p: any) => p.price >= minPrice);
+    }
+    if (maxPrice !== null) {
+      finalProducts = finalProducts.filter((p: any) => p.price <= maxPrice);
+    }
+    if (wilayaFilter) {
+      finalProducts = finalProducts.filter((p: any) => p.wilaya === wilayaFilter);
+    }
+    if (categoryFilter) {
+      finalProducts = finalProducts.filter((p: any) => p.category === categoryFilter);
+    }
 
     // Filter Stores based on search query
     let matchedStores = [];
     if (allStores && allStores.stores && queryStr) {
-        const normalizeText = (text?: string): string => {
+        const normalizeTextLocal = (text?: string): string => {
             if (!text) return "";
             return text.toString()
             .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "") // Remove Latin diacritics
-            .replace(/[\u064B-\u065F]/g, "") // Remove Arabic diacritics
-            .replace(/[أإآ]/g, "ا") // Normalize Arabic Alef
-            .replace(/ة/g, "ه") // Normalize Teh Marbuta
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[\u064B-\u065F]/g, "")
+            .replace(/[أإآا]/g, "ا")
+            .replace(/ة/g, "ه")
             .toLowerCase();
         };
-        const queryTokens = normalizeText(queryStr).split(/\s+/).filter(Boolean);
-        if (queryTokens.length > 0) {
+        const queryTokensStore = normalizeTextLocal(queryStr).split(/\s+/).filter(Boolean);
+        if (queryTokensStore.length > 0) {
             matchedStores = allStores.stores.filter((store: any) => {
-                const searchableStoreText = normalizeText([
+                const searchableStoreText = normalizeTextLocal([
                     store.shopName,
                     store.displayName,
                     store.shopDescription
                 ].filter(Boolean).join(" "));
                 
-                return queryTokens.every(term => searchableStoreText.includes(term));
+                return queryTokensStore.every(term => searchableStoreText.includes(term));
             });
         }
     }
 
-    // Attach shopName to products inside limitedResults if missing, to help the UI
-    const finalProducts = limitedResults.map((p: any) => {
+    // Map shopName safely to finalProducts
+    finalProducts = finalProducts.map((p: any) => {
         if (!p.shopName && p.sellerId) {
             const store = allStores?.stores?.find((s: any) => s.id === p.sellerId) || allStores?.stores?.find((s: any) => s.uid === p.sellerId);
             if (store && (store.shopName || store.displayName)) {
@@ -2374,7 +2541,42 @@ router.get("/api/search", async (req, res, next) => {
         return p;
     });
 
-    return res.json({ products: finalProducts, stores: matchedStores.slice(0, 5) });
+    // Logging search telemetry asynchronously to Firestore (R32)
+    try {
+      const logData = {
+        query: queryStr,
+        resultsCount: finalProducts.length,
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        userId: (req as any).user?.uid || "anonymous",
+        userAgent: req.headers["user-agent"] || "unknown",
+        filters: {
+          minPrice,
+          maxPrice,
+          wilaya: wilayaFilter,
+          category: categoryFilter
+        }
+      };
+      admin.firestore().collection("search_logs").add(logData).catch((e) => {
+        console.warn("[Search Engine] Log save rejected:", e.message);
+      });
+    } catch (logErr: any) {
+      console.warn("[Search Engine] Logging telemetry failed:", logErr.message);
+    }
+
+    // PAGINATION slicing (R23)
+    const totalCount = finalProducts.length;
+    const offset = (page - 1) * limitVal;
+    const paginatedProducts = finalProducts.slice(offset, offset + limitVal);
+    const hasMore = offset + limitVal < totalCount;
+
+    return res.json({ 
+      products: paginatedProducts, 
+      stores: matchedStores.slice(0, 5),
+      total: totalCount,
+      page,
+      limit: limitVal,
+      hasMore
+    });
   } catch (error: any) {
     console.error("Search API Error:", error);
     return res.status(500).json({ error: error.message });
@@ -2575,6 +2777,120 @@ router.get("/product/:id", async (req, res, next) => {
     }
   }
   next();
+});
+
+router.post("/api/admin/sellers/:id/ocr", authenticateToken, authorizeAdmin, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const sellerId = req.params.id;
+    const { documentUrl } = req.body;
+    
+    if (!documentUrl) {
+      return res.status(400).json({ error: "Missing documentUrl" });
+    }
+
+    // Fetch the image from URL
+    const imageResp = await fetch(documentUrl);
+    if (!imageResp.ok) throw new Error("Failed to fetch image");
+    const arrayBuffer = await imageResp.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const base64Data = buffer.toString('base64');
+    const mimeType = imageResp.headers.get('content-type') || 'image/jpeg';
+
+    const prompt = `Extraire les informations suivantes de cette pièce d'identité algérienne (Carte Nationale, Permis ou Passeport). 
+Retourne UNIQUEMENT un objet JSON valide avec les clés suivantes :
+- fullName (Nom complet)
+- documentNumber (Numéro de la pièce)
+- dateOfBirth (Date de naissance)
+- issueDate (Date de délivrance)
+- expiryDate (Date d'expiration si présente, sinon null)
+- isAuthentic (booléen, met true si le document semble être une pièce d'identité officielle et authentique, false si c'est flou, faux, ou illisible)
+- OCRConfidence (un score de 0 à 100 de ta confiance sur la lecture).
+`;
+
+    const result = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [
+        { role: "user", parts: [{ inlineData: { data: base64Data, mimeType } }, { text: prompt }] }
+      ]
+    });
+
+    const responseText = result.text || "{}";
+    
+    // Attempt to extract JSON from markdown if wrapped in ```json ... ```
+    let extractedJson = responseText;
+    const match = responseText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (match) {
+       extractedJson = match[1];
+    }
+    
+    let parsed = {};
+    try {
+      parsed = JSON.parse(extractedJson);
+    } catch(e) {
+      console.error("Failed to parse Gemini OCR response:", responseText);
+      parsed = { error: "Failed to parse JSON" };
+    }
+
+    res.json({ result: parsed });
+  } catch (err: any) {
+    console.error("OCR Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post("/api/seller/ocr", authenticateToken, authorizeSeller, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { documentUrl, base64Data: reqBase64, mimeType: reqMimeType, type } = req.body; // type = 'ID' | 'RC'
+    
+    if (!type || (!documentUrl && !reqBase64)) {
+      return res.status(400).json({ error: "Missing document or type" });
+    }
+
+    let base64Data = reqBase64;
+    let mimeType = reqMimeType || 'image/jpeg';
+
+    if (documentUrl && !base64Data) {
+       const imageResp = await fetch(documentUrl);
+       if (!imageResp.ok) throw new Error("Failed to fetch image");
+       const arrayBuffer = await imageResp.arrayBuffer();
+       const buffer = Buffer.from(arrayBuffer);
+       base64Data = buffer.toString('base64');
+       mimeType = imageResp.headers.get('content-type') || 'image/jpeg';
+    }
+
+    let prompt = "";
+    if (type === "ID") {
+       prompt = `Extraire les informations suivantes de cette pièce d'identité algérienne (Carte Nationale, Permis ou Passeport). 
+Retourne UNIQUEMENT un objet JSON valide avec la clé suivante :
+- documentNumber (Numéro d'Identification Nationale ou NIF)
+`;
+    } else {
+       prompt = `Extraire les informations de ce Registre de Commerce algérien. 
+Retourne UNIQUEMENT un objet JSON valide avec la clé suivante :
+- rcNumber (Numéro du registre de commerce complet)
+`;
+    }
+
+    const result = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [
+        { role: "user", parts: [{ inlineData: { data: base64Data, mimeType } }, { text: prompt }] }
+      ]
+    });
+
+    const responseText = result.text || "{}";
+    let extractedJson = responseText;
+    const match = responseText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (match) extractedJson = match[1];
+    
+    let parsed = {};
+    try { parsed = JSON.parse(extractedJson); } catch(e) {}
+
+    res.json({ result: parsed });
+  } catch (err: any) {
+    console.error("Seller OCR error:", err);
+    res.status(500).json({ error: "Failed to process OCR" });
+  }
 });
 
 export default router;

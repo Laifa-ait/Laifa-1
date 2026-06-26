@@ -13,6 +13,7 @@ import { ProductGallery } from "../../components/Product/Details/ProductGallery"
 import { ProductInfo } from "../../components/Product/Details/ProductInfo";
 import { ProductBuyBox } from "../../components/Product/Details/ProductBuyBox";
 import { ProductReviews } from "../../components/Product/Details/ProductReviews";
+import { ProductLightbox } from "../../components/Product/ProductLightbox";
 import { ProductCard } from "../../components/Product/ProductCard";
 import { useProductLogic } from "../../hooks/useProductLogic";
 
@@ -43,6 +44,7 @@ export const ProductDetails: React.FC = () => {
     setSelectedSize,
     showVideo,
     setShowVideo,
+    isLightboxOpen,
     setIsLightboxOpen,
     showStickyBuyBar,
     setShowStickyBuyBar,
@@ -170,17 +172,17 @@ export const ProductDetails: React.FC = () => {
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">{t("common.loading") || "Chargement..."}</div>;
   if (!product) return (
-    <div className="min-h-screen flex flex-col items-center justify-center text-center bg-[#FDF9EC]">
-      <ShoppingBag className="w-16 h-16 text-[#3C2B22]/30 mb-4" />
-      <h1 className="text-2xl font-kinder text-[#3C2B22] mb-4">{t("common.not_found") || "Produit non trouvé"}</h1>
-      <button onClick={() => navigate('/shop')} className="px-8 py-3.5 bg-[#3C2B22] hover:bg-[#FF5C00] text-white font-kinder text-sm uppercase tracking-widest rounded-full transition-all cursor-pointer shadow-md">
+    <div className="min-h-screen flex flex-col items-center justify-center text-center bg-slate-50">
+      <ShoppingBag className="w-16 h-16 text-slate-800/30 mb-4" />
+      <h1 className="text-2xl font-sans font-bold tracking-tight text-slate-800 mb-4">{t("common.not_found") || "Produit non trouvé"}</h1>
+      <button onClick={() => navigate('/shop')} className="px-8 py-3.5 bg-slate-800 hover:bg-sky-500 text-white font-sans font-bold tracking-tight text-sm uppercase tracking-widest rounded-full transition-all cursor-pointer shadow-md">
         {t("common.back_to_shop") || "Retour à la boutique"}
       </button>
     </div>
   );
 
   return (
-    <div className="bg-[#FDF9EC] min-h-screen pb-32 selection:bg-[#FF5C00] selection:text-white">
+    <div className="bg-white min-h-screen pb-32 selection:bg-black selection:text-white">
       <Helmet>
         <title>{product?.name ? `${product.name} | OLMART` : 'Produit | OLMART'}</title>
         <meta name="description" content={product?.description?.substring(0, 160)} />
@@ -193,39 +195,53 @@ export const ProductDetails: React.FC = () => {
       </Helmet>
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 lg:pt-32 pb-16">
-        <nav className="flex items-center gap-2 text-[10px] font-bold text-[#3C2B22]/60 uppercase tracking-widest rtl:tracking-normal flex-wrap mb-8 lg:mb-12">
-           <span className="cursor-pointer hover:text-[#3C2B22]" onClick={() => navigate('/')}>{t("common.home") || "Accueil"}</span>
-           <span>/</span>
-           <span className="cursor-pointer hover:text-[#3C2B22]" onClick={() => navigate('/shop')}>{t("common.shop") || "Boutique"}</span>
-            {product.category && (
-             <>
-               <span>/</span>
-               <span className="cursor-pointer hover:text-[#3C2B22]" onClick={() => navigate(`/shop?category=${encodeURIComponent(product.category!)}`)}>
-                 {getCategoryTranslation(product.category, t)}
-               </span>
-             </>
-           )}
-           {product.subcategory && (
-             <>
-               <span>/</span>
-               <span className="cursor-pointer hover:text-[#3C2B22]" onClick={() => navigate(`/shop?category=${encodeURIComponent(product.category!)}&subcategory=${encodeURIComponent(product.subcategory!)}`)}>
-                 {getCategoryTranslation(product.subcategory, t)}
-               </span>
-             </>
-           )}
-           {(product.subSubCategory || (product as any).subsubcategory) && (
-             <>
-               <span>/</span>
-               <span className="cursor-pointer hover:text-[#3C2B22]" onClick={() => navigate(`/shop?category=${encodeURIComponent(product.category!)}&subcategory=${encodeURIComponent(product.subcategory!)}&subsubcategory=${encodeURIComponent(product.subSubCategory || (product as any).subsubcategory)}`)}>
-                 {getCategoryTranslation(product.subSubCategory || (product as any).subsubcategory, t)}
-               </span>
-             </>
-           )}
-           <span>/</span>
-           <span className="text-[#3C2B22] truncate max-w-[200px] sm:max-w-xs px-2 py-0.5 bg-white rounded-full border border-white shadow-sm font-kinder">{product.name}</span>
+        <nav className="mb-6 lg:mb-10">
+          {/* Mobile Clean Back Button */}
+          <div className="flex sm:hidden items-center justify-between">
+            <button 
+              onClick={() => navigate(-1)} 
+              className="flex items-center gap-1.5 text-black hover:opacity-70 transition-opacity font-sans font-medium text-[11px] uppercase tracking-widest"
+            >
+              <ArrowLeft className="w-4 h-4" /> {t("common.back") || "Retour"}
+            </button>
+            <span className="text-[10px] font-medium text-black/40 uppercase tracking-widest truncate max-w-[150px]">{product.name}</span>
+          </div>
+
+          {/* Desktop Full Breadcrumbs */}
+          <div className="hidden sm:flex items-center gap-2 text-[10px] font-medium text-black/60 uppercase tracking-widest rtl:tracking-normal flex-wrap">
+             <span className="cursor-pointer hover:text-black transition-colors" onClick={() => navigate('/')}>{t("common.home") || "Accueil"}</span>
+             <span>/</span>
+             <span className="cursor-pointer hover:text-black transition-colors" onClick={() => navigate('/shop')}>{t("common.shop") || "Boutique"}</span>
+              {product.category && (
+               <>
+                 <span>/</span>
+                 <span className="cursor-pointer hover:text-slate-800" onClick={() => navigate(`/shop?category=${encodeURIComponent(product.category!)}`)}>
+                   {getCategoryTranslation(product.category, t)}
+                 </span>
+               </>
+             )}
+             {product.subcategory && (
+               <>
+                 <span>/</span>
+                 <span className="cursor-pointer hover:text-slate-800" onClick={() => navigate(`/shop?category=${encodeURIComponent(product.category!)}&subcategory=${encodeURIComponent(product.subcategory!)}`)}>
+                   {getCategoryTranslation(product.subcategory, t)}
+                 </span>
+               </>
+             )}
+             {(product.subSubCategory || (product as any).subsubcategory) && (
+               <>
+                 <span>/</span>
+                 <span className="cursor-pointer hover:text-slate-800" onClick={() => navigate(`/shop?category=${encodeURIComponent(product.category!)}&subcategory=${encodeURIComponent(product.subcategory!)}&subsubcategory=${encodeURIComponent(product.subSubCategory || (product as any).subsubcategory)}`)}>
+                   {getCategoryTranslation(product.subSubCategory || (product as any).subsubcategory, t)}
+                 </span>
+               </>
+             )}
+             <span>/</span>
+             <span className="text-black truncate max-w-[200px] sm:max-w-xs font-sans font-medium">{product.name}</span>
+          </div>
         </nav>
 
-        <div className="grid lg:grid-cols-12 gap-10 xl:gap-16 pb-16 border-b-[3px] border-[#FF5C00]/20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 xl:gap-16 pb-16">
           <div className="lg:col-span-6 h-max lg:sticky lg:top-28">
             <ProductGallery images={images} selectedIndex={selectedImageIndex} productName={product.name} onSelectImage={setSelectedImageIndex} showVideo={showVideo} setShowVideo={setShowVideo} productVideoUrl={product.video} onOpenLightbox={() => setIsLightboxOpen(true)} />
           </div>
@@ -237,19 +253,47 @@ export const ProductDetails: React.FC = () => {
           </div>
         </div>
 
+        {/* RECOMMENDED PRODUCTS PLACEHOLDER */}
+        <div className="pt-16 pb-8 border-t border-black/10 mt-8">
+          <h2 className="text-lg font-sans font-medium uppercase tracking-widest text-black mb-8 text-center">
+            {t("product.you_may_also_like") || "Vous aimerez aussi"}
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 opacity-60">
+            {/* These are placeholders that will be coded later as requested */}
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="group cursor-pointer">
+                <div className="aspect-[3/4] bg-slate-100 mb-3 overflow-hidden relative">
+                  <div className="w-full h-full bg-slate-200 animate-pulse"></div>
+                </div>
+                <div className="space-y-1">
+                  <div className="h-3 bg-slate-200 w-3/4 animate-pulse"></div>
+                  <div className="h-3 bg-slate-200 w-1/2 animate-pulse"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <ProductLightbox 
+          isOpen={isLightboxOpen} 
+          onClose={() => setIsLightboxOpen(false)} 
+          imageUrl={images[selectedImageIndex]} 
+          title={product.name} 
+        />
+
         {/* Cohesive Recommended Products Module */}
         {!loadingRecom && recommendedProducts.length > 0 && (
           <div className="mt-16 sm:mt-24">
             <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4 px-2">
               <div>
-                <div className="flex items-center gap-2 text-[#FF5C00] font-bold text-[11px] uppercase tracking-widest rtl:tracking-normal mb-2 bg-[#FF5C00]/5 self-start px-3 py-1 rounded-full border border-[#FF5C00]/20 w-fit">
+                <div className="flex items-center gap-2 text-sky-500 font-bold text-[11px] uppercase tracking-widest rtl:tracking-normal mb-2 bg-sky-500/5 self-start px-3 py-1 rounded-full border border-sky-500/20 w-fit">
                   <Flame className="w-4 h-4 animate-pulse" /> {t("product.premium_selection") || "Sélection Premium"}
                 </div>
-                <h3 className="font-kinder text-3xl sm:text-4xl text-[#3C2B22] uppercase tracking-wide drop-shadow-sm">
+                <h3 className="font-sans font-bold tracking-tight text-3xl sm:text-4xl text-slate-800 uppercase tracking-wide drop-shadow-sm">
                   {t("product.you_might_also_like") || "Vous aimerez aussi"}
                 </h3>
               </div>
-              <p className="text-sm font-bold text-[#3C2B22]/60">{t("product.recommendations_subtitle") || "Recommandations exclusives adaptées à vos goûts"}</p>
+              <p className="text-sm font-bold text-slate-800/60">{t("product.recommendations_subtitle") || "Recommandations exclusives adaptées à vos goûts"}</p>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">

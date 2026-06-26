@@ -25,34 +25,105 @@ export const ProductGallery: React.FC<GalleryProps> = ({
   productVideoUrl,
   onOpenLightbox,
 }) => {
+  const handleDragEnd = (event: any, info: any) => {
+    const swipeThreshold = 50;
+    if (info.offset.x < -swipeThreshold) {
+      // Swiped left -> next image
+      if (selectedIndex < images.length - 1) {
+        onSelectImage(selectedIndex + 1);
+        setShowVideo(false);
+      }
+    } else if (info.offset.x > swipeThreshold) {
+      // Swiped right -> previous image
+      if (selectedIndex > 0) {
+        onSelectImage(selectedIndex - 1);
+        setShowVideo(false);
+      }
+    }
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 -mx-4 sm:mx-0">
       <div
-        onClick={onOpenLightbox}
         onContextMenu={(e) => e.preventDefault()}
-        className="relative aspect-[4/5] rounded-[2rem] overflow-hidden bg-white shadow-xl shadow-zinc-200/50 group cursor-pointer"
+        className="relative aspect-[3/4] md:aspect-[4/5] sm:rounded-none overflow-hidden bg-slate-50 group cursor-pointer"
       >
-        <div className="hidden md:block w-full h-full">
+        {showVideo && productVideoUrl ? (
+          <div className="absolute inset-0 z-20 bg-black flex items-center justify-center">
+            <video
+              key={productVideoUrl}
+              src={productVideoUrl}
+              controls
+              playsInline
+              muted
+              loop
+              autoPlay
+              className="w-full h-full object-contain bg-black"
+            />
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowVideo(false);
+              }}
+              className="absolute top-4 right-4 w-10 h-10 bg-black/50 hover:bg-black text-white rounded-full flex items-center justify-center transition-colors z-30"
+            >
+              ✕
+            </button>
+          </div>
+        ) : null}
+
+        {/* Desktop View with ImageMagnifier */}
+        <div className="hidden lg:block w-full h-full bg-slate-50">
           <ImageMagnifier
-            src={getOptimizedImageUrl(images[selectedIndex], 800)}
+            src={getOptimizedImageUrl(images[selectedIndex], 1200)}
             alt={productName}
-            className="w-full h-full"
+            className="w-full h-full object-cover mix-blend-multiply"
+            onClick={onOpenLightbox}
           />
         </div>
-        <div className="md:hidden w-full h-full">
+
+        {/* Mobile Swipe-enabled View */}
+        <div className="lg:hidden w-full h-full relative overflow-hidden flex items-center justify-center bg-slate-50">
           <AnimatePresence mode="wait">
             <motion.img
               key={selectedIndex}
-              initial={{ opacity: 0, scale: 1.05 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.4 }}
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              transition={{ type: "tween", ease: "easeInOut", duration: 0.3 }}
               src={getOptimizedImageUrl(images[selectedIndex], 800)}
-              draggable={false}
-              className="w-full h-full object-cover select-none pointer-events-none"
+              draggable="true"
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.8}
+              onDragEnd={handleDragEnd}
+              className="w-full h-full object-cover select-none mix-blend-multiply pointer-events-auto"
               alt={productName}
+              onClick={onOpenLightbox}
             />
           </AnimatePresence>
+
+          {/* Swipe indicator dots - Zara minimalist style */}
+          {images.length > 1 && (
+            <div className="absolute bottom-4 left-0 w-full flex justify-center gap-1.5 z-10 px-4">
+              {images.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelectImage(idx);
+                    setShowVideo(false);
+                  }}
+                  className={`h-0.5 transition-all duration-300 ${
+                    selectedIndex === idx 
+                      ? "bg-black w-6" 
+                      : "bg-black/20 w-4 hover:bg-black/40"
+                  }`}
+                  aria-label={`Go to slide ${idx + 1}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {productVideoUrl && !showVideo && (
@@ -61,15 +132,27 @@ export const ProductGallery: React.FC<GalleryProps> = ({
               e.stopPropagation();
               setShowVideo(true);
             }}
-            className="absolute bottom-6 right-6 w-16 h-16 bg-white/20 backdrop-blur-xl text-white rounded-full flex items-center justify-center hover:scale-105 transition-transform shadow-xl border border-white/20"
+            className="absolute bottom-6 right-6 w-12 h-12 bg-white/80 backdrop-blur-md text-black flex items-center justify-center hover:bg-white transition-colors z-10"
           >
-            <Play className="w-6 h-6 fill-current ml-1" />
+            <Play className="w-5 h-5 fill-current ml-0.5" />
           </button>
         )}
       </div>
 
-      {images.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide px-1">
+      {(images.length > 1 || productVideoUrl) && (
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide justify-start sm:justify-start px-4 sm:px-0 mt-2">
+          {productVideoUrl && (
+            <button
+              onClick={() => setShowVideo(true)}
+              className={`w-16 h-20 sm:w-20 sm:h-28 overflow-hidden transition-all shrink-0 bg-slate-100 flex items-center justify-center relative ${
+                showVideo 
+                  ? "border border-black opacity-100" 
+                  : "border border-transparent opacity-60 hover:opacity-100"
+              }`}
+            >
+              <Play className="w-6 h-6 text-black/60 fill-black/60" />
+            </button>
+          )}
           {images.map((img, i) => (
             <button
               key={i}
@@ -78,13 +161,17 @@ export const ProductGallery: React.FC<GalleryProps> = ({
                 setShowVideo(false);
               }}
               onContextMenu={(e) => e.preventDefault()}
-              className={`w-20 h-28 rounded-xl overflow-hidden border-[3px] transition-all shrink-0 ${selectedIndex === i ? "border-[#FF5C00] shadow-md shadow-[#FF5C00]/20 scale-95" : "border-white shadow-sm hover:border-zinc-200"}`}
+              className={`w-16 h-20 sm:w-20 sm:h-28 overflow-hidden transition-all shrink-0 bg-white ${
+                selectedIndex === i && !showVideo
+                  ? "border border-black opacity-100" 
+                  : "border border-transparent opacity-60 hover:opacity-100"
+              }`}
             >
               <img
                 loading="lazy"
                 src={getOptimizedImageUrl(img, 200)}
                 draggable={false}
-                className="w-full h-full object-cover select-none pointer-events-none"
+                className="w-full h-full object-cover mix-blend-multiply select-none pointer-events-none"
                 alt=""
               />
             </button>

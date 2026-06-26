@@ -295,6 +295,11 @@ const ForgotPassword = React.lazy(() =>
     default: m.ForgotPassword,
   }))
 );
+const NotFound = React.lazy(() =>
+  import("./pages/Public/NotFound").then((m) => ({
+    default: m.NotFound,
+  }))
+);
 
 import { Layout } from "./components/Layout/Layout";
 import { AppGuard } from "./components/AppGuard";
@@ -396,10 +401,10 @@ export const AppRouter: React.FC = () => {
                 }
               />
               <Route
-                path="/collection/:bannerId"
+                path="/campaign-collection/:bannerId"
                 element={
                   <PageWrapper>
-                    <DynamicCollectionPage />
+                    <CampaignCollection />
                   </PageWrapper>
                 }
               />
@@ -609,7 +614,7 @@ export const AppRouter: React.FC = () => {
               </Route>
             </Route>
 
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </AnimatePresence>

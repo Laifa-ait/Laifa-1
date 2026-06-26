@@ -98,17 +98,17 @@ export const BoutiquesMarques: React.FC<BoutiquesMarquesProps> = ({ sellers, isL
   }
 
   return (
-    <section className="py-8 sm:py-12 bg-[#FDF9EC]/20 relative overflow-hidden">
+    <section className="py-8 sm:py-12 bg-slate-50 relative overflow-hidden">
       <div className="w-full max-w-[90rem] mx-auto px-4 sm:px-6 md:px-8">
         {/* Elegant Design Header with Overline and Bold Main Title */}
         <div className="flex flex-col items-center mb-8 sm:mb-12 text-center relative z-10 px-4 sm:px-6 lg:px-8">
-          <span className="text-[10px] rtl:text-[12px] sm:text-[11px] font-sans font-bold text-[#C75C1A] uppercase tracking-[0.35em] mb-1.5 select-none animate-pulse">
+          <span className="text-[10px] rtl:text-[11px] sm:text-[11px] font-sans font-bold text-sky-500 uppercase tracking-[0.35em] mb-1.5 select-none animate-pulse">
             {t("home.shops.community_badge")}
           </span>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#2C2118] uppercase tracking-tighter rtl:tracking-normal">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-slate-900 uppercase tracking-tighter rtl:tracking-normal">
             {t("home.shops.title")}
           </h2>
-          <div className="h-0.5 sm:h-1 w-12 bg-gradient-to-r from-orange-500 to-amber-500 mt-3 rounded-full shadow-sm" />
+          <div className="h-0.5 sm:h-1 w-12 bg-gradient-to-r from-sky-400 to-sky-600 mt-3 rounded-full shadow-sm" />
         </div>
 
         {/* Carousel Wrapper containing controls and card container */}
@@ -116,7 +116,7 @@ export const BoutiquesMarques: React.FC<BoutiquesMarquesProps> = ({ sellers, isL
           {/* Left Navigation Arrow */}
           <button
             onClick={() => scroll("left")}
-            className="hidden lg:flex absolute left-4 sm:left-6 lg:left-10 top-[40%] -translate-y-1/2 z-30 w-12 h-12 items-center justify-center rounded-full bg-[#FFFBF5] border border-slate-200/90 text-[#2C2118] hover:bg-[#2C2118] hover:text-white hover:scale-105 transition-all duration-300 shadow-[0_12px_24px_rgba(30,67,86,0.15)] active:scale-95 cursor-pointer opacity-0 group-hover/carousel:opacity-100"
+            className="hidden lg:flex absolute left-4 sm:left-6 lg:left-10 top-[40%] -translate-y-1/2 z-30 w-12 h-12 items-center justify-center rounded-full bg-white border border-slate-200/90 text-slate-900 hover:bg-slate-900 hover:text-white hover:scale-105 transition-all duration-300 shadow-sm active:scale-95 cursor-pointer opacity-0 group-hover/carousel:opacity-100"
             aria-label={t("Voir la boutique précédente")}
           >
             <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
@@ -131,7 +131,7 @@ export const BoutiquesMarques: React.FC<BoutiquesMarquesProps> = ({ sellers, isL
               ? [...Array(4)].map((_, i) => (
                   <div
                     key={i}
-                    className="min-w-[280px] sm:min-w-[320px] max-w-[360px] h-[320px] bg-[#FFFBF5] rounded-2xl border border-slate-200/40 shadow-sm animate-pulse flex flex-col overflow-hidden"
+                    className="min-w-[280px] sm:min-w-[320px] max-w-[360px] h-[320px] bg-white rounded-2xl border border-slate-200/40 shadow-sm animate-pulse flex flex-col overflow-hidden"
                   >
                     <div className="h-32 sm:h-36 bg-slate-200" />
                     <div className="p-5 pt-12 flex-1 flex flex-col gap-3">
@@ -155,10 +155,10 @@ export const BoutiquesMarques: React.FC<BoutiquesMarquesProps> = ({ sellers, isL
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
                       transition={{ duration: 0.5, delay: index * 0.08 }}
-                      className="min-w-[270px] sm:min-w-[310px] max-w-[340px] snap-start snap-always bg-[#FFFBF5] rounded-2xl overflow-hidden border border-slate-205/60 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgba(30,67,86,0.08)] transition-all duration-500 flex flex-col relative group"
+                      className="min-w-[200px] sm:min-w-[280px] max-w-[200px] sm:max-w-[280px] snap-start snap-always bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-md transition-all duration-500 flex flex-col relative group"
                     >
                       {/* Cover Photo */}
-                      <div className="h-32 sm:h-36 w-full overflow-hidden relative bg-[#F5F0E8]">
+                      <div className="h-20 sm:h-28 w-full overflow-hidden relative bg-slate-50">
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10 z-10 opacity-70" />
                         <img
                           src={coverImage}
@@ -170,8 +170,8 @@ export const BoutiquesMarques: React.FC<BoutiquesMarquesProps> = ({ sellers, isL
                       </div>
 
                       {/* Circular Verified Overlap Avatar */}
-                      <div className="absolute top-[92px] sm:top-[104px] left-5 z-20">
-                        <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full border-4 border-white shadow-[0_8px_16px_rgba(0,0,0,0.12)] overflow-hidden bg-[#1E3F50] flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
+                      <div className="absolute top-[56px] sm:top-[88px] left-4 z-20">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-4 border-white shadow-sm overflow-hidden bg-slate-900 flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
                           <img
                             src={avatarImage}
                             alt={seller.shopName}
@@ -183,25 +183,25 @@ export const BoutiquesMarques: React.FC<BoutiquesMarquesProps> = ({ sellers, isL
                       </div>
 
                       {/* Content Details Area */}
-                      <div className="p-5 pt-10 sm:pt-11 flex-1 flex flex-col justify-between">
+                      <div className="p-3 sm:p-4 pt-8 sm:pt-11 flex-1 flex flex-col justify-between">
                         <div className="mb-4">
                           {/* Shop Name & Checked Verified */}
                           <div className="flex items-center gap-1.5 mb-1.5">
-                            <h3 className="font-extrabold text-[#2C2118] text-sm sm:text-base leading-snug tracking-tight rtl:tracking-normal truncate max-w-[85%] uppercase">
+                            <h3 className="font-extrabold text-slate-900 text-xs sm:text-sm leading-snug tracking-tight rtl:tracking-normal truncate max-w-[85%] uppercase">
                               {seller.shopName}
                             </h3>
-                            <BadgeCheck className="w-4 h-4 text-blue-500 fill-blue-500/10 shrink-0" />
+                            <BadgeCheck className="w-4 h-4 text-sky-500 fill-sky-500/10 shrink-0" />
                           </div>
 
                           {/* Wilaya Geo Tag - Slogan line if exists */}
-                          <div className="flex items-center gap-1 text-zinc-400">
-                            <MapPin className="w-3.5 h-3.5 text-[#C75C1A] shrink-0" />
+                          <div className="flex items-center gap-1 text-slate-400">
+                            <MapPin className="w-3.5 h-3.5 text-sky-500 shrink-0" />
                             <span className="text-[10px] rtl:text-[12px] sm:text-[11px] font-medium tracking-wide uppercase truncate">
                               {formatLocation(seller.wilaya)}
                             </span>
                           </div>
                           {seller.slogan && (
-                            <p className="text-[10px] rtl:text-[12px] sm:text-xs rtl:text-sm text-zinc-500 leading-normal line-clamp-1 italic mt-2 border-l-2 border-slate-200 pl-2">
+                            <p className="text-[10px] rtl:text-[12px] sm:text-xs rtl:text-sm text-slate-500 leading-normal line-clamp-1 italic mt-2 border-l-2 border-slate-200 pl-2">
                               "{seller.slogan}"
                             </p>
                           )}
@@ -213,7 +213,7 @@ export const BoutiquesMarques: React.FC<BoutiquesMarquesProps> = ({ sellers, isL
                             e.stopPropagation();
                             navigate(`/store/${seller.id}`);
                           }}
-                          className="w-full py-2.5 sm:py-3 bg-[#2C2118] hover:bg-[#C75C1A] text-white text-[10px] rtl:text-[12px] sm:text-[11px] font-sans font-bold uppercase tracking-wider rtl:tracking-normal rounded-xl transition-all duration-300 shadow-md hover:shadow-lg active:scale-95 border-none cursor-pointer flex items-center justify-center gap-2 group/btn"
+                          className="w-full py-2 sm:py-2.5 bg-slate-800 hover:bg-sky-500 text-white text-[10px] sm:text-[11px] font-sans font-bold uppercase tracking-wider rtl:tracking-normal rounded-full transition-all duration-300 shadow-sm hover:shadow-md active:scale-95 border-none cursor-pointer flex items-center justify-center gap-2 group/btn"
                         >
                           <span>{t("home.shops.visit_boutique")}</span>
                           <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-1" />
@@ -227,7 +227,7 @@ export const BoutiquesMarques: React.FC<BoutiquesMarquesProps> = ({ sellers, isL
           {/* Right Navigation Arrow */}
           <button
             onClick={() => scroll("right")}
-            className="hidden lg:flex absolute right-4 sm:right-6 lg:right-10 top-[40%] -translate-y-1/2 z-30 w-12 h-12 items-center justify-center rounded-full bg-[#FFFBF5] border border-slate-200/90 text-[#2C2118] hover:bg-[#2C2118] hover:text-white hover:scale-105 transition-all duration-300 shadow-[0_12px_24px_rgba(30,67,86,0.15)] active:scale-95 cursor-pointer opacity-0 group-hover/carousel:opacity-100"
+            className="hidden lg:flex absolute right-4 sm:right-6 lg:right-10 top-[40%] -translate-y-1/2 z-30 w-12 h-12 items-center justify-center rounded-full bg-white border border-slate-200/90 text-slate-900 hover:bg-slate-900 hover:text-white hover:scale-105 transition-all duration-300 shadow-sm active:scale-95 cursor-pointer opacity-0 group-hover/carousel:opacity-100"
             aria-label={t("Voir la boutique suivante")}
           >
             <ChevronRight className="w-5 h-5 stroke-[2.5]" />

@@ -235,9 +235,9 @@ export const Auth: React.FC = () => {
                initial={{ opacity: 0, y: 30 }}
                animate={{ opacity: 1, y: 0 }}
                transition={{ duration: 0.8, ease: "easeOut" }}
-               className="backdrop-blur-xl bg-[#FDF9EC]/90 border border-white/40 p-10 rounded-[2.5rem] shadow-[0_8px_40px_rgba(30,67,86,0.3)]"
+               className="backdrop-blur-xl bg-[#FDF9EC]/90 border border-white/40 p-10 rounded-[2.5rem] shadow-2xl"
             >
-               <div className="w-16 h-16 bg-gradient-to-tr from-[#FF5C00] to-[#E5A852] rounded-2xl flex items-center justify-center mb-8 shadow-xl shadow-[#FF5C00]/20">
+               <div className="w-16 h-16 bg-gradient-to-tr from-[#FF5C00] to-[#E5A852] rounded-2xl flex items-center justify-center mb-8 shadow-xl">
                   <OlmaLogo className="w-8 h-8 text-white" />
                </div>
                <h1 className="text-4xl text-[#3C2B22] font-kinder tracking-tight rtl:tracking-normal mb-4">
@@ -273,7 +273,7 @@ export const Auth: React.FC = () => {
          <div className="w-full max-w-md mx-auto z-10">
             {/* Header Mobile */}
             <div className="lg:hidden flex items-center gap-3 mb-10 justify-center">
-                <div className="w-12 h-12 bg-gradient-to-tr from-[#FF5C00] to-[#E5A852] rounded-xl flex items-center justify-center shadow-lg shadow-[#FF5C00]/20">
+                <div className="w-12 h-12 bg-gradient-to-tr from-[#FF5C00] to-[#E5A852] rounded-xl flex items-center justify-center shadow-lg">
                    <OlmaLogo className="w-6 h-6 text-white" />
                 </div>
                 <span className="text-3xl font-kinder tracking-tighter rtl:tracking-normal text-[#3C2B22]">{t("OLMA")}</span>
@@ -296,7 +296,7 @@ export const Auth: React.FC = () => {
                     type="button"
                     onClick={() => setIsLogin(true)}
                     className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-300 ${
-                      isLogin ? 'bg-white text-[#3C2B22] shadow-md shadow-[#FF5C00]/5' : 'text-[#3C2B22]/60 hover:text-[#3C2B22]'
+                      isLogin ? 'bg-white text-[#3C2B22] shadow-md' : 'text-[#3C2B22]/60 hover:text-[#3C2B22]'
                     }`}
                   >
                     {t("auth.tab_login") || "Connexion"}
@@ -305,7 +305,7 @@ export const Auth: React.FC = () => {
                     type="button"
                     onClick={() => setIsLogin(false)}
                     className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-300 ${
-                      !isLogin ? 'bg-white text-[#3C2B22] shadow-md shadow-[#FF5C00]/5' : 'text-[#3C2B22]/60 hover:text-[#3C2B22]'
+                      !isLogin ? 'bg-white text-[#3C2B22] shadow-md' : 'text-[#3C2B22]/60 hover:text-[#3C2B22]'
                     }`}
                   >
                     {t("auth.tab_signup") || "Inscription"}

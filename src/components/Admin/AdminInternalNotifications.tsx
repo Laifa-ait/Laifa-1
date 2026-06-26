@@ -56,7 +56,7 @@ export const AdminInternalNotifications: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = React.useMemo(() => notifications.filter((n) => !n.read).length, [notifications]);
 
   const handleNotifClick = async (notif: InternalNotification) => {
     if (!notif.read) {
@@ -70,10 +70,12 @@ export const AdminInternalNotifications: React.FC = () => {
   };
 
   const clearAll = async () => {
-    // Usually we just mark read, but for internal log we can delete or mark
-    notifications.forEach(async (n) => {
-      if (!n.read) await updateDoc(doc(db, "internal_notifications", n.id), { read: true });
-    });
+    const unreadNotifs = notifications.filter((n) => !n.read);
+    if (unreadNotifs.length > 0) {
+      await Promise.all(
+        unreadNotifs.map((n) => updateDoc(doc(db, "internal_notifications", n.id), { read: true }))
+      );
+    }
   };
 
   const getIcon = (type: string) => {

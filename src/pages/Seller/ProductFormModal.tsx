@@ -1,13 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, X, ChevronRight, ChevronLeft, Video, Upload, Loader2, Info, Palette, Text as ListTree, Image as ImageIcon, Tag, Truck, Check, Zap, Leaf, FileText } from 'lucide-react';
+import { Sparkles, X, ChevronRight, ChevronLeft, Video, Upload, Loader2, Info, Palette, Text as ListTree, Image as ImageIcon, Tag, Truck, Check, Zap, Leaf, FileText, HelpCircle, Eye, Globe, Bell } from 'lucide-react';
 import { db, storage, auth } from '../../lib/firebase';
-import { collection, addDoc, serverTimestamp, doc, setDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, setDoc, deleteField } from 'firebase/firestore';
 import { ref, uploadBytes, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { ALGERIA_WILAYAS } from '../../constants';
 import toast from 'react-hot-toast';
 import imageCompression from 'browser-image-compression';
+import { Joyride, Step } from 'react-joyride';
 import { hasExternalChannel } from '../../utils/masking';
+import { ProductCard } from '../../components/Product/ProductCard';
+
+const FieldHelp = ({ text }: { text: string }) => (
+  <div className="group relative inline-block ml-2">
+    <HelpCircle className="w-4 h-4 text-[#8B7355] cursor-help" />
+    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-[#1A1410] text-white text-xs rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+      {text}
+      <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#1A1410]" />
+    </div>
+  </div>
+);
 
 interface ProductFormModalProps {
   onClose: () => void;
@@ -43,6 +55,17 @@ import { useTranslation } from "react-i18next";
 import { maskSensitiveData } from '../../utils/masking';
 import { sanitizeXSS } from '../../utils/sanitization';
 import { useConfirm } from '../../hooks/useConfirm';
+import { useProductForm } from './ProductForm/hooks/useProductForm';
+
+const safeParseFloat = (value: string | undefined | null | number): number | null => {
+  if (typeof value === 'number') return isNaN(value) ? null : value;
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  const parsed = parseFloat(trimmed);
+  if (isNaN(parsed) || !isFinite(parsed)) return null;
+  if (!/^-?\d+(\.\d+)?$/.test(trimmed)) return null;
+  return parsed;
+};
 
 export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   onClose,
@@ -55,125 +78,139 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   onSaveSuccess
 }) => {
   const { t } = useTranslation();
-  const { confirm: showConfirmModal, ConfirmationDialog } = useConfirm();
-  const [activeStep, setActiveStep] = useState(0);
   
-  const [formData, setFormData] = useState({
-    name: '',
-    brand: '',
-    price: '',
-    promoPrice: '',
-    costPrice: '',
-    flashSaleActive: false,
-    flashPrice: '',
-    flashQuantity: '',
-    flashStartDate: '',
-    flashEndDate: '',
-    flashLimitPerCustomer: 'illimité',
-    sku: '',
-    category: '',
-    subcategory: '',
-    subSubCategory: '',
-    gender: '',
-    condition: 'Neuf',
-    warranty: '',
-    materials: [] as string[],
-    otherMaterial: '',
-    season: '',
-    attributes: {} as Record<string, any>,
-    description: '',
-    image: '',
-    images: ['', '', '', '', '', '', '', ''], // Up to 8 images
-    video: '',
-    colors: [] as string[],
-    sizes: [] as string[],
-    sizeType: '',
-    weight: '',
-    dimensions: '',
-    deliveryPrice: '',
-    preparationTime: '',
-    returnPolicy: false,
-    autoTranslate: false,
-    tags: [] as string[],
-    isBannerFeatured: false,
-    isStoreFeatured: false,
-    variants: [] as any[],
-    wilaya: userProfile?.wilaya || '',
-    stock: '10',
-    status: 'pending',
-    translations: {
-      en: { name: '', description: '' },
-      ar: { name: '', description: '' }
-    }
-  });
+  const {
+    activeStep, setActiveStep,
+    showPreview, setShowPreview,
+    formData, setFormData,
+    loading, setLoading,
+    aiGenerating, setAiGenerating,
+    translating, setTranslating,
+    uploading, setUploading,
+    uploadProgress, setUploadProgress,
+    tagInput, setTagInput,
+    colorInput, setColorInput,
+    showAdminTagsList, setShowAdminTagsList,
+    draggedImageIdx, setDraggedImageIdx,
+    dragOverImageIdx, setDragOverImageIdx,
+    showConfirmModal, ConfirmationDialog
+  } = useProductForm(editingProduct, userProfile);
 
-  const [loading, setLoading] = useState(false);
-  const [aiGenerating, setAiGenerating] = useState(false);
-  const [translating, setTranslating] = useState(false);
-  const [uploading, setUploading] = useState<Record<string, boolean>>({});
-  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
-  
-  const [tagInput, setTagInput] = useState('');
-  const [colorInput, setColorInput] = useState('');
-  const [showAdminTagsList, setShowAdminTagsList] = useState(false);
+  const [runTour, setRunTour] = useState(false);
+  const [showTemplateMenu, setShowTemplateMenu] = useState(false);
+  const [savedTemplates, setSavedTemplates] = useState<{name: string, data: any}[]>([]);
 
   useEffect(() => {
-    if (editingProduct) {
-      const isPromo = editingProduct.onSale && editingProduct.originalPrice;
-      
-      let initImages = [...(editingProduct.images || [])];
-      while (initImages.length < 8) initImages.push('');
-
-      setFormData({
-        name: editingProduct.name || '',
-        price: isPromo ? editingProduct.originalPrice?.toString() || '' : (editingProduct.price?.toString() || ''),
-        promoPrice: isPromo ? (editingProduct.price?.toString() || '') : (editingProduct.promoPrice?.toString() || ''),
-        costPrice: editingProduct.costPrice?.toString() || '',
-        flashSaleActive: editingProduct.flashSaleActive || false,
-        flashPrice: editingProduct.flashPrice?.toString() || '',
-        flashQuantity: editingProduct.flashQuantity?.toString() || '',
-        flashStartDate: editingProduct.flashStartDate || '',
-        flashEndDate: editingProduct.flashEndDate || '',
-        flashLimitPerCustomer: editingProduct.flashLimitPerCustomer || 'illimité',
-        sku: editingProduct.sku || '',
-        brand: editingProduct.brand || '',
-        category: editingProduct.category || '',
-        subcategory: editingProduct.subcategory || '',
-        subSubCategory: editingProduct.subSubCategory || '',
-        gender: editingProduct.gender || '',
-        condition: editingProduct.condition || 'Neuf',
-        warranty: editingProduct.warranty || '',
-        materials: Array.isArray(editingProduct.materials) ? editingProduct.materials : [],
-        otherMaterial: editingProduct.otherMaterial || '',
-        season: editingProduct.season || '',
-        attributes: editingProduct.attributes || {},
-        description: editingProduct.description || '',
-        images: initImages,
-        image: initImages[0] || '',
-        video: editingProduct.video || '',
-        colors: Array.isArray(editingProduct.colors) ? editingProduct.colors : [],
-        sizes: Array.isArray(editingProduct.sizes) ? editingProduct.sizes : [],
-        sizeType: editingProduct.sizeType || '',
-        weight: editingProduct.weight || '',
-        dimensions: editingProduct.dimensions || '',
-        deliveryPrice: editingProduct.deliveryPrice?.toString() || '',
-        preparationTime: editingProduct.preparationTime || '',
-        returnPolicy: editingProduct.returnPolicy || false,
-        autoTranslate: editingProduct.autoTranslate || false,
-        tags: editingProduct.tags || [],
-        isBannerFeatured: editingProduct.isBannerFeatured || false,
-        isStoreFeatured: editingProduct.isStoreFeatured || false,
-        variants: editingProduct.variants || [],
-        wilaya: editingProduct.wilaya || userProfile?.wilaya || '',
-        stock: editingProduct.stock?.toString() || '0',
-        status: editingProduct.status || 'pending',
-        translations: editingProduct.translations || {
-          en: { name: '', description: '' },
-          ar: { name: '', description: '' }
-        }
-      });
-    }
+     const tpls = localStorage.getItem('olmart_product_templates');
+     if (tpls) {
+        setSavedTemplates(JSON.parse(tpls));
+     } else {
+        const defaultTemplates = [
+           {
+              name: "T-Shirt Standard",
+              data: { ...formData, category: "Mode Homme", subcategory: "Vêtements", name: "T-Shirt en Coton", price: "2500", stock: "50" }
+           },
+           {
+              name: "Sneakers Basiques",
+              data: { ...formData, category: "Mode Homme", subcategory: "Chaussures", name: "Sneakers Confort", price: "4500", stock: "20", sizeType: "adult" }
+           }
+        ];
+        setSavedTemplates(defaultTemplates);
+        localStorage.setItem('olmart_product_templates', JSON.stringify(defaultTemplates));
+     }
+     
+     if (!editingProduct && !localStorage.getItem('olmart_product_tour_done')) {
+        setRunTour(true);
+     }
   }, [editingProduct]);
+
+  const handleJoyrideCallback = (data: any) => {
+    const { status } = data;
+    if (status === 'finished' || status === 'skipped') {
+      setRunTour(false);
+      localStorage.setItem('olmart_product_tour_done', 'true');
+    }
+  };
+
+  const handleSaveTemplate = () => {
+     const name = prompt(t("Nom du template ?"));
+     if (name) {
+        const newTemplates = [...savedTemplates, { name, data: formData }];
+        setSavedTemplates(newTemplates);
+        localStorage.setItem('olmart_product_templates', JSON.stringify(newTemplates));
+        toast.success(t("Template sauvegardé avec succès !"));
+     }
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedImageIdx(index);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (draggedImageIdx === null || draggedImageIdx === index) return;
+    setDragOverImageIdx(index);
+  };
+
+  const handleDrop = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedImageIdx === null || draggedImageIdx === index) {
+      setDragOverImageIdx(null);
+      setDraggedImageIdx(null);
+      return;
+    }
+    setFormData(prev => {
+      const newImages = [...prev.images];
+      const draggedItem = newImages[draggedImageIdx];
+      newImages.splice(draggedImageIdx, 1);
+      newImages.splice(index, 0, draggedItem);
+      return { ...prev, images: newImages };
+    });
+    setDragOverImageIdx(null);
+    setDraggedImageIdx(null);
+  };
+
+  const handleDragEnd = () => {
+    setDragOverImageIdx(null);
+    setDraggedImageIdx(null);
+  };
+
+  useEffect(() => {
+    // AutoSave logic
+    if (editingProduct) return; // Ne pas brouillonner si on modifie un existant
+    const interval = setInterval(() => {
+      const draft = { formData, activeStep, timestamp: Date.now() };
+      localStorage.setItem('olmart_product_draft', JSON.stringify(draft));
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [formData, activeStep, editingProduct]);
+
+  useEffect(() => {
+    if (!editingProduct) {
+      const saved = localStorage.getItem('olmart_product_draft');
+      if (saved) {
+        try {
+          const draft = JSON.parse(saved);
+          if (Date.now() - draft.timestamp < 7 * 24 * 60 * 60 * 1000) {
+            showConfirmModal(
+              "Vous avez un brouillon non terminé. Voulez-vous le restaurer ?",
+              "Restaurer le brouillon"
+            ).then(confirmed => {
+              if (confirmed) {
+                setFormData(draft.formData);
+                setActiveStep(draft.activeStep || 0);
+              }
+            });
+          }
+        } catch (e) {
+          console.error("Erreur de parsing brouillon", e);
+        }
+      }
+    }
+  }, []);
 
   const handleGenerateVariants = () => {
     const colorList = formData.colors.map(s => s.trim()).filter(Boolean);
@@ -289,7 +326,20 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         return;
       }
     }
-    if (type === 'video' && file.size > 10 * 1024 * 1024) return toast.error("Vidéo trop lourde (Max 10Mo)");
+    if (type === 'video') {
+      if (!file.type.startsWith('video/')) {
+        toast.error("Format non supporté. Veuillez uploader une vidéo valide.");
+        return;
+      }
+      if (file.name.match(/\.(exe|js|php|html|sh|bat)$/i)) {
+        toast.error("Fichier exécutable interdit.");
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("Vidéo trop lourde (Max 10Mo)");
+        return;
+      }
+    }
 
     const uploadKey = index !== undefined ? `image-${index}` : type;
     setUploading(prev => ({ ...prev, [uploadKey]: true }));
@@ -304,6 +354,35 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
          if (index === 0) {
             toast("Traitement IA : Détourage et normalisation du fond (#FAF8F5)...", { icon: '✨', duration: 4000 });
          }
+         
+         const applyWatermark = async (imageFile: File | Blob): Promise<Blob> => {
+            return new Promise((resolve) => {
+               const img = new Image();
+               img.onload = () => {
+                  const canvas = document.createElement('canvas');
+                  canvas.width = img.width;
+                  canvas.height = img.height;
+                  const ctx = canvas.getContext('2d');
+                  if (!ctx) return resolve(imageFile);
+                  
+                  ctx.drawImage(img, 0, 0);
+                  ctx.globalAlpha = 0.5;
+                  ctx.font = `bold ${Math.floor(img.width * 0.05)}px sans-serif`;
+                  ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                  ctx.textAlign = 'right';
+                  ctx.textBaseline = 'bottom';
+                  ctx.shadowColor = 'rgba(0,0,0,0.3)';
+                  ctx.shadowBlur = 4;
+                  ctx.fillText('OLMART', img.width - 20, img.height - 20);
+                  
+                  canvas.toBlob((blob) => {
+                     resolve(blob || imageFile);
+                  }, 'image/webp', 0.9);
+               };
+               img.src = URL.createObjectURL(imageFile);
+            });
+         };
+
          const options = {
            maxSizeMB: 0.08,
            maxWidthOrHeight: 800,
@@ -312,9 +391,10 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
            initialQuality: 0.8
          };
          try {
-            uploadFile = await imageCompression(file, options);
+            const compressed = await imageCompression(file, options);
+            uploadFile = await applyWatermark(compressed);
          } catch (err) {
-            console.error("Compression failed:", err);
+            console.error("Compression/Watermark failed:", err);
          }
       }
 
@@ -377,7 +457,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       return;
     }
 
-    if (parseFloat(formData.price || '0') < 0) {
+    if ((safeParseFloat(formData.price) ?? 0) < 0) {
       toast.error("Le prix du produit ne peut pas être négatif !");
       return;
     }
@@ -436,6 +516,10 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                body: JSON.stringify({ name: formData.name, description: formData.description })
             });
 
+            if (!response.ok) {
+               throw new Error(`Translation API failed with status ${response.status}`);
+            }
+
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
                const data = await response.json();
@@ -472,16 +556,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
          }
       }
 
-      const safeParseFloat = (value: string | undefined | null): number | null => {
-        const trimmed = value?.trim();
-        if (!trimmed) return null;
-        const parsed = parseFloat(trimmed);
-        if (isNaN(parsed) || !isFinite(parsed)) return null;
-        if (!/^-?\d+(\.\d+)?$/.test(trimmed)) return null;
-        return parsed;
-      };
-
-      const hasPromo = formData.promoPrice && parseFloat(formData.promoPrice) > 0;
+      const hasPromo = formData.promoPrice && (safeParseFloat(formData.promoPrice) ?? 0) > 0;
       const parsedMainPrice = safeParseFloat(formData.price) ?? 0;
       const parsedPromoPrice = hasPromo ? (safeParseFloat(formData.promoPrice) || null) : null;
       const costPriceVal = safeParseFloat(formData.costPrice);
@@ -594,7 +669,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         sizeType: formData.sizeType,
         weight: formData.weight || '',
         dimensions: formData.dimensions || '',
-        deliveryPrice: (formData.deliveryPrice && formData.deliveryPrice.trim() !== '') ? parseFloat(formData.deliveryPrice.trim()) : null,
+        deliveryPrice: (formData.deliveryPrice && formData.deliveryPrice.trim() !== '') ? safeParseFloat(formData.deliveryPrice) : null,
         preparationTime: formData.preparationTime || '',
         returnPolicy: formData.returnPolicy,
         autoTranslate: formData.autoTranslate,
@@ -607,13 +682,22 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         ].filter(Boolean))),
         isBannerFeatured: Boolean(formData.isBannerFeatured),
         isStoreFeatured: Boolean(formData.isStoreFeatured),
-        variants: formData.variants || [],
-        hasOutOfStockVariants: formData.variants && formData.variants.length > 0 ? formData.variants.some((v: any) => (parseInt(v.stock) || 0) <= 0) : false,
-        stock: formData.variants && formData.variants.length > 0 ? formData.variants.reduce((acc, curr) => acc + (parseInt(curr.stock) || 0), 0) : (parseInt(formData.stock) || 0),
+        variants: (formData.variants || []).map((v: any) => ({
+          ...v,
+          stock: Number(v.stock) || 0
+        })),
+        hasOutOfStockVariants: formData.variants && formData.variants.length > 0 ? formData.variants.some((v: any) => (Number(v.stock) || 0) <= 0) : false,
+        stock: formData.variants && formData.variants.length > 0 ? formData.variants.reduce((acc, curr) => acc + (Number(curr.stock) || 0), 0) : (Number(formData.stock) || 0),
         sellerId: currentUser.uid,
         sellerName: userProfile?.displayName || '',
         wilaya: formData.wilaya || '',
         translations: finalTranslations,
+        metaTitle: formData.metaTitle || '',
+        metaDescription: formData.metaDescription || '',
+        slug: formData.slug || '',
+        lowStockAlert: Number(formData.lowStockAlert) || 5,
+        internalNotes: formData.internalNotes || '',
+        publishAt: formData.publishAt ? new Date(formData.publishAt).getTime() : null,
         updatedAt: serverTimestamp(),
         status: finalStatus,
         rejectionReason: null
@@ -674,8 +758,8 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         }
 
         const productDataToSave = Object.fromEntries(
-          Object.entries(cleanProductData).filter(([_, v]) =>
-            v !== '' && v !== null && v !== undefined
+          Object.entries(cleanProductData).map(([k, v]) =>
+            (v === '' || v === null || v === undefined) ? [k, deleteField()] : [k, v]
           )
         );
 
@@ -684,12 +768,27 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         } else {
           await setDoc(doc(db, "products", editingProduct.id), productDataToSave, { merge: true });
         }
+        
+        try {
+           await addDoc(collection(db, "product_history"), {
+              productId: editingProduct.id,
+              sellerId: currentUser?.uid || "UNKNOWN",
+              timestamp: serverTimestamp(),
+              action: "edit",
+              changes: productDataToSave
+           });
+        } catch (err) {
+           console.error("Failed to log product history", err);
+        }
+        
+        localStorage.removeItem('olmart_product_draft');
         onSaveSuccess({ id: editingProduct.id, ...cleanProductData }, true);
       } else {
         cleanProductData.createdAt = serverTimestamp();
         cleanProductData.status = 'pending';
         cleanProductData.moderationType = 'new';
         const docRef = await addDoc(collection(db, "products"), cleanProductData);
+        localStorage.removeItem('olmart_product_draft');
         onSaveSuccess({ id: docRef.id, ...cleanProductData, createdAt: new Date() }, false);
         
         await addDoc(collection(db, "internal_notifications"), {
@@ -712,8 +811,8 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   };
 
   const marginCalc = () => {
-    const sale = parseFloat(formData.promoPrice || formData.price || '0');
-    const cost = parseFloat(formData.costPrice || '0');
+    const sale = safeParseFloat(formData.promoPrice) || safeParseFloat(formData.price) || 0;
+    const cost = safeParseFloat(formData.costPrice) || 0;
     if (sale && cost && sale > cost) {
       return { val: (sale - cost).toFixed(2), perc: (((sale - cost) / sale) * 100).toFixed(1) };
     }
@@ -725,13 +824,13 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-0 md:p-4 bg-slate-900/60 backdrop-blur-sm">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0" />
-      <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative bg-white w-full h-full md:max-w-6xl md:max-h-[90vh] md:rounded-[2rem] shadow-2xl flex flex-col md:flex-row overflow-hidden border-t md:border border-slate-200 mt-safe-top md:mt-0 pb-safe md:pb-0">
+      <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative bg-[#FFFBF5] w-full h-full md:max-w-6xl md:max-h-[90vh] md:rounded-[2rem] shadow-2xl flex flex-col md:flex-row overflow-hidden border-t md:border border-[#E5DED4] mt-safe-top md:mt-0 pb-safe md:pb-0">
         
         {/* Sidebar Navigation */}
-        <div className="w-full md:w-64 bg-slate-50 border-r border-slate-200 flex flex-col overflow-y-auto">
-          <div className="p-4 md:p-8 flex items-center justify-between pointer-events-auto border-b md:border-b-0 border-slate-200 md:border-transparent mb-2 md:mb-0">
+        <div className="w-full md:w-64 bg-[#FFFBF5] border-r border-[#E5DED4] flex flex-col overflow-y-auto">
+          <div className="p-4 md:p-8 flex items-center justify-between pointer-events-auto border-b md:border-b-0 border-[#E5DED4] md:border-transparent mb-2 md:mb-0">
             <h3 className="text-xl font-bold text-slate-900 line-clamp-1 p-2 md:p-0">{editingProduct ? 'Modifier' : 'Ajouter'} {t("Produit")}</h3>
-            <button onClick={onClose} className="md:hidden w-12 h-12 rounded-xl bg-slate-200/50 flex items-center justify-center text-slate-700 active:scale-95 transition-transform shrink-0">
+            <button onClick={onClose} className="md:hidden w-12 h-12 rounded-xl bg-[#E5DED4]/50 flex items-center justify-center text-slate-700 active:scale-95 transition-transform shrink-0">
               <X className="w-6 h-6" />
             </button>
           </div>
@@ -744,26 +843,25 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   key={step.id}
                   onClick={() => setActiveStep(step.id)}
                   className={`flex flex-col md:flex-row items-center md:items-start md:gap-3 p-4 md:p-4 rounded-xl transition-all whitespace-nowrap min-w-[90px] md:min-w-0 border ${
-                    isActive ? "bg-white border-blue-900 shadow-sm" : 
-                    isPast ? "bg-white border-slate-200" : "bg-transparent border-transparent hover:bg-slate-100/50"
+                    isActive ? "bg-white border-[#C75C1A] shadow-sm" : 
+                    isPast ? "bg-white border-[#E5DED4]" : "bg-transparent border-transparent hover:bg-slate-100/50"
                   }`}
                 >
                   <div className={`w-10 h-10 md:w-8 md:h-8 rounded-full flex items-center justify-center shrink-0 border ${
-                    isActive ? "bg-blue-900 text-white border-blue-900" :
-                    isPast ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-slate-100 text-slate-400 border-slate-200"
+                    isActive ? "bg-[#C75C1A] text-white border-[#C75C1A]" :
+                    isPast ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-slate-100 text-slate-400 border-[#E5DED4]"
                   }`}>
                     {isPast ? <Check className="w-4 h-4" /> : <step.icon className="w-4 h-4" />}
                   </div>
                   <div className="md:flex flex-col text-center md:text-start mt-2 md:mt-0 items-center justify-center pt-1 md:pt-0">
-                    <span className={`text-[10px] uppercase font-bold tracking-widest rtl:tracking-normal ${isActive ? "text-blue-900" : "text-slate-500"}`}>{t("Étape")}{idx + 1}</span>
-                    <span className={`text-xs md:text-sm font-semibold hidden md:block ${isActive ? "text-slate-900" : "text-slate-600"}`}>{step.title}</span>
+                    <span className={`text-xs md:text-sm font-semibold ${isActive ? "text-[#C75C1A]" : "text-slate-600"}`}>{step.title}</span>
                   </div>
                 </button>
               );
             })}
           </div>
-          <div className="p-4 border-t border-slate-200 hidden md:block">
-            <button onClick={onClose} className="w-full py-3 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
+          <div className="p-4 border-t border-[#E5DED4] hidden md:block">
+            <button onClick={onClose} className="w-full py-3 bg-white border border-[#E5DED4] text-slate-600 rounded-xl text-sm font-semibold hover:bg-[#FFFBF5] transition-colors flex items-center justify-center gap-2">
               <X className="w-4 h-4" /> {t("Quitter")}</button>
           </div>
         </div>
@@ -771,6 +869,17 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         {/* Content Area */}
         <div className="flex-1 flex flex-col h-full bg-white overflow-hidden relative">
           <div className="flex-1 overflow-y-auto p-4 md:p-10 pb-48 md:pb-32">
+            
+            {/* Visual Progress Bar */}
+            <div className="tour-step-progress w-full max-w-3xl mx-auto h-1.5 bg-[#E5DED4] rounded-full overflow-hidden mb-6">
+              <motion.div
+                className="h-full bg-gradient-to-r from-[#C75C1A] to-[#D4A574] rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${((activeStep + 1) / STEPS.length) * 100}%` }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+              />
+            </div>
+
             <form id="productForm" className="max-w-3xl mx-auto space-y-10" onSubmit={(e) => e.preventDefault()}>
               
               {/* STEP 1: IDENTITY */}
@@ -783,26 +892,29 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   <div className="space-y-6">
                     <div>
                       <label className="block text-xs font-semibold text-slate-600 mb-2">{t("Nom du Produit *")}</label>
-                      <input required type="text" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-900 focus:ring-1 focus:ring-blue-900 transition-all font-medium text-slate-900 placeholder:text-slate-400" placeholder={t("Ex: Veste en cuir vintage...") || "Ex: Veste en cuir vintage..."} value={formData.name || ''} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+                      <input required type="text" className="w-full px-4 py-3 bg-white border border-[#E5DED4] rounded-xl outline-none focus:border-[#C75C1A] focus:ring-1 focus:ring-blue-900 transition-all font-medium text-slate-900 placeholder:text-slate-400" placeholder={t("Ex: Veste en cuir vintage...") || "Ex: Veste en cuir vintage..."} value={formData.name || ''} onChange={(e) => setFormData({...formData, name: e.target.value})} />
                     </div>
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-xs font-semibold text-slate-600 mb-2">{t("Catégorie Principale *")}</label>
-                        <select className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-900 transition-all font-medium text-slate-900" value={formData.category || ''} onChange={(e) => setFormData({...formData, category: e.target.value, subcategory: '', subSubCategory: ''})}>
+                        <label className="flex items-center text-xs font-semibold text-slate-600 mb-2">
+                          {t("Catégorie Principale *")}
+                          <FieldHelp text={t("product.help.category") || "Choisissez la catégorie la plus précise. Cela aide les acheteurs à trouver votre produit."} />
+                        </label>
+                        <select className="w-full px-4 py-3 bg-white border border-[#E5DED4] rounded-xl outline-none focus:border-[#C75C1A] transition-all font-medium text-slate-900" value={formData.category || ''} onChange={(e) => setFormData({...formData, category: e.target.value, subcategory: '', subSubCategory: ''})}>
                           <option value="">{t("Sélectionner...")}</option>
                           {(categories.length > 0 ? categories : Object.keys(DYNAMIC_CATEGORIES)).map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-slate-600 mb-2">{t("Marque")}</label>
-                        <input type="text" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-900 transition-all font-medium text-slate-900 placeholder:text-slate-400" placeholder={t("Ex: Zara, Nike...") || "Ex: Zara, Nike..."} value={formData.brand || ''} onChange={(e) => setFormData({...formData, brand: e.target.value})} />
+                        <input type="text" className="w-full px-4 py-3 bg-white border border-[#E5DED4] rounded-xl outline-none focus:border-[#C75C1A] transition-all font-medium text-slate-900 placeholder:text-slate-400" placeholder={t("Ex: Zara, Nike...") || "Ex: Zara, Nike..."} value={formData.brand || ''} onChange={(e) => setFormData({...formData, brand: e.target.value})} />
                       </div>
                     </div>
                     
                     <div className="grid md:grid-cols-3 gap-6">
                       <div>
                         <label className="block text-xs font-semibold text-slate-600 mb-2">{t("État du produit")}</label>
-                        <select className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-900 transition-all font-medium text-slate-900" value={formData.condition || ''} onChange={(e) => setFormData({...formData, condition: e.target.value})}>
+                        <select className="w-full px-4 py-3 bg-white border border-[#E5DED4] rounded-xl outline-none focus:border-[#C75C1A] transition-all font-medium text-slate-900" value={formData.condition || ''} onChange={(e) => setFormData({...formData, condition: e.target.value})}>
                           <option value="Neuf">{t("Neuf")}</option>
                           <option value="Très bon état">{t("Très bon état")}</option>
                           <option value="Bon état">{t("Bon état")}</option>
@@ -812,11 +924,11 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-slate-600 mb-2">{t("Garantie")}</label>
-                        <input type="text" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-900 transition-all font-medium text-slate-900 placeholder:text-slate-400" placeholder={t("Ex: 12 mois...") || "Ex: 12 mois..."} value={formData.warranty || ''} onChange={(e) => setFormData({...formData, warranty: e.target.value})} />
+                        <input type="text" className="w-full px-4 py-3 bg-white border border-[#E5DED4] rounded-xl outline-none focus:border-[#C75C1A] transition-all font-medium text-slate-900 placeholder:text-slate-400" placeholder={t("Ex: 12 mois...") || "Ex: 12 mois..."} value={formData.warranty || ''} onChange={(e) => setFormData({...formData, warranty: e.target.value})} />
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-slate-600 mb-2">{t("Cible (Genre)")}</label>
-                        <select className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-900 transition-all font-medium text-slate-900" value={formData.gender || ''} onChange={(e) => setFormData({...formData, gender: e.target.value})}>
+                        <select className="w-full px-4 py-3 bg-white border border-[#E5DED4] rounded-xl outline-none focus:border-[#C75C1A] transition-all font-medium text-slate-900" value={formData.gender || ''} onChange={(e) => setFormData({...formData, gender: e.target.value})}>
                           <option value="">{t("Tous")}</option>
                           <option value="Homme">{t("Homme")}</option>
                           <option value="Femme">{t("Femme")}</option>
@@ -826,11 +938,11 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                       </div>
                     </div>
                     {(subCategories.length > 0 || subSubCategories.length > 0) && (
-                      <div className="grid md:grid-cols-2 gap-6 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                      <div className="grid md:grid-cols-2 gap-6 bg-[#FFFBF5] p-4 rounded-2xl border border-slate-100">
                         {subCategories.length > 0 && (
                           <div>
                             <label className="block text-xs font-semibold text-slate-600 mb-2">{t("Sous-catégorie *")}</label>
-                            <select className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-900 transition-all font-medium text-slate-900" value={formData.subcategory || ''} onChange={(e) => setFormData({...formData, subcategory: e.target.value, subSubCategory: ''})}>
+                            <select className="w-full px-4 py-3 bg-white border border-[#E5DED4] rounded-xl outline-none focus:border-[#C75C1A] transition-all font-medium text-slate-900" value={formData.subcategory || ''} onChange={(e) => setFormData({...formData, subcategory: e.target.value, subSubCategory: ''})}>
                               <option value="">{t("Choisir...")}</option>
                               {subCategories.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
@@ -839,7 +951,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                         {subSubCategories.length > 0 && (
                           <div>
                             <label className="block text-xs font-semibold text-slate-600 mb-2">{t("Sous-sous-catégorie *")}</label>
-                            <select className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-900 transition-all font-medium text-slate-900" value={formData.subSubCategory || ''} onChange={(e) => setFormData({...formData, subSubCategory: e.target.value})}>
+                            <select className="w-full px-4 py-3 bg-white border border-[#E5DED4] rounded-xl outline-none focus:border-[#C75C1A] transition-all font-medium text-slate-900" value={formData.subSubCategory || ''} onChange={(e) => setFormData({...formData, subSubCategory: e.target.value})}>
                               <option value="">{t("Choisir...")}</option>
                               {subSubCategories.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
@@ -853,18 +965,18 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <label className="block text-xs font-semibold text-slate-600">{t("Description Détaillée")}</label>
-                        <button type="button" onClick={handleGenerateAiDescription} disabled={aiGenerating} className="flex items-center gap-1.5 text-[10px] font-bold text-blue-900 uppercase tracking-wider rtl:tracking-normal hover:bg-blue-50 px-2 py-1 rounded transition-colors disabled:opacity-50">
+                        <button type="button" onClick={handleGenerateAiDescription} disabled={aiGenerating} className="flex items-center gap-1.5 text-[10px] font-bold text-[#C75C1A] uppercase tracking-wider rtl:tracking-normal hover:bg-[#C75C1A]/5 px-2 py-1 rounded transition-colors disabled:opacity-50">
                           <Sparkles className={`w-3.5 h-3.5 ${aiGenerating ? 'animate-pulse' : ''}`} />
                           {aiGenerating ? 'Génération...' : 'Générer (IA)'}
                         </button>
                       </div>
-                      <textarea rows={6} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-900 transition-all font-medium text-slate-900 resize-none placeholder:text-slate-400" placeholder={t("Décrivez votre produit en détail...") || "Décrivez votre produit en détail..."} value={formData.description || ''} onChange={(e) => setFormData({...formData, description: e.target.value})} />
+                      <textarea rows={6} className="w-full px-4 py-3 bg-white border border-[#E5DED4] rounded-xl outline-none focus:border-[#C75C1A] transition-all font-medium text-slate-900 resize-none placeholder:text-slate-400" placeholder={t("Décrivez votre produit en détail...") || "Décrivez votre produit en détail..."} value={formData.description || ''} onChange={(e) => setFormData({...formData, description: e.target.value})} />
                     </div>
                     <div className="relative">
                       <label className="block text-xs font-semibold text-slate-600 mb-2">{t("Mots-clés (Appuyez sur Entrée)")}</label>
-                      <div className="w-full p-2 bg-white border border-slate-200 rounded-xl flex flex-wrap gap-2 focus-within:border-blue-900 transition-all">
+                      <div className="w-full p-2 bg-white border border-[#E5DED4] rounded-xl flex flex-wrap gap-2 focus-within:border-[#C75C1A] transition-all">
                         {formData.tags.map(tag => (
-                          <span key={tag} className="bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-md flex items-center gap-1.5">
+                          <span key={tag} className="bg-slate-100 border border-[#E5DED4] text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-md flex items-center gap-1.5">
                             {adminTags.find(t => t.id === tag)?.name || tag}
                             <button type="button" onClick={() => setFormData(prev => ({...prev, tags: prev.tags.filter(t => t !== tag)}))} className="text-slate-400 hover:text-red-500"><X className="w-3 h-3" /></button>
                           </span>
@@ -890,12 +1002,12 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                         />
                       </div>
                       {showAdminTagsList && adminTags.length > 0 && (
-                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-lg p-3 z-10 max-h-48 overflow-y-auto">
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-[#E5DED4] rounded-xl shadow-lg p-3 z-10 max-h-48 overflow-y-auto">
                           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest rtl:tracking-normal mb-3">{t("Suggestions :")}</p>
                           <div className="flex flex-wrap gap-2">
                             {adminTags.filter(t => !formData.tags.includes(t.id) && t.name.toLowerCase().includes(tagInput.toLowerCase())).map(t => (
                               <button key={t.id} type="button" onClick={() => {
-                                     setFormData(prev => ({...prev, tags: [...prev.tags, t.id]})); setTagInput(''); setShowAdminTagsList(false); }} className="text-xs font-medium bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg transition-colors">
+                                     setFormData(prev => ({...prev, tags: [...prev.tags, t.id]})); setTagInput(''); setShowAdminTagsList(false); }} className="text-xs font-medium bg-[#FFFBF5] hover:bg-slate-100 border border-[#E5DED4] text-slate-700 px-3 py-1.5 rounded-lg transition-colors">
                                 {t.name}
                               </button>
                             ))}
@@ -917,9 +1029,9 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
                   {/* Dynamic Filters from DYNAMIC_CATEGORIES */}
                   {DYNAMIC_CATEGORIES[formData.category]?.allowed_filters && DYNAMIC_CATEGORIES[formData.category].allowed_filters.length > 0 && (
-                    <div className="space-y-6 bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                    <div className="space-y-6 bg-[#FFFBF5] p-6 rounded-2xl border border-[#E5DED4]">
                       <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                        <Tag className="w-4 h-4 text-blue-900" />
+                        <Tag className="w-4 h-4 text-[#C75C1A]" />
                         {t("Spécificités de la catégorie")}</h4>
                       <div className="grid md:grid-cols-2 gap-6">
                         {DYNAMIC_CATEGORIES[formData.category].allowed_filters.map((filter) => {
@@ -928,7 +1040,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                                                         <label className="block text-xs font-bold text-slate-700 mb-2">{filter.label}</label>
                                                         {filter.type === "select" && (
                                                           <select 
-                                                            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-900 transition-all font-medium text-slate-900 text-sm"
+                                                            className="w-full px-4 py-2.5 bg-white border border-[#E5DED4] rounded-xl outline-none focus:border-[#C75C1A] transition-all font-medium text-slate-900 text-sm"
                                                             value={formData.attributes[filter.id] || ''}
                                                             onChange={(e) => setFormData({...formData, attributes: {...formData.attributes, [filter.id]: e.target.value}})}
                                                           >
@@ -951,7 +1063,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                                                                   key={val}
                                                                   type="button"
                                                                   onClick={() => setFormData({...formData, attributes: {...formData.attributes, [filter.id]: val}})}
-                                                                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${isSelected ? 'bg-blue-900 border-blue-900 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'}`}
+                                                                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${isSelected ? 'bg-[#C75C1A] border-[#C75C1A] text-white shadow-sm' : 'bg-white border-[#E5DED4] text-slate-600 hover:border-slate-300'}`}
                                                                 >
                                                                   {lbl}
                                                                 </button>
@@ -967,7 +1079,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                                                               const currentList = formData.attributes[filter.id] || [];
                                                               const isSelected = currentList.includes(val);
                                                               return (
-                                                                <label key={val} className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition-all ${isSelected ? 'bg-blue-50 border-blue-200' : 'bg-white border-slate-200 hover:bg-slate-50'}`}>
+                                                                <label key={val} className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition-all ${isSelected ? 'bg-[#C75C1A]/5 border-[#C75C1A]/20' : 'bg-white border-[#E5DED4] hover:bg-[#FFFBF5]'}`}>
                                                                   <input
                                                                     type="checkbox"
                                                                     className="accent-blue-900 w-3.5 h-3.5"
@@ -977,7 +1089,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                                                                       setFormData({...formData, attributes: {...formData.attributes, [filter.id]: updatedList}});
                                                                     }}
                                                                   />
-                                                                  <span className={`text-[12px] font-bold ${isSelected ? 'text-blue-900' : 'text-slate-700'}`}>{lbl}</span>
+                                                                  <span className={`text-[12px] font-bold ${isSelected ? 'text-[#C75C1A]' : 'text-slate-700'}`}>{lbl}</span>
                                                                 </label>
                                                               );
                                                             })}
@@ -988,7 +1100,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                                                             <input 
                                                               type={filter.type}
                                                               placeholder={filter.label}
-                                                              className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-900 transition-all font-medium text-slate-900 text-sm"
+                                                              className="w-full px-4 py-2.5 bg-white border border-[#E5DED4] rounded-xl outline-none focus:border-[#C75C1A] transition-all font-medium text-slate-900 text-sm"
                                                               value={formData.attributes[filter.id] || ''}
                                                               onChange={(e) => setFormData({...formData, attributes: {...formData.attributes, [filter.id]: e.target.value}})}
                                                             />
@@ -1003,7 +1115,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   )}
 
                   {/* FICHE TECHNIQUE & SPÉCIFICATIONS TECHNIQUES DE L’ARTICLE */}
-                  <div className="space-y-6 bg-white border border-slate-200/80 p-6 rounded-2xl shadow-sm">
+                  <div className="space-y-6 bg-white border border-[#E5DED4]/80 p-6 rounded-2xl shadow-sm">
                      <div className="flex items-center gap-2 border-b border-slate-100 pb-3 mb-4">
                         <FileText className="w-4 h-4 text-[#FF5C00]" />
                         <div>
@@ -1020,7 +1132,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                               <input 
                                  type="text" 
                                  placeholder={t("Ex: MAR-COT-748392") || "Ex: MAR-COT-748392"} 
-                                 className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-900 transition-all font-semibold text-slate-900 text-sm"
+                                 className="flex-1 px-4 py-2.5 bg-white border border-[#E5DED4] rounded-xl outline-none focus:border-[#C75C1A] transition-all font-semibold text-slate-900 text-sm"
                                  value={formData.sku || ''} 
                                  onChange={(e) => setFormData({...formData, sku: e.target.value.toUpperCase()})} 
                               />
@@ -1039,7 +1151,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                         <div className="space-y-1.5">
                            <label className="block text-xs font-semibold text-slate-700 font-sans">{t("Saison & Collection d'affichage")}</label>
                            <select 
-                              className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-900 transition-all font-semibold text-slate-900 text-sm"
+                              className="w-full px-4 py-2.5 bg-white border border-[#E5DED4] rounded-xl outline-none focus:border-[#C75C1A] transition-all font-semibold text-slate-900 text-sm"
                               value={formData.season || ''} 
                               onChange={(e) => setFormData({...formData, season: e.target.value})}
                            >
@@ -1096,7 +1208,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                                     className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
                                        isSelected 
                                           ? 'bg-[#3C2B22] border-[#3C2B22] text-white shadow-sm' 
-                                          : 'bg-stone-50 border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-stone-100'
+                                          : 'bg-stone-50 border-[#E5DED4] text-slate-700 hover:border-slate-300 hover:bg-stone-100'
                                     }`}
                                  >
                                     {mat.label}
@@ -1111,7 +1223,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                               <input 
                                  type="text" 
                                  placeholder={t("Ex: Céramique fine de Kabylie, Laiton martelé...") || "Ex: Céramique fine de Kabylie, Laiton martelé..."} 
-                                 className="w-full max-w-md px-4 py-2 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-900 transition-all font-semibold text-slate-900 text-xs"
+                                 className="w-full max-w-md px-4 py-2 bg-white border border-[#E5DED4] rounded-xl outline-none focus:border-[#C75C1A] transition-all font-semibold text-slate-900 text-xs"
                                  value={formData.otherMaterial || ''} 
                                  onChange={(e) => setFormData({...formData, otherMaterial: e.target.value})} 
                               />
@@ -1120,9 +1232,68 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                      </div>
                   </div>
 
+                  {/* SEO & VISIBILITÉ */}
+                  <div className="space-y-6 bg-[#FFFBF5]/50 p-6 rounded-2xl border border-[#E5DED4]">
+                     <div className="flex items-center gap-2 border-b border-[#E5DED4]/60 pb-3 mb-4">
+                        <Globe className="w-4 h-4 text-[#C75C1A]" />
+                        <div>
+                           <h4 className="text-sm font-bold text-slate-900">{t("SEO & Visibilité")}</h4>
+                           <p className="text-xs text-slate-500">{t("Optimisez votre produit pour les moteurs de recherche (Google) et les réseaux sociaux.")}</p>
+                        </div>
+                     </div>
+                     <div className="space-y-4">
+                        <div className="space-y-1.5">
+                           <label className="block text-xs font-semibold text-slate-700">{t("Meta Title (Titre SEO)")}</label>
+                           <input 
+                              type="text" 
+                              placeholder={t("Titre optimisé pour Google... (Max 60 caractères)") || "Titre optimisé pour Google..."} 
+                              className="w-full px-4 py-2.5 bg-white border border-[#E5DED4] rounded-xl outline-none focus:border-[#C75C1A] transition-all font-medium text-slate-900 text-sm"
+                              value={formData.metaTitle || ''} 
+                              onChange={(e) => setFormData({...formData, metaTitle: e.target.value})} 
+                              maxLength={60}
+                           />
+                           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t("Laissez vide pour utiliser le nom du produit.")}</p>
+                        </div>
+                        <div className="space-y-1.5">
+                           <label className="block text-xs font-semibold text-slate-700">{t("Meta Description")}</label>
+                           <textarea 
+                              placeholder={t("Description courte et accrocheuse... (Max 160 caractères)") || "Description courte et accrocheuse..."} 
+                              className="w-full px-4 py-2.5 bg-white border border-[#E5DED4] rounded-xl outline-none focus:border-[#C75C1A] transition-all font-medium text-slate-900 text-sm resize-none h-20"
+                              value={formData.metaDescription || ''} 
+                              onChange={(e) => setFormData({...formData, metaDescription: e.target.value})} 
+                              maxLength={160}
+                           />
+                        </div>
+                        <div className="space-y-1.5">
+                           <label className="block text-xs font-semibold text-slate-700">{t("Slug (URL personnalisée)")}</label>
+                           <div className="flex gap-2">
+                              <span className="inline-flex items-center px-3 rounded-xl border border-[#E5DED4] bg-slate-50 text-slate-500 text-sm whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px] md:max-w-[200px]">olmart.dz/p/</span>
+                              <input 
+                                 type="text" 
+                                 placeholder={t("mon-produit-incroyable") || "mon-produit-incroyable"} 
+                                 className="flex-1 px-4 py-2.5 bg-white border border-[#E5DED4] rounded-xl outline-none focus:border-[#C75C1A] transition-all font-medium text-slate-900 text-sm"
+                                 value={formData.slug || ''} 
+                                 onChange={(e) => setFormData({...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')})} 
+                              />
+                              <button 
+                                 type="button" 
+                                 onClick={() => {
+                                    if (formData.name) {
+                                       setFormData({...formData, slug: formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')});
+                                    }
+                                 }}
+                                 className="px-4 py-2.5 bg-[#FFFBF5] text-[#C75C1A] border border-[#E5DED4] hover:bg-[#C75C1A] hover:text-white rounded-xl transition-all font-bold text-xs shrink-0"
+                              >
+                                 {t("Générer")}
+                              </button>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+
                   {/* Variantes (Tailles & Couleurs) conditionnées */}
                   {(!DYNAMIC_CATEGORIES[formData.category] || DYNAMIC_CATEGORIES[formData.category].hasSize || DYNAMIC_CATEGORIES[formData.category].hasColor) && (
-                    <div className="space-y-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-200">
+                    <div className="space-y-6 bg-[#FFFBF5]/50 p-6 rounded-2xl border border-[#E5DED4]">
                       {(!DYNAMIC_CATEGORIES[formData.category] || DYNAMIC_CATEGORIES[formData.category].hasSize) && (
                         <div className="space-y-4">
                           <label className="block text-sm font-bold text-slate-900">{t("Type de Taille")}</label>
@@ -1131,7 +1302,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                               <button 
                                 key={s.id} type="button" 
                                 onClick={() => setFormData(prev => ({ ...prev, sizeType: s.id, sizes: [] }))}
-                                className={`p-3 rounded-xl border text-center transition-all ${formData.sizeType === s.id ? 'bg-blue-900 border-blue-900 text-white shadow-md' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'}`}
+                                className={`p-3 rounded-xl border text-center transition-all ${formData.sizeType === s.id ? 'bg-[#C75C1A] border-[#C75C1A] text-white shadow-md' : 'bg-white border-[#E5DED4] text-slate-600 hover:border-slate-300'}`}
                               >
                                 <span className="text-xs font-semibold">{s.label}</span>
                               </button>
@@ -1139,13 +1310,13 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                           </div>
                           
                           {activeSizeList.length > 0 && (
-                            <div className="bg-white p-4 rounded-xl border border-slate-200 mt-4">
+                            <div className="bg-white p-4 rounded-xl border border-[#E5DED4] mt-4">
                               <label className="block text-xs font-semibold text-slate-500 mb-3 uppercase tracking-widest rtl:tracking-normal">{t("Sélectionnez les tailles disponibles")}</label>
                               <div className="flex flex-wrap gap-2">
                                 {activeSizeList.map(s => {
                                   const isSelected = formData.sizes.includes(s);
                                   return (
-                                    <button key={s} type="button" onClick={() => toggleSize(s)} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors border ${isSelected ? 'bg-blue-900 text-white border-blue-900' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'}`}>
+                                    <button key={s} type="button" onClick={() => toggleSize(s)} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors border ${isSelected ? 'bg-[#C75C1A] text-white border-[#C75C1A]' : 'bg-[#FFFBF5] border-[#E5DED4] text-slate-700 hover:bg-slate-100'}`}>
                                       {s}
                                     </button>
                                   );
@@ -1157,7 +1328,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                       )}
 
                       {(!DYNAMIC_CATEGORIES[formData.category] || DYNAMIC_CATEGORIES[formData.category].hasColor) && (
-                        <div className={`space-y-4 ${(!DYNAMIC_CATEGORIES[formData.category] || DYNAMIC_CATEGORIES[formData.category].hasSize) ? 'pt-6 border-t border-slate-200' : ''}`}>
+                        <div className={`space-y-4 ${(!DYNAMIC_CATEGORIES[formData.category] || DYNAMIC_CATEGORIES[formData.category].hasSize) ? 'pt-6 border-t border-[#E5DED4]' : ''}`}>
                           <label className="block text-sm font-bold text-slate-900">{t("Couleurs (Optionnel)")}</label>
                           <div className="flex flex-wrap gap-3">
                             {PRODUCT_COLORS.map(color => {
@@ -1213,11 +1384,47 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   </div>
                   
                   {formData.variants.length > 0 ? (
-                    <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-sm">
-                        <table className="w-full text-start text-sm whitespace-nowrap">
-                          <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-widest rtl:tracking-normal text-[10px] font-kinder">
+                    <div className="space-y-4">
+                       <div className="flex flex-wrap items-end gap-3 p-4 bg-[#FFFBF5] border border-[#E5DED4] rounded-2xl">
+                          <div>
+                             <label className="block text-[10px] font-kinder uppercase text-slate-500 mb-1">{t("Appliquer à toutes les variantes :")}</label>
+                             <div className="flex gap-2">
+                                <div className="flex items-center gap-1.5 bg-white border border-[#E5DED4] rounded-xl px-3 py-2 w-32 focus-within:border-[#C75C1A] transition-all">
+                                   <input type="number" id="bulk-stock" placeholder={t("Stock")} className="w-full text-xs font-bold outline-none bg-transparent" />
+                                </div>
+                                <button type="button" onClick={() => {
+                                   const val = (document.getElementById('bulk-stock') as HTMLInputElement).value;
+                                   if (!val) return;
+                                   setFormData(prev => ({
+                                      ...prev,
+                                      variants: prev.variants.map(v => ({ ...v, stock: val }))
+                                   }));
+                                }} className="px-3 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition-colors">{t("Appliquer")}</button>
+                             </div>
+                          </div>
+                          <div>
+                             <div className="flex gap-2">
+                                <div className="flex items-center gap-1.5 bg-white border border-[#E5DED4] rounded-xl px-3 py-2 w-32 focus-within:border-[#C75C1A] transition-all">
+                                   <input type="number" id="bulk-price" placeholder={t("Prix (DA)")} className="w-full text-xs font-bold outline-none bg-transparent" />
+                                </div>
+                                <button type="button" onClick={() => {
+                                   const val = (document.getElementById('bulk-price') as HTMLInputElement).value;
+                                   if (!val) return;
+                                   setFormData(prev => ({
+                                      ...prev,
+                                      variants: prev.variants.map(v => ({ ...v, priceOverride: val }))
+                                   }));
+                                }} className="px-3 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition-colors">{t("Appliquer")}</button>
+                             </div>
+                          </div>
+                       </div>
+                       
+                       <div className="overflow-x-auto rounded-2xl border border-[#E5DED4] shadow-sm">
+                           <table className="w-full text-start text-sm whitespace-nowrap">
+                          <thead className="bg-[#FFFBF5] border-b border-[#E5DED4] text-slate-500 uppercase tracking-widest rtl:tracking-normal text-[10px] font-kinder">
                               <tr>
                                 <th className="px-5 py-4 w-12">{t("Actif")}</th>
+                                <th className="px-5 py-4 w-16">{t("Image")}</th>
                                 <th className="px-5 py-4">{t("Variante")}</th>
                                 <th className="px-5 py-4 w-32">{t("SKU (Optionnel)")}</th>
                                 <th className="px-5 py-4 w-32">{t("Stock")}</th>
@@ -1227,7 +1434,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                           <tbody className="divide-y divide-slate-100 bg-white">
                               {formData.variants.map((v, i) => {
                                 return (
-                                                              <tr key={i} className={`hover:bg-slate-50/50 transition-colors ${!v.isActive ? 'opacity-50' : ''}`}>
+                                                              <tr key={i} className={`hover:bg-[#FFFBF5]/50 transition-colors ${!v.isActive ? 'opacity-50' : ''}`}>
                                                                   <td className="px-5 py-3">
                                                                     <input type="checkbox" checked={v.isActive !== false} onChange={e => {
                                                                       setFormData(prev => {
@@ -1235,15 +1442,28 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                                                                           nw[i] = { ...nw[i], isActive: e.target.checked };
                                                                           return {...prev, variants: nw};
                                                                       })
-                                                                    }} className="w-4 h-4 rounded text-blue-900 cursor-pointer" />
+                                                                    }} className="w-4 h-4 rounded text-[#C75C1A] cursor-pointer" />
+                                                                  </td>
+                                                                  <td className="px-5 py-3">
+                                                                     <select className="w-14 h-14 bg-[#FFFBF5] border border-[#E5DED4] rounded-lg text-xs outline-none focus:border-[#C75C1A]" value={v.imageIndex ?? ''} onChange={e => {
+                                                                         const idx = e.target.value === '' ? null : parseInt(e.target.value);
+                                                                         setFormData(prev => {
+                                                                           const nw = [...prev.variants];
+                                                                           nw[i] = { ...nw[i], imageIndex: idx };
+                                                                           return {...prev, variants: nw};
+                                                                         });
+                                                                     }}>
+                                                                        <option value="">-</option>
+                                                                        {formData.images.map((img: string, idx: number) => img ? <option key={idx} value={idx}>Img {idx+1}</option> : null)}
+                                                                     </select>
                                                                   </td>
                                                                   <td className="px-5 py-3 font-semibold text-slate-900">
-                                                                    <span className="bg-slate-100 px-3 py-1.5 rounded-lg text-xs border border-slate-200">
+                                                                    <span className="bg-slate-100 px-3 py-1.5 rounded-lg text-xs border border-[#E5DED4]">
                                                                       {v.name}
                                                                     </span>
                                                                   </td>
                                                                   <td className="px-3 py-3">
-                                                                    <input type="text" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg outline-none font-medium text-xs focus:border-blue-900 disabled:bg-slate-50" placeholder={t("SKU-...") || "SKU-..."} value={v.sku || ''} disabled={v.isActive === false} onChange={e => {
+                                                                    <input type="text" className="w-full px-3 py-2 bg-white border border-[#E5DED4] rounded-lg outline-none font-medium text-xs focus:border-[#C75C1A] disabled:bg-[#FFFBF5]" placeholder={t("SKU-...") || "SKU-..."} value={v.sku || ''} disabled={v.isActive === false} onChange={e => {
                                                                         const str = e.target.value;
                                                                         setFormData(prev => {
                                                                           const nw = [...prev.variants];
@@ -1253,17 +1473,20 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                                                                     }} />
                                                                   </td>
                                                                   <td className="px-3 py-3">
-                                                                    <input type="number" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg outline-none font-bold text-xs focus:border-blue-900 disabled:bg-slate-50" placeholder="0" value={v.stock} disabled={v.isActive === false} onChange={e => {
-                                                                        const str = e.target.value;
-                                                                        setFormData(prev => {
-                                                                          const nw = [...prev.variants];
-                                                                          nw[i] = { ...nw[i], stock: str };
-                                                                          return {...prev, variants: nw};
-                                                                        });
-                                                                    }} />
+                                                                    <div className={`flex items-center gap-1.5 bg-white border border-[#E5DED4] rounded-lg px-2 py-1.5 focus-within:border-[#C75C1A] transition-all ${v.isActive === false ? 'bg-[#FFFBF5] opacity-50' : ''}`}>
+                                                                       <span className="text-[9px] font-kinder text-emerald-600 uppercase tracking-widest rtl:tracking-normal">{t("Stock:")}</span>
+                                                                       <input type="number" className="flex-1 w-12 text-center text-xs font-bold text-slate-900 outline-none bg-transparent" placeholder="0" value={v.stock} disabled={v.isActive === false} onChange={e => {
+                                                                           const str = e.target.value;
+                                                                           setFormData(prev => {
+                                                                             const nw = [...prev.variants];
+                                                                             nw[i] = { ...nw[i], stock: str };
+                                                                             return {...prev, variants: nw};
+                                                                           });
+                                                                       }} />
+                                                                    </div>
                                                                   </td>
                                                                   <td className="px-3 py-3 pr-5">
-                                                                    <input type="number" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg outline-none font-medium text-xs focus:border-blue-900 disabled:bg-slate-50 placeholder:text-slate-300" placeholder={t("Prix différent...") || "Prix différent..."} value={v.priceOverride || ''} disabled={v.isActive === false} onChange={e => {
+                                                                    <input type="number" className="w-full px-3 py-2 bg-white border border-[#E5DED4] rounded-lg outline-none font-medium text-xs focus:border-[#C75C1A] disabled:bg-[#FFFBF5] placeholder:text-slate-300" placeholder={t("Prix différent...") || "Prix différent..."} value={v.priceOverride || ''} disabled={v.isActive === false} onChange={e => {
                                                                         const str = e.target.value;
                                                                         setFormData(prev => {
                                                                           const nw = [...prev.variants];
@@ -1278,12 +1501,13 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                           </tbody>
                         </table>
                     </div>
+                  </div>
                   ) : (
-                    <div className="p-8 text-center bg-slate-50 border border-slate-200 rounded-2xl flex flex-col items-center">
+                    <div className="p-8 text-center bg-[#FFFBF5] border border-[#E5DED4] rounded-2xl flex flex-col items-center">
                       <ListTree className="w-8 h-8 text-slate-300 mb-4" />
                       <h5 className="font-bold text-slate-700 mb-1">{t("Aucune variante générée")}</h5>
                       <p className="text-sm text-slate-500 mb-4">{t("Retournez à l'étape \"Variantes\" pour configurer les tailles et couleurs.")}</p>
-                      <button type="button" onClick={() => setActiveStep(1)} className="px-6 py-2 bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-lg shadow-sm hover:bg-slate-100">
+                      <button type="button" onClick={() => setActiveStep(1)} className="px-6 py-2 bg-white border border-[#E5DED4] text-slate-700 text-xs font-bold rounded-lg shadow-sm hover:bg-slate-100">
                         {t("Aller aux Variantes")}</button>
                     </div>
                   )}
@@ -1291,7 +1515,10 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   {formData.variants.length === 0 && (
                      <div className="pt-6 border-t border-slate-100">
                         <label className="block text-xs font-semibold text-slate-600 mb-2">{t("Stock Global (Produit sans variante)")}</label>
-                        <input required type="number" className="w-full md:w-1/3 px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-900 transition-all font-bold text-slate-900" value={formData.stock || ''} onChange={(e) => setFormData({...formData, stock: e.target.value})} />
+                        <div className="flex items-center gap-1.5 bg-white border border-[#E5DED4] rounded-xl px-4 py-2 w-full md:w-1/3 focus-within:border-[#C75C1A] transition-all shadow-sm">
+                           <span className="text-[11px] font-kinder text-emerald-600 uppercase tracking-widest rtl:tracking-normal">{t("Stock:")}</span>
+                           <input required type="number" className="flex-1 text-center text-sm font-bold text-slate-900 outline-none bg-transparent" value={formData.stock || ''} onChange={(e) => setFormData({...formData, stock: e.target.value})} />
+                        </div>
                      </div>
                   )}
                 </motion.div>
@@ -1306,7 +1533,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   </div>
                   
                   {Object.values(uploading).some(Boolean) && (
-                    <div className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 text-blue-900 rounded-2xl animate-pulse">
+                    <div className="flex items-center gap-3 p-4 bg-[#C75C1A]/5 border border-[#C75C1A]/20 text-[#C75C1A] rounded-2xl animate-pulse">
                       <Loader2 className="w-5 h-5 animate-spin" />
                       <span className="text-xs font-bold uppercase tracking-wider rtl:tracking-normal">{t("Transfert de médias en cours... Veuillez patienter")}</span>
                     </div>
@@ -1321,12 +1548,20 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         {formData.images.map((img, i) => {
                           return (
-                                                    <label key={i} className={`relative cursor-pointer group bg-slate-50 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center overflow-hidden transition-all ${i === 0 ? 'aspect-square md:col-span-2 md:row-span-2' : 'aspect-square'} ${img ? 'border-slate-200 shadow-sm' : 'border-slate-200 hover:border-blue-900 hover:bg-blue-50/30'}`}>
+                                                    <label 
+                                                      key={i} 
+                                                      draggable={!!img}
+                                                      onDragStart={(e) => img ? handleDragStart(e, i) : undefined}
+                                                      onDragOver={(e) => handleDragOver(e, i)}
+                                                      onDrop={(e) => handleDrop(e, i)}
+                                                      onDragEnd={handleDragEnd}
+                                                      className={`relative cursor-pointer group bg-[#FFFBF5] rounded-2xl border-2 border-dashed flex flex-col items-center justify-center overflow-hidden transition-all ${i === 0 ? 'aspect-square md:col-span-2 md:row-span-2' : 'aspect-square'} ${img ? 'border-[#E5DED4] shadow-sm' : 'border-[#E5DED4] hover:border-[#C75C1A] hover:bg-[#C75C1A]/5/30'} ${dragOverImageIdx === i ? 'border-[#C75C1A] bg-[#C75C1A]/10 scale-[1.02]' : ''} ${draggedImageIdx === i ? 'opacity-50' : ''}`}
+                                                    >
                                                       <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'image', i)} disabled={uploading[`image-${i}`]} />
                                                       {uploading[`image-${i}`] ? (
                                                           <div className="flex flex-col items-center">
-                                                             <Loader2 className="w-6 h-6 text-blue-900 animate-spin mb-2" />
-                                                             <span className="text-[10px] font-bold text-blue-900">{uploadProgress[`image-${i}`] || 0}%</span>
+                                                             <Loader2 className="w-6 h-6 text-[#C75C1A] animate-spin mb-2" />
+                                                             <span className="text-[10px] font-bold text-[#C75C1A]">{uploadProgress[`image-${i}`] || 0}%</span>
                                                           </div>
                                                       ) : img ? (
                                                           <>
@@ -1334,7 +1569,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                                                             {i === 0 && <span className="absolute bottom-2 left-2 bg-slate-900/80 backdrop-blur text-white text-[10px] font-bold px-2 py-1 rounded">{t("Vignette Principale")}</span>}
                                                           </>
                                                       ) : (
-                                                          <div className="flex flex-col items-center gap-2 text-slate-400 group-hover:text-blue-900 p-4 text-center">
+                                                          <div className="flex flex-col items-center gap-2 text-slate-400 group-hover:text-[#C75C1A] p-4 text-center">
                                                             <Upload className={i === 0 ? "w-8 h-8" : "w-5 h-5"} />
                                                             {i === 0 ? (
                                                               <div><p className="font-bold text-sm">{t("Image Principale")}</p><p className="text-xs opacity-70">{t("Sera utilisée comme miniature")}</p></div>
@@ -1344,7 +1579,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                                                           </div>
                                                       )}
                                                       {img && (
-                                                        <button type="button" onClick={(e) => { e.preventDefault(); updateImage(i, ''); }} className="absolute top-2 right-2 w-8 h-8 bg-white/90 backdrop-blur border border-slate-200 rounded-full flex items-center justify-center text-slate-600 hover:text-red-500 hover:bg-white shadow-sm transition-all z-10">
+                                                        <button type="button" onClick={(e) => { e.preventDefault(); updateImage(i, ''); }} className="absolute top-2 right-2 w-8 h-8 bg-white/90 backdrop-blur border border-[#E5DED4] rounded-full flex items-center justify-center text-slate-600 hover:text-red-500 hover:bg-white shadow-sm transition-all z-10">
                                                           <X className="w-4 h-4" />
                                                         </button>
                                                       )}
@@ -1359,25 +1594,25 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                         <label className="block text-xs font-semibold text-slate-900">{t("Vidéo de Présentation")}</label>
                         <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">{t("MP4 • Max 10Mo")}</span>
                       </div>
-                      <label className="relative block w-full py-8 cursor-pointer overflow-hidden border-2 border-slate-200 bg-slate-50 rounded-2xl group border-dashed hover:border-blue-900 hover:bg-blue-50/30 transition-all text-center">
+                      <label className="relative block w-full py-8 cursor-pointer overflow-hidden border-2 border-[#E5DED4] bg-[#FFFBF5] rounded-2xl group border-dashed hover:border-[#C75C1A] hover:bg-[#C75C1A]/5/30 transition-all text-center">
                         <input type="file" accept="video/*" className="hidden" onChange={(e) => handleFileUpload(e, 'video')} disabled={uploading.video} />
                         {uploading.video ? (
-                          <div className="flex flex-col items-center text-blue-900">
+                          <div className="flex flex-col items-center text-[#C75C1A]">
                             <Loader2 className="w-8 h-8 animate-spin mb-2" />
                             <span className="text-xs font-bold font-medium mb-1">{t("Envoi en cours...")}</span>
-                            <div className="w-48 h-2 bg-blue-100 rounded-full overflow-hidden">
-                               <div className="h-full bg-blue-900 transition-all duration-300" style={{ width: `${uploadProgress.video || 0}%` }} />
+                            <div className="w-48 h-2 bg-[#C75C1A]/10 rounded-full overflow-hidden">
+                               <div className="h-full bg-[#C75C1A] transition-all duration-300" style={{ width: `${uploadProgress.video || 0}%` }} />
                             </div>
-                            <span className="text-[10px] font-bold mt-1 text-blue-900">{uploadProgress.video || 0}%</span>
+                            <span className="text-[10px] font-bold mt-1 text-[#C75C1A]">{uploadProgress.video || 0}%</span>
                           </div>
                         ) : formData.video ? (
                           <div className="flex flex-col items-center text-emerald-600">
                               <Video className="w-8 h-8 mb-2" />
                               <span className="text-sm font-bold">{t("Vidéo importée avec succès")}</span>
-                              <button onClick={(e) => { e.preventDefault(); setFormData({...formData, video: ''})}} className="mt-3 px-4 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-bold hover:text-red-500">{t("Supprimer")}</button>
+                              <button onClick={(e) => { e.preventDefault(); setFormData({...formData, video: ''})}} className="mt-3 px-4 py-1.5 bg-white border border-[#E5DED4] text-slate-600 rounded-lg text-xs font-bold hover:text-red-500">{t("Supprimer")}</button>
                           </div>
                         ) : (
-                          <div className="flex flex-col items-center text-slate-400 group-hover:text-blue-900">
+                          <div className="flex flex-col items-center text-slate-400 group-hover:text-[#C75C1A]">
                               <Video className="w-8 h-8 mb-2" />
                               <span className="text-sm font-bold">{t("Glissez ou cliquez pour importer")}</span>
                           </div>
@@ -1397,10 +1632,10 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   </div>
                   
                   <div className="space-y-6">
-                    <div className="grid md:grid-cols-2 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                    <div className="grid md:grid-cols-2 gap-6 bg-[#FFFBF5] p-6 rounded-2xl border border-[#E5DED4]">
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-2">{t("Prix de vente base (DA) *")}</label>
-                        <input required type="number" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none text-xl font-kinder focus:border-blue-900 text-slate-900 transition-colors" placeholder="0.00" value={formData.price || ''} onChange={(e) => setFormData({...formData, price: e.target.value})} />
+                        <input required type="number" className="w-full px-4 py-3 bg-white border border-[#E5DED4] rounded-xl outline-none text-xl font-kinder focus:border-[#C75C1A] text-slate-900 transition-colors" placeholder="0.00" value={formData.price || ''} onChange={(e) => setFormData({...formData, price: e.target.value})} />
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-2 flex justify-between items-center">
@@ -1410,16 +1645,16 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                       </div>
                     </div>
                     
-                    <div className="p-6 rounded-2xl border border-slate-200">
+                    <div className="p-6 rounded-2xl border border-[#E5DED4]">
                        <h5 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2"><Tag className="w-4 h-4 text-slate-400" /> {t("Analyse de rentabilité")}</h5>
                        <div className="grid md:grid-cols-2 gap-6 items-end">
                           <div>
                             <label className="block text-xs font-semibold text-slate-600 mb-2 flex justify-between items-center">
                                {t("Coût d'achat ou revient (DA)")}<span className="text-[9px] font-bold text-slate-400 italic">{t("Privé")}</span>
                             </label>
-                            <input type="number" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none font-bold text-slate-900 focus:border-blue-900 transition-colors" placeholder={t("Coût interne...") || "Coût interne..."} value={formData.costPrice || ''} onChange={(e) => setFormData({...formData, costPrice: e.target.value})} />
+                            <input type="number" className="w-full px-4 py-3 bg-white border border-[#E5DED4] rounded-xl outline-none font-bold text-slate-900 focus:border-[#C75C1A] transition-colors" placeholder={t("Coût interne...") || "Coût interne..."} value={formData.costPrice || ''} onChange={(e) => setFormData({...formData, costPrice: e.target.value})} />
                           </div>
-                          <div className={`p-4 rounded-xl border ${mg ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>
+                          <div className={`p-4 rounded-xl border ${mg ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-[#FFFBF5] border-[#E5DED4] text-slate-400'}`}>
                              {mg ? (
                                 <div className="flex justify-between items-center">
                                    <span className="text-xs font-semibold">{t("Marge Estimée")}</span>
@@ -1435,11 +1670,24 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                        </div>
                     </div>
 
+                    <div className="p-6 rounded-2xl border border-[#E5DED4]">
+                       <h5 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2"><Bell className="w-4 h-4 text-[#C75C1A]" /> {t("Alerte de Stock Bas (Critique)")}</h5>
+                       <div className="flex flex-col md:flex-row gap-6 items-center">
+                          <div className="flex-1">
+                             <p className="text-xs text-slate-500 mb-2">{t("Recevez un email et une notification push lorsque le stock de ce produit ou de l'une de ses variantes descend en dessous de ce seuil.")}</p>
+                          </div>
+                          <div className="w-full md:w-1/3">
+                            <label className="block text-xs font-semibold text-slate-600 mb-2">{t("Seuil d'alerte (Unités)")}</label>
+                            <input type="number" min="0" className="w-full px-4 py-3 bg-white border border-[#E5DED4] rounded-xl outline-none font-bold text-slate-900 focus:border-[#C75C1A] transition-colors" placeholder="5" value={formData.lowStockAlert || ''} onChange={(e) => setFormData({...formData, lowStockAlert: e.target.value})} />
+                          </div>
+                       </div>
+                    </div>
+
                     {/* FLASH SALE SECTION */}
-                    <div className="p-6 rounded-2xl border border-slate-200 bg-white">
+                    <div className="p-6 rounded-2xl border border-[#E5DED4] bg-white">
                        <div className="flex items-center justify-between mb-6">
                            <div className="flex items-center gap-3">
-                              <div className={`p-2 rounded-lg ${formData.flashSaleActive ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-400'}`}>
+                              <div className={`p-2 rounded-lg ${formData.flashSaleActive ? 'bg-[#C75C1A]/10 text-[#C75C1A]' : 'bg-slate-100 text-slate-400'}`}>
                                  <Zap className="w-5 h-5" />
                               </div>
                               <div>
@@ -1454,7 +1702,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                                  checked={formData.flashSaleActive}
                                  onChange={(e) => setFormData({ ...formData, flashSaleActive: e.target.checked })} 
                               />
-                              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                              <div className="w-11 h-6 bg-[#E5DED4] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                            </label>
                        </div>
 
@@ -1464,7 +1712,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                              <input 
                                 disabled={!formData.flashSaleActive}
                                 type="number" 
-                                className="w-full px-4 py-3 bg-white border border-blue-200 rounded-xl outline-none text-lg font-kinder text-blue-900 focus:border-blue-500 transition-colors" 
+                                className="w-full px-4 py-3 bg-white border border-[#C75C1A]/20 rounded-xl outline-none text-lg font-kinder text-[#C75C1A] focus:border-[#C75C1A] transition-colors" 
                                 placeholder={t("Doit être < prix de base") || "Doit être < prix de base"} 
                                 value={formData.flashPrice || ''} 
                                 onChange={(e) => setFormData({...formData, flashPrice: e.target.value})} 
@@ -1475,7 +1723,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                              <input 
                                 disabled={!formData.flashSaleActive}
                                 type="number" 
-                                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none font-medium text-slate-900 focus:border-blue-900 transition-colors" 
+                                className="w-full px-4 py-3 bg-white border border-[#E5DED4] rounded-xl outline-none font-medium text-slate-900 focus:border-[#C75C1A] transition-colors" 
                                 placeholder={t("Laissez vide si illimité") || "Laissez vide si illimité"} 
                                 value={formData.flashQuantity || ''} 
                                 onChange={(e) => setFormData({...formData, flashQuantity: e.target.value})} 
@@ -1486,7 +1734,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                              <input 
                                 disabled={!formData.flashSaleActive}
                                 type="datetime-local" 
-                                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none text-sm font-medium text-slate-900 focus:border-blue-900 transition-colors" 
+                                className="w-full px-4 py-3 bg-white border border-[#E5DED4] rounded-xl outline-none text-sm font-medium text-slate-900 focus:border-[#C75C1A] transition-colors" 
                                 value={formData.flashStartDate || ''} 
                                 onChange={(e) => setFormData({...formData, flashStartDate: e.target.value})} 
                              />
@@ -1496,7 +1744,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                              <input 
                                 disabled={!formData.flashSaleActive}
                                 type="datetime-local" 
-                                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none text-sm font-medium text-slate-900 focus:border-blue-900 transition-colors" 
+                                className="w-full px-4 py-3 bg-white border border-[#E5DED4] rounded-xl outline-none text-sm font-medium text-slate-900 focus:border-[#C75C1A] transition-colors" 
                                 value={formData.flashEndDate || ''} 
                                 onChange={(e) => setFormData({...formData, flashEndDate: e.target.value})} 
                              />
@@ -1505,7 +1753,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                              <label className="block text-xs font-semibold text-slate-700 mb-2">{t("Limite d'achat par client")}</label>
                              <select
                                 disabled={!formData.flashSaleActive}
-                                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none text-sm font-medium text-slate-900 focus:border-blue-900 transition-colors"
+                                className="w-full px-4 py-3 bg-white border border-[#E5DED4] rounded-xl outline-none text-sm font-medium text-slate-900 focus:border-[#C75C1A] transition-colors"
                                 value={formData.flashLimitPerCustomer || ''}
                                 onChange={(e) => setFormData({...formData, flashLimitPerCustomer: e.target.value})}
                              >
@@ -1530,25 +1778,25 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   </div>
                   
                   <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-[#FFFBF5] p-6 rounded-2xl border border-[#E5DED4]">
                         <div>
                           <label className="block text-xs font-semibold text-slate-700 mb-2">{t("Poids du Colis (kg)")}</label>
-                          <input type="number" step="0.01" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none font-medium text-slate-900 focus:border-blue-900 transition-colors" placeholder="0.5" value={formData.weight || ''} onChange={(e) => setFormData({...formData, weight: e.target.value})} />
+                          <input type="number" step="0.01" className="w-full px-4 py-3 bg-white border border-[#E5DED4] rounded-xl outline-none font-medium text-slate-900 focus:border-[#C75C1A] transition-colors" placeholder="0.5" value={formData.weight || ''} onChange={(e) => setFormData({...formData, weight: e.target.value})} />
                         </div>
                         <div>
                           <label className="block text-xs font-semibold text-slate-700 mb-2">{t("Dimensions (Lx lx h cm)")}</label>
-                          <input type="text" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none font-medium text-slate-900 focus:border-blue-900 transition-colors" placeholder="20x15x10" value={formData.dimensions || ''} onChange={(e) => setFormData({...formData, dimensions: e.target.value})} />
+                          <input type="text" className="w-full px-4 py-3 bg-white border border-[#E5DED4] rounded-xl outline-none font-medium text-slate-900 focus:border-[#C75C1A] transition-colors" placeholder="20x15x10" value={formData.dimensions || ''} onChange={(e) => setFormData({...formData, dimensions: e.target.value})} />
                         </div>
                         <div>
                           <label className="block text-xs font-semibold text-slate-700 mb-2 flex justify-between">{t("Livraison (DA)")}<span className="lowercase text-[9px] font-bold text-slate-400">{t("vide=défaut")}</span></label>
-                          <input type="number" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none font-medium text-slate-900 focus:border-blue-900 transition-colors" placeholder={t("Tarif fixe...") || "Tarif fixe..."} value={formData.deliveryPrice || ''} onChange={(e) => setFormData({...formData, deliveryPrice: e.target.value})} />
+                          <input type="number" className="w-full px-4 py-3 bg-white border border-[#E5DED4] rounded-xl outline-none font-medium text-slate-900 focus:border-[#C75C1A] transition-colors" placeholder={t("Tarif fixe...") || "Tarif fixe..."} value={formData.deliveryPrice || ''} onChange={(e) => setFormData({...formData, deliveryPrice: e.target.value})} />
                         </div>
                     </div>
                     
                     <div className="grid md:grid-cols-2 gap-6">
                        <div>
                           <label className="block text-xs font-semibold text-slate-700 mb-2">{t("Délai de préparation estimé")}</label>
-                          <select className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none font-medium text-slate-900 focus:border-blue-900 transition-colors" value={formData.preparationTime || ''} onChange={(e) => setFormData({...formData, preparationTime: e.target.value})}>
+                          <select className="w-full px-4 py-3 bg-white border border-[#E5DED4] rounded-xl outline-none font-medium text-slate-900 focus:border-[#C75C1A] transition-colors" value={formData.preparationTime || ''} onChange={(e) => setFormData({...formData, preparationTime: e.target.value})}>
                             <option value="">{t("Sélectionner...")}</option>
                             <option value="1">{t("1 jour ouvré (Express)")}</option>
                             <option value="2">{t("2 jours ouvrés")}</option>
@@ -1558,7 +1806,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                        </div>
                        <div>
                           <label className="block text-xs font-semibold text-slate-700 mb-2">{t("Wilaya d'expédition")}</label>
-                          <select className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none font-medium text-slate-900 focus:border-blue-900 transition-colors" value={formData.wilaya || ''} onChange={(e) => setFormData({...formData, wilaya: e.target.value})}>
+                          <select className="w-full px-4 py-3 bg-white border border-[#E5DED4] rounded-xl outline-none font-medium text-slate-900 focus:border-[#C75C1A] transition-colors" value={formData.wilaya || ''} onChange={(e) => setFormData({...formData, wilaya: e.target.value})}>
                             <option value="">{t("Sélectionner...")}</option>
                             {ALGERIA_WILAYAS.map(w => <option key={w} value={w}>{w}</option>)}
                           </select>
@@ -1566,38 +1814,63 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     </div>
 
                     <div className="pt-6 border-t border-slate-100 flex flex-col gap-4">
-                       <label className="p-4 border border-slate-200 rounded-xl bg-white flex items-center justify-between cursor-pointer hover:border-blue-900 transition-colors">
+                       <label className="p-4 border border-[#E5DED4] rounded-xl bg-white flex items-center justify-between cursor-pointer hover:border-[#C75C1A] transition-colors">
                          <div>
                             <span className="block font-bold text-slate-900 text-sm">{t("Politique de retour (14 jours)")}</span>
                             <span className="text-xs text-slate-500 font-medium">{t("Accepter les retours/échanges sous 14 jours")}</span>
                          </div>
-                         <div className={`w-12 h-6 rounded-full transition-colors relative flex items-center shrink-0 ${formData.returnPolicy ? 'bg-blue-900' : 'bg-slate-200'}`}>
+                         <div className={`w-12 h-6 rounded-full transition-colors relative flex items-center shrink-0 ${formData.returnPolicy ? 'bg-[#C75C1A]' : 'bg-[#E5DED4]'}`}>
                             <div className={`w-5 h-5 bg-white rounded-full absolute shadow transition-transform ${formData.returnPolicy ? 'translate-x-6' : 'translate-x-1'}`} />
                          </div>
                          <input type="checkbox" className="hidden" checked={formData.returnPolicy} onChange={() => setFormData({...formData, returnPolicy: !formData.returnPolicy})} />
                        </label>
                        
-                       <label className="p-4 border border-slate-200 rounded-xl bg-white flex items-center justify-between cursor-pointer hover:border-blue-900 transition-colors">
+                       <label className="p-4 border border-[#E5DED4] rounded-xl bg-white flex items-center justify-between cursor-pointer hover:border-[#C75C1A] transition-colors">
                          <div>
                             <span className="block font-bold text-slate-900 text-sm">{t("Mettre en avant sur la vitrine")}</span>
                             <span className="text-xs text-slate-500 font-medium">{t("Affiche le produit en grand en haut de votre boutique")}</span>
                          </div>
-                         <div className={`w-12 h-6 rounded-full transition-colors relative flex items-center shrink-0 ${formData.isStoreFeatured ? 'bg-orange-500' : 'bg-slate-200'}`}>
+                         <div className={`w-12 h-6 rounded-full transition-colors relative flex items-center shrink-0 ${formData.isStoreFeatured ? 'bg-orange-500' : 'bg-[#E5DED4]'}`}>
                             <div className={`w-5 h-5 bg-white rounded-full absolute shadow transition-transform ${formData.isStoreFeatured ? 'translate-x-6' : 'translate-x-1'}`} />
                          </div>
                          <input type="checkbox" className="hidden" checked={formData.isStoreFeatured} onChange={() => setFormData({...formData, isStoreFeatured: !formData.isStoreFeatured})} />
                        </label>
                        
-                       <label className="p-4 border border-slate-200 rounded-xl bg-white flex items-center justify-between cursor-pointer hover:border-blue-900 transition-colors">
+                       <label className="p-4 border border-[#E5DED4] rounded-xl bg-white flex items-center justify-between cursor-pointer hover:border-[#C75C1A] transition-colors">
                          <div>
                             <span className="block font-bold text-slate-900 text-sm">{t("Traduction automatique")}</span>
                             <span className="text-xs text-slate-500 font-medium">{t("Générer les versions Arabe et Anglais à l'enregistrement")}</span>
                          </div>
-                         <div className={`w-12 h-6 rounded-full transition-colors relative flex items-center shrink-0 ${formData.autoTranslate ? 'bg-blue-900' : 'bg-slate-200'}`}>
+                         <div className={`w-12 h-6 rounded-full transition-colors relative flex items-center shrink-0 ${formData.autoTranslate ? 'bg-[#C75C1A]' : 'bg-[#E5DED4]'}`}>
                             <div className={`w-5 h-5 bg-white rounded-full absolute shadow transition-transform ${formData.autoTranslate ? 'translate-x-6' : 'translate-x-1'}`} />
                          </div>
                          <input type="checkbox" className="hidden" checked={formData.autoTranslate} onChange={() => setFormData({...formData, autoTranslate: !formData.autoTranslate})} />
                        </label>
+                    </div>
+
+                    <div className="pt-6 border-t border-[#E5DED4]">
+                       <h5 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2"><FileText className="w-4 h-4 text-[#C75C1A]" /> {t("Planification & Notes internes")}</h5>
+                       <div className="grid md:grid-cols-2 gap-6">
+                           <div>
+                              <label className="block text-xs font-semibold text-slate-700 mb-2">{t("Date de publication programmée")}</label>
+                              <input 
+                                 type="datetime-local" 
+                                 className="w-full px-4 py-3 bg-white border border-[#E5DED4] rounded-xl outline-none font-medium text-slate-900 focus:border-[#C75C1A] transition-colors" 
+                                 value={formData.publishAt || ''} 
+                                 onChange={(e) => setFormData({...formData, publishAt: e.target.value})} 
+                              />
+                              <p className="text-[10px] text-slate-500 mt-1">{t("Laissez vide pour publier immédiatement après modération.")}</p>
+                           </div>
+                           <div>
+                              <label className="block text-xs font-semibold text-slate-700 mb-2">{t("Notes internes (Privé)")}</label>
+                              <textarea 
+                                 className="w-full px-4 py-3 bg-white border border-[#E5DED4] rounded-xl outline-none font-medium text-slate-900 focus:border-[#C75C1A] transition-colors resize-none h-[88px]" 
+                                 placeholder={t("Fournisseur, emplacement dans le stock, références internes...") || "Fournisseur, emplacement dans le stock, références internes..."} 
+                                 value={formData.internalNotes || ''} 
+                                 onChange={(e) => setFormData({...formData, internalNotes: e.target.value})} 
+                              />
+                           </div>
+                       </div>
                     </div>
                   </div>
                 </motion.div>
@@ -1606,14 +1879,55 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               {/* STEP 6: RECAP */}
               {activeStep === 6 && (
                 <motion.div initial={{opacity:0, x:20}} animate={{opacity:1, x:0}} className="space-y-8 pb-10">
-                  <div className="space-y-1">
-                    <h4 className="text-xl font-bold text-slate-900">{t("Récapitulatif")}</h4>
-                    <p className="text-sm text-slate-500">{t("Vérifiez les détails avant la publication. Les traductions seront générées automatiquement.")}</p>
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-1">
+                      <h4 className="text-xl font-bold text-slate-900">{t("Récapitulatif")}</h4>
+                      <p className="text-sm text-slate-500">{t("Vérifiez les détails avant la publication.")}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowPreview(true)}
+                      className="flex items-center gap-2 text-[#8B7355] hover:text-[#C75C1A] font-bold text-sm transition-colors border border-[#E5DED4] rounded-lg px-4 py-2 hover:bg-[#FFFBF5]"
+                    >
+                      <Eye className="w-4 h-4" />
+                      {t("product.preview", "Aperçu acheteur")}
+                    </button>
                   </div>
 
-                  <div className="bg-slate-50 rounded-3xl border border-slate-200 overflow-hidden divide-y divide-slate-200">
+                  <div className="bg-[#FFFBF5] rounded-3xl border border-[#E5DED4] overflow-hidden divide-y divide-[#E5DED4]">
+                    {editingProduct && (
+                      <div className="p-6 bg-slate-50">
+                         <h5 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                           <FileText className="w-4 h-4 text-blue-500" />
+                           {t("Modifications détectées (Diff)")}
+                         </h5>
+                         <div className="grid grid-cols-2 gap-4 text-sm">
+                            {formData.name !== editingProduct.name && (
+                               <div className="bg-white p-3 rounded-xl border border-slate-200">
+                                  <span className="text-xs text-slate-500 block mb-1">{t("Nom")}</span>
+                                  <div className="text-red-500 line-through text-xs mb-1">{editingProduct.name}</div>
+                                  <div className="text-emerald-600 font-bold">{formData.name}</div>
+                               </div>
+                            )}
+                            {formData.price !== editingProduct.price?.toString() && (
+                               <div className="bg-white p-3 rounded-xl border border-slate-200">
+                                  <span className="text-xs text-slate-500 block mb-1">{t("Prix")}</span>
+                                  <div className="text-red-500 line-through text-xs mb-1">{editingProduct.price} DA</div>
+                                  <div className="text-emerald-600 font-bold">{formData.price} DA</div>
+                               </div>
+                            )}
+                            {formData.stock !== editingProduct.stock?.toString() && (
+                               <div className="bg-white p-3 rounded-xl border border-slate-200">
+                                  <span className="text-xs text-slate-500 block mb-1">{t("Stock")}</span>
+                                  <div className="text-red-500 line-through text-xs mb-1">{editingProduct.stock}</div>
+                                  <div className="text-emerald-600 font-bold">{formData.stock}</div>
+                               </div>
+                            )}
+                         </div>
+                      </div>
+                    )}
                     <div className="p-6 flex gap-6 items-start">
-                       <div className="w-24 h-24 rounded-2xl bg-white border border-slate-200 overflow-hidden shrink-0 shadow-sm relative">
+                       <div className="w-24 h-24 rounded-2xl bg-white border border-[#E5DED4] overflow-hidden shrink-0 shadow-sm relative">
                           {formData.images.find(i => i) ? (
                             <img loading="lazy" src={formData.images.find(i => i)} className="w-full h-full object-cover" alt={t("Preview") || "Preview"} />
                           ) : (
@@ -1624,16 +1938,30 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                        </div>
                        <div className="flex-1 min-w-0">
                           <h5 className="font-extrabold text-slate-900 text-lg truncate">{formData.name || "Sans nom"}</h5>
-                          <p className="text-sm font-bold text-blue-900 mt-1">{formData.category} {formData.subcategory ? `> ${formData.subcategory}` : ''}</p>
+                          <p className="text-sm font-bold text-[#C75C1A] mt-1">{formData.category} {formData.subcategory ? `> ${formData.subcategory}` : ''}</p>
                           <div className="flex items-center gap-3 mt-3">
-                             <div className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-lg font-kinder text-slate-900">
+                             <div className="px-3 py-1 bg-white border border-[#E5DED4] rounded-lg text-lg font-kinder text-slate-900">
                                 {formData.price} <span className="text-xs">{t("DA")}</span>
                              </div>
                           </div>
                        </div>
                     </div>
 
-                    <div className="p-6 grid grid-cols-2 sm:grid-cols-3 gap-6">
+                    <div className="p-6 grid grid-cols-2 sm:grid-cols-4 gap-6">
+                       <div>
+                          <p className="text-[10px] font-kinder uppercase text-slate-400 tracking-widest rtl:tracking-normal mb-1">{t("Statut")}</p>
+                          {(userProfile?.isVerified === true || userProfile?.role === "admin") ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal border border-emerald-100">
+                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                               {t("Approuvé & En Ligne")}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal border border-amber-100 shadow-sm backdrop-blur-md">
+                               <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                               {t("En cours d'examen par la Curation")}
+                            </span>
+                          )}
+                       </div>
                        <div>
                           <p className="text-[10px] font-kinder uppercase text-slate-400 tracking-widest rtl:tracking-normal mb-1">{t("Stock Total")}</p>
                           <p className="text-sm font-extrabold text-slate-900">
@@ -1657,14 +1985,14 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                        </div>
                     </div>
 
-                    <div className="p-6 bg-blue-50/50">
+                    <div className="p-6 bg-[#C75C1A]/5/50">
                        <div className="flex gap-4">
-                          <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
-                             <Sparkles className="w-5 h-5 text-blue-900" />
+                          <div className="w-10 h-10 rounded-xl bg-[#C75C1A]/10 flex items-center justify-center shrink-0">
+                             <Sparkles className="w-5 h-5 text-[#C75C1A]" />
                           </div>
                           <div>
-                             <p className="text-sm font-extrabold text-blue-900">{t("Intelligence de Traduction Adaptative")}</p>
-                             <p className="text-xs font-medium text-blue-800/80 mt-1">
+                             <p className="text-sm font-extrabold text-[#C75C1A]">{t("Intelligence de Traduction Adaptative")}</p>
+                             <p className="text-xs font-medium text-[#A64D16]/80 mt-1">
                                 {t("Notre système va détecter automatiquement la langue de votre saisie (FR, AR ou EN) et traduire les fiches produits vers les deux autres langues dès que vous cliquerez sur \"Confirmer & Publier\".")}</p>
                           </div>
                        </div>
@@ -1677,25 +2005,50 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           </div>
 
           {/* Bottom Action Bar Fixed */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 md:px-10 md:py-6 bg-white border-t border-slate-200 flex flex-wrap md:flex-nowrap items-center justify-between shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] z-20 gap-3">
-             <div className="w-full md:w-auto">
+          <div className="absolute bottom-0 left-0 right-0 p-4 md:px-10 md:py-6 bg-white border-t border-[#E5DED4] flex flex-wrap md:flex-nowrap items-center justify-between shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] z-20 gap-3">
+             <div className="w-full md:w-auto flex items-center gap-3">
                 {activeStep > 0 && (
-                   <button onClick={() => setActiveStep(activeStep - 1)} className="w-full md:w-auto px-5 py-4 md:px-6 md:py-4 border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 rounded-xl font-bold text-sm uppercase tracking-widest rtl:tracking-normal transition-colors flex items-center justify-center md:justify-start gap-2 min-h-[50px]">
+                   <button onClick={() => setActiveStep(activeStep - 1)} className="w-full md:w-auto px-5 py-4 md:px-6 md:py-4 border border-[#E5DED4] text-slate-700 bg-white hover:bg-[#FFFBF5] rounded-xl font-bold text-sm uppercase tracking-widest rtl:tracking-normal transition-colors flex items-center justify-center md:justify-start gap-2 min-h-[50px]">
                      <ChevronLeft className="w-5 h-5" /> {t("Précédent")}</button>
                 )}
+                
+                <div className="tour-step-templates relative">
+                   <button type="button" onClick={() => setShowTemplateMenu(!showTemplateMenu)} className="w-full md:w-auto px-5 py-4 border border-[#E5DED4] text-slate-600 bg-white hover:bg-slate-50 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 min-h-[50px]">
+                      <FileText className="w-5 h-5" /> {t("Templates")}
+                   </button>
+                   {showTemplateMenu && (
+                      <div className="absolute bottom-full left-0 mb-2 w-64 bg-white border border-[#E5DED4] rounded-2xl shadow-xl overflow-hidden">
+                         <button type="button" onClick={handleSaveTemplate} className="w-full text-left px-4 py-3 text-sm font-bold text-[#C75C1A] hover:bg-[#FFFBF5] border-b border-[#E5DED4]">
+                            + {t("Sauvegarder la config actuelle")}
+                         </button>
+                         <div className="max-h-48 overflow-y-auto">
+                            {savedTemplates.length === 0 ? (
+                               <p className="px-4 py-3 text-xs text-slate-400">{t("Aucun template.")}</p>
+                            ) : (
+                               savedTemplates.map((tpl, i) => (
+                                 <button key={i} type="button" onClick={() => { setFormData(tpl.data); setShowTemplateMenu(false); toast.success(t("Template chargé !")); }} className="w-full text-left px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                                    {tpl.name}
+                                 </button>
+                               ))
+                            )}
+                         </div>
+                      </div>
+                   )}
+                </div>
              </div>
+             
              <div className="flex gap-3 w-full md:w-auto justify-end">
                 {activeStep === 6 ? (
                   <>
-                     <button type="button" onClick={(e) => Object.keys(formData).length && handleSubmitProduct(e, "draft")} disabled={loading || Object.values(uploading).some(Boolean)} className="flex-1 md:flex-none px-4 py-4 md:px-6 border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 hover:text-slate-900 rounded-xl font-bold text-xs md:text-sm uppercase tracking-widest rtl:tracking-normal transition-colors disabled:opacity-50 min-h-[50px]">
+                     <button type="button" onClick={(e) => Object.keys(formData).length && handleSubmitProduct(e, "draft")} disabled={loading || Object.values(uploading).some(Boolean)} className="flex-1 md:flex-none px-4 py-4 md:px-6 border border-slate-300 text-slate-700 bg-white hover:bg-[#FFFBF5] hover:text-slate-900 rounded-xl font-bold text-xs md:text-sm uppercase tracking-widest rtl:tracking-normal transition-colors disabled:opacity-50 min-h-[50px]">
                         {t("Brouillon")}</button>
-                     <button onClick={(e) => handleSubmitProduct(e)} disabled={loading || Object.values(uploading).some(Boolean)} className="flex-[2] md:flex-none px-6 py-4 md:px-8 bg-blue-900 text-white hover:bg-blue-800 rounded-xl font-bold text-xs md:text-sm uppercase tracking-widest rtl:tracking-normal shadow-md transition-colors disabled:opacity-50 flex items-center justify-center gap-2 min-h-[50px]">
+                     <button onClick={(e) => handleSubmitProduct(e)} disabled={loading || Object.values(uploading).some(Boolean)} className="tour-step-next flex-[2] md:flex-none px-6 py-4 md:px-8 bg-[#C75C1A] text-white hover:bg-[#A64D16] rounded-xl font-bold text-xs md:text-sm uppercase tracking-widest rtl:tracking-normal shadow-md transition-colors disabled:opacity-50 flex items-center justify-center gap-2 min-h-[50px]">
                         {loading || Object.values(uploading).some(Boolean) ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
                         {editingProduct ? "Mettre à jour" : "Confirmer & Publier"}
                      </button>
                   </>
                 ) : (
-                  <button onClick={() => setActiveStep(activeStep + 1)} className="w-full md:w-auto px-8 py-4 md:px-10 bg-blue-900 text-white hover:bg-blue-800 rounded-xl font-bold text-sm uppercase tracking-widest rtl:tracking-normal shadow-md transition-colors flex items-center justify-center gap-2 min-h-[50px]">
+                  <button onClick={() => setActiveStep(activeStep + 1)} className="tour-step-next w-full md:w-auto px-8 py-4 md:px-10 bg-[#C75C1A] text-white hover:bg-[#A64D16] rounded-xl font-bold text-sm uppercase tracking-widest rtl:tracking-normal shadow-md transition-colors flex items-center justify-center gap-2 min-h-[50px]">
                      {t("Suivant")}<ChevronRight className="w-5 h-5" />
                   </button>
                 )}
@@ -1705,6 +2058,38 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
       </motion.div>
       <ConfirmationDialog />
+      
+      {showPreview && (
+        <div className="fixed inset-0 bg-black/50 z-[300] flex items-center justify-center p-4">
+          <div className="bg-[#FFFBF5] rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto relative">
+            <button 
+              onClick={() => setShowPreview(false)}
+              className="absolute top-4 right-4 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center text-slate-700 z-10"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="p-6">
+              <h3 className="font-serif text-lg font-bold text-[#2C2118] mb-6">
+                {t("product.preview_title", "Aperçu pour l'acheteur")}
+              </h3>
+              <div className="pointer-events-none">
+                <ProductCard
+                  product={{
+                    id: "preview",
+                    name: formData.name || 'Nom du produit',
+                    price: safeParseFloat(formData.price) || 0,
+                    promoPrice: formData.promoPrice ? (safeParseFloat(formData.promoPrice) || undefined) : undefined,
+                    image: formData.images.find(i => i) || "/placeholder.png",
+                    sellerName: userProfile?.shopName || userProfile?.name || "Votre boutique",
+                    trustScore: 100,
+                    stock: formData.variants && formData.variants.length > 0 ? formData.variants.reduce((acc, curr) => acc + (parseInt(curr.stock) || 0), 0) : (parseInt(formData.stock) || 0),
+                  } as any}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

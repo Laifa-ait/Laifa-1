@@ -65,43 +65,43 @@ export const Footer: React.FC<{ isHomepage?: boolean }> = ({ isHomepage = false 
 
   return (
     <footer
-      className={`custom-dark-footer bg-[#1A1410] text-white pt-16 sm:pt-20 sm:pb-8 border-t border-[#E5DED4]/10 ${isHomepage ? "pb-24" : "pb-8"}`}
+      className={`custom-dark-footer bg-slate-900 text-slate-400 pt-10 sm:pt-16 sm:pb-8 border-t border-slate-800 ${isHomepage ? "pb-20" : "pb-8"}`}
     >
-      <div className="w-full max-w-[90rem] mx-auto px-4 sm:px-6 md:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 pb-4">
+      <div className="w-full max-w-[90rem] mx-auto px-4 sm:px-6 md:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-8 pb-4">
         {/* Column 1: Identity */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <OlmaLogo className="w-8 h-8 text-[#D4A574]" />
-            <span className="text-2xl font-sans font-bold uppercase tracking-tighter rtl:tracking-normal">
+            <OlmaLogo className="w-6 h-6 sm:w-8 sm:h-8 text-sky-500" />
+            <span className="text-xl sm:text-2xl font-sans font-bold uppercase tracking-tight text-white rtl:tracking-normal">
               {t("OLMA")}
-              <span className="text-[#D4A574]">{t("RT")}</span>
+              <span className="text-sky-500">{t("RT")}</span>
             </span>
           </div>
-          <p className="text-xs rtl:text-sm text-white/60 font-bold leading-relaxed max-w-xs uppercase">
+          <p className="text-xs rtl:text-sm text-slate-400 leading-relaxed max-w-xs uppercase">
             {t("footer_desc") || "La destination e-commerce N°1 en Algérie. Les meilleures offres des 58 Wilayas."}
           </p>
         </div>
 
         {/* Column 2: Newsletter */}
-        <div className="space-y-6">
-          <h5 className="text-[10px] rtl:text-[12px] font-sans font-bold uppercase tracking-[0.2em] text-[#D4A574]">
+        <div className="space-y-4">
+          <h5 className="text-[10px] rtl:text-[12px] font-sans font-bold uppercase tracking-[0.2em] text-sky-500">
             {t("newsletter") || "Newsletter"}
           </h5>
-          <div className="space-y-4">
-            <p className="text-[10px] rtl:text-[12px] text-white/40 font-sans font-bold uppercase tracking-widest rtl:tracking-normal">
+          <div className="space-y-3">
+            <p className="text-[9px] rtl:text-[11px] text-slate-500 font-sans font-medium uppercase tracking-widest rtl:tracking-normal">
               {t("newsletter_tagline") || "Inscrivez-vous pour les exclusivités"}
             </p>
-            <form className="flex flex-col gap-2" onSubmit={handleNewsletterSubmit}>
+            <form className="flex flex-col sm:flex-row gap-2" onSubmit={handleNewsletterSubmit}>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={t("your_email") || "VOTRE EMAIL"}
-                className="bg-white/5 border border-white/10 px-4 py-3 text-[10px] rtl:text-[12px] font-sans font-bold rounded-2xl focus:outline-none focus:border-orange-500 transition-all placeholder:text-white/20 uppercase"
+                className="flex-1 bg-slate-800/50 px-3 py-2 sm:px-4 sm:py-2.5 text-[10px] sm:text-xs rtl:text-[12px] font-sans font-medium rounded-xl focus:outline-none focus:ring-1 focus:ring-sky-500 transition-all placeholder:text-slate-500 text-slate-300 border-none"
               />
               <button
                 type="submit"
-                className="bg-[#C75C1A] text-white px-4 py-3 rounded-2xl text-[10px] rtl:text-[12px] font-sans font-bold uppercase tracking-widest rtl:tracking-normal hover:bg-[#C75C1A]/80 transition-colors shadow-lg shadow-black/20"
+                className="bg-sky-500 text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-[10px] sm:text-xs rtl:text-[12px] font-sans font-bold uppercase hover:bg-sky-400 transition-colors shadow-sm cursor-pointer border-none"
               >
                 {isSubmitting ? "..." : t("subscribe") || "S'inscrire"}
               </button>
@@ -110,24 +110,24 @@ export const Footer: React.FC<{ isHomepage?: boolean }> = ({ isHomepage = false 
         </div>
 
         {/* Column 3: Apps */}
-        <div className="space-y-6">
-          <h5 className="text-[10px] rtl:text-[12px] font-sans font-bold uppercase tracking-[0.2em] text-[#D4A574]">
+        <div className="space-y-4">
+          <h5 className="text-[10px] rtl:text-[12px] font-sans font-bold uppercase tracking-[0.2em] text-sky-500">
             {t("mobile_app") || "Application Mobile"}
           </h5>
-          <div className="flex items-center gap-5">
-            <div className="w-20 h-20 bg-white rounded-2xl p-2 shrink-0 shadow-xl shadow-black/20">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white/5 rounded-2xl p-2 shrink-0 shadow-inner">
               <img
                 loading="lazy"
-                src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://olma.dz"
+                src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://olma.dz&color=94a3b8&bgcolor=0f172a"
                 alt={t("QR") || "QR"}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain opacity-80 mix-blend-screen"
               />
             </div>
-            <div className="flex flex-col gap-2">
-              <button className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[9px] rtl:text-[11px] font-sans font-bold uppercase tracking-widest rtl:tracking-normal hover:bg-white/10 transition-all text-start">
+            <div className="flex flex-col gap-1.5">
+              <button className="px-3 py-1.5 sm:px-4 sm:py-2 bg-slate-800/50 border border-slate-700/50 rounded-xl text-[8px] sm:text-[9px] rtl:text-[11px] font-sans font-medium text-slate-400 hover:text-slate-300 uppercase tracking-widest rtl:tracking-normal hover:bg-slate-800 transition-all text-start cursor-pointer">
                 {t("App Store")}
               </button>
-              <button className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[9px] rtl:text-[11px] font-sans font-bold uppercase tracking-widest rtl:tracking-normal hover:bg-white/10 transition-all text-start">
+              <button className="px-3 py-1.5 sm:px-4 sm:py-2 bg-slate-800/50 border border-slate-700/50 rounded-xl text-[8px] sm:text-[9px] rtl:text-[11px] font-sans font-medium text-slate-400 hover:text-slate-300 uppercase tracking-widest rtl:tracking-normal hover:bg-slate-800 transition-all text-start cursor-pointer">
                 {t("Google Play")}
               </button>
             </div>
@@ -135,15 +135,15 @@ export const Footer: React.FC<{ isHomepage?: boolean }> = ({ isHomepage = false 
         </div>
 
         {/* Column 4: Links */}
-        <div className="space-y-6 lg:justify-self-end">
-          <h5 className="text-[10px] rtl:text-[12px] font-sans font-bold uppercase tracking-[0.2em] text-[#D4A574]">
+        <div className="space-y-4 lg:justify-self-end">
+          <h5 className="text-[10px] rtl:text-[12px] font-sans font-bold uppercase tracking-[0.2em] text-sky-500">
             {t("informations_header") || "Informations"}
           </h5>
-          <ul className="grid grid-cols-1 gap-2 text-[10px] rtl:text-[12px] font-sans font-bold uppercase tracking-widest rtl:tracking-normal text-white/40">
+          <ul className="grid grid-cols-1 gap-2 text-[10px] rtl:text-[12px] font-sans font-medium uppercase tracking-widest rtl:tracking-normal text-slate-500">
             <li>
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent("open-olma-updates"))}
-                className="hover:text-white transition-colors bg-transparent border-none p-0 cursor-pointer text-start"
+                className="hover:text-slate-300 transition-colors bg-transparent border-none p-0 cursor-pointer text-start"
               >
                 {t("changelog") || "Journal des mises à jour"}
               </button>
@@ -151,7 +151,7 @@ export const Footer: React.FC<{ isHomepage?: boolean }> = ({ isHomepage = false 
             <li>
               <button
                 onClick={() => navigate("/refund-policy")}
-                className="hover:text-white transition-colors bg-transparent border-none p-0 cursor-pointer text-start"
+                className="hover:text-slate-300 transition-colors bg-transparent border-none p-0 cursor-pointer text-start"
               >
                 {t("Remboursements & Retours")}
               </button>
@@ -159,7 +159,7 @@ export const Footer: React.FC<{ isHomepage?: boolean }> = ({ isHomepage = false 
             <li>
               <button
                 onClick={() => navigate("/privacy-policy")}
-                className="hover:text-white transition-colors bg-transparent border-none p-0 cursor-pointer text-start"
+                className="hover:text-slate-300 transition-colors bg-transparent border-none p-0 cursor-pointer text-start"
               >
                 {t("privacy") || "Confidentialité"}
               </button>
@@ -167,19 +167,19 @@ export const Footer: React.FC<{ isHomepage?: boolean }> = ({ isHomepage = false 
             <li>
               <button
                 onClick={() => navigate("/support")}
-                className="hover:text-white transition-colors bg-transparent border-none p-0 cursor-pointer text-start"
+                className="hover:text-slate-300 transition-colors bg-transparent border-none p-0 cursor-pointer text-start"
               >
                 {t("contact") || "Contact Support"}
               </button>
             </li>
             {supportEmail && (
-              <li className="text-white/60 lowercase tracking-normal mt-2 select-all">{supportEmail}</li>
+              <li className="text-slate-600 lowercase tracking-normal mt-2 select-all">{supportEmail}</li>
             )}
           </ul>
         </div>
       </div>
 
-      <div className="w-full max-w-[90rem] mx-auto px-4 sm:px-6 md:px-8 mt-12 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6 text-xs rtl:text-sm text-white/60 font-medium">
+      <div className="w-full max-w-[90rem] mx-auto px-4 sm:px-6 md:px-8 mt-12 pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-6 text-xs rtl:text-sm text-slate-500 font-medium">
         <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6">
           <span>
             © {new Date().getFullYear()} Olma. {t("all_rights_reserved")}
@@ -187,41 +187,41 @@ export const Footer: React.FC<{ isHomepage?: boolean }> = ({ isHomepage = false 
         </div>
 
         <div className="flex items-center gap-4">
-          <span className="text-white/40 uppercase tracking-widest rtl:tracking-normal text-[9px] rtl:text-[11px] font-sans font-bold">
+          <span className="text-slate-600 uppercase tracking-widest rtl:tracking-normal text-[9px] rtl:text-[11px] font-sans font-bold">
             {t("payment_delivery") || "Paiement & Livraison"}
           </span>
           <div className="flex gap-2">
-            <div className="px-2 py-1 bg-white/5 border border-white/10 rounded font-bold text-[9px] rtl:text-[11px]">
+            <div className="px-2 py-1 bg-slate-800/50 border border-slate-800 rounded text-slate-500 font-medium text-[9px] rtl:text-[11px]">
               {t("CIB")}
             </div>
-            <div className="px-2 py-1 bg-white/5 border border-white/10 rounded font-bold text-[9px] rtl:text-[11px]">
+            <div className="px-2 py-1 bg-slate-800/50 border border-slate-800 rounded text-slate-500 font-medium text-[9px] rtl:text-[11px]">
               {t("BaridiMob")}
             </div>
-            <div className="px-2 py-1 bg-white/5 border border-white/10 rounded font-bold text-[9px] rtl:text-[11px]">
+            <div className="px-2 py-1 bg-slate-800/50 border border-slate-800 rounded text-slate-500 font-medium text-[9px] rtl:text-[11px]">
               {t("Yalidine")}
             </div>
-            <div className="px-2 py-1 bg-white/5 border border-white/10 rounded font-bold text-[9px] rtl:text-[11px]">
+            <div className="px-2 py-1 bg-slate-800/50 border border-slate-800 rounded text-slate-500 font-medium text-[9px] rtl:text-[11px]">
               {t("ZR Express")}
             </div>
           </div>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-zinc-500">
+        <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-slate-600">
           <button
             onClick={() => navigate("/refund-policy")}
-            className="hover:text-white transition-colors bg-transparent border-none p-0 cursor-pointer font-bold uppercase tracking-widest rtl:tracking-normal"
+            className="hover:text-slate-400 transition-colors bg-transparent border-none p-0 cursor-pointer font-bold uppercase tracking-widest rtl:tracking-normal text-[10px]"
           >
             {t("Retours")}
           </button>
           <button
             onClick={() => navigate("/privacy-policy")}
-            className="hover:text-white transition-colors bg-transparent border-none p-0 cursor-pointer font-bold uppercase tracking-widest rtl:tracking-normal"
+            className="hover:text-slate-400 transition-colors bg-transparent border-none p-0 cursor-pointer font-bold uppercase tracking-widest rtl:tracking-normal text-[10px]"
           >
             {t("privacy")}
           </button>
           <button
             onClick={() => navigate("/support")}
-            className="hover:text-white transition-colors bg-transparent border-none p-0 cursor-pointer font-bold uppercase tracking-widest rtl:tracking-normal"
+            className="hover:text-slate-400 transition-colors bg-transparent border-none p-0 cursor-pointer font-bold uppercase tracking-widest rtl:tracking-normal text-[10px]"
           >
             {t("Support")}
           </button>

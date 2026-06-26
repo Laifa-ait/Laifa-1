@@ -119,7 +119,7 @@ export const Home: React.FC = () => {
         subtitle: t("cat_supermarche_desc"),
         image:
           "https://images.unsplash.com/photo-1590736704728-f4730bb30770?q=80&w=1000&auto=format&fit=crop",
-        gradient: "from-[#2B1D15]/80 via-[#2B1D15]/20 to-transparent",
+        gradient: "from-slate-900/80 via-slate-900/20 to-transparent",
         withExploreButton: true,
       },
       {
@@ -154,7 +154,7 @@ export const Home: React.FC = () => {
         subtitle: t("cat_beauty_desc"),
         image:
           "https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=1000&auto=format&fit=crop",
-        gradient: "from-[#2B1D15]/80 via-[#2B1D15]/20 to-transparent",
+        gradient: "from-slate-900/80 via-slate-900/20 to-transparent",
       },
       {
         key: "Électronique",
@@ -436,15 +436,15 @@ export const Home: React.FC = () => {
   }, [targetedPopupBanner]);
 
   return (
-    <div className="bg-[#F5F0E8] font-sans">
+    <div className="bg-slate-50 font-sans">
       <MonthlyUpdateBanner />
       {/* 💥 Dynamic Promotion Popup Banner (Loaded once per session per ID) */}
       {showPopupBanner && targetedPopupBanner && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-500">
-          <div className="relative max-w-sm sm:max-w-md w-full rounded-[2rem] overflow-hidden shadow-2xl bg-[#FCFAF6] border border-[#C75C1A]/20 animate-in zoom-in-95 duration-500 group">
+          <div className="relative max-w-sm sm:max-w-md w-full rounded-3xl overflow-hidden shadow-xl bg-white border border-sky-100 animate-in zoom-in-95 duration-500 group">
             <button 
               onClick={() => setShowPopupBanner(false)}
-              className="absolute top-4 right-4 z-10 p-2 bg-white hover:bg-stone-50 backdrop-blur-md rounded-full text-[#2C2118] transition-colors cursor-pointer"
+              className="absolute top-4 right-4 z-10 p-2 bg-white/90 hover:bg-slate-100 backdrop-blur-md rounded-full text-slate-700 transition-colors cursor-pointer shadow-sm"
             >
               <X className="w-4 h-4" />
             </button>
@@ -463,8 +463,8 @@ export const Home: React.FC = () => {
                 className="w-full aspect-[4/5] object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
               />
               <div className="absolute bottom-0 inset-x-0 p-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
-                <span className="text-[10px] font-mono font-black uppercase tracking-[0.2em] rtl:tracking-normal text-[#C75C1A] mb-1 block">{t("home.popup.exclusive_offer")}</span>
-                <h3 className="text-white font-extrabold text-xl font-serif drop-shadow-md">{targetedPopupBanner.title}</h3>
+                <span className="text-[10px] font-sans font-bold uppercase tracking-widest rtl:tracking-normal text-sky-400 mb-1 block">{t("home.popup.exclusive_offer")}</span>
+                <h3 className="text-white font-semibold text-xl font-display drop-shadow-md">{targetedPopupBanner.title}</h3>
               </div>
             </div>
           </div>
@@ -481,10 +481,10 @@ export const Home: React.FC = () => {
       <h1 className="sr-only">{t("home.sr_title")}</h1>
       
       {/* Neo-Heritage Bento Hero - Kinder Style */}
-      <section className="w-full bg-[#F5F0E8] py-4 sm:py-6 lg:py-8 relative overflow-hidden">
+      <section className="w-full bg-slate-50 py-4 sm:py-6 lg:py-8 relative overflow-hidden">
         <div className="max-w-[90rem] mx-auto px-4 sm:px-6 md:px-8">
           {isBannersLoading ? (
-            <div className="w-full min-h-[400px] sm:min-h-[500px] bg-[#E5DED4]/30 animate-pulse rounded-[2rem] border border-[#E5DED4]/50 mt-0" />
+            <div className="w-full min-h-[400px] sm:min-h-[500px] bg-slate-200 animate-pulse rounded-3xl border border-slate-100 mt-0" />
           ) : (
             <BentoHero banners={targetedHeroBanners} />
           )}
@@ -499,14 +499,14 @@ export const Home: React.FC = () => {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="flex items-center justify-between py-4 px-6 bg-[#2C2118] text-white rounded-full shadow-[0_10px_20px_rgba(44,33,24,0.15)]"
+            className="flex items-center justify-between py-4 px-6 bg-white border border-sky-100 text-slate-800 rounded-full shadow-sm"
           >
             <div className="flex items-center gap-3">
               <span className="flex h-3 w-3 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
               </span>
-              <span className="font-sans font-sans font-bold text-[12px] sm:text-sm uppercase tracking-widest rtl:tracking-normal drop-shadow-sm">
+              <span className="font-sans font-bold text-[12px] sm:text-sm uppercase tracking-widest rtl:tracking-normal drop-shadow-sm text-slate-700">
                 [ {activeWilaya} ] {t("home.regional_filter_active")}
               </span>
             </div>
@@ -534,7 +534,7 @@ export const Home: React.FC = () => {
                 <div
                   key={banner.id}
                   onClick={() => navigate(linkDestination)}
-                  className={`relative block rounded-2xl overflow-hidden group shadow-[0_16px_48px_rgba(26,20,16,0.10)] hover:shadow-[0_24px_64px_rgba(26,20,16,0.14)] hover:scale-[1.02] transition-all duration-500 cursor-pointer ${banner.layout === "half" ? "w-full md:w-[calc(50%-12px)] aspect-[2/1] sm:aspect-[2.5/1]" : "w-full aspect-[2.5/1] sm:aspect-[4/1] md:aspect-[5/1]"}`}
+                  className={`relative block rounded-3xl overflow-hidden group shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-500 cursor-pointer ${banner.layout === "half" ? "w-full md:w-[calc(50%-12px)] aspect-[2/1] sm:aspect-[2.5/1]" : "w-full aspect-[2.5/1] sm:aspect-[4/1] md:aspect-[5/1]"}`}
                 >
                   {/* PC Image */}
                   <img loading="lazy"
@@ -550,7 +550,7 @@ export const Home: React.FC = () => {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out sm:hidden block"
                     />
                   )}
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-[#2C2118]/5 transition-colors duration-500" />
+                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors duration-500" />
                 </div>
               );
             })}
@@ -563,46 +563,47 @@ export const Home: React.FC = () => {
       ))}
 
       {/* Selection Premium - Clean Immersive Premium */}
-      <div className="max-w-[90rem] mx-auto px-2 sm:px-6 md:px-8 mb-16">
-        <section className="pt-16 pb-16 bg-[#FFFBF5] rounded-[2.5rem] relative overflow-hidden shadow-[0_20px_60px_rgba(26,20,16,0.08)] border border-[#E5DED4]/40">
+      <div className="max-w-[90rem] mx-auto px-2 sm:px-6 md:px-8 mb-10 sm:mb-16">
+        <section className="pt-8 sm:pt-16 pb-8 sm:pb-16 bg-white rounded-3xl relative overflow-hidden shadow-sm border border-slate-100">
           {/* Splash Drops Decorations */}
           <div className="absolute top-0 right-10 w-32 h-32 bg-white rounded-full opacity-10 rotate-45 transform blur-[8px] hidden md:block"></div>
           <div className="absolute top-10 right-32 w-16 h-16 bg-white rounded-full opacity-10 rotate-12 transform blur-[4px] hidden md:block"></div>
           <div className="absolute bottom-10 left-10 w-48 h-48 bg-white rounded-full opacity-5 transform blur-[12px]"></div>
 
           <div className="w-full px-4 sm:px-8 md:px-12 relative z-10">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 sm:mb-8 gap-4 sm:gap-6">
               <div>
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D4A574]/10 text-[#C75C1A] border border-[#D4A574]/20 font-mono text-[9px] uppercase tracking-[0.2em] font-black mb-4">
-                  <Sparkles className="w-3.5 h-3.5 text-[#C75C1A]" />
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-sky-50 text-sky-600 border border-sky-100 font-sans text-[9px] sm:text-[10px] uppercase tracking-widest font-bold mb-3 sm:mb-4">
+                  <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-sky-500" />
                   {t("exploration_premium")}
                 </div>
-                <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-[#2C2118] mb-3">
+                <h2 className="font-sans text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-slate-900 mb-2 sm:mb-3 flex flex-col items-start">
                   {t("product.premium_selection")}
+                  <div className="w-12 sm:w-16 h-1 sm:h-1.5 bg-sky-500 rounded-full mt-2 sm:mt-3"></div>
                 </h2>
-                <p className="font-sans text-sm md:text-base text-[#8B7355] uppercase tracking-[0.15em] max-w-xl leading-relaxed">
+                <p className="font-sans text-xs sm:text-sm md:text-base text-slate-500 uppercase tracking-wider max-w-xl leading-relaxed mt-2 sm:mt-4">
                   {t("home.featured.subtitle")}
                 </p>
               </div>
               
               <button
                 onClick={() => navigate("/premium-collection")}
-                className="group flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-white text-[#C75C1A] font-mono font-black text-[11px] uppercase tracking-[0.2em] hover:bg-[#FFFDF5] hover:scale-105 active:scale-95 transition-all shadow-[0_8px_20px_rgba(0,0,0,0.15)] cursor-pointer"
+                className="group flex items-center justify-center gap-2 px-2 py-2 sm:px-4 sm:py-3 rounded-xl bg-transparent text-sky-500 font-sans font-bold text-xs sm:text-sm border-none hover:text-sky-600 active:scale-95 transition-all cursor-pointer"
               >
                 <span>{t("Voir la Collection")}</span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1.5 transition-transform" />
               </button>
             </div>
 
-          <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-8 pt-4 desktop-scrollbar snap-x snap-mandatory px-4 sm:px-0 select-none scroll-smooth">
+          <div className="flex gap-3 sm:gap-6 overflow-x-auto pb-6 sm:pb-8 pt-2 sm:pt-4 desktop-scrollbar snap-x snap-mandatory px-4 sm:px-0 select-none scroll-smooth">
             {isLoadingProducts ? (
               Array(6).fill(0).map((_, i) => (
-                <div key={i} className="w-[240px] shrink-0 snap-start snap-always h-[340px] rounded-[2rem] bg-white/20 animate-pulse" />
+                <div key={i} className="w-[160px] sm:w-[220px] shrink-0 snap-start snap-always h-[220px] sm:h-[300px] rounded-2xl bg-slate-100 animate-pulse" />
               ))
             ) : premiumProducts.length === 0 ? (
-              <div className="w-full flex flex-col items-center justify-center py-12 text-center bg-[#F5F0E8] rounded-[2rem] border border-[#E5DED4]/50 shadow-inner">
-                <Sparkles className="w-8 h-8 text-[#D4A574] mb-3" />
-                <p className="font-mono font-black text-[#8B7355] text-xs uppercase tracking-[0.2em]">{t("Prochain arrivage imminent")}</p>
+              <div className="w-full flex flex-col items-center justify-center py-6 sm:py-12 text-center bg-slate-50 rounded-2xl border border-slate-100 shadow-inner">
+                <Sparkles className="w-5 h-5 sm:w-8 sm:h-8 text-slate-300 mb-2 sm:mb-3" />
+                <p className="font-sans font-medium text-slate-500 text-[9px] sm:text-xs uppercase tracking-wider">{t("Prochain arrivage imminent")}</p>
               </div>
             ) : (
               premiumProducts.slice(0, 8).map((product, i) => {
@@ -612,9 +613,9 @@ export const Home: React.FC = () => {
                   <div 
                     key={`${product.id}-${i}`} 
                     onClick={() => navigate(`/product/${product.id}`)}
-                    className="w-[240px] sm:w-[260px] shrink-0 snap-start snap-always h-[360px] rounded-[2rem] bg-[#FFFBF5] overflow-hidden shadow-[0_16px_48px_rgba(26,20,16,0.08)] border border-[#E5DED4]/50 group transition-all duration-300 relative flex flex-col cursor-pointer hover:-translate-y-2"
+                    className="w-[240px] sm:w-[260px] shrink-0 snap-start snap-always h-[360px] rounded-2xl bg-white overflow-hidden shadow-sm border border-slate-100 group transition-all duration-300 relative flex flex-col cursor-pointer hover:-translate-y-1 hover:shadow-md"
                   >
-                    <div className="relative h-[180px] bg-[#F5F0E8] overflow-hidden shrink-0 rounded-t-[2rem]">
+                    <div className="relative h-[180px] bg-slate-50 overflow-hidden shrink-0 rounded-t-2xl">
                       <img
                         loading="lazy"
                         src={product.image || "https://images.unsplash.com/photo-1555529771-835f59fc5efe?auto=format&fit=crop&q=80&w=600"}
@@ -628,15 +629,15 @@ export const Home: React.FC = () => {
                       />
                       
                       <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5 pointer-events-none">
-                        <div className="px-2.5 py-1 rounded-full bg-white/95 text-[#2C2118] shadow-sm flex items-center gap-1.5">
+                        <div className="px-2.5 py-1 rounded-full bg-white/95 text-slate-800 shadow-sm flex items-center gap-1.5">
                           <div className={`w-2 h-2 rounded-full ${
                             (product as any).sellerTrust >= 90 
-                              ? "bg-[#10B981]" 
+                              ? "bg-emerald-500" 
                               : (product as any).sellerTrust >= 75 
-                              ? "bg-[#F59E0B]" 
-                              : "bg-[#EF4444]"
+                              ? "bg-amber-500" 
+                              : "bg-red-500"
                           }`} />
-                          <span className="font-mono font-black text-[9px] uppercase tracking-[0.2em]">
+                          <span className="font-sans font-bold text-[9px] uppercase tracking-widest">
                             {t("FIABILITÉ")} : {(product as any).sellerTrust}%
                           </span>
                         </div>
@@ -653,32 +654,32 @@ export const Home: React.FC = () => {
                             {
                               id: `wishlist-${product.id}`,
                               icon: "✨",
-                              style: { borderRadius: "10px", background: "#1A1410", color: "#FFF", fontSize: "14px", fontWeight: "bold" }
+                              style: { borderRadius: "10px", background: "#1e293b", color: "#FFF", fontSize: "14px", fontWeight: "bold" }
                             }
                           );
                         }}
-                        className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white text-[#2C2118] shadow-md hover:scale-110 active:scale-95 flex items-center justify-center cursor-pointer transition-all border border-stone-100"
+                        className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white text-slate-900 shadow-md hover:scale-110 active:scale-95 flex items-center justify-center cursor-pointer transition-all border border-slate-100"
                         aria-label="Wishlist"
                       >
                         <Heart
-                          className={`w-4 h-4 ${isItemWishlisted ? "fill-[#C75C1A] text-[#C75C1A] stroke-[#C75C1A]" : "text-[#2C2118] stroke-[2.5]"}`}
+                          className={`w-4 h-4 ${isItemWishlisted ? "fill-rose-500 text-rose-500 stroke-rose-500" : "text-slate-900 stroke-[2.5]"}`}
                         />
                       </button>
                     </div>
 
-                    <div className="flex-1 p-5 flex flex-col justify-between bg-[#FFFBF5] rounded-b-[2rem]">
+                    <div className="flex-1 p-5 flex flex-col justify-between bg-white rounded-b-[2rem]">
                       <div>
                         <div className="flex items-center gap-1.5 mb-2">
-                          <span className="px-3 py-1 rounded-full bg-[#FFF0E5] text-[#C75C1A] font-mono text-[9px] font-black uppercase tracking-[0.2em] truncate max-w-[100px]">
+                          <span className="px-3 py-1 rounded-full bg-sky-50 text-sky-600 font-mono text-[9px] font-black uppercase tracking-[0.2em] truncate max-w-[100px]">
                             {product.sellerName || "Olma Boutique"}
                           </span>
-                          <span className="w-1 h-1 rounded-full bg-stone-300" />
-                          <span className="font-sans text-[9px] font-bold uppercase tracking-widest text-stone-400 truncate">
+                          <span className="w-1 h-1 rounded-full bg-slate-300" />
+                          <span className="font-sans text-[9px] font-bold uppercase tracking-widest text-slate-400 truncate">
                             {product.category || "Mode"}
                           </span>
                         </div>
                         
-                        <h3 className="font-bold text-[#2C2118] text-sm group-hover:text-[#C75C1A] transition-colors duration-300 line-clamp-2 leading-snug">
+                        <h3 className="font-bold text-slate-900 text-sm group-hover:text-sky-600 transition-colors duration-300 line-clamp-2 leading-snug">
                           {getTranslatedField(product, "name", lang)}
                         </h3>
                       </div>
@@ -686,11 +687,11 @@ export const Home: React.FC = () => {
                       <div className="flex items-end justify-between mt-4">
                         <div className="flex flex-col gap-0.5">
                           <div className="flex items-baseline gap-1.5">
-                            <span className="font-mono font-black text-[#C75C1A] text-[18px]">
+                            <span className="font-mono font-black text-slate-900 text-[18px]">
                               {formatPrice(product.promoPrice || product.price)}
                             </span>
                             {isPromo && (
-                              <span className="font-sans font-bold text-[11px] text-stone-400 line-through">
+                              <span className="font-sans font-bold text-[11px] text-slate-400 line-through">
                                 {formatPrice(product.price)}
                               </span>
                             )}
@@ -719,31 +720,30 @@ export const Home: React.FC = () => {
       
 
       {/* Recommended Section (Point 4) - Framed Beautifully & Playfully */}
-      <section className="py-12 sm:py-16 bg-[#F5F0E8] relative z-20 overflow-hidden">
+      <section className="py-12 sm:py-16 bg-slate-50 relative z-20 overflow-hidden">
         <div className="w-full max-w-[90rem] mx-auto px-4 sm:px-6 md:px-8 relative z-10">
-          <div className="bg-[#FFFBF5] rounded-3xl shadow-[0_20px_60px_rgba(26,20,16,0.08)] border border-[#E5DED4]/40 p-6 sm:p-10 relative">
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 sm:p-10 relative">
           
-          <div className="absolute top-0 right-0 w-48 h-48 bg-[#C75C1A]/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute top-0 right-0 w-48 h-48 bg-sky-500/5 rounded-full blur-3xl pointer-events-none"></div>
           
           {/* Playful Header Section */}
-          <div className="flex items-center justify-between mb-8 pb-4 relative z-10">
-            <h3 className="text-3xl md:text-5xl font-serif font-bold text-[#2C2118] tracking-tight uppercase flex items-center gap-3">
-              <span className="flex items-center justify-center w-12 h-12 md:w-16 md:h-16 bg-[#C75C1A] rounded-full text-white rotate-12 shadow-sm border-4 border-[#FDF9EC]">
-                <Sparkle className="w-6 h-6 md:w-8 md:h-8" />
-              </span>
-              {lang === "ar" ? "خصيصاً لك" : <>
-                <span className="text-[#C75C1A]">{t("home.pour_vous.prefix")}</span> 
-                <span>{t("home.pour_vous.suffix")}</span>
-              </>}
-            </h3>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 pb-2 sm:pb-4 relative z-10 gap-4">
+            <div className="flex flex-col items-start">
+              <h3 className="text-2xl sm:text-3xl md:text-4xl font-sans font-bold text-slate-900 tracking-tight flex items-center gap-2 sm:gap-3">
+                {lang === "ar" ? "خصيصاً لك" : <>
+                  <span className="uppercase tracking-tight text-slate-900">{t("home.pour_vous.prefix")} {t("home.pour_vous.suffix")}</span>
+                </>}
+              </h3>
+              <div className="w-12 sm:w-16 h-1 sm:h-1.5 bg-sky-500 rounded-full mt-2 sm:mt-3"></div>
+            </div>
 
             {/* Fun Rounded Button */}
             <button 
               onClick={() => navigate('/shop')}
-              className="group relative flex items-center gap-2 px-6 py-3 rounded-full bg-[#2C2118] text-white hover:bg-[#C75C1A] hover:scale-105 active:scale-95 text-[11px] font-mono font-black uppercase tracking-[0.2em] transition-all shadow-md border-2 border-[transparent] cursor-pointer"
+              className="group relative flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-3 rounded-xl bg-transparent text-sky-500 hover:text-sky-600 active:scale-95 text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 w-fit border-none"
             >
               <span>{t("home.pour_vous.explore_all")}</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+              <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform duration-300" />
             </button>
           </div>
           
@@ -751,10 +751,10 @@ export const Home: React.FC = () => {
             {/* Left Desktop Nav */}
             <button
               onClick={() => scrollRcmd("left")}
-              className="absolute -left-3 sm:-left-5 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#FFFBF5] text-[#2C2118] border border-[#E5DED4] flex items-center justify-center hover:bg-[#C75C1A] hover:text-white hover:border-[#C75C1A] hover:scale-110 active:scale-95 transition-all duration-300 md:flex hidden shadow-[0_8px_20px_rgba(26,20,16,0.1)] cursor-pointer"
+              className="absolute -left-3 sm:-left-5 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white text-slate-600 border border-slate-200 flex items-center justify-center hover:bg-slate-50 hover:text-slate-900 hover:scale-110 active:scale-95 transition-all duration-300 md:flex hidden shadow-sm cursor-pointer"
               aria-label={t("Voir les produits précédents")}
             >
-              <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+              <ChevronLeft className="w-5 h-5 stroke-[2]" />
             </button>
 
             <div 
@@ -771,7 +771,7 @@ export const Home: React.FC = () => {
                     <ProductCard
                       product={product}
                       index={idx}
-                      sectionStyle="bg-[#FFFBF5] rounded-[2rem] shadow-[0_8px_30px_rgba(26,20,16,0.06)] border border-[#E5DED4]/40 hover:-translate-y-2 transition-all duration-300"
+                      sectionStyle="bg-white rounded-2xl shadow-sm border border-slate-100 hover:-translate-y-1 transition-all duration-300"
                       onClick={(p) => navigate(`/product/${p.id}`)}
                     />
                   </div>
@@ -782,10 +782,10 @@ export const Home: React.FC = () => {
             {/* Right Desktop Nav */}
             <button
               onClick={() => scrollRcmd("right")}
-              className="absolute -right-3 sm:-right-5 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#FFFBF5] text-[#2C2118] border border-[#E5DED4] flex items-center justify-center hover:bg-[#C75C1A] hover:text-white hover:border-[#C75C1A] hover:scale-110 active:scale-95 transition-all duration-300 md:flex hidden shadow-[0_8px_20px_rgba(26,20,16,0.1)] cursor-pointer"
+              className="absolute -right-3 sm:-right-5 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white text-slate-600 border border-slate-200 flex items-center justify-center hover:bg-slate-50 hover:text-slate-900 hover:scale-110 active:scale-95 transition-all duration-300 md:flex hidden shadow-sm cursor-pointer"
               aria-label={t("Voir plus de produits")}
             >
-              <ChevronRight className="w-5 h-5 stroke-[2.5]" />
+              <ChevronRight className="w-5 h-5 stroke-[2]" />
             </button>
             
             <MobileSwipeIndicator className="-mt-3 md:hidden block" />
@@ -801,20 +801,20 @@ export const Home: React.FC = () => {
       {/* Main Product Grid Section: Shrink Banners and increase density - REMOVED DUPLICATE */}
 
       {/* Social Proof: Bubbly & Fun */}
-      <section className="py-12 sm:py-20 bg-[#FFFBF5] relative mt-16 rounded-[2.5rem] mx-4 sm:mx-8 shadow-[0_20px_60px_rgba(26,20,16,0.05)] border border-[#E5DED4]/60">
-         <div className="max-w-4xl mx-auto px-4 relative z-10 pt-8">
-            <div className="flex flex-col items-center text-center space-y-6">
-               <div className="flex items-center gap-2 p-4 rounded-full bg-[#F5F0E8] border border-[#E5DED4] shadow-inner transform -rotate-2">
+      <section className="py-6 sm:py-16 bg-white relative mt-6 sm:mt-16 rounded-3xl mx-3 sm:mx-8 shadow-sm border border-slate-100">
+         <div className="max-w-4xl mx-auto px-4 relative z-10 pt-2 sm:pt-8">
+            <div className="flex flex-col items-center text-center space-y-4 sm:space-y-6">
+               <div className="flex items-center gap-1.5 sm:gap-2">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-6 h-6 sm:w-8 sm:h-8 text-[#C75C1A] fill-[#C75C1A]" />
+                    <Star key={i} className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-yellow-500 fill-yellow-500" />
                   ))}
                </div>
-               <p className="text-2xl sm:text-4xl font-serif font-bold text-[#2C2118] leading-snug px-4 max-w-3xl text-center italic">
+               <p className="text-sm sm:text-2xl font-sans text-slate-800 leading-snug px-2 sm:px-4 max-w-3xl text-center italic">
                  {t("home.social_proof.quote")}
                </p>
-               <div className="flex items-center gap-4 bg-[#F5F0E8] px-6 py-3 rounded-full shadow-inner border border-[#E5DED4] mt-4">
-                  <div className="w-10 h-10 rounded-full bg-[#C75C1A] flex items-center justify-center text-white font-sans font-bold text-sm sm:text-base shadow-md">SA</div>
-                  <span className="text-sm sm:text-lg font-bold text-[#2C2118] uppercase tracking-wide">{t("Sonia A. •")}<span className="text-[#2EC4B6] ml-2">{t("home.social_proof.verified")}</span></span>
+               <div className="flex items-center gap-2 sm:gap-3 mt-4 sm:mt-6">
+                  <span className="text-[11px] sm:text-sm font-semibold text-slate-900 uppercase tracking-wide">{t("Sonia A.")}</span>
+                  <span className="px-2 py-0.5 rounded-full bg-pink-50 text-pink-500 text-[9px] sm:text-[11px] font-medium tracking-wide uppercase">{t("home.social_proof.verified")}</span>
                </div>
             </div>
          </div>

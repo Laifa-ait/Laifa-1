@@ -58,9 +58,7 @@ let auth: Auth;
 let storage: FirebaseStorage;
 
 try {
-  const dbOptions = process.env.NODE_ENV === 'development' 
-    ? { experimentalForceLongPolling: true } 
-    : {};
+  const dbOptions = { experimentalForceLongPolling: true };
   
   app = getApps().length === 0 ? initializeApp(clientConfig) : getApp();
   db = initializeFirestore(app, dbOptions, clientConfig.firestoreDatabaseId);
@@ -174,3 +172,27 @@ export async function syncUserProfile(user: User) {
     console.warn("Sync Profile error (Client):", error);
   }
 }
+
+// Timeout helper to avoid indefinite hanging on slow Firestore/network connections
+export function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs = 15000,
+  errorMsg = "La requête de base de données a expiré. Veuillez vérifier votre connexion."
+): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(errorMsg));
+    }, timeoutMs);
+
+    promise
+      .then((res) => {
+        clearTimeout(timer);
+        resolve(res);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
+  });
+}
+

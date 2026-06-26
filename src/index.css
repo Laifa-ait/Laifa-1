@@ -1,25 +1,32 @@
-@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;700;800;900&display=swap");
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Nunito", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Fredoka", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", ui-sans-serif, system-ui, sans-serif;
   
-  /* Premium soft shadow definitions to create elevated, modern depth */
-  --shadow-sm: 0 4px 10px rgba(60, 43, 34, 0.05);
-  --shadow-md: 0 8px 24px rgba(60, 43, 34, 0.08);
-  --shadow-lg: 0 16px 40px rgba(60, 43, 34, 0.12);
-  --shadow-xl: 0 24px 60px rgba(60, 43, 34, 0.16);
-  --shadow-2xl: 0 32px 80px rgba(60, 43, 34, 0.2);
+  /* Premium soft shadow definitions to create elevated, modern depth in light pink */
+  --shadow-sm: 0 2px 10px rgba(219, 39, 119, 0.12);
+  --shadow-md: 0 6px 18px rgba(219, 39, 119, 0.16);
+  --shadow-lg: 0 12px 28px rgba(219, 39, 119, 0.22);
+  --shadow-xl: 0 18px 36px rgba(219, 39, 119, 0.28);
+  --shadow-2xl: 0 24px 48px rgba(219, 39, 119, 0.36);
 }
 
 body {
-  background-color: #FDF9EC !important; /* Kinder Cream */
-  color: #3C2B22 !important; /* Deep Cocoa Brown */
+  background-color: #F8FAFC !important; /* Slate 50 */
+  color: #0F172A !important; /* Slate 900 */
   font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Rounded typography classes for playful Kinder feel */
+/* Modern Typography classes */
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+/* Fallback for old class to avoid breakage during transition */
 .font-kinder {
   font-family: var(--font-display);
   font-weight: 700;
@@ -82,18 +89,27 @@ body {
 }
 
 @layer components {
-  /* Les Boutons Call-to-Action (Action principale) */
-  .btn-premium-orange {
-    @apply bg-orange-600 text-white px-8 py-4 rounded-[2rem] font-black uppercase tracking-widest text-sm shadow-[0_10px_30px_-10px_rgba(234,88,12,0.5)] hover:-translate-y-1 hover:shadow-[0_15px_40px_-10px_rgba(234,88,12,0.6)] active:translate-y-0 transition-all duration-300;
+  /* Primary Action Button (Sky Blue) */
+  .btn-primary {
+    @apply bg-sky-500 text-white px-8 py-3.5 rounded-xl font-medium tracking-wide text-sm shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:bg-sky-400 active:translate-y-0 transition-all duration-300;
   }
 
-  /* Les Boutons Secondaires (Annulation, Retour) */
-  .btn-ghost-teal {
-    @apply border-2 border-zinc-900/10 text-zinc-900 px-8 py-4 rounded-[2rem] font-bold text-sm hover:bg-zinc-900/5 active:bg-zinc-900/10 transition-colors;
+  /* Secondary Action Button (Ghost / Outline) */
+  .btn-secondary {
+    @apply border border-slate-200 text-slate-700 px-8 py-3.5 rounded-xl font-medium text-sm hover:bg-slate-50 active:bg-slate-100 transition-colors;
   }
-  /* Les Cartes Surfaces (Produits, Blocs de Checkout) */
+
+  /* Surface Cards */
   .surface-card {
-    @apply bg-white rounded-[2rem] border border-zinc-100/60 shadow-md hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 overflow-hidden;
+    @apply bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-all duration-300 overflow-hidden;
+  }
+
+  /* Fallbacks to not break the app immediately */
+  .btn-premium-orange {
+    @apply bg-sky-500 text-white px-8 py-3.5 rounded-xl font-medium tracking-wide text-sm shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:bg-sky-400 active:translate-y-0 transition-all duration-300;
+  }
+  .btn-ghost-teal {
+    @apply border border-slate-200 text-slate-700 px-8 py-3.5 rounded-xl font-medium text-sm hover:bg-slate-50 active:bg-slate-100 transition-colors;
   }
 }
 

@@ -7,6 +7,8 @@ import toast from "react-hot-toast";
 import { formatPrice } from "../../utils/format";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
+import { DisputeChatModal } from "../../components/Admin/DisputeChatModal";
+import { MessageSquare } from "lucide-react";
 
 interface DisputeCase {
   id: string;
@@ -30,6 +32,9 @@ export const DisputeManagement: React.FC = () => {
   const { currentUser, userProfile } = useAuth();
   const [cases, setCases] = useState<DisputeCase[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [decisions, setDecisions] = useState<{ [key: string]: string }>({});
+  const [chatOpenFor, setChatOpenFor] = useState<any>(null);
 
   useEffect(() => {
     const fetchCases = async () => {
@@ -63,33 +68,66 @@ export const DisputeManagement: React.FC = () => {
     fetchCases();
   }, []);
 
-  const resolveDispute = async (orderId: string, resolution: "approved" | "rejected", amount: number) => {
+  const handleResolve = async (c: any) => {
     if (!currentUser || userProfile?.role !== "admin") {
       toast.error(t("Action non autorisée"));
+      return;
+    }
+    
+    const decision = decisions[c.id];
+    if (!decision) {
+      toast.error(t("Veuillez sélectionner une décision avant de résoudre."));
       return;
     }
 
     try {
       const token = await currentUser.getIdToken();
-      const res = await fetch(`/api/admin/orders/${orderId}/resolve-dispute`, {
+      const res = await fetch(`/api/admin/orders/${c.id}/resolve-dispute`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          resolution: resolution === "approved" ? "refund_to_wallet" : "close",
-          refundAmount: amount,
+          resolution: decision === "approved" ? "refund_to_wallet" : "close",
+          refundAmount: decision === "approved" ? c.total : 0,
           adminId: currentUser.uid,
         }),
       });
 
       if (!res.ok) throw new Error("Erreur serveur");
 
+      // Notifications
+      const { addDoc, serverTimestamp } = await import("firebase/firestore");
+      const buyerUid = c.userId || c.buyerId;
+      const targetSellerUid = c.sellerIds?.[0] || c.sellerId;
+      
+      if (buyerUid) {
+         await addDoc(collection(db, "user_notifications"), {
+            userId: buyerUid,
+            title: decision === "approved" ? t("Litige résolu en votre faveur") : t("Litige clôturé"),
+            message: decision === "approved" ? t(`La commande #${c.id.substring(0,8)} a été remboursée sur votre Olma Wallet.`) : t(`Votre demande pour la commande #${c.id.substring(0,8)} a été clôturée.`),
+            type: "INFO",
+            read: false,
+            createdAt: serverTimestamp(),
+         });
+      }
+      
+      if (targetSellerUid) {
+         await addDoc(collection(db, "user_notifications"), {
+            userId: targetSellerUid,
+            title: t("Résolution du litige"),
+            message: decision === "approved" ? t(`Le litige (cmd #${c.id.substring(0,8)}) a été résolu en faveur du client.`) : t(`Le litige (cmd #${c.id.substring(0,8)}) a été clôturé en votre faveur.`),
+            type: "INFO",
+            read: false,
+            createdAt: serverTimestamp(),
+         });
+      }
+
       toast.success(
-        resolution === "approved" ? t("Client remboursé sur son Wallet !") : t("Litige clos sans remboursement")
+        decision === "approved" ? t("Client remboursé sur son Wallet !") : t("Litige clos sans remboursement")
       );
-      setCases((prev) => prev.filter((c) => c.id !== orderId));
+      setCases((prev) => prev.filter((item) => item.id !== c.id));
     } catch (e) {
       console.error(e);
       toast.error(t("Erreur lors de la résolution"));
@@ -160,22 +198,33 @@ export const DisputeManagement: React.FC = () => {
                         <span className="text-xs font-kinder text-emerald-600">
                           {formatPrice(c.total)} {t("DZD")}
                         </span>
+                        <button 
+                           onClick={() => setChatOpenFor(c)}
+                           className="ml-auto flex items-center gap-2 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors"
+                        >
+                           <MessageSquare className="w-3.5 h-3.5" />
+                           {t("Chat & Preuves")}
+                        </button>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 w-full md:w-auto">
+                  <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+                    <div className="w-full md:w-auto">
+                      <select
+                        value={decisions[c.id] || ""}
+                        onChange={(e) => setDecisions({ ...decisions, [c.id]: e.target.value })}
+                        className="w-full bg-white border border-zinc-200 px-4 py-3.5 rounded-2xl text-xs font-bold uppercase tracking-widest rtl:tracking-normal outline-none focus:ring-2 ring-emerald-500/20"
+                      >
+                        <option value="">{t("Décision...")}</option>
+                        <option value="approved">{t("Rembourser l'acheteur")} ({formatPrice(c.total)} DZD)</option>
+                        <option value="rejected">{t("Clôturer en faveur du vendeur")}</option>
+                      </select>
+                    </div>
                     <button
-                      onClick={() => resolveDispute(c.id, "approved", c.total)}
-                      className="flex-1 md:flex-none px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-kinder text-xs uppercase tracking-widest rtl:tracking-normal transition-all shadow-lg shadow-emerald-500/20"
+                      onClick={() => handleResolve(c)}
+                      className="w-full md:w-auto px-6 py-3.5 bg-zinc-900 hover:bg-black text-white rounded-2xl font-kinder text-xs uppercase tracking-widest rtl:tracking-normal transition-all shadow-lg shadow-zinc-900/20"
                     >
-                      {t("Rembourser (")}
-                      {formatPrice(c.total)})
-                    </button>
-                    <button
-                      onClick={() => resolveDispute(c.id, "rejected", 0)}
-                      className="flex-1 md:flex-none px-6 py-3.5 bg-zinc-900 hover:bg-black text-white rounded-2xl font-kinder text-xs uppercase tracking-widest rtl:tracking-normal transition-all shadow-lg shadow-zinc-900/20"
-                    >
-                      {t("Fin de litige")}
+                      {t("Résoudre le litige")}
                     </button>
                   </div>
                 </div>
@@ -184,6 +233,10 @@ export const DisputeManagement: React.FC = () => {
           </div>
         )}
       </div>
+      
+      {chatOpenFor && (
+        <DisputeChatModal dispute={chatOpenFor} onClose={() => setChatOpenFor(null)} />
+      )}
     </div>
   );
 };

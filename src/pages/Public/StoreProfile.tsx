@@ -335,12 +335,12 @@ export const StoreProfile: React.FC = () => {
         // Decrement followersCount in publicProfiles
         await updateDoc(sellerPublicRef, {
           followersCount: increment(-1)
-        }).catch(err => (process.env.NODE_ENV === 'debug' ? console.log : function(){})("PublicProfile follow count dec error", err));
+        }).catch(err => (process.env.NODE_ENV === 'development' ? console.log : function(){})("PublicProfile follow count dec error", err));
 
         // Decrement followersCount in users
         await updateDoc(sellerPrivateRef, {
           followersCount: increment(-1)
-        }).catch(err => (process.env.NODE_ENV === 'debug' ? console.log : function(){})("UserProfile follow count dec error", err));
+        }).catch(err => (process.env.NODE_ENV === 'development' ? console.log : function(){})("UserProfile follow count dec error", err));
 
         setIsFollowing(false);
         // Update local state smoothly
@@ -362,12 +362,12 @@ export const StoreProfile: React.FC = () => {
         // Increment followersCount in publicProfiles
         await updateDoc(sellerPublicRef, {
           followersCount: increment(1)
-        }).catch(err => (process.env.NODE_ENV === 'debug' ? console.log : function(){})("PublicProfile follow count inc error", err));
+        }).catch(err => (process.env.NODE_ENV === 'development' ? console.log : function(){})("PublicProfile follow count inc error", err));
 
         // Increment followersCount in users
         await updateDoc(sellerPrivateRef, {
           followersCount: increment(1)
-        }).catch(err => (process.env.NODE_ENV === 'debug' ? console.log : function(){})("UserProfile follow count inc error", err));
+        }).catch(err => (process.env.NODE_ENV === 'development' ? console.log : function(){})("UserProfile follow count inc error", err));
 
         setIsFollowing(true);
         // Update local state smoothly
@@ -599,9 +599,9 @@ export const StoreProfile: React.FC = () => {
 
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 md:px-8 relative -mt-24 sm:-mt-28 md:-mt-32 z-10 animate-fade-in">
          {/* Premium Store Header Card */}
-         <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.06)] flex flex-col md:flex-row items-center md:items-start gap-6 sm:gap-8 border border-zinc-200/50">
+         <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 shadow-xl flex flex-col md:flex-row items-center md:items-start gap-6 sm:gap-8 border border-zinc-200/50">
             {/* Store Logo with Double-circle design */}
-            <div className="w-28 h-28 sm:w-36 sm:h-36 shrink-0 bg-white rounded-3xl p-1.5 shadow-[0_15px_35px_rgba(0,0,0,0.06)] relative group border border-zinc-100 flex-none -mt-20 sm:-mt-24 md:-mt-28">
+            <div className="w-28 h-28 sm:w-36 sm:h-36 shrink-0 bg-white rounded-3xl p-1.5 shadow-lg relative group border border-zinc-100 flex-none -mt-20 sm:-mt-24 md:-mt-28">
                <div className="w-full h-full rounded-2xl overflow-hidden bg-zinc-50 flex items-center justify-center relative border border-zinc-100">
                   {storeInfo.logoUrl ? (
                      <img loading="lazy" src={getOptimizedImageUrl(storeInfo.logoUrl, 400)} alt={t("Store Logo") || "Store Logo"} className="w-full h-full object-cover" />

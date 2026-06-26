@@ -21,17 +21,17 @@ if ("serviceWorker" in navigator) {
     window.location.hostname.includes("-dev-") ||
     window.location.hostname.includes("-pre-") ||
     window.location.hostname.includes(".run.app") ||
-    (import.meta as any).env?.DEV;
+    process.env.NODE_ENV === "development";
 
   if (!isDevOrPreview) {
     window.addEventListener("load", () => {
       navigator.serviceWorker
         .register("/sw.js")
         .then((registration) => {
-          (process.env.NODE_ENV === "debug" ? console.log : function () {})("SW registered: ", registration);
+          (process.env.NODE_ENV === "development" ? console.log : function () {})("SW registered: ", registration);
         })
         .catch((registrationError) => {
-          (process.env.NODE_ENV === "debug" ? console.log : function () {})(
+          (process.env.NODE_ENV === "development" ? console.log : function () {})(
             "SW registration failed: ",
             registrationError
           );
@@ -54,10 +54,14 @@ if ("serviceWorker" in navigator) {
 }
 
 import { setupErrorAgent, logReactErrorBoundary } from "./utils/errorAgent";
+import { trackPerformance } from "./utils/performance";
 import { useTranslation } from "react-i18next";
 
 // Initialize the global error agent
 setupErrorAgent();
+
+// Track RUM performance metrics
+trackPerformance();
 
 const I18nLoader = () => {
   return (

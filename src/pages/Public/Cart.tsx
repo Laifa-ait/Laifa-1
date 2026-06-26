@@ -211,7 +211,7 @@ export const Cart: React.FC = () => {
                    const sellerSubtotal = items.reduce((sum, item) => sum + (getCartItemPrice(item) * (item.quantity || 1)), 0);
 
                    return (
-                      <div key={sellerId} className="bg-white rounded-[3.5rem] p-8 sm:p-10 border border-zinc-200/60 shadow-[0_20px_40px_-15px_rgba(30,67,86,0.04)] space-y-8">
+                      <div key={sellerId} className="bg-white rounded-[3.5rem] p-8 sm:p-10 border border-zinc-200/60 shadow-xl space-y-8">
                          
                          {/* Package Header with multi-seller action splitting */}
                          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-zinc-100 pb-6 gap-6">

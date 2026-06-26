@@ -13,6 +13,18 @@ import {
   Save,
   Sparkles,
   Star,
+  Zap,
+  Flame,
+  Award,
+  History,
+  Calendar,
+  Monitor,
+  Smartphone,
+  Tablet,
+  ArrowUp,
+  ArrowDown,
+  HelpCircle,
+  Eye,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useFirebaseHomepage } from "../../hooks/useFirebaseHomepage";
@@ -41,6 +53,81 @@ import { DEFAULT_CATEGORIES } from "../../data/categories";
 import { formatPrice } from "../../utils/format";
 import { ALGERIA_WILAYAS, PRODUCT_HIERARCHY } from "../../constants";
 import { useTranslation } from "react-i18next";
+
+const SECTION_TYPES_METADATA = [
+  {
+    type: "top_picks" as const,
+    title: "Top Picks (Sélection Vedette)",
+    titleAr: "أفضل الاختيارات (مميز)",
+    desc: "Carousel ou grille des meilleures offres triées à la main par l'équipe admin Olmart.",
+    descAr: "عرض دائري أو شبكة لأفضل العروض المنسقة يدويًا بواسطة فريق الإدارة.",
+    icon: "Star",
+    color: "text-amber-500 bg-amber-50 border-amber-200",
+    colorActive: "border-amber-500 bg-amber-500/10",
+  },
+  {
+    type: "flash_sale" as const,
+    title: "Flash Sale (Ventes Flash)",
+    titleAr: "عروض فلاش السريعة",
+    desc: "Ventes à temps limité avec un compte à rebours de fin d'activité et badges de remise élevés.",
+    descAr: "مبيعات محدودة الوقت مع عد تنازلي وتخفيضات مغرية.",
+    icon: "Zap",
+    color: "text-orange-600 bg-orange-50 border-orange-200",
+    colorActive: "border-orange-600 bg-orange-600/10",
+  },
+  {
+    type: "new_arrivals" as const,
+    title: "New Arrivals (Nouveautés)",
+    titleAr: "وصل حديثًا (الجديد)",
+    desc: "Produits récemment ajoutés sur le marketplace, propulsés de manière automatique.",
+    descAr: "المنتجات المضافة حديثًا إلى السوق والمروجة تلقائيًا.",
+    icon: "Plus",
+    color: "text-blue-500 bg-blue-50 border-blue-200",
+    colorActive: "border-blue-500 bg-blue-500/10",
+  },
+  {
+    type: "trending" as const,
+    title: "Trending (Tendances)",
+    titleAr: "المنتجات الشائعة",
+    desc: "Articles les plus consultés et commandés par la communauté ces dernières 48 heures.",
+    descAr: "المنتجات الأكثر مشاهدة وطلبًا من قبل المجتمع خلال الـ 48 ساعة الماضية.",
+    icon: "Flame",
+    color: "text-rose-500 bg-rose-50 border-rose-200",
+    colorActive: "border-rose-500 bg-rose-500/10",
+  },
+  {
+    type: "recommended" as const,
+    title: "Recommended (Recommandé)",
+    titleAr: "مقترح لك",
+    desc: "Algorithme intelligent affichant des recommandations basées sur les visites de l'acheteur.",
+    descAr: "خوارزمية ذكية تعرض توصيات مخصصة بناءً على تصفح المشتري.",
+    icon: "Sparkles",
+    color: "text-purple-500 bg-purple-50 border-purple-200",
+    colorActive: "border-purple-500 bg-purple-500/10",
+  },
+  {
+    type: "brands" as const,
+    title: "Sellers (Vendeurs Officiels)",
+    titleAr: "البائعون الرسميون",
+    desc: "Grille des boutiques certifiées d'Algérie avec logo de certification officiel.",
+    descAr: "شبكة من المتاجر المعتمدة في الجزائر مع شعار التوثيق الرسمي.",
+    icon: "Award",
+    color: "text-emerald-500 bg-emerald-50 border-emerald-200",
+    colorActive: "border-emerald-500 bg-emerald-500/10",
+  },
+];
+
+const getSectionIcon = (iconName: string, className = "w-4 h-4") => {
+  switch (iconName) {
+    case "Star": return <Star className={className} />;
+    case "Zap": return <Zap className={className} />;
+    case "Plus": return <Plus className={className} />;
+    case "Flame": return <Flame className={className} />;
+    case "Sparkles": return <Sparkles className={className} />;
+    case "Award": return <Award className={className} />;
+    default: return <LayoutTemplate className={className} />;
+  }
+};
 
 export const HomepageBuilder: React.FC = () => {
   const { t } = useTranslation();
@@ -77,6 +164,8 @@ export const HomepageBuilder: React.FC = () => {
   const [secTitle, setSecTitle] = useState("");
   const [secSubtitle, setSecSubtitle] = useState("");
   const [secIsActive, setSecIsActive] = useState(true);
+  const [secStartDate, setSecStartDate] = useState("");
+  const [secEndDate, setSecEndDate] = useState("");
 
   const [activeModalStep, setActiveModalStep] = useState(1);
   const [secManualLinks, setSecManualLinks] = useState<string[]>(Array(18).fill(""));
@@ -109,6 +198,17 @@ export const HomepageBuilder: React.FC = () => {
   const [productSearchResults, setProductSearchResults] = useState<any[]>([]);
   const [isSearchingProducts, setIsSearchingProducts] = useState(false);
 
+  // Drag & drop state
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
+
+  // Versioning states
+  const [versions, setVersions] = useState<any[]>([]);
+  const [backupName, setBackupName] = useState("");
+  const [isLoadingVersions, setIsLoadingVersions] = useState(false);
+
+  // Real-time responsive preview states
+  const [previewDeviceMode, setPreviewDeviceMode] = useState<"desktop" | "mobile">("mobile");
+
   const resetForm = () => {
     setEditItem(null);
     setActiveModalStep(1);
@@ -128,6 +228,8 @@ export const HomepageBuilder: React.FC = () => {
     setSecTitle("");
     setSecSubtitle("");
     setSecIsActive(true);
+    setSecStartDate("");
+    setSecEndDate("");
     setSecTargetAudience("all");
     setSecTargetRegions([]);
 
@@ -176,6 +278,8 @@ export const HomepageBuilder: React.FC = () => {
       setSecTitle(item.title || "");
       setSecSubtitle(item.subtitle || "");
       setSecIsActive(item.isActive !== false);
+      setSecStartDate(item.startDate || "");
+      setSecEndDate(item.endDate || "");
       setSecTargetAudience(item.targetAudience || "all");
       setSecTargetRegions(item.targetRegions || []);
     } else {
@@ -229,6 +333,8 @@ export const HomepageBuilder: React.FC = () => {
             title: secTitle,
             subtitle: secSubtitle,
             isActive: secIsActive,
+            startDate: secStartDate || null,
+            endDate: secEndDate || null,
             targetAudience: secTargetAudience,
             targetRegions: secTargetRegions,
             orderIndex: editItem ? editItem.orderIndex : sections.length + 1,
@@ -298,7 +404,7 @@ export const HomepageBuilder: React.FC = () => {
     }
   };
 
-  // File upload handler for media
+  // File upload handler for media using crypto.randomUUID() to prevent collisions
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, setter: (url: string) => void) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -310,7 +416,8 @@ export const HomepageBuilder: React.FC = () => {
 
     try {
       toast.loading("Upload de l'image/GIF en cours...", { id: "upload-hp" });
-      const storageRef = ref(storage, `homepage_media/${Date.now()}_${file.name.replace(/\s+/g, "_")}`);
+      const uniqueFilename = `${crypto.randomUUID()}_${file.name.replace(/\s+/g, "_")}`;
+      const storageRef = ref(storage, `homepage_media/${uniqueFilename}`);
       try {
         const snapshot = await uploadBytes(storageRef, file);
         const url = await getDownloadURL(snapshot.ref);
@@ -327,6 +434,100 @@ export const HomepageBuilder: React.FC = () => {
     } catch (err) {
       console.error(err);
       toast.error("Erreur lors de l'importation.", { id: "upload-hp" });
+    }
+  };
+
+  // Backup Versioning Functions
+  const fetchVersions = async () => {
+    setIsLoadingVersions(true);
+    try {
+      const q = query(collection(db, "homepage_versions"), orderBy("createdAt", "desc"));
+      const snap = await getDocs(q);
+      setVersions(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    } catch (err) {
+      console.error("Error fetching versions:", err);
+    } finally {
+      setIsLoadingVersions(false);
+    }
+  };
+
+  const handleCreateBackup = async () => {
+    const name = backupName.trim() || `Sauvegarde du ${new Date().toLocaleString()}`;
+    try {
+      toast.loading("Création de la sauvegarde...", { id: "backup" });
+      const payload = {
+        name,
+        sections,
+        banners,
+        createdAt: new Date().toISOString(),
+        adminEmail: currentUser?.email || "admin@olmart.dz",
+      };
+      await addDoc(collection(db, "homepage_versions"), payload);
+      setBackupName("");
+      toast.success("Point de sauvegarde créé !", { id: "backup" });
+      fetchVersions();
+    } catch (err) {
+      console.error(err);
+      toast.error("Erreur lors de la sauvegarde", { id: "backup" });
+    }
+  };
+
+  const handleRestoreBackup = async (version: any) => {
+    if (!window.confirm(`Êtes-vous sûr de vouloir restaurer la version "${version.name}" ? Les paramètres actuels de la page d'accueil (sections et bannières) seront écrasés.`)) {
+      return;
+    }
+    try {
+      toast.loading("Restauration de la sauvegarde...", { id: "restore" });
+
+      // Delete current sections
+      const secSnap = await getDocs(collection(db, "homepage_sections"));
+      for (const d of secSnap.docs) {
+        await deleteDoc(doc(db, "homepage_sections", d.id));
+      }
+
+      // Delete current banners
+      const banSnap = await getDocs(collection(db, "banners"));
+      for (const d of banSnap.docs) {
+        await deleteDoc(doc(db, "banners", d.id));
+      }
+
+      // Restore sections
+      const savedSections = version.sections || [];
+      const savedBanners = version.banners || [];
+
+      for (const item of savedSections) {
+        const { id, ...payload } = item;
+        await addDoc(collection(db, "homepage_sections"), payload);
+      }
+
+      // Restore banners
+      for (const item of savedBanners) {
+        const { id, ...payload } = item;
+        await addDoc(collection(db, "banners"), payload);
+      }
+
+      // Clear public homepage cache
+      try {
+        await deleteDoc(doc(db, "public", "homepage_cache"));
+      } catch (_) {}
+
+      toast.success("Restauration réussie avec succès !", { id: "restore" });
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      toast.error("Erreur lors de la restauration", { id: "restore" });
+    }
+  };
+
+  const handleDeleteVersion = async (id: string) => {
+    if (!window.confirm("Supprimer cette sauvegarde définitivement ?")) return;
+    try {
+      await deleteDoc(doc(db, "homepage_versions", id));
+      toast.success("Sauvegarde supprimée !");
+      fetchVersions();
+    } catch (err) {
+      console.error(err);
+      toast.error("Erreur de suppression");
     }
   };
 
@@ -368,10 +569,18 @@ export const HomepageBuilder: React.FC = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const collectionName = activeTab === "sections" ? "homepage_sections" : "banners";
-      const data = await fetchHookData(collectionName);
-      if (activeTab === "sections") setSections(data as any);
-      else if (activeTab === "banners") setBanners(data as any);
+      // Fetch both collections for real-time preview accuracy in both tabs
+      const rawSections = await fetchHookData("homepage_sections");
+      const rawBanners = await fetchHookData("banners");
+      
+      const sortedSections = [...(rawSections || [])].sort((a: any, b: any) => (a.orderIndex || 0) - (b.orderIndex || 0));
+      const sortedBanners = [...(rawBanners || [])].sort((a: any, b: any) => (a.orderIndex || 0) - (b.orderIndex || 0));
+
+      setSections(sortedSections as any);
+      setBanners(sortedBanners as any);
+
+      // Fetch version history too
+      fetchVersions();
     } catch (err) {
       console.error("Error fetching data:", err);
     } finally {

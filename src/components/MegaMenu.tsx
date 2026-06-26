@@ -96,7 +96,16 @@ export const MegaMenu: React.FC = () => {
                     className={`flex flex-col items-center justify-center gap-1 ${activeCategory === category.id ? "text-[#FF5C00]" : "text-[#3C2B22]/80 hover:text-[#FF5C00]"}`}
                     title={t(category.name) || category.name}
                   >
-                    <IconComponent className="w-8 h-8 stroke-[1.5]" />
+                    {category.iconUrl ? (
+                      <img
+                        src={category.iconUrl}
+                        alt={category.name}
+                        className="w-8 h-8 object-contain"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <IconComponent className="w-8 h-8 stroke-[1.5]" />
+                    )}
                   </span>
                 </button>
 
@@ -124,7 +133,7 @@ export const MegaMenu: React.FC = () => {
               <div className="grid grid-cols-12 gap-12">
                 {/* 1ère Colonne : Liste des sous-catégories (Sections) */}
                 <div className="col-span-3 pe-4">
-                  <h3 className="text-xl font-serif italic tracking-[0.1em] rtl:tracking-normal text-[#3C2B22] mb-6 uppercase">
+                  <h3 className="text-xl font-display italic tracking-[0.1em] rtl:tracking-normal text-[#3C2B22] mb-6 uppercase">
                     {t("sub_categories") || "Sous-catégories"}
                   </h3>
                   <ul className="flex flex-col gap-1">

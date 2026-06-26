@@ -79,6 +79,9 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                 <th className="p-5 text-[10px] font-kinder uppercase tracking-widest text-zinc-450">
                   {t("Client & Livrable")}
                 </th>
+                <th className="p-5 text-[10px] font-kinder uppercase tracking-widest text-zinc-450 w-48">
+                  {t("Produits")}
+                </th>
                 <th className="p-5 text-[10px] font-kinder uppercase tracking-widest text-zinc-450">
                   {t("Encaissable COD / 5% Math")}
                 </th>
@@ -135,6 +138,22 @@ export const OrderTable: React.FC<OrderTableProps> = ({
                         <span>
                           {order.shippingAddress?.wilaya} • {order.shippingAddress?.commune}
                         </span>
+                      </div>
+                    </td>
+
+                    <td className="p-5">
+                      <div className="flex flex-col gap-1 max-h-16 overflow-y-auto pr-1">
+                        {order.items?.map((item, idx) => (
+                          <div key={idx} className="flex justify-between items-start text-[10px]">
+                            <span
+                              className="font-semibold text-zinc-700 truncate max-w-[120px]"
+                              title={item.productName || item.name || "Produit"}
+                            >
+                              {item.productName || item.name || "Produit"}
+                            </span>
+                            <span className="font-mono font-bold text-zinc-500 ml-2">x{item.quantity}</span>
+                          </div>
+                        ))}
                       </div>
                     </td>
 

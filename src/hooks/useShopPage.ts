@@ -11,7 +11,7 @@ import {
   DocumentData,
   QueryDocumentSnapshot,
 } from "firebase/firestore";
-import { db } from "../lib/firebase";
+import { db, withTimeout } from "../lib/firebase";
 import { Product } from "../types";
 import { useShop } from "../context/ShopContext";
 import { useDebounce } from "./useDebounce";
@@ -79,7 +79,7 @@ export const useShopPage = () => {
   const fetchProductsSWR = async () => {
     const conditions = buildQueryConditions();
     const q = query(collection(db, "products"), ...conditions, limit(PRODUCTS_PER_PAGE));
-    const snap = await getDocs(q);
+    const snap = await withTimeout(getDocs(q));
     const productsFetched = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as unknown as Product);
     const lastDoc = snap.docs[snap.docs.length - 1] || null;
 
@@ -129,7 +129,7 @@ export const useShopPage = () => {
         startAfter(lastVisible),
         limit(PRODUCTS_PER_PAGE)
       );
-      const snap = await getDocs(q);
+      const snap = await withTimeout(getDocs(q));
       const newProducts = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as unknown as Product);
       setProducts((prev) => [...prev, ...newProducts.filter((p) => !prev.some((ep) => ep.id === p.id))]);
       setLastVisible(snap.docs.length > 0 ? snap.docs[snap.docs.length - 1] : null);

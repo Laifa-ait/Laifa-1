@@ -87,27 +87,32 @@ export const SellerDashboardLayout: React.FC = () => {
       </div>
 
       {/* Bottom Navigation for Mobile (App-like feel) */}
-      <div className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-sm">
-         <div className="bg-white/80 backdrop-blur-xl border border-zinc-200/50 shadow-2xl rounded-[2rem] p-2 flex items-center justify-around">
+      <div className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] w-[95%] max-w-sm">
+         <div className="bg-white/90 backdrop-blur-xl border border-[#E5DED4] shadow-2xl rounded-2xl p-2 flex items-center justify-around">
             {[
-               { to: '/dashboard/seller', icon: LayoutDashboard },
-               { to: '/dashboard/seller/orders', icon: ShoppingBag },
-               { to: '/dashboard/seller/catalog', icon: Box },
-               { to: '/dashboard/seller/wallet', icon: Wallet },
+               { to: '/dashboard/seller', icon: LayoutDashboard, label: t('Vue') },
+               { to: '/dashboard/seller/orders', icon: ShoppingBag, label: t('Commandes') },
+               { to: '/dashboard/seller/catalog', icon: Box, label: t('Catalogue') },
+               { to: '/dashboard/seller/wallet', icon: Wallet, label: t('Gains') },
             ].map((item) => (
                <NavLink
                   key={item.to}
                   to={item.to}
                   end={item.to === '/dashboard/seller'}
                   className={({ isActive }) => 
-                     `p-4 rounded-2xl transition-all ${
+                     `flex flex-col items-center justify-center p-2 rounded-xl transition-all ${
                         isActive 
-                        ? 'bg-[#ea580c] text-white shadow-lg shadow-orange-500/30' 
+                        ? 'text-[#C75C1A]' 
                         : 'text-zinc-400 hover:text-zinc-900'
                      }`
                   }
                >
-                  <item.icon className="w-6 h-6" />
+                  {({ isActive }) => (
+                    <>
+                      <item.icon className={`w-6 h-6 mb-1 ${isActive ? 'drop-shadow-[0_2px_8px_rgba(199,92,26,0.3)]' : ''}`} />
+                      <span className={`text-[10px] font-bold ${isActive ? 'text-[#C75C1A]' : 'text-zinc-500'}`}>{item.label}</span>
+                    </>
+                  )}
                </NavLink>
             ))}
          </div>

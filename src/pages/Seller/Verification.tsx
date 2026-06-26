@@ -163,7 +163,7 @@ export const Verification: React.FC = () => {
       const finalStatus = shouldReverify ? 'pending_verification' : status;
 
       // Primary Write: User Profile
-      (process.env.NODE_ENV === 'debug' ? console.log : function(){})("Writing to users/", uid, { documents: { fileRC: !!finalFileRC, fileId: !!finalFileId, fileRib: !!finalFileRib } });
+      (process.env.NODE_ENV === 'development' ? console.log : function(){})("Writing to users/", uid, { documents: { fileRC: !!finalFileRC, fileId: !!finalFileId, fileRib: !!finalFileRib } });
       await setDoc(doc(db, "users", uid), {
         brandName: formData.brandName,
         designStyle: formData.designStyle,
@@ -217,7 +217,7 @@ export const Verification: React.FC = () => {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'RC' | 'Id' | 'Rib') => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'RC' | 'Id' | 'Rib') => {
     const file = e.target.files?.[0];
     if (file) {
       const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
@@ -239,6 +239,55 @@ export const Verification: React.FC = () => {
       } else {
         setSelectedFileRib(file);
         setFormData(prev => ({ ...prev, fileRib: previewUrl }));
+      }
+
+      // Auto-OCR logic for RC and ID
+      if ((type === 'RC' && !formData.rcNumber) || (type === 'Id' && !formData.nifNumber)) {
+         try {
+           toast.loading(isArabic ? "جاري استخراج البيانات تلقائيًا..." : "Extraction automatique des données...", { id: "ocr-toast" });
+           
+           // Convert file to base64
+           const reader = new FileReader();
+           reader.onloadend = async () => {
+             const result = reader.result as string;
+             const base64Data = result.split(',')[1];
+             const authHeader = await auth.currentUser?.getIdToken();
+
+             const res = await fetch("/api/seller/ocr", {
+               method: "POST",
+               headers: {
+                 "Content-Type": "application/json",
+                 "Authorization": `Bearer ${authHeader}`
+               },
+               body: JSON.stringify({
+                 type: type === 'RC' ? 'RC' : 'ID',
+                 base64Data,
+                 mimeType: file.type
+               })
+             });
+
+             if (res.ok) {
+               const data = await res.json();
+               if (data.result) {
+                 if (type === 'RC' && data.result.rcNumber) {
+                   setFormData(prev => ({ ...prev, rcNumber: data.result.rcNumber }));
+                   toast.success(isArabic ? "تم استخراج رقم السجل التجاري!" : "Numéro RC extrait avec succès !", { id: "ocr-toast" });
+                 } else if (type === 'Id' && data.result.documentNumber) {
+                   setFormData(prev => ({ ...prev, nifNumber: data.result.documentNumber }));
+                   toast.success(isArabic ? "تم استخراج رقم الهوية!" : "Numéro d'identité extrait avec succès !", { id: "ocr-toast" });
+                 } else {
+                   toast.dismiss("ocr-toast");
+                 }
+               }
+             } else {
+               toast.dismiss("ocr-toast");
+             }
+           };
+           reader.readAsDataURL(file);
+         } catch (e) {
+           toast.dismiss("ocr-toast");
+           console.error("OCR Auto-fill error:", e);
+         }
       }
     }
   };

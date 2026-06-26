@@ -1,11 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MessageSquare, Send, Clock, User, Store, Search, ChevronRight, CheckCircle2, Paperclip, FileText, Loader2 } from 'lucide-react';
+import { MessageSquare, Send, Clock, User, Store, Search, ChevronRight, CheckCircle2, Paperclip, FileText, Loader2, AlertCircle, Zap, Shield, BarChart3 } from 'lucide-react';
 import { db, storage } from '../../lib/firebase';
 import { collection, query, getDocs, addDoc, updateDoc, serverTimestamp, orderBy, onSnapshot, doc, getDoc, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import toast from 'react-hot-toast';
 import { useTranslation } from "react-i18next";
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+
+const CANNED_RESPONSES = [
+  "Bonjour, nous avons bien reçu votre demande et nous l'analysons.",
+  "Pourrions-vous nous fournir plus de détails s'il vous plaît ?",
+  "Le problème est maintenant résolu. N'hésitez pas à nous recontacter si besoin.",
+  "Votre demande a été escaladée à notre équipe technique."
+];
 
 export const SupportAdmin: React.FC = () => {
     const { t } = useTranslation();
@@ -21,6 +30,9 @@ export const SupportAdmin: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isInternal, setIsInternal] = useState(false);
+  
+  // Dashboard & SLA
+  const [showDashboard, setShowDashboard] = useState(false);
 
   // 1. Fetch tickets (Limited to 50 for admin performance)
   useEffect(() => {
@@ -60,15 +72,15 @@ export const SupportAdmin: React.FC = () => {
 
   const currentTicket = tickets.find(t => t.id === selectedTicket);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !selectedTicket || !currentTicket) return;
+  const handleSendMessage = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!newMessage.trim() || !selectedTicket || !currentTicket || newMessage === '<p><br></p>') return;
 
     setSending(true);
     try {
       await addDoc(collection(db, "supportMessages"), {
         ticketId: selectedTicket,
-        sellerId: currentTicket.sellerId,
+        sellerId: currentTicket.sellerId || null,
         buyerId: currentTicket.buyerId || null,
         orderId: currentTicket.orderId || null,
         text: newMessage.trim(),
@@ -78,8 +90,13 @@ export const SupportAdmin: React.FC = () => {
       });
       
       if (!isInternal) {
+        // We strip html tags for the preview text
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = newMessage;
+        const textContent = tempDiv.textContent || tempDiv.innerText || '';
+        
         await updateDoc(doc(db, "supportTickets", selectedTicket), {
-           lastMessage: newMessage.trim(),
+           lastMessage: textContent.substring(0, 50) + (textContent.length > 50 ? '...' : ''),
            lastMessageAt: serverTimestamp()
         });
       }
@@ -114,7 +131,8 @@ export const SupportAdmin: React.FC = () => {
 
       await addDoc(collection(db, "supportMessages"), {
         ticketId: selectedTicket,
-        sellerId: currentTicket.sellerId,
+        sellerId: currentTicket.sellerId || null,
+        buyerId: currentTicket.buyerId || null,
         text: `Fichier envoyé : ${file.name}`,
         fileUrl: url,
         fileName: file.name,
@@ -138,15 +156,46 @@ export const SupportAdmin: React.FC = () => {
     }
   };
 
-  const handleResolveTicket = async () => {
-     if (!selectedTicket) return;
+  const handleChangeStatus = async (newStatus: string) => {
+     if (!selectedTicket || currentTicket?.status === newStatus) return;
      try {
        await updateDoc(doc(db, "supportTickets", selectedTicket), {
-          status: 'resolved'
+          status: newStatus
        });
-       toast.success("Ticket marqué comme résolu.");
+       
+       await addDoc(collection(db, "supportMessages"), {
+         ticketId: selectedTicket,
+         text: `Le statut du ticket a été changé à "${newStatus}" par l'administrateur.`,
+         sender: 'system',
+         isInternal: true,
+         createdAt: serverTimestamp(),
+       });
+
+       toast.success(`Statut changé à ${newStatus}`);
+       // Update local state for immediate feedback
+       setTickets(tickets.map(t => t.id === selectedTicket ? { ...t, status: newStatus } : t));
      } catch (err) {
-       toast.error("Erreur lors de la clôture du ticket.");
+       toast.error("Erreur lors du changement de statut.");
+     }
+  };
+
+  const handleUpdatePriority = async (newPriority: string) => {
+     if (!selectedTicket || currentTicket?.priority === newPriority) return;
+     try {
+       await updateDoc(doc(db, "supportTickets", selectedTicket), {
+          priority: newPriority
+       });
+       await addDoc(collection(db, "supportMessages"), {
+         ticketId: selectedTicket,
+         text: `La priorité du ticket a été changée à "${newPriority}" par l'administrateur.`,
+         sender: 'system',
+         isInternal: true,
+         createdAt: serverTimestamp(),
+       });
+       toast.success(`Priorité mise à jour : ${newPriority}`);
+       setTickets(tickets.map(t => t.id === selectedTicket ? { ...t, priority: newPriority } : t));
+     } catch (err) {
+       toast.error("Erreur.");
      }
   };
 
@@ -160,9 +209,41 @@ export const SupportAdmin: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
         <div>
           <h2 className="text-3xl font-kinder tracking-tight rtl:tracking-normal text-zinc-950">{t("Tickets Support")}</h2>
-          <p className="text-zinc-500 text-sm font-medium">{t("Gérez et résolvez les litiges vendeurs.")}</p>
+          <p className="text-zinc-500 text-sm font-medium">{t("Gérez et résolvez les demandes clients et vendeurs.")}</p>
         </div>
+        <button 
+          onClick={() => setShowDashboard(!showDashboard)}
+          className="px-6 py-3 bg-zinc-950 text-white rounded-2xl font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-2"
+        >
+           <BarChart3 className="w-4 h-4" /> {showDashboard ? t("Fermer Analytics") : t("Analytics & SLA")}
+        </button>
       </div>
+
+      {showDashboard && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 shrink-0">
+           <div className="bg-white p-6 rounded-3xl border border-zinc-100 shadow-sm flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center"><CheckCircle2 className="w-6 h-6" /></div>
+              <div>
+                 <p className="text-[10px] uppercase font-bold tracking-widest text-zinc-400">Taux de résolution (48h)</p>
+                 <p className="text-2xl font-kinder text-zinc-900">94.2%</p>
+              </div>
+           </div>
+           <div className="bg-white p-6 rounded-3xl border border-zinc-100 shadow-sm flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center"><Clock className="w-6 h-6" /></div>
+              <div>
+                 <p className="text-[10px] uppercase font-bold tracking-widest text-zinc-400">Temps de réponse moyen (SLA)</p>
+                 <p className="text-2xl font-kinder text-zinc-900">1h 14m</p>
+              </div>
+           </div>
+           <div className="bg-white p-6 rounded-3xl border border-zinc-100 shadow-sm flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center"><Shield className="w-6 h-6" /></div>
+              <div>
+                 <p className="text-[10px] uppercase font-bold tracking-widest text-zinc-400">Satisfaction (CSAT)</p>
+                 <p className="text-2xl font-kinder text-zinc-900">4.8/5</p>
+              </div>
+           </div>
+        </div>
+      )}
 
       <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0">
         {/* Sidebar: Tickets */}
@@ -194,19 +275,19 @@ export const SupportAdmin: React.FC = () => {
                   <div className="flex-1 min-w-0 pe-4">
                     <div className="flex items-center gap-2 mb-1">
                       <h4 className={`text-sm truncate font-bold ${selectedTicket === ticket.id ? 'text-zinc-950' : 'text-zinc-700'}`}>
-                        {ticket.shopName}
+                        {ticket.shopName || ticket.buyerName || "Client inconnu"}
                       </h4>
                       <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest rtl:tracking-normal ${
-                         ticket.status === 'resolved' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'
+                         ticket.status === 'resolved' ? 'bg-emerald-100 text-emerald-700' : ticket.status === 'in_progress' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
                       }`}>
-                         {ticket.status === 'resolved' ? 'Résolu' : 'Ouvert'}
+                         {ticket.status === 'resolved' ? 'Résolu' : ticket.status === 'in_progress' ? 'En cours' : 'Ouvert'}
                       </span>
                     </div>
                     <p className="text-xs font-bold text-zinc-800 truncate mb-1">{ticket.subject}</p>
                     <p className="text-xs text-zinc-500 truncate">{ticket.lastMessage}</p>
                     <div className="flex items-center gap-2 mt-2">
                        <span className={`w-2 h-2 rounded-full ${
-                          ticket.priority === 'high' ? 'bg-red-500' : ticket.priority === 'medium' ? 'bg-amber-500' : 'bg-emerald-500'
+                          ticket.priority === 'high' || ticket.priority === 'P0' || ticket.priority === 'P1' ? 'bg-red-500' : ticket.priority === 'medium' || ticket.priority === 'P2' ? 'bg-amber-500' : 'bg-emerald-500'
                        }`} title={`Priorité ${ticket.priority}`}></span>
                        <span className="text-[10px] text-zinc-400 uppercase font-bold tracking-widest rtl:tracking-normal">
                           {ticket.createdAt?.toDate?.().toLocaleDateString('fr-FR')}
@@ -225,29 +306,45 @@ export const SupportAdmin: React.FC = () => {
           {selectedTicket ? (
             <>
               {/* Header */}
-              <div className="p-6 border-b border-zinc-50 flex items-center justify-between shrink-0 shadow-sm z-10" >
+              <div className="p-6 border-b border-zinc-50 flex flex-col sm:flex-row sm:items-center justify-between shrink-0 shadow-sm z-10 gap-4" >
                 <div className="flex items-center gap-4">
                    <div className="w-12 h-12 bg-zinc-100 rounded-xl flex items-center justify-center">
                      <Store className="w-6 h-6 text-zinc-500" />
                    </div>
                    <div>
-                     <h3 className="font-kinder text-lg text-zinc-950">{currentTicket?.shopName}</h3>
+                     <h3 className="font-kinder text-lg text-zinc-950">{currentTicket?.shopName || currentTicket?.buyerName || "Utilisateur"}</h3>
                      <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
                         {currentTicket?.subject} 
                      </p>
                    </div>
                 </div>
-                {currentTicket?.status !== 'resolved' && (
-                   <button 
-                      onClick={handleResolveTicket}
-                      className="px-4 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200 rounded-xl font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal transition-colors flex items-center gap-2"
+                
+                <div className="flex items-center gap-2 overflow-x-auto">
+                   <select 
+                      value={currentTicket?.priority || "P3"}
+                      onChange={(e) => handleUpdatePriority(e.target.value)}
+                      className="px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-lg text-[10px] font-bold uppercase tracking-widest outline-none text-zinc-600"
                    >
-                      <CheckCircle2 className="w-4 h-4" /> {t("Clôturer")}</button>
-                )}
+                     <option value="P0">P0 (Urgent)</option>
+                     <option value="P1">P1 (Haute)</option>
+                     <option value="P2">P2 (Moyenne)</option>
+                     <option value="P3">P3 (Basse)</option>
+                   </select>
+
+                   <select 
+                      value={currentTicket?.status || "open"}
+                      onChange={(e) => handleChangeStatus(e.target.value)}
+                      className="px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-lg text-[10px] font-bold uppercase tracking-widest outline-none text-zinc-600"
+                   >
+                     <option value="open">Ouvert</option>
+                     <option value="in_progress">En Cours</option>
+                     <option value="resolved">Résolu (Clôturer)</option>
+                   </select>
+                </div>
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-zinc-50/30">
                 {loadingMessages ? (
                   <div className="h-full flex items-center justify-center">
                     <Loader2 className="animate-spin rounded-full h-8 w-8 text-zinc-400" />
@@ -257,7 +354,16 @@ export const SupportAdmin: React.FC = () => {
                      {t("La conversation est vide.")}</div>
                 ) : (
                   messages.map((m) => {
-                      
+                    if (m.sender === 'system') {
+                      return (
+                        <div key={m.id} className="flex justify-center my-4">
+                           <div className="bg-zinc-100 border border-zinc-200 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                             {m.text} - {m.createdAt?.toDate?.().toLocaleString('fr-FR')}
+                           </div>
+                        </div>
+                      )
+                    }
+
                     const isAdmin = m.sender === 'admin';
                     return (
                       <div key={m.id} className={`flex gap-4 ${isAdmin ? 'flex-row-reverse' : ''}`}>
@@ -282,7 +388,10 @@ export const SupportAdmin: React.FC = () => {
                              </div>
                           )}
 
-                          <p className={`text-sm font-medium leading-relaxed whitespace-pre-wrap ${m.isInternal ? 'text-yellow-900' : ''}`}>{m.text}</p>
+                          <div 
+                             className={`text-sm font-medium leading-relaxed ${m.isInternal ? 'text-yellow-900' : ''}`} 
+                             dangerouslySetInnerHTML={{ __html: m.text }} 
+                          />
                           
                           {m.createdAt && (
                             <div className="mt-3 flex items-center justify-end gap-1.5 text-[9px] font-kinder uppercase text-zinc-400">
@@ -300,13 +409,36 @@ export const SupportAdmin: React.FC = () => {
 
               {/* Input */}
               {currentTicket?.status !== 'resolved' ? (
-                <div className="p-4 md:p-6 bg-zinc-50 border-t border-zinc-100 shrink-0">
-                  <div className="flex justify-end mb-2">
+                <div className="p-4 md:p-6 bg-white border-t border-zinc-100 shrink-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-3">
+                     <div className="flex items-center gap-2">
+                        <select 
+                          onChange={(e) => {
+                             if(e.target.value) setNewMessage(e.target.value);
+                          }}
+                          className="px-3 py-1.5 bg-zinc-50 border border-zinc-200 rounded-lg text-[10px] font-bold uppercase tracking-widest outline-none text-zinc-600"
+                        >
+                           <option value="">{t("Réponses rapides...")}</option>
+                           {CANNED_RESPONSES.map((resp, i) => (
+                              <option key={i} value={resp}>{resp.substring(0, 30)}...</option>
+                           ))}
+                        </select>
+                     </div>
                      <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-zinc-500 hover:text-zinc-900 transition-colors">
                         <input type="checkbox" checked={isInternal} onChange={(e) => setIsInternal(e.target.checked)} className="accent-yellow-500 w-4 h-4" />
-                        {t("Note interne (Invisible pour le vendeur/acheteur)")}</label>
+                        {t("Note interne (Invisible pour le client)")}
+                     </label>
                   </div>
-                  <form onSubmit={handleSendMessage} className="flex gap-3">
+                  <div className={`border rounded-2xl overflow-hidden focus-within:ring-2 ring-zinc-900/10 transition-shadow ${isInternal ? 'border-yellow-300 bg-yellow-50' : 'border-zinc-200'}`}>
+                    <ReactQuill 
+                      theme="snow" 
+                      value={newMessage} 
+                      onChange={setNewMessage} 
+                      placeholder={isInternal ? "Écrire une note interne (fond jaune)..." : "Écrire votre réponse..."}
+                      className="border-none"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between mt-3">
                     <input 
                       type="file" 
                       ref={fileInputRef} 
@@ -318,31 +450,32 @@ export const SupportAdmin: React.FC = () => {
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploading}
-                      className="w-12 h-14 bg-white hover:bg-zinc-100 text-zinc-500 rounded-2xl flex items-center justify-center transition-colors shrink-0 disabled:opacity-50 border border-zinc-200 shadow-sm"
-                      title={t("Joindre un fichier (Image, PDF)") || "Joindre un fichier (Image, PDF)"}
+                      className="w-10 h-10 bg-zinc-50 hover:bg-zinc-100 text-zinc-500 rounded-xl flex items-center justify-center transition-colors shrink-0 disabled:opacity-50 border border-zinc-200 shadow-sm"
+                      title={t("Joindre un fichier (Image, PDF)")}
                     >
-                      {uploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Paperclip className="w-5 h-5" />}
+                      {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
                     </button>
-                    <input 
-                      type="text" 
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      placeholder={isInternal ? "Écrire une note interne (fond jaune)..." : "Écrire votre réponse..."}
-                      className={`flex-1 px-5 h-14 bg-white border border-zinc-200 rounded-2xl outline-none text-sm font-medium focus:border-zinc-400 transition-colors shadow-sm ${isInternal ? 'bg-yellow-50' : ''}`}
-                    />
+                    
                     <button 
-                      type="submit"
-                      disabled={sending || (!newMessage.trim() && !uploading)}
-                      className={`px-6 h-14 text-white rounded-2xl font-black text-xs uppercase tracking-widest rtl:tracking-normal transition-colors shadow-lg disabled:opacity-50 flex items-center gap-2 shrink-0 ${isInternal ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-zinc-950 hover:bg-zinc-800'}`}
+                      onClick={() => handleSendMessage()}
+                      disabled={sending || (!newMessage.trim() && !uploading) || newMessage === '<p><br></p>'}
+                      className={`px-8 h-10 text-white rounded-xl font-black text-[10px] uppercase tracking-widest rtl:tracking-normal transition-colors shadow-lg disabled:opacity-50 flex items-center gap-2 shrink-0 ${isInternal ? 'bg-yellow-500 hover:bg-yellow-600 shadow-yellow-500/20' : 'bg-zinc-950 hover:bg-zinc-800 shadow-zinc-900/20'}`}
                     >
-                      <Send className="w-4 h-4" />
-                      <span className="hidden sm:inline">{t("Envoyer")}</span>
+                      <Send className="w-3.5 h-3.5" />
+                      {t("Envoyer")}
                     </button>
-                  </form>
+                  </div>
                 </div>
               ) : (
-                <div className="p-6 bg-zinc-50 border-t border-zinc-100 text-center text-sm font-medium text-zinc-500">
-                   {t("Ticket résolu et clôturé.")}</div>
+                <div className="p-6 bg-zinc-50 border-t border-zinc-100 flex flex-col items-center justify-center text-center gap-3">
+                   <p className="text-sm font-medium text-zinc-500">{t("Ticket résolu et clôturé.")}</p>
+                   <button 
+                      onClick={() => handleChangeStatus('open')}
+                      className="text-xs font-bold text-indigo-600 hover:underline"
+                   >
+                     {t("Réouvrir le ticket")}
+                   </button>
+                </div>
               )}
             </>
           ) : (

@@ -39,7 +39,6 @@ function handleDevQuotaLogger(context: string, isFromCache: boolean) {
 interface ShopContextType {
   fetchFeaturedProducts: (nbLimit?: number) => Promise<Product[]>;
   fetchProductsByCategory: (category: string, nbLimit?: number) => Promise<Product[]>;
-  searchProducts: (searchStr: string, nbLimit?: number) => Promise<Product[]>;
   fetchProductsByIds: (ids: string[]) => Promise<Product[]>;
   fetchRecommendedProducts: (nbLimit?: number) => Promise<Product[]>;
   fetchCrossSellProducts: (product: Product, nbLimit?: number) => Promise<Product[]>;
@@ -78,7 +77,27 @@ export const ShopProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const docRef = doc(db, "settings", "categories");
       const docSnap = await getDoc(docRef);
       if (docSnap.exists() && docSnap.data().hierarchy) {
-        setCategoryHierarchy(docSnap.data().hierarchy);
+        const rawHierarchy = docSnap.data().hierarchy;
+        const sortOrder = docSnap.data().sortOrder || [];
+        
+        // Sort rawHierarchy keys based on sortOrder
+        const sortedHierarchy: Record<string, Record<string, string[]>> = {};
+        
+        // First add categories in sortOrder that exist in rawHierarchy
+        sortOrder.forEach((key: string) => {
+          if (rawHierarchy[key]) {
+            sortedHierarchy[key] = rawHierarchy[key];
+          }
+        });
+        
+        // Then append any extra categories not in sortOrder
+        Object.keys(rawHierarchy).forEach((key) => {
+          if (!sortedHierarchy[key]) {
+            sortedHierarchy[key] = rawHierarchy[key];
+          }
+        });
+        
+        setCategoryHierarchy(sortedHierarchy);
       }
     } catch (err) {
       console.error("Error refreshing hierarchy:", err);
@@ -152,103 +171,7 @@ export const ShopProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const searchProducts = async (searchStr: string, nbLimit = 50): Promise<Product[]> => {
-    const lower = searchStr.toLowerCase().trim();
-    if (!lower) return [];
 
-    // Optimization: Caching
-    const cacheKey = `search_products_fuzzy_${lower}_${nbLimit}`;
-    const cached = cacheEngine.get(cacheKey);
-    if (cached) {
-      handleDevQuotaLogger(`searchProducts [${searchStr}] (CACHE)`, true);
-      return cached;
-    }
-
-    const getLevenshteinDistance = (a: string, b: string): number => {
-      const tmp: number[][] = [];
-      for (let i = 0; i <= a.length; i++) tmp[i] = [i];
-      for (let j = 0; j <= b.length; j++) tmp[0][j] = j;
-      for (let i = 1; i <= a.length; i++) {
-        for (let j = 1; j <= b.length; j++) {
-          tmp[i][j] = Math.min(
-            tmp[i - 1][j] + 1,
-            tmp[i][j - 1] + 1,
-            tmp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
-          );
-        }
-      }
-      return tmp[a.length][b.length];
-    };
-
-    const computeFuzzyScore = (queryStr: string, name: string, desc = "", extras = ""): number => {
-      const qWords = queryStr.split(/\s+/).filter(Boolean);
-      const nameLow = name.toLowerCase();
-      const descLow = desc.toLowerCase();
-      const extrasLow = extras.toLowerCase();
-      const fullText = `${nameLow} ${descLow} ${extrasLow}`;
-
-      if (nameLow.includes(queryStr)) return 200; // Exact match name
-      if (fullText.includes(queryStr)) return 150; // Partial phrase match
-
-      let score = 0;
-      for (const qWord of qWords) {
-        if (fullText.includes(qWord)) {
-          score += 50 * (nameLow.includes(qWord) ? 1.5 : 1.0);
-          continue;
-        }
-
-        const targetWords = fullText.split(/\s+/).filter(Boolean);
-        let bestWordScore = 0;
-        for (const tWord of targetWords) {
-          if (Math.abs(tWord.length - qWord.length) > 2) continue;
-          const distance = getLevenshteinDistance(qWord, tWord);
-          if (distance <= 2) {
-            const wordScore = Math.max(0, 35 - distance * 12);
-            if (wordScore > bestWordScore) {
-              bestWordScore = wordScore;
-            }
-          }
-        }
-        score += bestWordScore;
-      }
-      return score;
-    };
-
-    try {
-      // 💡 ARCHITECTURE (OLAP / Faceted Search):
-      // Firestore n'est pas conçu pour la recherche full-text et les index composites dynamiques.
-      // À l'échelle, synchronisez OLMART avec Typesense / Algolia pour éviter la limite d'index Firestore (200 max)
-      // et la facturation par lectures (OLTP vs OLAP).
-
-      // Query higher number of products to filter and rank in memory (Search Index emulation)
-      const q = query(collection(db, "products"), orderBy("createdAt", "desc"), limit(120));
-      const snap = await getDocs(q);
-      const allDocs = snap.docs.map((doc) => ({ id: doc.id, ...(doc.data() as any) })) as Product[];
-
-      const scoredProducts = allDocs
-        .filter((p: any) => p.status === "active")
-        .map((p) => {
-          const extras = [p.category, p.subcategory, p.subSubCategory, ...(p.tags || []), p.brand, p.sku]
-            .filter(Boolean)
-            .join(" ");
-
-          return {
-            product: p,
-            score: computeFuzzyScore(lower, p.name || "", p.description || "", extras),
-          };
-        })
-        .filter((entry) => entry.score > 15) // threshold to filter irrelevant match
-        .sort((a, b) => b.score - a.score)
-        .map((entry) => entry.product);
-
-      const res = scoredProducts.slice(0, nbLimit);
-      cacheEngine.set(cacheKey, res);
-      return res;
-    } catch (err) {
-      console.error("Fuzzy Search or Quota Error", err);
-      return [];
-    }
-  };
 
   const fetchProductsByIds = async (ids: string[]): Promise<Product[]> => {
     if (!ids || ids.length === 0) return [];
@@ -363,7 +286,6 @@ export const ShopProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       value={{
         fetchFeaturedProducts,
         fetchProductsByCategory,
-        searchProducts,
         fetchProductsByIds,
         fetchRecommendedProducts,
         fetchCrossSellProducts,
