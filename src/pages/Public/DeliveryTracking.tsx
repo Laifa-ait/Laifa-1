@@ -6,10 +6,10 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { db } from "../../lib/firebase";
-import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
 import { formatPrice } from "../../utils/format";
 import { useTranslation } from "react-i18next";
+import toast from "react-hot-toast";
+import { CarrierTrackingEvent } from "../../types";
 
 interface StatusStep {
   title: string;
@@ -17,6 +17,7 @@ interface StatusStep {
   time: string;
   status: "completed" | "active" | "next";
   hub: string;
+  severity?: string;
 }
 
 export const DeliveryTracking: React.FC = () => {
@@ -46,116 +47,92 @@ export const DeliveryTracking: React.FC = () => {
     setSelectedCarrier('yalidine');
 
     try {
-      const dbQuery = query(collection(db, 'orders'), where('trackingId', '==', trackingInput.trim().toUpperCase()));
-      const snap = await getDocs(dbQuery);
-      
-      if (!snap.empty) {
-        setRealOrder({ id: snap.docs[0].id, ...snap.docs[0].data() });
+      const response = await fetch(`/api/public/tracking/${trackingInput.trim()}`);
+      if (response.ok) {
+        const data = await response.json();
+        setRealOrder(data);
       } else {
-        try {
-          const docRef = doc(db, 'orders', trackingInput.trim());
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-             setRealOrder({ id: docSnap.id, ...docSnap.data() });
-          } else {
-             // Fallback for uppercase IDs via query (since doc ID is exact match)
-             const q2 = query(collection(db, 'orders'), where('__name__', '==', trackingInput.trim()));
-             const snap2 = await getDocs(q2);
-             if (!snap2.empty) {
-                setRealOrder({ id: snap2.docs[0].id, ...snap2.docs[0].data() });
-             } else {
-                setErrorMsg('Aucun colis trouvé pour ce code de suivi.');
-             }
-          }
-        } catch(err) {
-             setErrorMsg('Aucun colis trouvé pour ce code de suivi.');
-        }
+        const errData = await response.json().catch(() => ({}));
+        const msg = errData.error || t('Aucun colis trouvé pour ce code de suivi.');
+        setErrorMsg(msg);
+        toast.error(msg);
       }
     } catch (err) {
-      setErrorMsg('Erreur serveur.');
+      const msg = t('Erreur de connexion au serveur.');
+      setErrorMsg(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
   };
 
-  // Generate real dynamic delivery routing based on code or input string
   const trackingData = useMemo(() => {
-    if (!searchedId) return null;
+    if (!searchedId || !realOrder) return null;
 
-    // Use string to extract custom seed or codes (e.g., DZ-XXXXXX)
-    const seed = searchedId.replace(/[^A-Za-z0-9]/g, "");
-    const codeNum = seed.length > 0 ? seed.charCodeAt(0) * (seed.charCodeAt(seed.length - 1) || 5) : 100;
-    
-    const wilayas = ["Alger", "Oran", "Constantine", "Setif", "Blida", "Jijel", "Tlemcen", "Annaba", "Boumerdes"];
-    const targetWilaya = wilayas[codeNum % wilayas.length];
-    
-    const codAmount = realOrder?.total || 0;
-    
-    const courierName = codeNum % 3 === 0 ? "Amine Y." : (codeNum % 3 === 1 ? "Mourad B." : "Kamel B.");
-    const courierPhone = `+213 (0) 55${(codeNum % 900) + 100} ${(codeNum % 80) + 10} ${(codeNum % 90) + 10}`;
+    const events = realOrder.carrier_tracking_events || [];
+    const sortedEvents = [...events].sort((a: CarrierTrackingEvent, b: CarrierTrackingEvent) => {
+       const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
+       const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
+       return dateB.getTime() - dateA.getTime();
+    });
 
-    // Status steps based on seed
-    const isDelivered = codeNum % 4 === 3;
-    const isShipped = codeNum % 4 === 2;
-    const isPreparing = codeNum % 4 === 1;
+    const isDelivered = realOrder.status === "delivered";
+    const isShipped = realOrder.status === "shipped";
+    const isPreparing = realOrder.status === "processing";
 
-    const steps: StatusStep[] = [
-      {
-        title: "Commande Validée",
-        desc: "La commande a été validée par la boutique. Le vendeur prépare le colis.",
-        time: "Il y a 3 jours, 09:30",
-        status: "completed",
-        hub: "Olma Main Warehouse"
-      },
-      {
-        title: "Colis Remis au Transporteur",
-        desc: `Bordereau enregistré. Colis déposé au Centre National à Alger.`,
-        time: "Il y a 2 jours, 14:15",
-        status: isPreparing ? "active" : "completed",
-        hub: "Hub Central - Alger (Yalidine Express)"
-      },
-      {
-        title: "En Transit Régional",
-        desc: `Expédié vers le centre régional de distribution de ${targetWilaya}.`,
-        time: "Hier, 21:00",
-        status: isPreparing ? "next" : (isShipped ? "active" : "completed"),
-        hub: `Hub Wilaya - Distribution ${targetWilaya}`
-      },
-      {
-        title: "En Cours de Livraison",
-        desc: `Colis pris en charge par le livreur local ${courierName} (${courierPhone}).`,
-        time: "Aujourd'hui, 08:45",
-        status: (isPreparing || isShipped) ? "next" : (isDelivered ? "completed" : "active"),
-        hub: `Secteur ${targetWilaya} Centre`
-      },
-      {
-        title: "Livré & Encaissé (COD)",
-        desc: "Colis remis au destinataire. Paiement en espèces reçu et validé.",
-        time: isDelivered ? "Aujourd'hui, 11:30" : "En attente",
-        status: isDelivered ? "completed" : "next",
-        hub: "Destination finale"
+    const steps: StatusStep[] = sortedEvents.map((evt: CarrierTrackingEvent, i: number) => {
+      const dateObj = evt.timestamp?.toDate ? evt.timestamp.toDate() : new Date(evt.timestamp);
+      const isLatest = i === 0;
+      
+      let status: "completed" | "active" | "next" = "completed";
+      if (isLatest && !isDelivered) {
+        status = "active";
       }
-    ];
+
+      return {
+        title: t(evt.status_key) || evt.raw_status || "Statut inconnu",
+        desc: evt.reason || t("Mise à jour logistique enregistrée."),
+        time: dateObj.toLocaleString(),
+        status,
+        hub: evt.location || "Plateforme Logistique",
+        severity: evt.severity || "Normal"
+      };
+    });
+
+    if (steps.length === 0) {
+      steps.push({
+        title: t("Commande Validée"),
+        desc: t("La commande est en attente d'expédition par le vendeur."),
+        time: t("En cours"),
+        status: "active",
+        hub: t("Entrepôt Vendeur"),
+        severity: "Normal"
+      });
+    }
 
     const currentStatusLabel = isDelivered 
-      ? "Livré avec succès" 
-      : (isShipped ? "En cours d'acheminement" : (isPreparing ? "En cours de préparation" : "En cours de distribution"));
+      ? t("Livré avec succès")
+      : (isShipped ? t("En cours d'acheminement") : (isPreparing ? t("En cours de préparation") : t("En cours de distribution")));
+
+    const clientName = realOrder.shippingAddress?.fullName || realOrder.userName || "Client Anonyme";
+    const wilaya = realOrder.shippingAddress?.city || realOrder.shippingAddress?.state || "Algérie";
+    const codAmount = realOrder.total || 0;
 
     return {
-      id: searchedId,
+      id: realOrder.trackingId || searchedId,
       carrier: selectedCarrier.toUpperCase(),
-      clientName: realOrder ? (realOrder.shippingAddress?.fullName || realOrder.userName || "Client Anonyme") : "Client Anonyme",
-      address: `Cité des 500 Logements, Bloc C, ${targetWilaya}, Algérie`,
-      phone: "+213 (0) 770 XX XX XX",
-      wilaya: targetWilaya,
+      clientName,
+      address: realOrder.shippingAddress?.address || `Destination: ${wilaya}`,
+      phone: "+213 (0) XXX XX XX XX",
+      wilaya,
       codAmount,
-      courierName,
-      courierPhone,
+      courierName: t("Livreur Partenaire"),
+      courierPhone: "",
       currentStatusLabel,
       steps,
       isDelivered,
     };
-  }, [searchedId, selectedCarrier, realOrder]);
+  }, [searchedId, selectedCarrier, realOrder, t]);
 
   return (
     <div className="min-h-screen bg-[#FDF9EC]/20 pb-20">
@@ -188,13 +165,13 @@ export const DeliveryTracking: React.FC = () => {
           
           <form onSubmit={handleSearch} className="max-w-2xl mx-auto flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400 w-5 h-5" />
+              <Search className="absolute start-5 top-1/2 -translate-y-1/2 text-zinc-400 w-5 h-5" />
               <input
                 type="text"
                 placeholder={t("Ex: DZ-94E1B3 ou ID Commande...") || "Ex: DZ-94E1B3 ou ID Commande..."}
                 value={trackingInput}
                 onChange={(e) => setTrackingInput(e.target.value)}
-                className="w-full pl-14 pr-6 py-4.5 bg-zinc-50 border border-zinc-200 focus:border-[#FF5C00] font-kinder text-[#3C2B22] rounded-2xl outline-none shadow-inner"
+                className="w-full ps-14 pe-6 py-4.5 bg-zinc-50 border border-zinc-200 focus:border-[#FF5C00] font-kinder text-[#3C2B22] rounded-2xl outline-none shadow-inner"
               />
             </div>
             <button
@@ -202,7 +179,7 @@ export const DeliveryTracking: React.FC = () => {
               className="px-8 py-4.5 bg-[#FF5C00] hover:bg-[#b04f30] text-white font-kinder text-xs uppercase tracking-widest rtl:tracking-normal rounded-2xl flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg cursor-pointer border-none"
             >
               {loading ? <Sparkles className="w-4 h-4 animate-spin" /> : <Navigation className="w-4 h-4" />}
-              {loading ? 'Recherche...' : 'Rechercher'}
+              {loading ? t('Recherche...') : t('Rechercher')}
             </button>
           </form>
           {errorMsg && <div className="mt-4 p-3 bg-red-50 text-red-600 rounded-xl text-xs font-bold text-center">{errorMsg}</div>}
@@ -232,7 +209,46 @@ export const DeliveryTracking: React.FC = () => {
 
         {/* Search Results Display */}
         <AnimatePresence mode="wait">
-          {trackingData ? (
+          {loading ? (
+            <motion.div
+              key="loading-skeleton"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-6"
+            >
+              {/* Header Skeleton */}
+              <div className="bg-white/60 backdrop-blur-md animate-pulse border border-zinc-100 rounded-[2.5rem] p-6 sm:p-10 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm">
+                <div className="space-y-4">
+                  <div className="h-4 w-32 bg-zinc-200/80 rounded-md"></div>
+                  <div className="h-8 w-64 bg-zinc-200/80 rounded-lg"></div>
+                  <div className="h-4 w-48 bg-zinc-200/80 rounded-md"></div>
+                </div>
+                <div className="h-16 w-16 bg-zinc-200/80 rounded-2xl"></div>
+              </div>
+
+              {/* Timeline Skeleton */}
+              <div className="bg-white rounded-[2.5rem] border border-zinc-100 shadow-xl p-6 sm:p-10 space-y-8">
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 bg-zinc-200 animate-pulse rounded-full"></div>
+                  <div className="h-5 w-56 bg-zinc-200 animate-pulse rounded-md"></div>
+                </div>
+                <div className="relative ps-6 sm:ps-8 space-y-10 before:absolute before:start-[11px] sm:before:start-[15px] before:top-2 before:bottom-2 before:w-[2px] before:bg-zinc-100">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="relative flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                      <div className="absolute -start-[23px] sm:-start-[31px] top-1 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-zinc-200 border-4 border-white shadow-sm"></div>
+                      <div className="space-y-3 flex-1">
+                        <div className="h-4 w-40 bg-zinc-200 animate-pulse rounded-md"></div>
+                        <div className="h-3 w-3/4 bg-zinc-200 animate-pulse rounded-md"></div>
+                        <div className="h-5 w-24 bg-zinc-100 animate-pulse rounded-md mt-2"></div>
+                      </div>
+                      <div className="h-3 w-20 bg-zinc-200 animate-pulse rounded-md mt-1 sm:mt-0"></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          ) : trackingData ? (
             <motion.div
               key={trackingData.id}
               initial={{ opacity: 0, y: 15 }}
@@ -258,7 +274,7 @@ export const DeliveryTracking: React.FC = () => {
                 <>
                   {/* Visual tracking summary banner */}
                   <div className="bg-[#3C2B22] text-white rounded-[2rem] p-6 sm:p-8 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-48 h-48 bg-[#FF5C00]/10 rounded-full blur-2xl pointer-events-none" />
+                    <div className="absolute top-0 end-0 w-48 h-48 bg-[#FF5C00]/10 rounded-full blur-2xl pointer-events-none" />
                     
                     <div className="space-y-3 relative z-10">
                       <div className="flex items-center gap-2">
@@ -286,12 +302,18 @@ export const DeliveryTracking: React.FC = () => {
                       <Layers className="w-5 h-5 text-[#FF5C00]" />
                       {t("Historique des étapes de distribution")}</h3>
 
-                    <div className="relative pl-6 sm:pl-8 space-y-8 before:absolute before:left-[11px] sm:before:left-[15px] before:top-2 before:bottom-2 before:w-[2px] before:bg-zinc-100">
+                    <div className="relative ps-6 sm:ps-8 space-y-8 before:absolute before:start-[11px] sm:before:start-[15px] before:top-2 before:bottom-2 before:w-[2px] before:bg-zinc-100">
                       {trackingData.steps.map((step, i) => (
                         <div key={i} className="relative flex flex-col sm:flex-row sm:items-start justify-between gap-2">
                           {/* Dot item */}
-                          <div className={`absolute -left-[23px] sm:-left-[31px] top-1 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center border-4 border-white shadow-md transition-all ${step.status === "completed" ? "bg-[#3C2B22] text-white" : (step.status === "active" ? "bg-[#FF5C00] text-white animate-pulse" : "bg-zinc-100 text-zinc-350")}`}>
-                            {step.status === "completed" ? (
+                          <div className={`absolute -start-[23px] sm:-start-[31px] top-1 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center border-4 border-white shadow-md transition-all 
+                            ${step.severity === 'error' ? 'bg-red-500 text-white' : 
+                              step.severity === 'success' ? 'bg-emerald-500 text-white' :
+                              step.severity === 'warning' ? 'bg-amber-500 text-white' :
+                              (step.status === "completed" ? "bg-[#3C2B22] text-white" : (step.status === "active" ? "bg-[#FF5C00] text-white animate-pulse" : "bg-zinc-100 text-zinc-350"))}`}>
+                            {(step.status === "completed" || step.severity === 'success' || step.severity === 'error' || step.severity === 'warning') ? (
+                              step.severity === 'error' ? <div className="w-2 h-2 rounded-full bg-white" /> :
+                              step.severity === 'warning' ? <div className="w-2 h-2 rounded-full bg-white" /> :
                               <Check className="w-3 h-3 text-white" />
                             ) : (
                               <div className={`w-1.5 h-1.5 rounded-full ${step.status === "active" ? "bg-white" : "bg-transparent"}`} />
@@ -299,7 +321,11 @@ export const DeliveryTracking: React.FC = () => {
                           </div>
 
                           <div className="space-y-1">
-                            <h4 className={`text-sm font-black uppercase tracking-tight rtl:tracking-normal ${step.status === "active" ? "text-[#FF5C00]" : (step.status === "completed" ? "text-[#3C2B22]" : "text-zinc-400")}`}>
+                            <h4 className={`text-sm font-black uppercase tracking-tight rtl:tracking-normal 
+                              ${step.severity === 'error' ? 'text-red-500' :
+                                step.severity === 'success' ? 'text-emerald-500' :
+                                step.severity === 'warning' ? 'text-amber-500' :
+                                (step.status === "active" ? "text-[#FF5C00]" : (step.status === "completed" ? "text-[#3C2B22]" : "text-zinc-400"))}`}>
                               {step.title}
                             </h4>
                             <p className="text-xs text-zinc-500 font-semibold leading-relaxed">
@@ -310,7 +336,7 @@ export const DeliveryTracking: React.FC = () => {
                             </span>
                           </div>
 
-                          <div className="text-left sm:text-right shrink-0">
+                          <div className="text-start sm:text-end shrink-0">
                             <span className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal">
                               {step.time}
                             </span>

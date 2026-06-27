@@ -16,7 +16,7 @@ i18n
       escapeValue: true,
     },
     react: {
-      useSuspense: true,
+      useSuspense: false,
     },
   });
 

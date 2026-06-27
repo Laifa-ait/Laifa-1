@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Zap, Clock, Flame, AlertCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Zap, Clock, Flame, AlertCircle, ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { db } from "../../lib/firebase";
 import { collection, query, limit, getDocs, where } from "firebase/firestore";
@@ -110,68 +110,64 @@ export const FlashSales: React.FC = () => {
   if (flashProducts.length === 0) return null;
 
   return (
-    <section className="py-8 sm:py-12 relative -mt-4 bg-transparent border-none">
-      <div className="w-full mx-auto px-1 sm:px-2 md:px-0">
-        <div className="relative border-4 border-white bg-white p-5 sm:p-8 rounded-[3rem] sm:rounded-[4rem] shadow-xl">
-          {/* Header Zone: Elegant, symmetry-driven layout with matching heights */}
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5 mb-8 md:mb-10 pb-6 border-b-[3px] border-rose-500/20">
+    <section className="mb-6 sm:mb-8 relative bg-transparent border-none">
+      <div className="w-full max-w-[90rem] mx-auto px-4 sm:px-6 md:px-8">
+        <div className="relative bg-white p-5 sm:p-8 rounded-3xl shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-rose-100/50">
+          {/* Header Zone: Elegant, symmetry-driven layout */}
+          <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6 md:mb-8">
             {/* Left Block: Info Hub (Title, Badges & Countdown Timer) */}
-            <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-8 w-full md:w-auto">
+            <div className="flex flex-col gap-4 w-full md:w-auto">
               {/* Title Block & Badges */}
               <div className="flex flex-col gap-2">
                 <div className="flex flex-wrap items-center gap-2">
                   {flashProducts.some((p) => p.flashSaleActive || p.promoPrice) && (
-                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-rose-500 text-white text-[10px] sm:text-[11px] font-sans font-sans font-bold uppercase tracking-wider animate-bounce shadow-md">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-500 text-[10px] sm:text-[11px] font-sans font-bold uppercase tracking-wider shadow-sm border border-rose-100">
                       <Flame className="w-3.5 h-3.5 fill-current animate-pulse" />
                       {t("home.flash.badge", "OFFRE LIMITÉE")}
                     </span>
                   )}
                   {flashProducts.some((p) => p.stock && p.stock > 0 && p.stock <= 20) && (
-                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-rose-50 text-rose-500 text-[10px] sm:text-[11px] font-sans font-sans font-bold uppercase tracking-wider shadow-sm border border-rose-200">
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-ping" />
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-orange-50 text-orange-600 text-[10px] sm:text-[11px] font-sans font-bold uppercase tracking-wider shadow-sm border border-orange-100">
+                      <span className="w-1.5 h-1.5 rounded-full bg-orange-600 animate-ping" />
                       {t("stock_scarcity", "STOCK FAIBLE")}
                     </span>
                   )}
                 </div>
-                <h2 className="font-sans font-bold text-3xl sm:text-4xl text-slate-900 uppercase leading-none drop-shadow-[0_2px_2px_rgba(0,0,0,0.05)]">
+                <h2 className="font-sans font-bold text-3xl sm:text-4xl md:text-5xl text-slate-900 leading-[1.1] tracking-tight">
                   {t("home.flash.title", "VENTES FLASH")}
                 </h2>
               </div>
 
-              {/* Chrono Pill with exact h-11 height matching the button */}
-              <div className="flex items-center justify-between sm:justify-start gap-4 bg-slate-900 text-white px-4 rounded-full shadow-md h-12 shrink-0 w-full sm:w-auto mt-2 md:mt-0 border-2 border-white/20">
-                <div className="flex items-center gap-2 shrink-0">
-                  <Clock className="w-4 h-4 text-rose-500 animate-spin" style={{ animationDuration: "4s" }} />
-                  <span className="text-[10px] sm:text-[11px] font-sans font-bold text-slate-50 uppercase tracking-widest rtl:tracking-normal">
+              {/* Chrono Pill */}
+              <div className="flex items-center gap-3 mt-1">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-rose-500" />
+                  <span className="text-[11px] sm:text-xs font-sans font-medium text-slate-500 uppercase tracking-wider">
                     {t("ends_in", "FINIT DANS")} :
                   </span>
                 </div>
 
-                {/* Inline countdown display (No bulky stacked label clutter) */}
-                <div className="flex items-center gap-1 font-sans font-bold text-sm sm:text-base">
-                  <span className="bg-white/20 px-2 py-0.5 rounded-lg text-white min-w-[2rem] text-center shadow-inner">
-                    {String(timeLeft.hours).padStart(2, "0")}
-                  </span>
-                  <span className="text-rose-500 animate-pulse text-xs font-bold">:</span>
-                  <span className="bg-white/20 px-2 py-0.5 rounded-lg text-white min-w-[2rem] text-center shadow-inner">
-                    {String(timeLeft.minutes).padStart(2, "0")}
-                  </span>
-                  <span className="text-rose-500 animate-pulse text-xs font-bold">:</span>
-                  <span className="bg-rose-500 px-2 py-0.5 rounded-lg text-white min-w-[2rem] text-center animate-pulse shadow-md border border-rose-500/40">
+                {/* Inline countdown display */}
+                <div className="flex items-center gap-1.5 font-mono text-sm sm:text-base font-bold text-slate-900">
+                  <div className="bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">{String(timeLeft.hours).padStart(2, "0")}</div>
+                  <span className="text-slate-300">:</span>
+                  <div className="bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">{String(timeLeft.minutes).padStart(2, "0")}</div>
+                  <span className="text-slate-300">:</span>
+                  <div className="bg-rose-50 text-rose-600 px-2.5 py-1 rounded-md border border-rose-100">
                     {String(timeLeft.seconds).padStart(2, "0")}
-                  </span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Right Block: CTA button perfectly aligned to the absolute right side */}
-            <div className="w-full md:w-auto flex justify-end mt-2 md:mt-0">
+            {/* View All & Chevrons Navigation */}
+            <div className="flex items-center justify-between md:justify-end w-full md:w-auto gap-4 mt-2 md:mt-0">
               <button
                 onClick={() => navigate("/ventes-flash")}
-                className="group flex gap-2 px-8 bg-rose-500 hover:bg-rose-600 text-white font-sans font-bold text-sm uppercase items-center justify-center rounded-full shadow-md transition-all duration-300 hover:scale-105 active:scale-95 border-2 border-white h-12 shrink-0 w-full md:w-auto tracking-wide"
+                className="group flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-slate-900 text-white font-sans font-medium text-sm hover:bg-slate-800 active:scale-95 transition-all shadow-md shrink-0 w-full sm:w-auto"
               >
                 <span>{t("VOIR TOUT LE DROP", "VOIR TOUT LE DROP")}</span>
-                <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1 border-2 border-white rounded-full p-0.5" />
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:translate-x-1" />
               </button>
             </div>
           </div>
@@ -180,21 +176,20 @@ export const FlashSales: React.FC = () => {
           <div className="relative group/carousel -mx-2 sm:-mx-4 md:mx-0">
             <button
               onClick={() => scroll("left")}
-              className="absolute left-4 md:-left-5 top-[35%] -translate-y-1/2 z-20 w-12 h-12 bg-white/90 hover:bg-white border-2 border-rose-200 rounded-full flex flex-col items-center justify-center shadow-xl opacity-0 group-hover/carousel:opacity-100 transition-all hover:scale-110 hidden md:flex active:scale-90"
+              className="absolute left-0 md:-left-4 top-[35%] -translate-y-1/2 z-20 w-10 h-10 bg-white/90 backdrop-blur-md border border-slate-200 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover/carousel:opacity-100 transition-all hover:scale-110 hidden md:flex active:scale-90 text-slate-600 hover:text-slate-900"
             >
-              <ChevronLeft className="w-6 h-6 text-slate-900" />
+              <ChevronLeft className="w-5 h-5" />
             </button>
             <button
               onClick={() => scroll("right")}
-              className="absolute right-4 md:-right-5 top-[35%] -translate-y-1/2 z-20 w-12 h-12 bg-white/90 hover:bg-white border-2 border-rose-200 rounded-full flex flex-col items-center justify-center shadow-xl opacity-0 group-hover/carousel:opacity-100 transition-all hover:scale-110 hidden md:flex active:scale-90"
+              className="absolute right-0 md:-right-4 top-[35%] -translate-y-1/2 z-20 w-10 h-10 bg-white/90 backdrop-blur-md border border-slate-200 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover/carousel:opacity-100 transition-all hover:scale-110 hidden md:flex active:scale-90 text-slate-600 hover:text-slate-900"
             >
-              <ChevronRight className="w-6 h-6 text-slate-900" />
+              <ChevronRight className="w-5 h-5" />
             </button>
 
             <div
               ref={scrollContainerRef}
-              className="flex overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] gap-4 sm:gap-6 px-2 sm:px-4 pb-4 overflow-y-hidden overscroll-x-contain"
-              style={{ WebkitOverflowScrolling: "touch" }}
+              className="flex overflow-x-auto desktop-scrollbar gap-4 sm:gap-6 px-2 sm:px-4 pb-4 overflow-y-hidden overscroll-x-contain snap-x snap-mandatory scroll-smooth"
             >
               {flashProducts.map((product, i) => {
                 // Respect User Intent: No fake/pseudo UI. Only true stock logic.
@@ -211,7 +206,7 @@ export const FlashSales: React.FC = () => {
                     className="w-[calc(44%-0.5rem)] sm:w-[calc(33.333%-0.666rem)] md:w-[calc(25%-0.75rem)] lg:w-[calc(20%-0.8rem)] shrink-0 flex flex-col justify-between"
                   >
                     {/* The Product Card */}
-                    <div className="bg-white rounded-2xl p-1.5 shadow-sm border border-rose-100 hover:border-rose-500/30 transition-all duration-300">
+                    <div className="bg-white rounded-none p-1.5 shadow-sm border border-rose-100 hover:border-rose-500/30 transition-all duration-300">
                       <ProductCard product={product} index={i} variant="flash_sale" />
 
                       {/* Real stock meter below card - only shown if we have valid logical data */}

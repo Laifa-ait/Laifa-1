@@ -54,7 +54,7 @@ const getGuideSections = (t: any) => [
   },
 ];
 
-export const exportManualToPDF = (t: any) => {
+const exportManualToPDF = (t: any) => {
   const doc = new jsPDF({
     orientation: "portrait",
     unit: "mm",

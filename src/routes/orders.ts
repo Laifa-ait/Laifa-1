@@ -714,38 +714,170 @@ router.post("/validate-coupon", authenticateToken, async (req: AuthenticatedRequ
 
 router.post("/webhooks/yalidine", async (req: AuthenticatedRequest, res: Response) => {
   try {
-    // Vérification de sécurité du Webhook
+    // 1. Sécurisation et Validation de l'Endpoint Webhook
     const apiKey = process.env.DELIVERY_API_KEY || process.env.YALIDINE_WEBHOOK_SECRET;
     const reqKey = req.headers['x-api-key'] || req.query.token || req.headers['authorization'];
     
-    // Si une clé est configurée sur le serveur mais non fournie ou incorrecte dans la requête
     if (apiKey && reqKey !== apiKey && reqKey !== `Bearer ${apiKey}`) {
        return res.status(401).json({ error: "Accès non autorisé au Webhook. Signature invalide." });
     }
 
-    const { order_id, tracking, status } = req.body;
-    
-    // Simplification webhook: "Delivered", "Returned", "Shipped"
-    // Dans Yalidine, les statuts peuvent être "Livre", "Retourne", etc.
-    
-    if (order_id && status) {
-       let targetStatus = "in_transit";
-       if (status.toLowerCase().includes("livré")) targetStatus = "delivered";
-       if (status.toLowerCase().includes("retour")) targetStatus = "returned";
-       if (status.toLowerCase().includes("expédié")) targetStatus = "shipped";
-       
-       await db.collection("orders").doc(order_id).update({
-          status: targetStatus,
-          trackingNumber: tracking || null,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp()
-       });
-       
-       // Note : les déclencheurs de commissions (walletBalance) sont gérés par les événements db.runTransaction standard. Il est recommandé de mutualiser la logique handleUpdateStatus du vendeur.
+    const payload = req.body;
+    // Supposons que Yalidine envoie { order_id, tracking, status, event_id, timestamp, location, reason }
+    // ou un tableau d'événements.
+    const order_id = payload.order_id || payload.tracking; // Fallback
+    const tracking = payload.tracking;
+    const rawStatus = payload.status;
+    const event_id = payload.event_id || `${rawStatus}_${payload.timestamp || Date.now()}`;
+    const timestamp = payload.timestamp ? new Date(payload.timestamp) : new Date();
+
+    if (!order_id || !rawStatus) {
+      return res.status(400).json({ error: "Missing order_id or status" });
     }
+
+    // 2. Matrice de Mapping Standardisée
+    let targetStatus = "TRACKING_STATUS_IN_TRANSIT";
+    let statusSeverity = "normal";
+    let orderStatus = "in_transit";
     
-    res.json({ success: true });
+    const s = rawStatus.toLowerCase();
+    if (s.includes("livré") || s.includes("delivered")) {
+      targetStatus = "TRACKING_STATUS_DELIVERED";
+      statusSeverity = "success";
+      orderStatus = "delivered";
+    } else if (s.includes("retour") || s.includes("returned")) {
+      targetStatus = "TRACKING_STATUS_RETURNED";
+      statusSeverity = "error";
+      orderStatus = "returned";
+    } else if (s.includes("expédié") || s.includes("shipped")) {
+      targetStatus = "TRACKING_STATUS_SHIPPED";
+      statusSeverity = "normal";
+      orderStatus = "shipped";
+    } else if (s.includes("annulé") || s.includes("canceled")) {
+      targetStatus = "TRACKING_STATUS_CANCELED";
+      statusSeverity = "error";
+      orderStatus = "cancelled";
+    } else if (s.includes("anomalie") || s.includes("échec")) {
+      targetStatus = "TRACKING_STATUS_ALERT";
+      statusSeverity = "warning";
+      orderStatus = "in_transit";
+    }
+
+    const newEvent = {
+      event_id,
+      status_key: targetStatus,
+      raw_status: rawStatus,
+      severity: statusSeverity,
+      timestamp: admin.firestore.Timestamp.fromDate(timestamp),
+      location: payload.location || "",
+      reason: payload.reason || ""
+    };
+
+    // 3. Garantie d'Idempotence avec Transaction
+    const orderRef = db.collection("orders").doc(order_id);
+    
+    await db.runTransaction(async (transaction) => {
+      const orderDoc = await transaction.get(orderRef);
+      if (!orderDoc.exists) {
+        // Optionnel : chercher par trackingId si order_id n'est pas l'ID Firestore
+        const querySnapshot = await db.collection("orders").where("trackingId", "==", order_id).limit(1).get();
+        if (querySnapshot.empty) {
+          throw new Error("Order not found");
+        }
+        const realOrderRef = querySnapshot.docs[0].ref;
+        const realOrderDoc = await transaction.get(realOrderRef);
+        
+        const existingEvents = realOrderDoc.data()?.carrier_tracking_events || [];
+        const eventExists = existingEvents.some((e: any) => e.event_id === event_id);
+        
+        if (!eventExists) {
+          const updatePayload: any = {
+            status: orderStatus,
+            carrier_tracking_events: admin.firestore.FieldValue.arrayUnion(newEvent),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          };
+
+          const data = realOrderDoc.data() || {};
+          const cStatus = data.status;
+
+          // Si c'est un échec de livraison (retourné avant d'être livré)
+          if (orderStatus === "returned" && cStatus !== "returned" && cStatus !== "returning" && cStatus !== "refunded") {
+             const buyerId = data.userId || data.buyerId;
+             if (buyerId && (data.walletDeducted > 0 || data.cashbackApplied > 0)) {
+                const buyerRef = db.collection("users").doc(buyerId);
+                const updatesForBuyer: any = {};
+                if (data.walletDeducted > 0) {
+                   updatesForBuyer.walletBalance = admin.firestore.FieldValue.increment(data.walletDeducted);
+                   const walletTxRef = db.collection("wallet_transactions").doc();
+                   transaction.set(walletTxRef, {
+                     userId: buyerId,
+                     orderId: realOrderRef.id,
+                     amount: data.walletDeducted,
+                     type: 'refund',
+                     description: `Remboursement suite à échec de livraison #${realOrderRef.id.substring(0, 8)}`,
+                     createdAt: new Date().toISOString(),
+                     status: 'completed'
+                   });
+                }
+                if (data.cashbackApplied > 0) {
+                   updatesForBuyer.cashbackBalance = admin.firestore.FieldValue.increment(data.cashbackApplied);
+                }
+                transaction.update(buyerRef, updatesForBuyer);
+                updatePayload.paymentStatus = data.walletDeducted > 0 ? "refunded" : (data.paymentStatus || "unpaid");
+             }
+          }
+
+          transaction.update(realOrderRef, updatePayload);
+        }
+      } else {
+        const existingEvents = orderDoc.data()?.carrier_tracking_events || [];
+        const eventExists = existingEvents.some((e: any) => e.event_id === event_id);
+        
+        if (!eventExists) {
+          const updatePayload: any = {
+            status: orderStatus,
+            carrier_tracking_events: admin.firestore.FieldValue.arrayUnion(newEvent),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          };
+
+          const data = orderDoc.data() || {};
+          const cStatus = data.status;
+
+          if (orderStatus === "returned" && cStatus !== "returned" && cStatus !== "returning" && cStatus !== "refunded") {
+             const buyerId = data.userId || data.buyerId;
+             if (buyerId && (data.walletDeducted > 0 || data.cashbackApplied > 0)) {
+                const buyerRef = db.collection("users").doc(buyerId);
+                const updatesForBuyer: any = {};
+                if (data.walletDeducted > 0) {
+                   updatesForBuyer.walletBalance = admin.firestore.FieldValue.increment(data.walletDeducted);
+                   const walletTxRef = db.collection("wallet_transactions").doc();
+                   transaction.set(walletTxRef, {
+                     userId: buyerId,
+                     orderId: orderRef.id,
+                     amount: data.walletDeducted,
+                     type: 'refund',
+                     description: `Remboursement suite à échec de livraison #${orderRef.id.substring(0, 8)}`,
+                     createdAt: new Date().toISOString(),
+                     status: 'completed'
+                   });
+                }
+                if (data.cashbackApplied > 0) {
+                   updatesForBuyer.cashbackBalance = admin.firestore.FieldValue.increment(data.cashbackApplied);
+                }
+                transaction.update(buyerRef, updatesForBuyer);
+                updatePayload.paymentStatus = data.walletDeducted > 0 ? "refunded" : (data.paymentStatus || "unpaid");
+             }
+          }
+
+          transaction.update(orderRef, updatePayload);
+        }
+      }
+    });
+
+    res.json({ success: true, message: "Webhook processed securely" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error("Yalidine Webhook Error:", err);
+    res.status(err.message === "Order not found" ? 404 : 500).json({ error: err.message });
   }
 });
 
@@ -806,6 +938,183 @@ router.post("/prepare-shipment", authenticateToken, authorizeSeller, async (req:
   }
 });
 
+
+router.post("/cron/sync-tracking", async (req: Request, res: Response) => {
+  try {
+    // Vérifier un secret Cron
+    const cronSecret = req.headers['x-cron-secret'] || req.query.secret;
+    if (process.env.CRON_SECRET && cronSecret !== process.env.CRON_SECRET) {
+      return res.status(401).json({ error: "Unauthorized cron access" });
+    }
+
+    const apiId = process.env.YALIDINE_API_ID;
+    const apiToken = process.env.YALIDINE_API_TOKEN;
+
+    if (!apiId || !apiToken) {
+       console.log("Yalidine API credentials missing. Skipping sync.");
+       return res.json({ success: true, syncedCount: 0, message: "Credentials missing" });
+    }
+
+    const snapshot = await db.collection("orders")
+      .where("status", "in", ["processing", "shipped", "in_transit"])
+      .get();
+
+    let syncedCount = 0;
+    
+    // Pour ne pas dépasser le rate limit, on requête Yalidine par batchs si nécessaire.
+    // L'API Yalidine /v1/histories/ supporte de multiples tracking_numbers séparés par virgule.
+    const trackingIds = snapshot.docs.map(d => d.data().trackingId).filter(Boolean);
+    
+    if (trackingIds.length === 0) {
+       return res.json({ success: true, syncedCount: 0, message: "No active orders to sync" });
+    }
+
+    // On découpe en paquets de 50 pour l'URL
+    const chunkSize = 50;
+    for (let i = 0; i < trackingIds.length; i += chunkSize) {
+      const chunk = trackingIds.slice(i, i + chunkSize);
+      try {
+        const response = await fetch(`https://api.yalidine.com/v1/histories/?tracking=${chunk.join(',')}`, {
+          headers: { 
+             "X-API-ID": apiId, 
+             "X-API-TOKEN": apiToken 
+          }
+        });
+
+        if (!response.ok) {
+           console.error("Yalidine sync failed for chunk", chunk, await response.text());
+           continue;
+        }
+
+        const json = await response.json();
+        const dataArray = json.data || [];
+
+        // Grouper par trackingId
+        const trackingEventsMap = new Map<string, any[]>();
+        for (const item of dataArray) {
+           const trc = item.tracking;
+           if (!trackingEventsMap.has(trc)) trackingEventsMap.set(trc, []);
+           trackingEventsMap.get(trc)!.push(item);
+        }
+
+        for (const [trackingNumber, events] of trackingEventsMap.entries()) {
+           // Trouver la commande
+           const orderQuery = await db.collection("orders").where("trackingId", "==", trackingNumber).limit(1).get();
+           if (orderQuery.empty) continue;
+           
+           const orderRef = orderQuery.docs[0].ref;
+           
+           await db.runTransaction(async (transaction) => {
+             const doc = await transaction.get(orderRef);
+             const orderData = doc.data() || {};
+             const existingEvents = orderData.carrier_tracking_events || [];
+             
+             let hasNewEvents = false;
+             const updatedEvents = [...existingEvents];
+             let latestOrderStatus = orderData.status;
+
+             // Trier les événements Yalidine par date
+             events.sort((a, b) => new Date(a.date_heure).getTime() - new Date(b.date_heure).getTime());
+
+             for (const evt of events) {
+                const rawStatus = evt.status;
+                const event_id = evt.id ? String(evt.id) : `${rawStatus}_${evt.date_heure}`;
+                
+                const exists = updatedEvents.some((e: any) => e.event_id === event_id);
+                if (exists) continue;
+
+                let targetStatus = "TRACKING_STATUS_IN_TRANSIT";
+                let statusSeverity = "normal";
+                let computedOrderStatus = "in_transit";
+                
+                const s = rawStatus.toLowerCase();
+                if (s.includes("livré") || s.includes("delivered") || s.includes("livre")) {
+                  targetStatus = "TRACKING_STATUS_DELIVERED";
+                  statusSeverity = "success";
+                  computedOrderStatus = "delivered";
+                } else if (s.includes("retour") || s.includes("returned")) {
+                  targetStatus = "TRACKING_STATUS_RETURNED";
+                  statusSeverity = "error";
+                  computedOrderStatus = "returned";
+                } else if (s.includes("expédié") || s.includes("shipped")) {
+                  targetStatus = "TRACKING_STATUS_SHIPPED";
+                  statusSeverity = "normal";
+                  computedOrderStatus = "shipped";
+                } else if (s.includes("annulé") || s.includes("canceled")) {
+                  targetStatus = "TRACKING_STATUS_CANCELED";
+                  statusSeverity = "error";
+                  computedOrderStatus = "cancelled";
+                } else if (s.includes("anomalie") || s.includes("échec")) {
+                  targetStatus = "TRACKING_STATUS_ALERT";
+                  statusSeverity = "warning";
+                }
+
+                updatedEvents.push({
+                  event_id,
+                  status_key: targetStatus,
+                  raw_status: rawStatus,
+                  severity: statusSeverity,
+                  timestamp: admin.firestore.Timestamp.fromDate(new Date(evt.date_heure)),
+                  location: evt.wilaya || evt.commune || "",
+                  reason: evt.motif || ""
+                });
+                
+                latestOrderStatus = computedOrderStatus;
+                hasNewEvents = true;
+             }
+
+             if (hasNewEvents) {
+                const updatePayload: any = {
+                  status: latestOrderStatus,
+                  carrier_tracking_events: updatedEvents,
+                  updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                };
+
+                const cStatus = orderData.status;
+
+                // Refund logic
+                if (latestOrderStatus === "returned" && cStatus !== "returned" && cStatus !== "returning" && cStatus !== "refunded") {
+                   const buyerId = orderData.userId || orderData.buyerId;
+                   if (buyerId && (orderData.walletDeducted > 0 || orderData.cashbackApplied > 0)) {
+                      const buyerRef = db.collection("users").doc(buyerId);
+                      const updatesForBuyer: any = {};
+                      if (orderData.walletDeducted > 0) {
+                         updatesForBuyer.walletBalance = admin.firestore.FieldValue.increment(orderData.walletDeducted);
+                         const walletTxRef = db.collection("wallet_transactions").doc();
+                         transaction.set(walletTxRef, {
+                           userId: buyerId,
+                           orderId: orderRef.id,
+                           amount: orderData.walletDeducted,
+                           type: 'refund',
+                           description: `Remboursement suite à échec de livraison #${orderRef.id.substring(0, 8)}`,
+                           createdAt: new Date().toISOString(),
+                           status: 'completed'
+                         });
+                      }
+                      if (orderData.cashbackApplied > 0) {
+                         updatesForBuyer.cashbackBalance = admin.firestore.FieldValue.increment(orderData.cashbackApplied);
+                      }
+                      transaction.update(buyerRef, updatesForBuyer);
+                      updatePayload.paymentStatus = orderData.walletDeducted > 0 ? "refunded" : (orderData.paymentStatus || "unpaid");
+                   }
+                }
+
+                transaction.update(orderRef, updatePayload);
+                syncedCount++;
+             }
+           });
+        }
+      } catch (err) {
+        console.error(`Error syncing tracking chunk:`, err);
+      }
+    }
+
+    res.json({ success: true, syncedCount, message: "Tracking sync completed" });
+  } catch (error: any) {
+    console.error("Cron sync tracking error:", error);
+    res.status(500).json({ error: "Internal server error during sync" });
+  }
+});
 
 router.post('/calculate-commissions', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {

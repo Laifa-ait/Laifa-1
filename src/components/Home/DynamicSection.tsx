@@ -376,7 +376,7 @@ export const DynamicSection: React.FC<{ section: HomepageSection; isFramed?: boo
               className="group relative flex items-center gap-1 px-3 py-1.5 rounded-full border border-slate-200 bg-white/50 hover:bg-white/80 text-[8.5px] font-sans font-bold text-slate-900 uppercase tracking-[0.1em] transition-all cursor-pointer shadow-sm"
             >
               <span>{seeMoreLabel}</span>
-              <ArrowRight className="w-3 h-3 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform duration-300 text-sky-500 stroke-[2.5]" />
+              <ArrowRight className="w-3 h-3 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform duration-300 text-zinc-900 stroke-[2.5]" />
             </button>
 
             {userProfile?.role === "admin" && (
@@ -401,7 +401,7 @@ export const DynamicSection: React.FC<{ section: HomepageSection; isFramed?: boo
       <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-2.5">
         <h3 className="text-lg sm:text-xl font-extralight text-slate-900 tracking-tight rtl:tracking-normal leading-none font-display flex items-center gap-2">
           {section.subtitle && (
-            <span className="text-[9px] rtl:text-[11px] font-sans font-bold tracking-[0.15em] text-sky-500 select-none animate-pulse hidden sm:inline uppercase me-2">
+            <span className="text-[9px] rtl:text-[11px] font-sans font-bold tracking-[0.15em] text-zinc-900 select-none animate-pulse hidden sm:inline uppercase me-2">
               ✦ {section.subtitle} ✦
             </span>
           )}
@@ -420,7 +420,7 @@ export const DynamicSection: React.FC<{ section: HomepageSection; isFramed?: boo
           className="group relative flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 text-[8.5px] sm:text-[9.2px] font-bold text-slate-900 uppercase tracking-[0.25em] transition-all shadow-sm hover:shadow-md cursor-pointer animate-fade-in"
         >
           <span>{seeMoreLabel}</span>
-          <ArrowRight className="w-3 h-3 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform duration-300 text-sky-500 stroke-[2.5]" />
+          <ArrowRight className="w-3 h-3 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform duration-300 text-zinc-900 stroke-[2.5]" />
         </button>
       </div>
     );
@@ -429,14 +429,14 @@ export const DynamicSection: React.FC<{ section: HomepageSection; isFramed?: boo
   const getCardStyle = () => {
     switch (section.style) {
       case "glass":
-        return "bg-white/40 backdrop-blur-md border border-white/60 shadow-sm rounded-[1.5rem] hover:bg-white/60";
+        return "bg-white/40 backdrop-blur-md border border-white/60 shadow-sm rounded-none hover:bg-white/60";
       case "minimal":
-        return "bg-transparent border border-zinc-200 rounded-xl hover:border-zinc-300";
+        return "bg-transparent border border-zinc-200 rounded-none hover:border-zinc-300";
       case "immersive":
-        return "bg-slate-900 rounded-[1.5rem] overflow-hidden shadow-lg border border-slate-200/20 hover:shadow-2xl hover:-translate-y-1 relative";
+        return "bg-slate-900 rounded-none overflow-hidden shadow-lg border border-slate-200/20 hover:shadow-2xl hover:-translate-y-1 relative";
       case "premium":
       default:
-        return "bg-white rounded-[1.5rem] shadow-sm border border-slate-100 hover:shadow-md hover:-translate-y-1";
+        return "bg-white rounded-none shadow-sm border border-slate-100 hover:shadow-md hover:-translate-y-1";
     }
   };
 
@@ -475,7 +475,7 @@ export const DynamicSection: React.FC<{ section: HomepageSection; isFramed?: boo
 
   if (section.type === "flash_sale") {
     return (
-      <div className="w-full bg-gradient-to-br from-[#0C0303] via-[#2F0606] to-[#0D0101] py-8 sm:py-12 mb-8 rounded-xl border-2 border-red-500/20 shadow-[0_25px_60px_rgba(220,38,38,0.25)] relative overflow-hidden ring-4 ring-red-500/5">
+      <div className="w-full bg-gradient-to-br from-[#0C0303] via-[#2F0606] to-[#0D0101] py-8 sm:py-12 mb-8 rounded-none border-2 border-red-500/20 shadow-[0_25px_60px_rgba(220,38,38,0.25)] relative overflow-hidden ring-4 ring-red-500/5">
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-red-600/10 rounded-full blur-[130px] pointer-events-none" />
         <div className="absolute -bottom-20 -left-10 w-[450px] h-[450px] bg-orange-650/10 rounded-full blur-[150px] pointer-events-none" />
 
@@ -484,7 +484,7 @@ export const DynamicSection: React.FC<{ section: HomepageSection; isFramed?: boo
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-12 gap-6">
             <div className="flex flex-col">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-red-650 to-orange-550 rounded-lg flex items-center justify-center text-white shadow-[0_8px_20px_rgba(220,38,38,0.35)] relative animate-pulse">
+                <div className="w-12 h-12 bg-gradient-to-br from-red-650 to-orange-550 rounded-none flex items-center justify-center text-white shadow-[0_8px_20px_rgba(220,38,38,0.35)] relative animate-pulse">
                   <Zap className="w-6 h-6 fill-white" />
                   <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-black flex items-center justify-center">
                     <span className="w-1.5 h-1.5 bg-sky-50 rounded-full animate-ping" />
@@ -503,7 +503,7 @@ export const DynamicSection: React.FC<{ section: HomepageSection; isFramed?: boo
 
             <button
               onClick={() => navigate("/ventes-flash")}
-              className="px-8 py-3.5 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white rounded-lg text-[11px] font-sans font-bold uppercase tracking-widest rtl:tracking-normal shadow-xl transition-all active:scale-95 flex items-center gap-2 group border-none cursor-pointer"
+              className="px-8 py-3.5 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white rounded-none text-[11px] font-sans font-bold uppercase tracking-widest rtl:tracking-normal shadow-xl transition-all active:scale-95 flex items-center gap-2 group border-none cursor-pointer"
             >
               <span>{t("VOIR TOUTES LES OFFRES")}</span>
               <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -516,7 +516,7 @@ export const DynamicSection: React.FC<{ section: HomepageSection; isFramed?: boo
               [...Array(6)].map((_, i) => (
                 <div
                   key={i}
-                  className="w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.666rem)] md:w-[calc(25%-0.75rem)] lg:w-[calc(16.666%-0.833rem)] shrink-0 aspect-[2/3] bg-zinc-900/40 border border-white/5 animate-pulse rounded-xl"
+                  className="w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.666rem)] md:w-[calc(25%-0.75rem)] lg:w-[calc(16.666%-0.833rem)] shrink-0 aspect-[2/3] bg-zinc-900/40 border border-white/5 animate-pulse rounded-none"
                 />
               ))
             ) : products.length > 0 ? (
@@ -533,7 +533,7 @@ export const DynamicSection: React.FC<{ section: HomepageSection; isFramed?: boo
                   <div className="shrink-0 flex items-center justify-center p-4">
                     <button
                       onClick={loadMore}
-                      className="px-6 py-3 bg-red-600/20 text-red-500 hover:bg-red-600 hover:text-white rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all cursor-pointer whitespace-nowrap"
+                      className="px-6 py-3 bg-red-600/20 text-red-500 hover:bg-red-600 hover:text-white rounded-none font-bold text-[10px] uppercase tracking-widest transition-all cursor-pointer whitespace-nowrap"
                     >
                       {t("Afficher plus")}
                     </button>
@@ -560,7 +560,7 @@ export const DynamicSection: React.FC<{ section: HomepageSection; isFramed?: boo
             {[...Array(section.limit || section.rules?.maxItems || 8)].map((_, i) => (
               <div
                 key={i}
-                className="snap-start snap-always shrink-0 w-[calc(50%-0.5rem)] sm:w-[calc((100%-2rem)/3)] md:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-4rem)/5)] xl:w-[calc((100%-5rem)/6)] aspect-[4/5] bg-stone-200/50 animate-pulse rounded-3xl"
+                className="snap-start snap-always shrink-0 w-[calc(50%-0.5rem)] sm:w-[calc((100%-2rem)/3)] md:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-4rem)/5)] xl:w-[calc((100%-5rem)/6)] aspect-[4/5] bg-stone-200/50 animate-pulse rounded-none"
               />
             ))}
           </div>
@@ -609,14 +609,14 @@ export const DynamicSection: React.FC<{ section: HomepageSection; isFramed?: boo
   }
 
   const containerBgClass = hasActiveImage
-    ? "relative z-10 p-4 sm:p-6 pb-5 sm:pb-7 rounded-[2rem] animate-fade-in " +
+    ? "relative z-10 p-4 sm:p-6 pb-5 sm:pb-7 rounded-none animate-fade-in " +
       "bg-gradient-to-b from-white/10 via-white/5 to-transparent border-[1.5px] border-white/30 " +
       "shadow-sm"
-    : "bg-white border border-slate-100 p-4 sm:p-6 pb-5 sm:pb-7 rounded-[2rem] shadow-sm animate-fade-in";
+    : "bg-white border border-slate-100 p-4 sm:p-6 pb-5 sm:pb-7 rounded-none shadow-sm animate-fade-in";
 
   return (
     <section
-      className="py-12 sm:py-20 relative"
+      className="py-4 sm:py-6 relative mb-6 sm:mb-8"
       style={!themeClasses() ? { backgroundColor: section.backgroundColor || "transparent" } : {}}
     >
       {renderThemeWrapper()}
@@ -630,7 +630,7 @@ export const DynamicSection: React.FC<{ section: HomepageSection; isFramed?: boo
               {[...Array(section.limit || section.rules?.maxItems || 8)].map((_, i) => (
                 <div
                   key={i}
-                  className="snap-start snap-always shrink-0 w-[calc(50%-0.5rem)] sm:w-[calc((100%-2rem)/3)] md:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-4rem)/5)] xl:w-[calc((100%-5rem)/6)] aspect-[4/5] bg-stone-200/50 animate-pulse rounded-3xl"
+                  className="snap-start snap-always shrink-0 w-[calc(50%-0.5rem)] sm:w-[calc((100%-2rem)/3)] md:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-4rem)/5)] xl:w-[calc((100%-5rem)/6)] aspect-[4/5] bg-stone-200/50 animate-pulse rounded-none"
                 />
               ))}
             </div>

@@ -7,7 +7,7 @@ import { ALGERIA_REGIONS } from "../../data/algeriaRegions";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 
-export interface ShippingAddress {
+interface ShippingAddress {
   id: string;
   wilaya: string;
   daira: string;

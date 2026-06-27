@@ -94,13 +94,3 @@ export function sanitizeXSS(input: string): string {
   return sanitized;
 }
 
-/**
- * Enhanced full-strip function for simple plain text inputs (such as product titles, tags, category names).
- * Allows absolutely zero HTML.
- */
-export function stripAllHTML(input: string): string {
-  if (!input) return "";
-  const sanitized = sanitizeXSS(input);
-  // Strip any remaining html tags of form <...> or </...>
-  return sanitized.replace(/<[^>]*>/g, "").trim();
-}

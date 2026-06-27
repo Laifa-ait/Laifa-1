@@ -260,6 +260,16 @@ export type OrderStatus =
   | "DISPUTE_RESOLVED"
   | "CANCELED";
 
+export interface CarrierTrackingEvent {
+  event_id: string;
+  status_key: string;
+  raw_status: string;
+  severity: "normal" | "success" | "warning" | "error" | string;
+  timestamp: any; // Can be string, number, or Firestore Timestamp
+  location: string;
+  reason: string;
+}
+
 export interface ReturnRequest {
   id: string;
   reason: string;
@@ -307,6 +317,7 @@ export interface Order {
   // Logistics API reference
   trackingNumber?: string;
   trackingId?: string;
+  carrier_tracking_events?: CarrierTrackingEvent[];
   deliveryProvider?: 'Yalidine' | 'Maystro' | 'KaziTour' | 'Autre';
   shippingLabelUrl?: string;
 

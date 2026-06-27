@@ -806,7 +806,7 @@ export const Checkout: React.FC = () => {
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8 border-t border-stone-100">
                    <button 
-                     onClick={() => navigate('/orders')}
+                     onClick={() => navigate('/delivery-tracking')}
                      className="btn-premium-orange"
                    >
                       {t("track_order") || "Suivre ma commande"}

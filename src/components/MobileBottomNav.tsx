@@ -76,7 +76,7 @@ export const MobileBottomNav: React.FC = () => {
               strokeWidth={cart.length > 0 ? 2.5 : 2}
             />
             {cart.length > 0 && (
-              <span className="absolute -top-1.5 -right-2 w-4.5 h-4.5 bg-sky-500 text-white text-[9px] rounded-full flex items-center justify-center font-bold border-[1.5px] border-white shadow-sm">
+              <span className="absolute -top-1.5 -right-2 w-4.5 h-4.5 bg-zinc-900 text-white text-[9px] rounded-full flex items-center justify-center font-bold border-[1.5px] border-white shadow-sm">
                 {cart.length}
               </span>
             )}

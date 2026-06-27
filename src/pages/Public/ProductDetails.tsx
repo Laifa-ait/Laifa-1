@@ -175,7 +175,7 @@ export const ProductDetails: React.FC = () => {
     <div className="min-h-screen flex flex-col items-center justify-center text-center bg-slate-50">
       <ShoppingBag className="w-16 h-16 text-slate-800/30 mb-4" />
       <h1 className="text-2xl font-sans font-bold tracking-tight text-slate-800 mb-4">{t("common.not_found") || "Produit non trouvé"}</h1>
-      <button onClick={() => navigate('/shop')} className="px-8 py-3.5 bg-slate-800 hover:bg-sky-500 text-white font-sans font-bold tracking-tight text-sm uppercase tracking-widest rounded-full transition-all cursor-pointer shadow-md">
+      <button onClick={() => navigate('/shop')} className="px-8 py-3.5 bg-slate-800 hover:bg-zinc-900 text-white font-sans font-bold tracking-tight text-sm uppercase tracking-widest rounded-full transition-all cursor-pointer shadow-md">
         {t("common.back_to_shop") || "Retour à la boutique"}
       </button>
     </div>
@@ -286,7 +286,7 @@ export const ProductDetails: React.FC = () => {
           <div className="mt-16 sm:mt-24">
             <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4 px-2">
               <div>
-                <div className="flex items-center gap-2 text-sky-500 font-bold text-[11px] uppercase tracking-widest rtl:tracking-normal mb-2 bg-sky-500/5 self-start px-3 py-1 rounded-full border border-sky-500/20 w-fit">
+                <div className="flex items-center gap-2 text-zinc-900 font-bold text-[11px] uppercase tracking-widest rtl:tracking-normal mb-2 bg-zinc-900/5 self-start px-3 py-1 rounded-full border border-zinc-900/20 w-fit">
                   <Flame className="w-4 h-4 animate-pulse" /> {t("product.premium_selection") || "Sélection Premium"}
                 </div>
                 <h3 className="font-sans font-bold tracking-tight text-3xl sm:text-4xl text-slate-800 uppercase tracking-wide drop-shadow-sm">

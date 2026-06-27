@@ -43,7 +43,7 @@ const app = express();
 const PORT = 3000;
 
 // Tell Express to trust reverse proxy headers securely by whitelisting trusted local and internal subnets
-app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal']);
+app.set('trust proxy', 1);
 
 import rateLimit from "express-rate-limit";
 

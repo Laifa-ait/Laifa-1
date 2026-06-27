@@ -53,7 +53,7 @@ export const ReturnManagement: React.FC = () => {
          } else if (action === 'rejected') {
             targetStatusVal = 'return_rejected';
          } else if (action === 'received') {
-            targetStatusVal = 'returned';
+            targetStatusVal = 'refunded'; // Déclenche le remboursement dans le backend
          }
 
          const response = await fetch("/api/seller/orders/status", {
@@ -153,8 +153,8 @@ export const ReturnManagement: React.FC = () => {
                                            </div>
                                         )}
                                         {r.returnRequest.status === 'approved' && (
-                                           <button onClick={() => handleReturnAction(r.id, 'received')} className="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl font-bold text-xs hover:bg-blue-100 transition-colors">
-                                              {t("Marquer comme reçu")}</button>
+                                           <div className="flex flex-col items-end gap-1"><button onClick={() => handleReturnAction(r.id, 'received')} disabled={!r.carrier_tracking_events || !r.carrier_tracking_events.some((e: any) => e.status_key === 'TRACKING_STATUS_RETURNED')} className="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl font-bold text-xs hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                              {t("Marquer comme reçu & Rembourser")}</button> {(!r.carrier_tracking_events || !r.carrier_tracking_events.some((e: any) => e.status_key === 'TRACKING_STATUS_RETURNED')) && <div className='text-[10px] text-amber-600 mt-1 flex items-center gap-1'><AlertCircle className='w-3 h-3'/>{t('En attente du transporteur')}</div>}</div>
                                         )}
                                      </div>
                                   );

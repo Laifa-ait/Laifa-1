@@ -52,14 +52,25 @@ export const ProductGallery: React.FC<GalleryProps> = ({
           <div className="absolute inset-0 z-20 bg-black flex items-center justify-center">
             <video
               key={productVideoUrl}
-              src={productVideoUrl}
+              src={`/api/proxy-video?url=${encodeURIComponent(productVideoUrl)}`}
               controls
               playsInline
+              autoPlay
               muted
               loop
-              autoPlay
+              preload="metadata"
               className="w-full h-full object-contain bg-black"
             />
+            {productVideoUrl && (
+              <a 
+                href={productVideoUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="absolute top-4 right-[60px] bg-white/80 px-3 py-2 rounded shadow z-30 text-xs font-bold text-black"
+              >
+                Ouvrir la vidéo
+              </a>
+            )}
             <button
               onClick={(e) => {
                 e.stopPropagation();

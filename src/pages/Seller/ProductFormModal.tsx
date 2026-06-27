@@ -398,8 +398,12 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
          }
       }
 
+      const metadata = {
+        contentType: type === 'image' ? 'image/webp' : file.type || 'video/mp4'
+      };
+
       const uploadPromise = new Promise((resolve, reject) => {
-         const uploadTask = uploadBytesResumable(storageRef, uploadFile as Blob);
+         const uploadTask = uploadBytesResumable(storageRef, uploadFile as Blob, metadata);
          uploadTask.on('state_changed',
            (snapshot) => {
               const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;

@@ -1,12 +1,12 @@
 import React from "react";
 import { motion } from "motion/react";
-import { Heart, Star, Store, TrendingUp, Zap, Eye, Flame } from "lucide-react";
+import { Heart, Zap, Flame } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { Product } from "../../types";
 import { formatPrice } from "../../utils/format";
-import { getCategoryTranslation, getTranslatedField } from "../../utils/translations";
+import { getTranslatedField } from "../../utils/translations";
 import { getOptimizedImageUrl } from "../../utils/imageUtils";
 
 interface ProductCardProps {
@@ -54,191 +54,155 @@ export const ProductCard = React.memo(
 
     return (
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 15 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        transition={{ delay: (index % 10) * 0.05 }}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        className={`group flex flex-col bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl border border-slate-100 hover:border-sky-500/30 transition-all duration-500 cursor-pointer h-full ${sectionStyle || ""}`}
+        transition={{ delay: ((index || 0) % 10) * 0.05, duration: 0.4 }}
+        whileHover={{ y: -4 }}
+        className={`group flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl border border-slate-100 transition-all duration-500 cursor-pointer h-full ${sectionStyle || ""}`}
         onClick={() => defaultClick(product)}
       >
         {variant === "premium_immersive" ? (
-          <div className="relative aspect-[3/4] bg-stone-900 overflow-hidden shrink-0 flex items-end">
-            <img
-              loading="lazy"
-              src={getOptimizedImageUrl(product.image, 400)}
-              alt={getSpelledCorrectly(getTranslatedField(product, "name", lang))}
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              referrerPolicy="no-referrer"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src =
-                  "https://images.unsplash.com/photo-1555529771-835f59fc5efe?auto=format&fit=crop&q=80&w=800";
-              }}
-            />
-            {/* Dark gradient so text is readable */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent z-10" />
-
-            {/* Badges Overlay */}
-            <div className="absolute top-3 right-3 flex items-center gap-1.5 z-20">
-              {product.promoPrice && product.promoPrice < product.price && (
-                <span className="bg-rose-500 text-white px-2 py-1 text-[10px] rtl:text-[12px] font-bold rounded">
-                  -{Math.round(((product.price - product.promoPrice) / product.price) * 100)}%
-                </span>
-              )}
-              <button
-                aria-label={wishlist.includes(product.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleWishlist(product.id);
-                }}
-                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white transition-all shadow-sm hover:bg-white/20 active:scale-90"
-              >
-                <Heart
-                  className={`w-4 h-4 sm:w-5 sm:h-5 ${wishlist.includes(product.id) ? "fill-pink-500 text-pink-500 stroke-pink-500" : "stroke-[2]"}`}
-                />
-              </button>
-            </div>
-
-            {/* Content OVER image */}
-            <div className="relative z-10 w-full p-4 flex flex-col">
-              <span className="font-sans font-bold text-[9px] rtl:text-[11px] uppercase tracking-widest rtl:tracking-normal text-zinc-300 mb-0.5">
-                {getCategoryTranslation(product.category, t) || product.category || "Mode"}
-              </span>
-              <h3 className="font-kinder text-white text-[15px] sm:text-[17px] leading-tight line-clamp-1 mb-0.5 drop-shadow-md">
-                {getSpelledCorrectly(getTranslatedField(product, "name", lang))}
-              </h3>
-              <div className="flex items-center gap-1.5 text-zinc-300 mb-2 font-sans font-bold text-[10px] rtl:text-[12px] tracking-wider rtl:tracking-normal uppercase">
-                <Store className="w-3.5 h-3.5 text-sky-500" />
-                <span className="truncate max-w-[120px]">{product.sellerName || "Olma Seller"}</span>
-              </div>
-
-              <div className="flex items-center gap-2 mb-1">
-                <span className="font-kinder text-white text-[18px] sm:text-[20px] drop-shadow-md">
-                  {formatPrice(product.promoPrice || product.price)}
-                </span>
-                {product.promoPrice && product.promoPrice < product.price && (
-                  <span className="font-sans font-bold text-[12px] text-slate-400 line-through">{formatPrice(product.price)}</span>
-                )}
-              </div>
-            </div>
-          </div>
-        ) : (
           <>
-            {/* Top: Image Section -> Vertical ratio */}
-            <div className="relative aspect-[4/5] bg-slate-50 overflow-hidden shrink-0">
-              <div className="w-full h-full relative rounded-none overflow-hidden">
-                <img
-                  loading="lazy"
-                  src={getOptimizedImageUrl(product.image, 400)}
-                  alt={getSpelledCorrectly(getTranslatedField(product, "name", lang))}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src =
-                      "https://images.unsplash.com/photo-1555529771-835f59fc5efe?auto=format&fit=crop&q=80&w=800";
-                  }}
-                />
-              </div>
-
-              <div className="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-black/5 group-hover:bg-transparent transition-colors duration-300 z-10 pointer-events-none" />
+            <div className="relative aspect-[4/5] sm:aspect-[3/4] w-full bg-zinc-50 overflow-hidden group">
+              <img
+                loading="lazy"
+                src={getOptimizedImageUrl(product.image, 600)}
+                alt={getSpelledCorrectly(getTranslatedField(product, "name", lang))}
+                className="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src =
+                    "https://images.unsplash.com/photo-1555529771-835f59fc5efe?auto=format&fit=crop&q=80&w=800";
+                }}
+              />
+              <div className="absolute inset-0 bg-black/[0.02] pointer-events-none" />
 
               {/* Badges Overlay */}
-              <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-20">
-                <div className="flex flex-col gap-2">
-                  {product.isSponsored && (
-                    <span className="inline-flex items-center gap-1 bg-slate-900 text-white font-sans font-bold text-[9px] rtl:text-[11px] uppercase tracking-widest rtl:tracking-normal px-2.5 py-1 rounded-full shadow-sm">
-                      <Zap className="w-3 h-3 fill-white" /> {t("SPONSORED")}
-                    </span>
-                  )}
-                  {isProductFlashActive ? (
-                    <span className="inline-flex items-center gap-1 bg-rose-500 text-white font-sans text-[9px] sm:text-[10px] font-kinder uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md animate-pulse border border-white">
-                      <Flame className="w-3 h-3 fill-current" />
-                      {t("VENTE FLASH")} -
-                      {Math.round(((product.price - (product.flashPrice || product.price)) / product.price) * 100)}%
-                    </span>
-                  ) : (
-                    product.promoPrice &&
-                    product.promoPrice < product.price && (
-                      <span className="inline-block bg-rose-500 text-white font-sans font-bold text-[10px] rtl:text-[12px] tracking-widest rtl:tracking-normal px-2.5 py-1 rounded-full shadow-sm border border-white">
-                        -{Math.round(((product.price - product.promoPrice) / product.price) * 100)}%
-                      </span>
-                    )
-                  )}
-                  {product.stock <= 0 ? (
-                    <span className="inline-block bg-slate-900 text-white font-sans font-bold text-[9px] rtl:text-[11px] uppercase tracking-widest rtl:tracking-normal px-2.5 py-1 rounded-full shadow-sm border border-white">
-                      {t("SOLD OUT")}
-                    </span>
-                  ) : product.stock <= 5 ? (
-                    <span className="inline-block bg-rose-50 text-rose-500 font-sans font-kinder text-[9px] rtl:text-[11px] uppercase tracking-widest rtl:tracking-normal px-2.5 py-1 rounded-full shadow-sm border border-white">
-                      {t("DROP LIMITÉ")}
-                    </span>
-                  ) : null}
-                </div>
+              <div className="absolute top-3 left-3 flex flex-col items-start gap-1.5 z-20">
+                {product.promoPrice && product.promoPrice < product.price && !isProductFlashActive && (
+                  <span className="bg-zinc-900 text-white px-2.5 py-1 text-[11px] font-bold rounded-md shadow-sm">
+                    -{Math.round(((product.price - product.promoPrice) / product.price) * 100)}%
+                  </span>
+                )}
+                {isProductFlashActive && (
+                  <span className="flex items-center gap-1.5 bg-rose-500 text-white px-2.5 py-1 text-[11px] font-bold rounded-md shadow-sm animate-pulse">
+                    <Flame className="w-3.5 h-3.5" />
+                    {t("VENTE FLASH")} -{Math.round(((product.price - (product.flashPrice || product.price)) / product.price) * 100)}%
+                  </span>
+                )}
+              </div>
 
+              {/* Wishlist Button */}
+              <div className="absolute top-3 right-3 z-20">
                 <button
                   aria-label={wishlist.includes(product.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleWishlist(product.id);
                   }}
-                  className="w-9 h-9 rounded-full bg-white backdrop-blur-md border border-slate-200 flex items-center justify-center text-slate-900 hover:text-pink-500 hover:bg-slate-50 transition-colors shadow-md"
+                  className="w-9 h-9 rounded-full bg-white/90 backdrop-blur text-slate-400 flex items-center justify-center shadow-sm hover:text-rose-500 hover:bg-white hover:scale-110 active:scale-95 transition-all"
                 >
                   <Heart
-                    className={`w-4 h-4 ${wishlist.includes(product.id) ? "fill-pink-500 text-pink-500" : "stroke-[2]"}`}
+                    className={`w-4 h-4 ${wishlist.includes(product.id) ? "fill-rose-500 text-rose-500" : "stroke-[2]"}`}
                   />
                 </button>
               </div>
             </div>
 
-            {/* Bottom: Content Section */}
-            <div className="p-4 sm:p-5 flex flex-col flex-1 bg-white">
-              <div className="flex items-center justify-between gap-1.5 sm:gap-2 mb-2">
-                <span className="font-sans font-bold text-[9px] rtl:text-[11px] uppercase tracking-widest rtl:tracking-normal text-slate-500 px-2 py-0.5 bg-slate-50 rounded-full">
-                  {getCategoryTranslation(product.category, t) || product.category || "Mode"}
-                </span>
-              </div>
-
-              <h3 className="font-kinder text-slate-900 text-[15px] sm:text-[17px] leading-tight line-clamp-2 mb-2 group-hover:text-sky-500 transition-colors">
+            {/* Content Section */}
+            <div className="p-4 sm:p-5 bg-[#0f0f11] flex flex-col flex-1 border-t border-white/5">
+              <h3 className="font-sans font-medium text-white/90 text-[15px] sm:text-[16px] leading-snug line-clamp-2 mb-2 group-hover:text-white transition-colors">
                 {getSpelledCorrectly(getTranslatedField(product, "name", lang))}
               </h3>
 
-              <div className="flex items-center gap-1.5 text-slate-500 mb-4 font-sans font-bold text-[10px] rtl:text-[12px] tracking-wider rtl:tracking-normal uppercase">
-                <Store className="w-3.5 h-3.5 text-sky-500" />
-                <span className="truncate max-w-[120px]">{product.sellerName || "Olma Seller"}</span>
+              <div className="mt-auto flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                <span className="font-sans font-bold text-white text-[18px]">
+                  {formatPrice(isProductFlashActive ? product.flashPrice : product.promoPrice || product.price)}
+                </span>
+                {((product.promoPrice && product.promoPrice < product.price) ||
+                  (isProductFlashActive && product.flashPrice && product.flashPrice < product.price)) && (
+                  <span className="font-sans font-medium text-[13px] text-zinc-500 line-through">
+                    {formatPrice(product.price)}
+                  </span>
+                )}
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Default/Flash Sale Variant */}
+            <div className="relative aspect-[4/5] w-full bg-slate-50 overflow-hidden group">
+              <img
+                loading="lazy"
+                src={getOptimizedImageUrl(product.image, 400)}
+                alt={getSpelledCorrectly(getTranslatedField(product, "name", lang))}
+                className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-1000 ease-[0.16,1,0.3,1] group-hover:scale-105"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src =
+                    "https://images.unsplash.com/photo-1555529771-835f59fc5efe?auto=format&fit=crop&q=80&w=800";
+                }}
+              />
+              <div className="absolute inset-0 bg-slate-900/5 mix-blend-multiply group-hover:bg-transparent transition-colors duration-500 pointer-events-none" />
+
+              {/* Badges Overlay */}
+              <div className="absolute top-3 left-3 flex flex-col items-start gap-1.5 z-20 pointer-events-none">
+                {product.isSponsored && (
+                  <span className="flex items-center gap-1 bg-slate-900/80 backdrop-blur-md text-white font-sans font-bold text-[9px] uppercase tracking-wider px-2 py-1 rounded-full shadow-sm border border-white/20">
+                    <Zap className="w-3 h-3" /> {t("SPONSORISÉ")}
+                  </span>
+                )}
+                {isProductFlashActive ? (
+                  <span className="flex items-center gap-1.5 bg-rose-500 text-white font-sans font-bold text-[10px] uppercase tracking-wider px-2 py-1 rounded-full shadow-sm animate-pulse border border-rose-400">
+                    <Flame className="w-3 h-3" />
+                    -{Math.round(((product.price - (product.flashPrice || product.price)) / product.price) * 100)}%
+                  </span>
+                ) : (
+                  product.promoPrice &&
+                  product.promoPrice < product.price && (
+                    <span className="bg-slate-900 text-white font-sans font-bold text-[10px] px-2.5 py-1 rounded-full shadow-sm">
+                      -{Math.round(((product.price - product.promoPrice) / product.price) * 100)}%
+                    </span>
+                  )
+                )}
               </div>
 
-              <div className="mt-auto flex flex-col gap-3">
+              {/* Wishlist Button */}
+              <div className="absolute top-3 right-3 z-20">
+                <button
+                  aria-label={wishlist.includes(product.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleWishlist(product.id);
+                  }}
+                  className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-white hover:scale-110 active:scale-95 transition-all shadow-sm pointer-events-auto border border-slate-200"
+                >
+                  <Heart
+                    className={`w-4 h-4 ${wishlist.includes(product.id) ? "fill-rose-500 text-rose-500" : "stroke-[2]"}`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Content Section */}
+            <div className="p-4 flex flex-col flex-1 bg-white border-t border-slate-100/60">
+              <h3 className="font-sans font-semibold text-slate-800 text-[14px] sm:text-[15px] leading-snug line-clamp-2 mb-2 group-hover:text-slate-900 transition-colors">
+                {getSpelledCorrectly(getTranslatedField(product, "name", lang))}
+              </h3>
+
+              <div className="mt-auto flex flex-col gap-1">
                 <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                  <span className="font-kinder text-slate-900 text-[18px] sm:text-[20px]">
+                  <span className="font-sans font-bold text-slate-900 text-[16px] sm:text-[17px] tracking-tight">
                     {formatPrice(isProductFlashActive ? product.flashPrice : product.promoPrice || product.price)}
                   </span>
                   {((product.promoPrice && product.promoPrice < product.price) ||
                     (isProductFlashActive && product.flashPrice && product.flashPrice < product.price)) && (
-                    <span className="font-sans font-bold text-[12px] text-slate-400 line-through">
+                    <span className="font-sans font-medium text-[12px] text-slate-400 line-through">
                       {formatPrice(product.price)}
                     </span>
                   )}
                 </div>
-
-                {isFlashSale && (
-                  <div className="flex flex-col gap-1.5 mt-2">
-                    <div className="flex items-center justify-between font-sans font-kinder text-[9px] rtl:text-[11px] uppercase text-rose-500">
-                      <span className="animate-pulse flex items-center gap-1">{t("⏱️ VITE!")}</span>
-                      <span className="flex items-center gap-1 bg-red-50 px-2 py-0.5 border border-red-100 rounded-full">
-                        🔥 {Math.min(9, ((parseInt(product.id.slice(-1), 16) || 4) % 6) + 2)} {t("RESTANTS")}
-                      </span>
-                    </div>
-                    <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-rose-400 to-rose-600"
-                        style={{
-                          width: `${Math.max(25, ((parseInt(product.id.slice(0, 2), 16) || 75) % 65) + 20)}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </>
@@ -247,3 +211,4 @@ export const ProductCard = React.memo(
     );
   }
 );
+

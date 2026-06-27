@@ -109,7 +109,7 @@ export const Navbar: React.FC = () => {
         <div className="flex items-center mx-auto w-full max-w-[90rem] justify-between">
           <div className="flex items-center gap-6">
             <span className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-sky-500 shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-zinc-900 shrink-0" />
               {t("trust_delivery")}
             </span>
             <span className="text-slate-600">|</span>
@@ -163,10 +163,10 @@ export const Navbar: React.FC = () => {
                onClick={handleLogoClick}
                className="flex items-center gap-2 shrink-0 select-none cursor-pointer group bg-transparent border-none"
              >
-               <OlmaLogo className="w-8 h-8 sm:w-10 sm:h-10 text-sky-500 group-hover:scale-105 transition-transform duration-300" />
+               <OlmaLogo className="w-8 h-8 sm:w-10 sm:h-10 text-zinc-900 group-hover:scale-105 transition-transform duration-300" />
                <span className="font-display font-bold text-2xl sm:text-3xl tracking-tight text-slate-900 uppercase hidden sm:block">
                  {t("Olma")}
-                 <span className="text-sky-500">{t("rt")}</span>
+                 <span className="text-zinc-900">{t("rt")}</span>
                </span>
             </button>
           </div>
@@ -180,7 +180,7 @@ export const Navbar: React.FC = () => {
           <div className="flex items-center justify-end gap-3 sm:gap-5 relative lg:w-1/4 shrink-0">
             <button
               onClick={() => setIsSearchOpen(true)}
-              className="flex items-center justify-center text-slate-600 hover:bg-slate-100 hover:text-sky-500 transition-colors cursor-pointer bg-transparent border-none w-9 h-9 sm:w-10 sm:h-10 rounded-full lg:hidden"
+              className="flex items-center justify-center text-slate-600 hover:bg-slate-100 hover:text-zinc-900 transition-colors cursor-pointer bg-transparent border-none w-9 h-9 sm:w-10 sm:h-10 rounded-full lg:hidden"
             >
               <Search className="w-5 h-5 sm:w-6 sm:h-6 stroke-[1.5]" />
             </button>
@@ -201,7 +201,7 @@ export const Navbar: React.FC = () => {
               {isLangDropdownOpen && (
                 <>
                   <div className="fixed inset-0 z-50 cursor-default" onClick={() => setIsLangDropdownOpen(false)} />
-                  <div className="absolute top-full right-0 mt-2 bg-white border border-slate-100 shadow-xl z-[60] py-2 rounded-xl min-w-[140px] overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
+                  <div className="absolute top-full right-0 mt-2 bg-white border border-slate-100 shadow-xl z-[60] py-2 rounded-none min-w-[140px] overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
                     {[
                       { code: "fr", name: "Français" },
                       { code: "ar", name: "العربية" },
@@ -214,11 +214,11 @@ export const Navbar: React.FC = () => {
                           setIsLangDropdownOpen(false);
                         }}
                         className={`w-full text-left rtl:text-right px-4 py-2.5 text-sm font-medium transition-colors bg-transparent border-none cursor-pointer flex items-center justify-between gap-2 hover:bg-slate-50 ${
-                          lang === l.code ? "text-sky-600" : "text-slate-700"
+                          lang === l.code ? "text-zinc-900" : "text-slate-700"
                         }`}
                       >
                         <span>{l.name}</span>
-                        {lang === l.code && <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />}
+                        {lang === l.code && <span className="w-1.5 h-1.5 rounded-full bg-zinc-900" />}
                       </button>
                     ))}
                   </div>
@@ -241,11 +241,11 @@ export const Navbar: React.FC = () => {
             {/* Panier */}
             <button
               onClick={() => setIsCartOpen(true)}
-              className="flex items-center justify-center text-slate-600 hover:bg-sky-50 hover:text-sky-500 transition-colors cursor-pointer relative bg-transparent border-none w-9 h-9 sm:w-10 sm:h-10 rounded-full"
+              className="flex items-center justify-center text-slate-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors cursor-pointer relative bg-transparent border-none w-9 h-9 sm:w-10 sm:h-10 rounded-full"
             >
               <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 stroke-[1.5]" />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-sky-500 text-white flex items-center justify-center text-[11px] font-bold shadow-sm">
+                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-zinc-900 text-white flex items-center justify-center text-[11px] font-bold shadow-sm">
                   {cartCount}
                 </span>
               )}
@@ -254,7 +254,7 @@ export const Navbar: React.FC = () => {
             {/* Profile Dropdown Toggle */}
             <button
               onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-              className="flex items-center justify-center text-slate-600 hover:bg-slate-100 hover:text-sky-500 transition-colors cursor-pointer bg-transparent border-none w-9 h-9 sm:w-10 sm:h-10 rounded-full"
+              className="flex items-center justify-center text-slate-600 hover:bg-slate-100 hover:text-zinc-900 transition-colors cursor-pointer bg-transparent border-none w-9 h-9 sm:w-10 sm:h-10 rounded-full"
             >
               <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 stroke-[1.5]" />
             </button>
@@ -262,7 +262,7 @@ export const Navbar: React.FC = () => {
             {/* Hamburger on Right */}
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="flex items-center justify-center text-slate-600 hover:bg-slate-100 hover:text-sky-500 transition-colors cursor-pointer bg-transparent border-none w-9 h-9 sm:w-10 sm:h-10 rounded-full lg:hidden"
+              className="flex items-center justify-center text-slate-600 hover:bg-slate-100 hover:text-zinc-900 transition-colors cursor-pointer bg-transparent border-none w-9 h-9 sm:w-10 sm:h-10 rounded-full lg:hidden"
             >
               <Menu className="w-5 h-5 sm:w-6 sm:h-6 stroke-[1.5]" />
             </button>
@@ -270,7 +270,7 @@ export const Navbar: React.FC = () => {
             {isUserDropdownOpen && (
               <>
                 <div className="fixed inset-0 z-[60]" onClick={() => setIsUserDropdownOpen(false)} />
-                <div className="absolute top-full right-0 mt-4 bg-white border border-slate-100 shadow-xl rounded-2xl z-[70] overflow-hidden flex flex-col animate-in fade-in slide-in-from-top-2 duration-200 min-w-[260px]">
+                <div className="absolute top-full right-0 mt-4 bg-white border border-slate-100 shadow-xl rounded-none z-[70] overflow-hidden flex flex-col animate-in fade-in slide-in-from-top-2 duration-200 min-w-[260px]">
                   {!currentUser ? (
                     <div className="p-4 bg-slate-50">
                       <button
@@ -278,7 +278,7 @@ export const Navbar: React.FC = () => {
                           navigate("/auth", { replace: true });
                           setIsUserDropdownOpen(false);
                         }}
-                        className="w-full py-3 bg-sky-500 text-white rounded-xl font-semibold text-sm hover:bg-sky-600 transition-colors border-none cursor-pointer"
+                        className="w-full py-3 bg-zinc-900 text-white rounded-none font-semibold text-sm hover:bg-zinc-900 transition-colors border-none cursor-pointer"
                       >
                         {t("auth.signin") || "Se connecter"}
                       </button>
@@ -304,7 +304,7 @@ export const Navbar: React.FC = () => {
                             navigate("/dashboard/buyer");
                             setIsUserDropdownOpen(false);
                           }}
-                          className="w-full flex items-center px-5 py-3 text-sm font-medium text-slate-700 hover:text-sky-600 hover:bg-sky-50 transition-colors bg-transparent border-none cursor-pointer"
+                          className="w-full flex items-center px-5 py-3 text-sm font-medium text-slate-700 hover:text-zinc-900 hover:bg-zinc-100 transition-colors bg-transparent border-none cursor-pointer"
                         >
                           {t("buyer_space") || "Mon Espace"}
                         </button>
@@ -315,7 +315,7 @@ export const Navbar: React.FC = () => {
                               navigate("/dashboard/seller");
                               setIsUserDropdownOpen(false);
                             }}
-                            className="w-full flex items-center px-5 py-3 text-sm font-medium text-slate-700 hover:text-sky-600 hover:bg-sky-50 transition-colors bg-transparent border-none cursor-pointer"
+                            className="w-full flex items-center px-5 py-3 text-sm font-medium text-slate-700 hover:text-zinc-900 hover:bg-zinc-100 transition-colors bg-transparent border-none cursor-pointer"
                           >
                             {t("seller_dashboard") || "Dashboard Vendeur"}
                           </button>

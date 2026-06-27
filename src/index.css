@@ -1,20 +1,21 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Outfit:wght@300;400;500;600&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Playfair Display", ui-serif, Georgia, serif;
   
-  /* Premium soft shadow definitions to create elevated, modern depth in light pink */
-  --shadow-sm: 0 2px 10px rgba(219, 39, 119, 0.12);
-  --shadow-md: 0 6px 18px rgba(219, 39, 119, 0.16);
-  --shadow-lg: 0 12px 28px rgba(219, 39, 119, 0.22);
-  --shadow-xl: 0 18px 36px rgba(219, 39, 119, 0.28);
-  --shadow-2xl: 0 24px 48px rgba(219, 39, 119, 0.36);
+  /* Premium subtle shadows for a luxury editorial feel */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 12px 32px rgba(0, 0, 0, 0.1);
+  --shadow-2xl: 0 16px 48px rgba(0, 0, 0, 0.12);
 }
 
 body {
-  background-color: #F8FAFC !important; /* Slate 50 */
-  color: #0F172A !important; /* Slate 900 */
+  background-color: #FAFAFA !important; /* Very subtle off-white */
+  color: #18181b !important; /* Zinc 900 */
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -23,14 +24,14 @@ body {
 /* Modern Typography classes */
 .font-display {
   font-family: var(--font-display);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
 }
 
 /* Fallback for old class to avoid breakage during transition */
 .font-kinder {
   font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 @layer utilities {
@@ -68,12 +69,12 @@ body {
 
 /* Keep standard scrollbars or customize them minimally without hiding entirely */
 ::-webkit-scrollbar {
-  width: 8px; /* Give it a standard size instead of 0 */
-  height: 8px;
+  width: 6px; /* Give it a standard size instead of 0 */
+  height: 6px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #ccc;
-  border-radius: 4px;
+  background: #d4d4d8;
+  border-radius: 3px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -89,27 +90,27 @@ body {
 }
 
 @layer components {
-  /* Primary Action Button (Sky Blue) */
+  /* Primary Action Button (Luxury Black) */
   .btn-primary {
-    @apply bg-sky-500 text-white px-8 py-3.5 rounded-xl font-medium tracking-wide text-sm shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:bg-sky-400 active:translate-y-0 transition-all duration-300;
+    @apply bg-zinc-950 text-white px-8 py-3.5 rounded-none font-medium tracking-wide text-sm shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:bg-zinc-800 active:translate-y-0 transition-all duration-300;
   }
 
   /* Secondary Action Button (Ghost / Outline) */
   .btn-secondary {
-    @apply border border-slate-200 text-slate-700 px-8 py-3.5 rounded-xl font-medium text-sm hover:bg-slate-50 active:bg-slate-100 transition-colors;
+    @apply border border-zinc-200 text-zinc-800 px-8 py-3.5 rounded-none font-medium text-sm hover:bg-zinc-50 active:bg-zinc-100 transition-colors;
   }
 
-  /* Surface Cards */
+  /* Surface Cards - Editorial Look */
   .surface-card {
-    @apply bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-all duration-300 overflow-hidden;
+    @apply bg-white rounded-none shadow-sm border border-zinc-100 hover:shadow-md transition-all duration-300 overflow-hidden;
   }
 
   /* Fallbacks to not break the app immediately */
   .btn-premium-orange {
-    @apply bg-sky-500 text-white px-8 py-3.5 rounded-xl font-medium tracking-wide text-sm shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:bg-sky-400 active:translate-y-0 transition-all duration-300;
+    @apply bg-zinc-950 text-white px-8 py-3.5 rounded-none font-medium tracking-widest uppercase text-xs shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:bg-zinc-800 active:translate-y-0 transition-all duration-300;
   }
   .btn-ghost-teal {
-    @apply border border-slate-200 text-slate-700 px-8 py-3.5 rounded-xl font-medium text-sm hover:bg-slate-50 active:bg-slate-100 transition-colors;
+    @apply border border-zinc-200 text-zinc-800 px-8 py-3.5 rounded-none font-medium tracking-widest uppercase text-xs hover:bg-zinc-50 active:bg-zinc-100 transition-colors;
   }
 }
 

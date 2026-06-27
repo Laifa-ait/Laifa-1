@@ -79,7 +79,7 @@ export const MegaMenu: React.FC = () => {
   const productToDisplay = displayedProductInfo?.productId ? productCache[displayedProductInfo.productId] : null;
 
   return (
-    <div ref={menuRef} className="relative w-full z-40 bg-[#FDF9EC] text-[#3C2B22] font-sans hidden xl:block shadow-sm">
+    <div ref={menuRef} className="relative w-full z-40 bg-slate-50 text-slate-900 font-sans hidden xl:block shadow-sm">
       {/* Barre secondaire des catégories (Clic uniquement) */}
       <div className="max-w-[1600px] mx-auto px-6">
         <ul className="flex items-center justify-between overflow-x-auto scrollbar-hide py-3">
@@ -93,7 +93,7 @@ export const MegaMenu: React.FC = () => {
                   className={`py-3 transition-colors cursor-pointer border-none bg-transparent flex items-center justify-center px-1`}
                 >
                   <span
-                    className={`flex flex-col items-center justify-center gap-1 ${activeCategory === category.id ? "text-[#FF5C00]" : "text-[#3C2B22]/80 hover:text-[#FF5C00]"}`}
+                    className={`flex flex-col items-center justify-center gap-1 ${activeCategory === category.id ? "text-orange-600" : "text-slate-600 hover:text-orange-600"}`}
                     title={t(category.name) || category.name}
                   >
                     {category.iconUrl ? (
@@ -111,7 +111,7 @@ export const MegaMenu: React.FC = () => {
 
                 {/* Soulignement pour la catégorie active */}
                 {activeCategory === category.id && (
-                  <div className="absolute bottom-0 start-0 w-full h-[2px] bg-[#FF5C00] rounded-t-full shadow-[0_0_8px_rgba(243,112,33,0.4)]" />
+                  <div className="absolute bottom-0 start-0 w-full h-[2px] bg-orange-600 rounded-t-full shadow-[0_0_8px_rgba(234,88,12,0.4)]" />
                 )}
               </li>
             );
@@ -127,13 +127,13 @@ export const MegaMenu: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 5, scale: 0.98 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute top-full start-0 w-full bg-[#FDF9EC]/98 text-black border-t border-[#FF5C00] shadow-2xl backdrop-blur-xl"
+            className="absolute top-full start-0 w-full bg-slate-50/98 text-black border-t border-slate-200 shadow-2xl backdrop-blur-xl"
           >
             <div className="w-full max-w-[1600px] mx-auto px-6 py-10">
               <div className="grid grid-cols-12 gap-12">
                 {/* 1ère Colonne : Liste des sous-catégories (Sections) */}
                 <div className="col-span-3 pe-4">
-                  <h3 className="text-xl font-display italic tracking-[0.1em] rtl:tracking-normal text-[#3C2B22] mb-6 uppercase">
+                  <h3 className="text-xl font-display italic tracking-[0.1em] rtl:tracking-normal text-slate-900 mb-6 uppercase">
                     {t("sub_categories") || "Sous-catégories"}
                   </h3>
                   <ul className="flex flex-col gap-1">

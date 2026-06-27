@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, Sparkles, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-export interface DbBanner {
+interface DbBanner {
   id: string;
   name?: string; // from builder
   title?: string;
@@ -45,7 +45,7 @@ export interface DbBanner {
   button_text_ar?: string;
 }
 
-export interface TagType {
+interface TagType {
   id: string;
   name: string;
   slug: string;

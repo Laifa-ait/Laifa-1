@@ -39,11 +39,11 @@ export const UniversalFilterBar: React.FC<UniversalFilterBarProps> = ({ activeFi
   ];
 
   return (
-    <div className="w-full bg-white/70 backdrop-blur-md border-b border-[#FF5C00]/40 sticky top-16 z-30 py-3 px-4 sm:px-6 md:px-8">
-      <div className="max-w-[1850px] mx-auto flex items-center justify-between gap-4">
+    <div className="w-full bg-white/70 backdrop-blur-md border-b border-slate-200 sticky top-16 z-30 py-3 px-4 sm:px-6 md:px-8">
+      <div className="max-w-[90rem] mx-auto flex items-center justify-between gap-4">
         {/* Horizontal scrollable capsule bar */}
-        <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-hide w-full -mx-4 px-4 sm:mx-0 sm:px-0">
-          <span className="text-[9px] rtl:text-[11px] font-kinder uppercase text-stone-400 tracking-wider rtl:tracking-normal shrink-0 mr-1.5 hidden sm:inline-block">
+        <div className="flex items-center gap-2.5 overflow-x-auto pb-1 desktop-scrollbar w-full -mx-4 px-4 sm:mx-0 sm:px-0">
+          <span className="text-[9px] rtl:text-[11px] font-sans font-bold uppercase text-slate-400 tracking-wider rtl:tracking-normal shrink-0 mr-1.5 hidden sm:inline-block">
             {t("express_filter_colon", "Filtre express :")}
           </span>
 
@@ -54,18 +54,18 @@ export const UniversalFilterBar: React.FC<UniversalFilterBarProps> = ({ activeFi
               <button
                 key={f.id}
                 onClick={() => onSelectFilter(isSelected ? null : f.id)}
-                className={`relative px-4 py-2.5 rounded-full text-[10px] rtl:text-[12px] font-black uppercase tracking-wider rtl:tracking-normal transition-all duration-300 flex items-center gap-1.5 shrink-0 select-none cursor-pointer border ${
+                className={`relative px-4 py-2.5 rounded-full text-[10px] rtl:text-[12px] font-sans font-bold uppercase tracking-wider rtl:tracking-normal transition-all duration-300 flex items-center gap-1.5 shrink-0 select-none cursor-pointer border ${
                   isSelected
-                    ? "text-white border-transparent bg-[#FF5C00] shadow-sm"
-                    : "bg-white text-stone-600 border-[#FF5C00]/60 hover:border-[#3C2B22]/40"
+                    ? "text-white border-transparent bg-slate-900 shadow-sm"
+                    : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
                 }`}
               >
-                {!isSelected && <IconComponent className="w-3.5 h-3.5 text-[#FF5C00]" />}
+                {!isSelected && <IconComponent className="w-3.5 h-3.5 text-slate-500" />}
                 <span>{f.label}</span>
                 {isSelected && (
                   <motion.div
                     layoutId="activeExpressFilter"
-                    className="absolute inset-0 bg-[#FF5C00] rounded-full -z-10"
+                    className="absolute inset-0 bg-slate-900 rounded-full -z-10"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
@@ -77,7 +77,7 @@ export const UniversalFilterBar: React.FC<UniversalFilterBarProps> = ({ activeFi
         {activeFilter && (
           <button
             onClick={() => onSelectFilter(null)}
-            className="text-[9px] rtl:text-[11px] font-kinder uppercase tracking-wider rtl:tracking-normal text-[#FF5C00] hover:text-[#3C2B22] transition-colors shrink-0 cursor-pointer underline cursor-pointer bg-transparent border-none"
+            className="text-[9px] rtl:text-[11px] font-sans font-bold uppercase tracking-wider rtl:tracking-normal text-slate-500 hover:text-slate-900 transition-colors shrink-0 cursor-pointer underline bg-transparent border-none"
           >
             {t("reset", "Réinitialiser")}
           </button>

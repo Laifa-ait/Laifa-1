@@ -152,7 +152,7 @@ export default function MobileCategories(): React.ReactElement {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDF9F1] pb-32 overflow-x-hidden pt-4" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="min-h-screen bg-slate-50 pb-32 overflow-x-hidden pt-4" dir={isRTL ? "rtl" : "ltr"}>
       <div className="max-w-xl mx-auto px-5">
         {/* Superior Header: Abstract & Minimalist */}
         <header className="mb-10 flex flex-col items-start gap-1">
@@ -162,13 +162,13 @@ export default function MobileCategories(): React.ReactElement {
             className="flex items-center gap-2 text-orange-600 mb-1"
           >
             <Sparkles className="w-4 h-4 fill-current" />
-            <span className="text-[10px] font-kinder uppercase tracking-[0.25em]">
+            <span className="text-[10px] font-sans font-bold uppercase tracking-[0.25em]">
               {t("exploration_premium") || "Exploration Premium"}
             </span>
           </motion.div>
-          <h1 className="text-4xl font-kinder text-[#3C2B22] tracking-tighter rtl:tracking-normal uppercase leading-none">
+          <h1 className="text-4xl font-sans font-bold text-slate-900 tracking-tighter rtl:tracking-normal uppercase leading-none">
             {t("univers_olma")?.split(" ")[0] || "Univers"}{" "}
-            <span className="text-[#3C2B22]/30">{t("univers_olma")?.split(" ")[1] || "Olma"}</span>
+            <span className="text-slate-400">{t("univers_olma")?.split(" ")[1] || "Olma"}</span>
           </h1>
           <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest rtl:tracking-normal mt-2 max-w-[200px] leading-relaxed">
             {t("browse_collections_desc") || "Parcourez nos collections par atmosphère et style de vie."}
@@ -189,7 +189,7 @@ export default function MobileCategories(): React.ReactElement {
                 <motion.button
                   layout
                   onClick={() => handleToggle(cat.id)}
-                  className={`w-full relative h-40 sm:h-48 rounded-[32px] overflow-hidden group border-none cursor-pointer transition-all duration-500 ${isExpanded ? "ring-2 ring-[#3C2B22] ring-offset-2 ring-offset-[#FDF9F1]" : "hover:shadow-xl shadow-lg shadow-[#3C2B22]/5"}`}
+                  className={`w-full relative h-40 sm:h-48 rounded-[32px] overflow-hidden group border-none cursor-pointer transition-all duration-500 ${isExpanded ? "ring-2 ring-slate-900 ring-offset-2 ring-offset-slate-50" : "hover:shadow-xl shadow-lg shadow-slate-900/5"}`}
                 >
                   <motion.img
                     layout
@@ -202,7 +202,7 @@ export default function MobileCategories(): React.ReactElement {
                     }}
                   />
                   <div
-                    className={`absolute inset-0 transition-opacity duration-500 ${isExpanded ? "bg-[#3C2B22]/75" : "bg-gradient-to-t from-[#3C2B22]/85 via-transparent to-transparent"}`}
+                    className={`absolute inset-0 transition-opacity duration-500 ${isExpanded ? "bg-slate-900/75" : "bg-gradient-to-t from-slate-900/85 via-transparent to-transparent"}`}
                   />
 
                   <div className="absolute inset-x-0 bottom-0 p-6 flex items-end justify-between">
@@ -228,7 +228,7 @@ export default function MobileCategories(): React.ReactElement {
                       </h2>
                     </div>
                     <div
-                      className={`w-10 h-10 rounded-full flex shrink-0 items-center justify-center shadow-xl transition-all duration-500 ${isExpanded ? "rotate-90 scale-110 bg-[#EDAD00] text-white" : "bg-white/35 text-white border border-white/45 rtl:rotate-180"}`}
+                      className={`w-10 h-10 rounded-full flex shrink-0 items-center justify-center shadow-xl transition-all duration-500 ${isExpanded ? "rotate-90 scale-110 bg-slate-900 text-white" : "bg-white/35 text-white border border-white/45 rtl:rotate-180"}`}
                     >
                       <ArrowRight className="w-5 h-5" />
                     </div>
@@ -255,7 +255,7 @@ export default function MobileCategories(): React.ReactElement {
                               initial={{ opacity: 0, scale: 0.9, y: 10 }}
                               animate={{ opacity: 1, scale: 1, y: 0 }}
                               transition={{ delay: sIdx * 0.03 + 0.1 }}
-                              className={`relative overflow-hidden rounded-3xl group bg-[#FDF9EC] ${isWide ? "col-span-2" : "col-span-1"} ${isSelectedSub ? "h-auto shadow-[0_10px_30px_-10px_rgba(30,67,86,0.3)] border border-[#3C2B22]/15" : isWide ? "h-32" : "h-36"} flex flex-col transition-all duration-300`}
+                              className={`relative overflow-hidden rounded-3xl group bg-white ${isWide ? "col-span-2" : "col-span-1"} ${isSelectedSub ? "h-auto shadow-md border border-slate-200" : isWide ? "h-32" : "h-36"} flex flex-col transition-all duration-300`}
                             >
                               {!isSelectedSub ? (
                                 <button
@@ -274,28 +274,28 @@ export default function MobileCategories(): React.ReactElement {
                                         />
                                       </div>
                                       <div className="flex flex-col items-start gap-1 relative z-10 w-full">
-                                        <span className="text-[10px] font-kinder text-orange-500 uppercase tracking-widest rtl:tracking-normal">
+                                        <span className="text-[10px] font-sans font-bold text-orange-500 uppercase tracking-widest rtl:tracking-normal">
                                           {t("view_collection") || "Voir la collection"}
                                         </span>
-                                        <h3 className="text-xl font-kinder text-[#3C2B22] uppercase tracking-tighter rtl:tracking-normal leading-none">
+                                        <h3 className="text-xl font-sans font-bold text-slate-900 uppercase tracking-tighter rtl:tracking-normal leading-none">
                                           {getCategoryTranslation(sub.name, t)}
                                         </h3>
                                         <div className="flex flex-wrap gap-1 mt-2 w-full">
                                           {sub.subSubs.slice(0, 3).map((ss) => (
                                             <span
                                               key={ss.name}
-                                              className="px-2 py-0.5 text-[8px] font-bold bg-[#3C2B22]/10 text-[#3C2B22] rounded-full whitespace-nowrap"
+                                              className="px-2 py-0.5 text-[8px] font-bold bg-slate-100 text-slate-900 rounded-full whitespace-nowrap"
                                             >
                                               {getCategoryTranslation(ss.name, t)}
                                             </span>
                                           ))}
                                           {sub.subSubs.length > 3 && (
-                                            <span className="px-2 py-0.5 text-[8px] font-bold bg-[#3C2B22]/10 text-[#3C2B22] rounded-full">
+                                            <span className="px-2 py-0.5 text-[8px] font-bold bg-slate-100 text-slate-900 rounded-full">
                                               +{sub.subSubs.length - 3}
                                             </span>
                                           )}
                                         </div>
-                                        <div className="mt-2 w-7 h-1 bg-[#3C2B22] rounded-full group-hover:w-full transition-all duration-500" />
+                                        <div className="mt-2 w-7 h-1 bg-slate-900 rounded-full group-hover:w-full transition-all duration-500" />
                                       </div>
                                     </div>
                                   ) : (
@@ -321,7 +321,7 @@ export default function MobileCategories(): React.ReactElement {
                                         </div>
                                       </div>
                                       <div className="p-3 bg-white flex flex-col items-center justify-center flex-1">
-                                        <span className="text-[10px] font-bold text-[#3C2B22] uppercase tracking-wide text-center leading-tight line-clamp-2">
+                                        <span className="text-[10px] font-bold text-slate-900 uppercase tracking-wide text-center leading-tight line-clamp-2">
                                           {getCategoryTranslation(sub.name, t)}
                                         </span>
                                         <span className="text-[8px] font-semibold text-stone-500 mt-1 uppercase tracking-wider rtl:tracking-normal">
@@ -335,14 +335,14 @@ export default function MobileCategories(): React.ReactElement {
                                 <div className="flex flex-col w-full h-full">
                                   <button
                                     onClick={(e) => handleSubToggle(sub.name, e)}
-                                    className="w-full flex items-center p-5 bg-[#3C2B22] text-white shrink-0 border-none text-left cursor-pointer active:bg-[#0a0b0c] transition-colors relative overflow-hidden"
+                                    className="w-full flex items-center p-5 bg-slate-900 text-white shrink-0 border-none text-left cursor-pointer active:bg-[#0a0b0c] transition-colors relative overflow-hidden"
                                   >
                                     <div className="absolute top-0 end-0 w-32 h-32 bg-white/5 rounded-full -me-10 -mt-10 blur-2xl" />
                                     <div className="flex-1 flex flex-col relative z-10">
-                                      <span className="text-[10px] text-orange-400 font-kinder uppercase tracking-widest rtl:tracking-normal mb-1">
+                                      <span className="text-[10px] text-orange-400 font-sans font-bold uppercase tracking-widest rtl:tracking-normal mb-1">
                                         {t("choose_department") || "Choisir un rayon"}
                                       </span>
-                                      <h3 className="text-xl font-kinder text-white uppercase tracking-tighter rtl:tracking-normal leading-none">
+                                      <h3 className="text-xl font-sans font-bold text-white uppercase tracking-tighter rtl:tracking-normal leading-none">
                                         {getCategoryTranslation(sub.name, t)}
                                       </h3>
                                     </div>
@@ -351,7 +351,7 @@ export default function MobileCategories(): React.ReactElement {
                                     </div>
                                   </button>
 
-                                  <div className="p-4 grid grid-cols-1 gap-2 w-full bg-[#FDF9EC]">
+                                  <div className="p-4 grid grid-cols-1 gap-2 w-full bg-slate-50">
                                     {sub.subSubs.map((ss) => (
                                       <button
                                         key={ss.name}
@@ -359,12 +359,12 @@ export default function MobileCategories(): React.ReactElement {
                                           e.stopPropagation();
                                           selectSubCategoryAndNavigate(cat.id, ss.name);
                                         }}
-                                        className="w-full text-left px-5 py-3.5 bg-white hover:bg-orange-50 rounded-2xl shadow-sm border border-[#FF5C00] flex justify-between items-center cursor-pointer active:scale-[0.98] transition-transform"
+                                        className="w-full text-left px-5 py-3.5 bg-white hover:bg-slate-100 rounded-2xl shadow-sm border border-slate-200 flex justify-between items-center cursor-pointer active:scale-[0.98] transition-transform"
                                       >
-                                        <span className="text-xs sm:text-sm font-bold text-[#3C2B22] uppercase tracking-tight rtl:tracking-normal">
+                                        <span className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-tight rtl:tracking-normal">
                                           {getCategoryTranslation(ss.name, t)}
                                         </span>
-                                        <ChevronRight className="w-4 h-4 text-orange-500" />
+                                        <ChevronRight className="w-4 h-4 text-slate-400" />
                                       </button>
                                     ))}
                                     <button
@@ -374,7 +374,7 @@ export default function MobileCategories(): React.ReactElement {
                                       }}
                                       className="w-full text-left px-5 py-3.5 bg-orange-100/60 hover:bg-orange-100 rounded-2xl text-orange-800 flex justify-between items-center mt-1 border border-orange-200/60 cursor-pointer active:scale-[0.98] transition-transform"
                                     >
-                                      <span className="text-xs font-kinder uppercase tracking-widest rtl:tracking-normal">
+                                      <span className="text-xs font-sans font-bold uppercase tracking-widest rtl:tracking-normal">
                                         {t("see_all_in") || "Tout voir dans"} {getCategoryTranslation(sub.name, t)}
                                       </span>
                                       <ArrowRight className="w-4 h-4" />
@@ -395,9 +395,9 @@ export default function MobileCategories(): React.ReactElement {
                             setActiveCategory(cat.id);
                             navigate("/shop");
                           }}
-                          className="col-span-2 h-16 bg-[#3C2B22] rounded-2xl flex items-center justify-between px-6 group cursor-pointer border-none active:scale-[0.98] transition-all"
+                          className="col-span-2 h-16 bg-slate-900 rounded-2xl flex items-center justify-between px-6 group cursor-pointer border-none active:scale-[0.98] transition-all"
                         >
-                          <span className="text-xs font-kinder text-white uppercase tracking-widest rtl:tracking-normal">
+                          <span className="text-xs font-sans font-bold text-white uppercase tracking-widest rtl:tracking-normal">
                             {t("explore_all_in") || "Tout Explorer:"} {getCategoryTranslation(cat.name, t)}
                           </span>
                           <Zap className="w-4 h-4 text-orange-400 group-hover:rotate-12 transition-transform" />
@@ -416,11 +416,11 @@ export default function MobileCategories(): React.ReactElement {
           <div className="flex flex-col items-start gap-1 mb-6">
             <div className="flex items-center gap-2 text-emerald-600">
               <TrendingUp className="w-4 h-4" />
-              <span className="text-[10px] font-kinder uppercase tracking-[0.25em]">
+              <span className="text-[10px] font-sans font-bold uppercase tracking-[0.25em]">
                 {t("at_the_moment") || "En ce moment"}
               </span>
             </div>
-            <h2 className="text-2xl font-kinder text-[#3C2B22] tracking-tighter rtl:tracking-normal uppercase leading-none">
+            <h2 className="text-2xl font-sans font-bold text-slate-900 tracking-tighter rtl:tracking-normal uppercase leading-none">
               {t("popular_styles") || "Styles Populaires"}
             </h2>
           </div>
@@ -457,7 +457,7 @@ export default function MobileCategories(): React.ReactElement {
 
       {/* Decorative footer element for Olma */}
       <div className="mt-24 px-10 text-center opacity-10 select-none">
-        <span className="text-[12vw] font-kinder tracking-tighter rtl:tracking-normal text-[#3C2B22] uppercase">
+        <span className="text-[12vw] font-sans font-bold tracking-tighter rtl:tracking-normal text-slate-900 uppercase">
           {t("OLMART")}
         </span>
       </div>

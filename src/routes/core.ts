@@ -49,7 +49,118 @@ const dualWrite = (lang: string, content: any) => {
   }
 };
 
+import rateLimit from "express-rate-limit";
+
 const router = Router();
+
+const trackingLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 30, // Limit each IP to 30 requests per `window`
+  message: { error: "Trop de requêtes, veuillez réessayer plus tard." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Public Tracking API
+router.get("/api/public/tracking/:trackingId", trackingLimiter, async (req: Request, res: Response) => {
+  try {
+    const { trackingId } = req.params;
+    if (!trackingId) {
+      return res.status(400).json({ error: "Tracking ID missing" });
+    }
+
+    const ordersRef = db.collection("orders");
+    let snapshot = await ordersRef.where("trackingId", "==", trackingId.toUpperCase()).limit(1).get();
+
+    let orderData = null;
+    let orderId = "";
+
+    if (!snapshot.empty) {
+      orderData = snapshot.docs[0].data();
+      orderId = snapshot.docs[0].id;
+    } else {
+      // Try to match doc ID directly
+      const docRef = await ordersRef.doc(trackingId).get();
+      if (docRef.exists) {
+        orderData = docRef.data();
+        orderId = docRef.id;
+      } else {
+        return res.status(404).json({ error: "Aucun colis trouvé pour ce code de suivi." });
+      }
+    }
+    
+    // Only return safe public data
+    const publicData = {
+      id: orderId,
+      trackingId: orderData?.trackingId || orderId,
+      status: orderData?.status,
+      total: orderData?.total,
+      carrier_tracking_events: orderData?.carrier_tracking_events || [],
+      shippingAddress: {
+        fullName: orderData?.shippingAddress?.fullName,
+        city: orderData?.shippingAddress?.city,
+        state: orderData?.shippingAddress?.state,
+        address: orderData?.shippingAddress?.address,
+      },
+      userName: orderData?.userName,
+    };
+
+    res.json(publicData);
+  } catch (error: any) {
+    console.error("Public tracking error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+router.get("/api/proxy-video", async (req: Request, res: Response) => {
+  try {
+    const videoUrl = req.query.url as string;
+    if (!videoUrl) {
+      return res.status(400).send("URL missing");
+    }
+
+    const response = await fetch(videoUrl, {
+      headers: req.headers.range ? { Range: req.headers.range } : {}
+    });
+
+    if (!response.ok) {
+      return res.status(response.status).send(response.statusText);
+    }
+
+    response.headers.forEach((value, key) => {
+      // Don't forward transfer-encoding or content-encoding as we are piping the stream directly
+      const lowerKey = key.toLowerCase();
+      if (lowerKey !== 'transfer-encoding' && lowerKey !== 'content-encoding') {
+        res.setHeader(key, value);
+      }
+    });
+
+    res.status(response.status);
+
+    if (response.body) {
+      const reader = response.body.getReader();
+      const push = async () => {
+        try {
+          const { done, value } = await reader.read();
+          if (done) {
+            res.end();
+            return;
+          }
+          res.write(value);
+          push();
+        } catch (e) {
+          res.end();
+        }
+      };
+      push();
+    } else {
+      res.end();
+    }
+  } catch (error) {
+    console.error("Video proxy error:", error);
+    res.status(500).send("Error proxying video");
+  }
+});
 
 router.post("/api/analytics/track", async (req: Request, res: Response) => {
   try {
@@ -189,6 +300,13 @@ router.post(
 
         const cStatus = currentStatus.toLowerCase();
         const tStatus = targetStatus.toLowerCase();
+
+        if (isUserSeller && !isUserAdmin) {
+          const allowedBySeller = ['processing', 'picked_up', 'canceled'];
+          if (!allowedBySeller.includes(tStatus)) {
+            return res.status(403).json({ error: "Les vendeurs ne peuvent que confirmer la préparation (processing) ou la remise au transporteur (picked_up). Le reste est géré par l'API logistique."});
+          }
+        }
 
         if (cStatus !== tStatus) {
           if (

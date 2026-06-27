@@ -123,7 +123,7 @@ export const MobileMenu: React.FC = () => {
                             handleNav("/dashboard/buyer");
                             closeMenu();
                           }}
-                          className="flex-1 py-3 px-4 bg-sky-500 hover:bg-sky-600 text-white text-sm font-medium rounded-2xl text-center transition-colors cursor-pointer border-none shadow-sm"
+                          className="flex-1 py-3 px-4 bg-zinc-900 hover:bg-sky-600 text-white text-sm font-medium rounded-2xl text-center transition-colors cursor-pointer border-none shadow-sm"
                         >
                           {t("common.my_space")}
                         </button>
@@ -165,7 +165,7 @@ export const MobileMenu: React.FC = () => {
                             handleNav("/auth");
                             closeMenu();
                           }}
-                          className="w-full bg-sky-500 hover:bg-sky-600 text-white py-3 rounded-2xl font-medium text-sm transition-colors border-none cursor-pointer shadow-sm"
+                          className="w-full bg-zinc-900 hover:bg-sky-600 text-white py-3 rounded-2xl font-medium text-sm transition-colors border-none cursor-pointer shadow-sm"
                         >
                           {t("Se connecter")}
                         </button>

@@ -904,8 +904,7 @@ export const Orders: React.FC = () => {
                                           const norm = (currentStatus || '').toLowerCase();
                                           if (norm === 'new' || norm === 'pending' || norm === 'confirmed') return 'processing';
                                           if (norm === 'preparing' || norm === 'processing') return 'picked_up';
-                                          if (norm === 'picked_up') return 'in_transit';
-                                          if (norm === 'in_transit' || norm === 'shipped') return 'delivered';
+                                          // Les statuts ultérieurs (in_transit, delivered) sont gérés exclusivement par l'API (webhook)
                                           return null;
                                        };
                                        const currentLower = (selectedOrder.status || '').toLowerCase();

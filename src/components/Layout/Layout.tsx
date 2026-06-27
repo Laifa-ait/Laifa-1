@@ -85,7 +85,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       <main className="min-h-[calc(100vh-200px)] relative">{children}</main>
 
-      {!isCheckoutPage && <Footer isHomepage={isHomepage} />}
+      {isHomepage && <Footer isHomepage={true} />}
 
       <MobileBottomNav />
 

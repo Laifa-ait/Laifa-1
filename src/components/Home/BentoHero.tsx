@@ -85,7 +85,7 @@ export const BentoHero: React.FC<{ banners: any[] }> = ({ banners }) => {
     <div
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="w-full min-h-[350px] sm:min-h-[450px] md:min-h-[500px] relative rounded-3xl overflow-hidden group shadow-sm border border-sky-100 mt-0 bg-white"
+      className="w-full min-h-[350px] sm:min-h-[450px] md:min-h-[500px] relative rounded-none overflow-hidden group shadow-sm border border-zinc-200 mt-0 bg-white"
     >
       <AnimatePresence mode="wait">
         <motion.div
@@ -111,24 +111,23 @@ export const BentoHero: React.FC<{ banners: any[] }> = ({ banners }) => {
         </motion.div>
       </AnimatePresence>
 
-      {/* Cinematic Overlays */}
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/85 via-black/20 to-transparent z-0" />
-      <div className="absolute inset-0 bg-gradient-to-r from-slate-900/40 via-transparent to-transparent z-0" />
+      <div className="absolute inset-0 bg-slate-900/40 z-0 mix-blend-multiply" />
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent z-0" />
 
-      {/* Decorative Blob */}
-      <div className="absolute -top-20 -left-20 w-64 h-64 bg-sky-50 blur-3xl rounded-full pointer-events-none z-0"></div>
+      {/* Decorative Blur */}
+      <div className="absolute -top-32 -left-32 w-96 h-96 bg-white/10 blur-[100px] rounded-full pointer-events-none z-0"></div>
 
       {/* Content wrapper */}
       <div className="absolute inset-0 p-6 sm:p-10 md:p-16 flex flex-col justify-end items-start z-10">
         <motion.div
           key={`tag-${currentIndex}`}
-          initial={{ opacity: 0, y: 15, rotate: -3 }}
-          animate={{ opacity: 1, y: 0, rotate: -3 }}
-          transition={{ duration: 0.5 }}
-          className="flex items-center gap-1.5 mb-3 sm:mb-5 bg-white/90 backdrop-blur-md shadow-lg px-3 py-1.5 rounded-full border border-sky-100"
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="flex items-center gap-2 mb-4 bg-white/10 backdrop-blur-md shadow-sm px-3.5 py-1.5 rounded-full border border-white/20"
         >
-          <Sparkles className="w-3.5 h-3.5 text-sky-500 fill-sky-500" />
-          <span className="font-sans font-bold text-[10px] sm:text-xs uppercase tracking-[0.15em] text-sky-500">
+          <Sparkles className="w-3.5 h-3.5 text-white" />
+          <span className="font-sans font-medium text-[10px] sm:text-xs uppercase tracking-[0.2em] text-white">
             {t("home.hero.exclusive_selection")}
           </span>
         </motion.div>
@@ -137,8 +136,8 @@ export const BentoHero: React.FC<{ banners: any[] }> = ({ banners }) => {
           key={`title-${currentIndex}`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-display text-white uppercase tracking-tighter mb-3 max-w-4xl leading-none drop-shadow-md text-start font-bold"
+          transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-sans text-white font-bold tracking-tight mb-4 max-w-4xl leading-[1.1] drop-shadow-sm text-start"
         >
           {title || "VOTRE UNIVERS SHOPPING"}
         </motion.h2>
@@ -148,8 +147,8 @@ export const BentoHero: React.FC<{ banners: any[] }> = ({ banners }) => {
             key={`sub-${currentIndex}`}
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-xs sm:text-sm md:text-base text-white/90 mb-6 max-w-2xl text-start font-sans font-medium drop-shadow-sm leading-relaxed"
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="text-sm sm:text-base md:text-lg text-slate-100/90 mb-8 max-w-2xl text-start font-sans font-medium leading-relaxed"
           >
             {subtitle}
           </motion.p>
@@ -157,13 +156,13 @@ export const BentoHero: React.FC<{ banners: any[] }> = ({ banners }) => {
 
         <motion.button
           key={`btn-${currentIndex}`}
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          whileHover={{ scale: 1.05, rotate: -1 }}
-          whileTap={{ scale: 0.95 }}
+          transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          whileHover={{ y: -2 }}
+          whileTap={{ scale: 0.98 }}
           onClick={handleBannerClick}
-          className="bg-sky-500 text-white font-sans font-bold text-xs sm:text-sm uppercase px-6 py-3 sm:px-8 sm:py-3.5 flex items-center gap-2.5 shadow-lg transition-colors hover:bg-sky-400 rounded-full cursor-pointer"
+          className="bg-white text-slate-900 font-sans font-semibold text-xs sm:text-sm px-7 py-3.5 sm:px-8 sm:py-4 flex items-center gap-3 shadow-[0_8px_20px_rgba(0,0,0,0.1)] transition-all hover:shadow-[0_12px_25px_rgba(0,0,0,0.15)] rounded-full cursor-pointer hover:bg-slate-50"
         >
           <span>{buttonText || t("cat_explore")}</span>
           <ArrowRight className={`w-4 h-4 sm:w-5 sm:h-5 ${isRTL ? "rotate-180" : ""}`} />

@@ -436,12 +436,12 @@ export const Home: React.FC = () => {
   }, [targetedPopupBanner]);
 
   return (
-    <div className="bg-slate-50 font-sans">
+    <div className="bg-[#FAFAFA] font-sans">
       <MonthlyUpdateBanner />
       {/* 💥 Dynamic Promotion Popup Banner (Loaded once per session per ID) */}
       {showPopupBanner && targetedPopupBanner && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-500">
-          <div className="relative max-w-sm sm:max-w-md w-full rounded-3xl overflow-hidden shadow-xl bg-white border border-sky-100 animate-in zoom-in-95 duration-500 group">
+          <div className="relative max-w-sm sm:max-w-md w-full rounded-3xl overflow-hidden shadow-xl bg-white border border-zinc-200 animate-in zoom-in-95 duration-500 group">
             <button 
               onClick={() => setShowPopupBanner(false)}
               className="absolute top-4 right-4 z-10 p-2 bg-white/90 hover:bg-slate-100 backdrop-blur-md rounded-full text-slate-700 transition-colors cursor-pointer shadow-sm"
@@ -463,7 +463,7 @@ export const Home: React.FC = () => {
                 className="w-full aspect-[4/5] object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
               />
               <div className="absolute bottom-0 inset-x-0 p-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
-                <span className="text-[10px] font-sans font-bold uppercase tracking-widest rtl:tracking-normal text-sky-400 mb-1 block">{t("home.popup.exclusive_offer")}</span>
+                <span className="text-[10px] font-sans font-bold uppercase tracking-widest rtl:tracking-normal text-zinc-500 mb-1 block">{t("home.popup.exclusive_offer")}</span>
                 <h3 className="text-white font-semibold text-xl font-display drop-shadow-md">{targetedPopupBanner.title}</h3>
               </div>
             </div>
@@ -481,7 +481,7 @@ export const Home: React.FC = () => {
       <h1 className="sr-only">{t("home.sr_title")}</h1>
       
       {/* Neo-Heritage Bento Hero - Kinder Style */}
-      <section className="w-full bg-slate-50 py-4 sm:py-6 lg:py-8 relative overflow-hidden">
+      <section className="w-full bg-[#FAFAFA] py-4 sm:py-6 lg:py-8 relative overflow-hidden">
         <div className="max-w-[90rem] mx-auto px-4 sm:px-6 md:px-8">
           {isBannersLoading ? (
             <div className="w-full min-h-[400px] sm:min-h-[500px] bg-slate-200 animate-pulse rounded-3xl border border-slate-100 mt-0" />
@@ -495,16 +495,16 @@ export const Home: React.FC = () => {
       <TechTrustBanner />
 
       {activeWilaya && activeWilaya !== "Tous" && (
-        <div className="max-w-[90rem] mx-auto px-4 sm:px-6 md:px-8 mb-4">
+        <div className="max-w-[90rem] mx-auto px-4 sm:px-6 md:px-8 mb-6 sm:mb-8">
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="flex items-center justify-between py-4 px-6 bg-white border border-sky-100 text-slate-800 rounded-full shadow-sm"
+            className="flex items-center justify-between py-4 px-6 bg-white border border-zinc-200 text-slate-800 rounded-full shadow-sm"
           >
             <div className="flex items-center gap-3">
               <span className="flex h-3 w-3 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-zinc-500 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-zinc-900"></span>
               </span>
               <span className="font-sans font-bold text-[12px] sm:text-sm uppercase tracking-widest rtl:tracking-normal drop-shadow-sm text-slate-700">
                 [ {activeWilaya} ] {t("home.regional_filter_active")}
@@ -525,7 +525,7 @@ export const Home: React.FC = () => {
 
       {/* Intermediate Banners */}
       {targetedIntermediateBanners.length > 0 && (
-        <section className="pb-16 sm:pb-24 w-full max-w-[90rem] mx-auto px-4 sm:px-6 md:px-8">
+        <section className="mb-6 sm:mb-8 w-full max-w-[90rem] mx-auto px-4 sm:px-6 md:px-8">
           <div className="flex flex-wrap gap-6">
             {targetedIntermediateBanners.map((banner) => {
               const hasLinkedProducts = banner.linkedProductIds && banner.linkedProductIds.length > 0;
@@ -563,149 +563,55 @@ export const Home: React.FC = () => {
       ))}
 
       {/* Selection Premium - Clean Immersive Premium */}
-      <div className="max-w-[90rem] mx-auto px-2 sm:px-6 md:px-8 mb-10 sm:mb-16">
-        <section className="pt-8 sm:pt-16 pb-8 sm:pb-16 bg-white rounded-3xl relative overflow-hidden shadow-sm border border-slate-100">
-          {/* Splash Drops Decorations */}
-          <div className="absolute top-0 right-10 w-32 h-32 bg-white rounded-full opacity-10 rotate-45 transform blur-[8px] hidden md:block"></div>
-          <div className="absolute top-10 right-32 w-16 h-16 bg-white rounded-full opacity-10 rotate-12 transform blur-[4px] hidden md:block"></div>
-          <div className="absolute bottom-10 left-10 w-48 h-48 bg-white rounded-full opacity-5 transform blur-[12px]"></div>
-
+      <div className="max-w-[90rem] mx-auto px-4 sm:px-6 md:px-8 mb-6 sm:mb-8">
+        <section className="pt-6 sm:pt-8 pb-6 sm:pb-8 bg-white rounded-3xl relative overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-slate-100/50">
           <div className="w-full px-4 sm:px-8 md:px-12 relative z-10">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 sm:mb-8 gap-4 sm:gap-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 sm:mb-8 gap-6">
               <div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-sky-50 text-sky-600 border border-sky-100 font-sans text-[9px] sm:text-[10px] uppercase tracking-widest font-bold mb-3 sm:mb-4">
-                  <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-sky-500" />
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 text-slate-800 border border-slate-200 font-sans text-[10px] sm:text-[11px] uppercase tracking-[0.2em] font-semibold mb-4">
+                  <Sparkles className="w-3.5 h-3.5" />
                   {t("exploration_premium")}
                 </div>
-                <h2 className="font-sans text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-slate-900 mb-2 sm:mb-3 flex flex-col items-start">
+                <h2 className="font-sans text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-900 mb-3 flex flex-col items-start leading-[1.1]">
                   {t("product.premium_selection")}
-                  <div className="w-12 sm:w-16 h-1 sm:h-1.5 bg-sky-500 rounded-full mt-2 sm:mt-3"></div>
                 </h2>
-                <p className="font-sans text-xs sm:text-sm md:text-base text-slate-500 uppercase tracking-wider max-w-xl leading-relaxed mt-2 sm:mt-4">
+                <p className="font-sans text-sm md:text-base text-slate-500 max-w-xl leading-relaxed mt-3">
                   {t("home.featured.subtitle")}
                 </p>
               </div>
               
               <button
                 onClick={() => navigate("/premium-collection")}
-                className="group flex items-center justify-center gap-2 px-2 py-2 sm:px-4 sm:py-3 rounded-xl bg-transparent text-sky-500 font-sans font-bold text-xs sm:text-sm border-none hover:text-sky-600 active:scale-95 transition-all cursor-pointer"
+                className="group inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-slate-900 text-white font-sans font-medium text-sm hover:bg-slate-800 active:scale-95 transition-all shadow-md cursor-pointer self-start md:self-auto"
               >
                 <span>{t("Voir la Collection")}</span>
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1.5 transition-transform" />
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
 
-          <div className="flex gap-3 sm:gap-6 overflow-x-auto pb-6 sm:pb-8 pt-2 sm:pt-4 desktop-scrollbar snap-x snap-mandatory px-4 sm:px-0 select-none scroll-smooth">
+          <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-8 pt-2 desktop-scrollbar snap-x snap-mandatory px-2 sm:px-0 scroll-smooth">
             {isLoadingProducts ? (
               Array(6).fill(0).map((_, i) => (
                 <div key={i} className="w-[160px] sm:w-[220px] shrink-0 snap-start snap-always h-[220px] sm:h-[300px] rounded-2xl bg-slate-100 animate-pulse" />
               ))
             ) : premiumProducts.length === 0 ? (
-              <div className="w-full flex flex-col items-center justify-center py-6 sm:py-12 text-center bg-slate-50 rounded-2xl border border-slate-100 shadow-inner">
+              <div className="w-full flex flex-col items-center justify-center py-6 sm:py-12 text-center bg-[#FAFAFA] rounded-2xl border border-slate-100 shadow-inner">
                 <Sparkles className="w-5 h-5 sm:w-8 sm:h-8 text-slate-300 mb-2 sm:mb-3" />
                 <p className="font-sans font-medium text-slate-500 text-[9px] sm:text-xs uppercase tracking-wider">{t("Prochain arrivage imminent")}</p>
               </div>
             ) : (
               premiumProducts.slice(0, 8).map((product, i) => {
-                const isPromo = product.promoPrice && product.promoPrice < product.price;
-                const isItemWishlisted = wishlist.includes(product.id);
                 return (
                   <div 
                     key={`${product.id}-${i}`} 
-                    onClick={() => navigate(`/product/${product.id}`)}
-                    className="w-[240px] sm:w-[260px] shrink-0 snap-start snap-always h-[360px] rounded-2xl bg-white overflow-hidden shadow-sm border border-slate-100 group transition-all duration-300 relative flex flex-col cursor-pointer hover:-translate-y-1 hover:shadow-md"
+                    className="w-[240px] sm:w-[260px] shrink-0 snap-start snap-always"
                   >
-                    <div className="relative h-[180px] bg-slate-50 overflow-hidden shrink-0 rounded-t-2xl">
-                      <img
-                        loading="lazy"
-                        src={product.image || "https://images.unsplash.com/photo-1555529771-835f59fc5efe?auto=format&fit=crop&q=80&w=600"}
-                        alt={getTranslatedField(product, "name", lang)}
-                        className="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-110"
-                        referrerPolicy="no-referrer"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src =
-                            "https://images.unsplash.com/photo-1555529771-835f59fc5efe?auto=format&fit=crop&q=80&w=600";
-                        }}
-                      />
-                      
-                      <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5 pointer-events-none">
-                        <div className="px-2.5 py-1 rounded-full bg-white/95 text-slate-800 shadow-sm flex items-center gap-1.5">
-                          <div className={`w-2 h-2 rounded-full ${
-                            (product as any).sellerTrust >= 90 
-                              ? "bg-emerald-500" 
-                              : (product as any).sellerTrust >= 75 
-                              ? "bg-amber-500" 
-                              : "bg-red-500"
-                          }`} />
-                          <span className="font-sans font-bold text-[9px] uppercase tracking-widest">
-                            {t("FIABILITÉ")} : {(product as any).sellerTrust}%
-                          </span>
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleWishlist(product.id);
-                          toast.success(
-                            isItemWishlisted
-                              ? t("Retiré des favoris")
-                              : t("Ajouté aux favoris"),
-                            {
-                              id: `wishlist-${product.id}`,
-                              icon: "✨",
-                              style: { borderRadius: "10px", background: "#1e293b", color: "#FFF", fontSize: "14px", fontWeight: "bold" }
-                            }
-                          );
-                        }}
-                        className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white text-slate-900 shadow-md hover:scale-110 active:scale-95 flex items-center justify-center cursor-pointer transition-all border border-slate-100"
-                        aria-label="Wishlist"
-                      >
-                        <Heart
-                          className={`w-4 h-4 ${isItemWishlisted ? "fill-rose-500 text-rose-500 stroke-rose-500" : "text-slate-900 stroke-[2.5]"}`}
-                        />
-                      </button>
-                    </div>
-
-                    <div className="flex-1 p-5 flex flex-col justify-between bg-white rounded-b-[2rem]">
-                      <div>
-                        <div className="flex items-center gap-1.5 mb-2">
-                          <span className="px-3 py-1 rounded-full bg-sky-50 text-sky-600 font-mono text-[9px] font-black uppercase tracking-[0.2em] truncate max-w-[100px]">
-                            {product.sellerName || "Olma Boutique"}
-                          </span>
-                          <span className="w-1 h-1 rounded-full bg-slate-300" />
-                          <span className="font-sans text-[9px] font-bold uppercase tracking-widest text-slate-400 truncate">
-                            {product.category || "Mode"}
-                          </span>
-                        </div>
-                        
-                        <h3 className="font-bold text-slate-900 text-sm group-hover:text-sky-600 transition-colors duration-300 line-clamp-2 leading-snug">
-                          {getTranslatedField(product, "name", lang)}
-                        </h3>
-                      </div>
-
-                      <div className="flex items-end justify-between mt-4">
-                        <div className="flex flex-col gap-0.5">
-                          <div className="flex items-baseline gap-1.5">
-                            <span className="font-mono font-black text-slate-900 text-[18px]">
-                              {formatPrice(product.promoPrice || product.price)}
-                            </span>
-                            {isPromo && (
-                              <span className="font-sans font-bold text-[11px] text-slate-400 line-through">
-                                {formatPrice(product.price)}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col items-end gap-1">
-                          <div className="flex items-center gap-1 text-[11px] font-sans font-bold text-stone-400 bg-stone-50 px-2 py-1 rounded-md">
-                            <ShoppingBag className="w-3 h-3" />
-                            <span>{product.salesCount || 0}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <ProductCard
+                      product={product}
+                      index={i}
+                      variant="premium_immersive"
+                      onClick={(p) => navigate(`/product/${p.id}`)}
+                    />
                   </div>
                 );
               })
@@ -720,11 +626,11 @@ export const Home: React.FC = () => {
       
 
       {/* Recommended Section (Point 4) - Framed Beautifully & Playfully */}
-      <section className="py-12 sm:py-16 bg-slate-50 relative z-20 overflow-hidden">
+      <section className="bg-transparent relative z-20 overflow-hidden mb-6 sm:mb-8">
         <div className="w-full max-w-[90rem] mx-auto px-4 sm:px-6 md:px-8 relative z-10">
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 sm:p-10 relative">
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-5 sm:p-8 relative">
           
-          <div className="absolute top-0 right-0 w-48 h-48 bg-sky-500/5 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute top-0 right-0 w-48 h-48 bg-zinc-900/5 rounded-full blur-3xl pointer-events-none"></div>
           
           {/* Playful Header Section */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 pb-2 sm:pb-4 relative z-10 gap-4">
@@ -734,13 +640,13 @@ export const Home: React.FC = () => {
                   <span className="uppercase tracking-tight text-slate-900">{t("home.pour_vous.prefix")} {t("home.pour_vous.suffix")}</span>
                 </>}
               </h3>
-              <div className="w-12 sm:w-16 h-1 sm:h-1.5 bg-sky-500 rounded-full mt-2 sm:mt-3"></div>
+              <div className="w-12 sm:w-16 h-1 sm:h-1.5 bg-zinc-900 rounded-full mt-2 sm:mt-3"></div>
             </div>
 
             {/* Fun Rounded Button */}
             <button 
               onClick={() => navigate('/shop')}
-              className="group relative flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-3 rounded-xl bg-transparent text-sky-500 hover:text-sky-600 active:scale-95 text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 w-fit border-none"
+              className="group relative flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-3 rounded-xl bg-transparent text-zinc-900 hover:text-zinc-900 active:scale-95 text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 w-fit border-none"
             >
               <span>{t("home.pour_vous.explore_all")}</span>
               <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform duration-300" />
@@ -751,7 +657,7 @@ export const Home: React.FC = () => {
             {/* Left Desktop Nav */}
             <button
               onClick={() => scrollRcmd("left")}
-              className="absolute -left-3 sm:-left-5 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white text-slate-600 border border-slate-200 flex items-center justify-center hover:bg-slate-50 hover:text-slate-900 hover:scale-110 active:scale-95 transition-all duration-300 md:flex hidden shadow-sm cursor-pointer"
+              className="absolute -left-3 sm:-left-5 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white text-slate-600 border border-slate-200 flex items-center justify-center hover:bg-[#FAFAFA] hover:text-slate-900 hover:scale-110 active:scale-95 transition-all duration-300 md:flex hidden shadow-sm cursor-pointer"
               aria-label={t("Voir les produits précédents")}
             >
               <ChevronLeft className="w-5 h-5 stroke-[2]" />
@@ -782,7 +688,7 @@ export const Home: React.FC = () => {
             {/* Right Desktop Nav */}
             <button
               onClick={() => scrollRcmd("right")}
-              className="absolute -right-3 sm:-right-5 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white text-slate-600 border border-slate-200 flex items-center justify-center hover:bg-slate-50 hover:text-slate-900 hover:scale-110 active:scale-95 transition-all duration-300 md:flex hidden shadow-sm cursor-pointer"
+              className="absolute -right-3 sm:-right-5 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white text-slate-600 border border-slate-200 flex items-center justify-center hover:bg-[#FAFAFA] hover:text-slate-900 hover:scale-110 active:scale-95 transition-all duration-300 md:flex hidden shadow-sm cursor-pointer"
               aria-label={t("Voir plus de produits")}
             >
               <ChevronRight className="w-5 h-5 stroke-[2]" />
@@ -801,8 +707,8 @@ export const Home: React.FC = () => {
       {/* Main Product Grid Section: Shrink Banners and increase density - REMOVED DUPLICATE */}
 
       {/* Social Proof: Bubbly & Fun */}
-      <section className="py-6 sm:py-16 bg-white relative mt-6 sm:mt-16 rounded-3xl mx-3 sm:mx-8 shadow-sm border border-slate-100">
-         <div className="max-w-4xl mx-auto px-4 relative z-10 pt-2 sm:pt-8">
+      <section className="py-6 sm:py-8 bg-white relative mb-6 sm:mb-8 rounded-3xl mx-3 sm:mx-8 shadow-sm border border-slate-100">
+         <div className="max-w-4xl mx-auto px-4 relative z-10 pt-2 sm:pt-6">
             <div className="flex flex-col items-center text-center space-y-4 sm:space-y-6">
                <div className="flex items-center gap-1.5 sm:gap-2">
                   {[...Array(5)].map((_, i) => (

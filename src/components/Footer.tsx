@@ -71,10 +71,10 @@ export const Footer: React.FC<{ isHomepage?: boolean }> = ({ isHomepage = false 
         {/* Column 1: Identity */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <OlmaLogo className="w-6 h-6 sm:w-8 sm:h-8 text-sky-500" />
+            <OlmaLogo className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
             <span className="text-xl sm:text-2xl font-sans font-bold uppercase tracking-tight text-white rtl:tracking-normal">
               {t("OLMA")}
-              <span className="text-sky-500">{t("RT")}</span>
+              <span className="text-white">{t("RT")}</span>
             </span>
           </div>
           <p className="text-xs rtl:text-sm text-slate-400 leading-relaxed max-w-xs uppercase">
@@ -84,7 +84,7 @@ export const Footer: React.FC<{ isHomepage?: boolean }> = ({ isHomepage = false 
 
         {/* Column 2: Newsletter */}
         <div className="space-y-4">
-          <h5 className="text-[10px] rtl:text-[12px] font-sans font-bold uppercase tracking-[0.2em] text-sky-500">
+          <h5 className="text-[10px] rtl:text-[12px] font-sans font-bold uppercase tracking-[0.2em] text-white">
             {t("newsletter") || "Newsletter"}
           </h5>
           <div className="space-y-3">
@@ -97,11 +97,11 @@ export const Footer: React.FC<{ isHomepage?: boolean }> = ({ isHomepage = false 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={t("your_email") || "VOTRE EMAIL"}
-                className="flex-1 bg-slate-800/50 px-3 py-2 sm:px-4 sm:py-2.5 text-[10px] sm:text-xs rtl:text-[12px] font-sans font-medium rounded-xl focus:outline-none focus:ring-1 focus:ring-sky-500 transition-all placeholder:text-slate-500 text-slate-300 border-none"
+                className="flex-1 bg-slate-800/50 px-3 py-2 sm:px-4 sm:py-2.5 text-[10px] sm:text-xs rtl:text-[12px] font-sans font-medium rounded-none focus:outline-none focus:ring-1 focus:ring-white transition-all placeholder:text-slate-500 text-slate-300 border-none"
               />
               <button
                 type="submit"
-                className="bg-sky-500 text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-[10px] sm:text-xs rtl:text-[12px] font-sans font-bold uppercase hover:bg-sky-400 transition-colors shadow-sm cursor-pointer border-none"
+                className="bg-white text-zinc-900 px-4 py-2 sm:px-5 sm:py-2.5 rounded-none text-[10px] sm:text-xs rtl:text-[12px] font-sans font-bold uppercase hover:bg-zinc-200 transition-colors shadow-sm cursor-pointer border-none"
               >
                 {isSubmitting ? "..." : t("subscribe") || "S'inscrire"}
               </button>
@@ -111,11 +111,11 @@ export const Footer: React.FC<{ isHomepage?: boolean }> = ({ isHomepage = false 
 
         {/* Column 3: Apps */}
         <div className="space-y-4">
-          <h5 className="text-[10px] rtl:text-[12px] font-sans font-bold uppercase tracking-[0.2em] text-sky-500">
+          <h5 className="text-[10px] rtl:text-[12px] font-sans font-bold uppercase tracking-[0.2em] text-white">
             {t("mobile_app") || "Application Mobile"}
           </h5>
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white/5 rounded-2xl p-2 shrink-0 shadow-inner">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white/5 rounded-none p-2 shrink-0 shadow-inner">
               <img
                 loading="lazy"
                 src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://olma.dz&color=94a3b8&bgcolor=0f172a"
@@ -124,10 +124,10 @@ export const Footer: React.FC<{ isHomepage?: boolean }> = ({ isHomepage = false 
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <button className="px-3 py-1.5 sm:px-4 sm:py-2 bg-slate-800/50 border border-slate-700/50 rounded-xl text-[8px] sm:text-[9px] rtl:text-[11px] font-sans font-medium text-slate-400 hover:text-slate-300 uppercase tracking-widest rtl:tracking-normal hover:bg-slate-800 transition-all text-start cursor-pointer">
+              <button className="px-3 py-1.5 sm:px-4 sm:py-2 bg-slate-800/50 border border-slate-700/50 rounded-none text-[8px] sm:text-[9px] rtl:text-[11px] font-sans font-medium text-slate-400 hover:text-slate-300 uppercase tracking-widest rtl:tracking-normal hover:bg-slate-800 transition-all text-start cursor-pointer">
                 {t("App Store")}
               </button>
-              <button className="px-3 py-1.5 sm:px-4 sm:py-2 bg-slate-800/50 border border-slate-700/50 rounded-xl text-[8px] sm:text-[9px] rtl:text-[11px] font-sans font-medium text-slate-400 hover:text-slate-300 uppercase tracking-widest rtl:tracking-normal hover:bg-slate-800 transition-all text-start cursor-pointer">
+              <button className="px-3 py-1.5 sm:px-4 sm:py-2 bg-slate-800/50 border border-slate-700/50 rounded-none text-[8px] sm:text-[9px] rtl:text-[11px] font-sans font-medium text-slate-400 hover:text-slate-300 uppercase tracking-widest rtl:tracking-normal hover:bg-slate-800 transition-all text-start cursor-pointer">
                 {t("Google Play")}
               </button>
             </div>
@@ -136,7 +136,7 @@ export const Footer: React.FC<{ isHomepage?: boolean }> = ({ isHomepage = false 
 
         {/* Column 4: Links */}
         <div className="space-y-4 lg:justify-self-end">
-          <h5 className="text-[10px] rtl:text-[12px] font-sans font-bold uppercase tracking-[0.2em] text-sky-500">
+          <h5 className="text-[10px] rtl:text-[12px] font-sans font-bold uppercase tracking-[0.2em] text-white">
             {t("informations_header") || "Informations"}
           </h5>
           <ul className="grid grid-cols-1 gap-2 text-[10px] rtl:text-[12px] font-sans font-medium uppercase tracking-widest rtl:tracking-normal text-slate-500">
