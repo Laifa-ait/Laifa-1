@@ -1,13 +1,12 @@
-import { describe, it, expect, vi } from "vitest";
-import React from "react";
+import { describe, it, expect } from "vitest";
+import { ROLES } from "../constants/roles";
 
-// Minimal mock to avoid rendering context issues
 describe("AppGuard basic logic", () => {
   it("should evaluate allowed roles correctly", () => {
-    const allowedRoles = ["buyer", "seller"];
+    const allowedRoles = [ROLES.BUYER, ROLES.SELLER];
     
-    const userBuyer = { role: "buyer" };
-    const userAdmin = { role: "admin" };
+    const userBuyer = { role: ROLES.BUYER };
+    const userAdmin = { role: ROLES.ADMIN };
 
     expect(allowedRoles.includes(userBuyer.role)).toBe(true);
     expect(allowedRoles.includes(userAdmin.role)).toBe(false);

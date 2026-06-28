@@ -1,8 +1,6 @@
 import { Timestamp } from 'firebase/firestore';
 
-// Temporairement défini sur 'any' pour stabiliser l'application après le remplacement global erroné.
-// Nous allons le typer strictement de manière itérative, fichier par fichier (Phase 3a).
-export type AppTimestamp = any;
+export type AppTimestamp = Timestamp | Date | string | number | { seconds: number; nanoseconds?: number };
 
 export function normalizeTimestamp(input: AppTimestamp): Timestamp {
   if (!input) return Timestamp.now();

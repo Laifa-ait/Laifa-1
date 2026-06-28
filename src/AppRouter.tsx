@@ -303,6 +303,7 @@ const NotFound = React.lazy(() =>
 
 import { Layout } from "./components/Layout/Layout";
 import { AppGuard } from "./components/AppGuard";
+import { ROLES } from "./constants/roles";
 
 const PageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
@@ -538,7 +539,7 @@ export const AppRouter: React.FC = () => {
               <Route
                 path="/dashboard/buyer"
                 element={
-                  <AppGuard allowedRoles={["buyer", "admin", "seller"]}>
+                  <AppGuard allowedRoles={[ROLES.BUYER, ROLES.ADMIN, ROLES.SELLER]}>
                     <BuyerDashboard />
                   </AppGuard>
                 }
@@ -546,7 +547,7 @@ export const AppRouter: React.FC = () => {
               <Route
                 path="/dashboard/buyer/order/:id"
                 element={
-                  <AppGuard allowedRoles={["buyer", "admin", "seller"]}>
+                  <AppGuard allowedRoles={[ROLES.BUYER, ROLES.ADMIN, ROLES.SELLER]}>
                     <OrderDetails />
                   </AppGuard>
                 }
@@ -556,7 +557,7 @@ export const AppRouter: React.FC = () => {
               <Route
                 path="/dashboard/seller"
                 element={
-                  <AppGuard allowedRoles={["seller", "admin"]}>
+                  <AppGuard allowedRoles={[ROLES.SELLER, ROLES.ADMIN]}>
                     <SellerDashboardLayout />
                   </AppGuard>
                 }
@@ -577,7 +578,7 @@ export const AppRouter: React.FC = () => {
               <Route
                 path="/dashboard/admin"
                 element={
-                  <AppGuard allowedRoles={["admin"]}>
+                  <AppGuard allowedRoles={[ROLES.ADMIN]}>
                     <AdminDashboardLayout />
                   </AppGuard>
                 }

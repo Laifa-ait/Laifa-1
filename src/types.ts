@@ -14,7 +14,7 @@ export interface UserProfile {
   velocitySuspended?: boolean;
   bgSuspended_reason?: string;
   createdAt?: AppTimestamp;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface GuestUser {
@@ -32,8 +32,8 @@ export interface CartItem {
   image: string;
   quantity: number;
   selectedVariant?: string;
-  variants?: any[]; // optional details
-  [key: string]: any;
+  variants?: Record<string, unknown>[]; // optional details
+  [key: string]: unknown;
 }
 
 export interface User {
@@ -41,7 +41,7 @@ export interface User {
   email: string;
   displayName?: string;
   role: UserRole;
-  clientType?: "standard" | "vip" | "architect";
+  buyerType?: "standard" | "vip" | "architect";
   velocitySuspended?: boolean;
   bgSuspended_reason?: string;
   trustScore?: number;
@@ -68,7 +68,7 @@ export interface Shop {
 
   // Settings & Support
   supportPhone?: string;
-  address?: { wilaya?: string; [key: string]: any };
+  address?: { wilaya?: string; [key: string]: unknown };
   avgPreparationTime?: string; // e.g. "24h", "48h", "3-5 j"
   returnPolicy?: string;
 
@@ -188,7 +188,7 @@ export interface Product {
   season?: string;
   isBannerFeatured?: boolean;
   isSponsored?: boolean;
-  sponsoredSince?: any;
+  sponsoredSince?: AppTimestamp;
 
   // Legacy fields (restoring to fix build errors)
   colors?: string[];
@@ -268,7 +268,7 @@ export interface CarrierTrackingEvent {
   status_key: string;
   raw_status: string;
   severity: "normal" | "success" | "warning" | "error" | string;
-  timestamp: any; // Can be string, number, or Firestore Timestamp
+  timestamp: AppTimestamp; // Can be string, number, or Firestore Timestamp
   location: string;
   reason: string;
 }
@@ -299,7 +299,7 @@ export interface Order {
     productName: string;
     name?: string;
     productImage: string;
-    selectedVariant?: any;
+    selectedVariant?: string;
   }[];
 
   shippingAddress: Address;
@@ -344,15 +344,15 @@ export interface WithdrawalRequest {
   receiptUrl?: string;
 
   createdAt?: AppTimestamp;
-  processedAt?: any;
-  paidAt?: any;
+  processedAt?: AppTimestamp;
+  paidAt?: AppTimestamp;
 }
 
 export interface NewsletterCampaign {
   id: string;
   subject: string;
   content: string;
-  blocks: any[];
+  blocks: Record<string, unknown>[];
   status: "draft" | "sent";
   stats?: {
     opened: number;
