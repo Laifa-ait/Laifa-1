@@ -158,9 +158,9 @@ export const BuyerDashboard: React.FC = () => {
             <div className="absolute top-0 right-0 w-24 h-24 bg-[#ea580c]/5 rounded-full blur-2xl pointer-events-none" />
             <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-white shadow-sm shrink-0">
               <img loading="lazy" 
-                src={userProfile?.photoURL || currentUser.photoURL || getRetroAvatar(currentUser.email || currentUser.uid)} 
+                src={userProfile?.photoURL || currentUser.photoURL || getRetroAvatar(currentUser.email || currentUser.uid) || undefined} 
                 className="w-full h-full object-cover" 
-                alt={userProfile?.displayName} 
+                alt={userProfile?.displayName || "Profile"} 
                 referrerPolicy="no-referrer"
               />
             </div>

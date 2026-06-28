@@ -79,10 +79,11 @@ export const setupErrorAgent = () => {
   });
 };
 
-export const logReactErrorBoundary = (error: Error, info: { componentStack?: string | null }) => {
+export const logReactErrorBoundary = (error: unknown, info: { componentStack?: string | null }) => {
+  const err = error instanceof Error ? error : new Error(String(error));
   sendErrorToAgent({
-    message: error.message,
-    stack: error.stack,
+    message: err.message,
+    stack: err.stack,
     componentStack: info.componentStack || undefined,
     type: 'react_boundary'
   });

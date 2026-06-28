@@ -1,14 +1,19 @@
+import { AppTimestamp } from "./utils/date";
+import { UserRole } from "./constants/roles";
+
+export type { UserRole };
+
 export interface UserProfile {
   uid: string;
   email: string | null;
   displayName: string | null;
   photoURL: string | null;
-  role: "buyer" | "seller" | "admin";
+  role: UserRole;
   isVerified: boolean;
   onboardingCompleted: boolean;
   velocitySuspended?: boolean;
   bgSuspended_reason?: string;
-  createdAt?: Date | any;
+  createdAt?: AppTimestamp;
   [key: string]: any;
 }
 
@@ -28,10 +33,8 @@ export interface CartItem {
   quantity: number;
   selectedVariant?: string;
   variants?: any[]; // optional details
-  [key: string]: any; // fallback
+  [key: string]: any;
 }
-
-export type UserRole = "client" | "seller" | "admin";
 
 export interface User {
   uid: string;
@@ -44,8 +47,8 @@ export interface User {
   trustScore?: number;
   cashbackBalance?: number;
   phone?: string;
-  createdAt: any;
-  updatedAt?: any;
+  createdAt?: AppTimestamp;
+  updatedAt?: AppTimestamp;
 }
 
 export type ShopStatus =
@@ -93,8 +96,8 @@ export interface Shop {
   lockedBalance: number; // Funds pending withdrawal
   commissionRate: number; // e.g., 0.10 for 10%
 
-  createdAt: any;
-  updatedAt?: any;
+  createdAt?: AppTimestamp;
+  updatedAt?: AppTimestamp;
 }
 
 export interface FlashSaleProduct {
@@ -113,11 +116,11 @@ export interface FlashSaleProduct {
 export interface FlashSaleDocument {
   campaignId: string;
   title: string;
-  startTime: any;
-  endTime: any;
+  startTime?: AppTimestamp;
+  endTime?: AppTimestamp;
   products: FlashSaleProduct[];
   isActive: boolean;
-  updatedAt: any;
+  updatedAt?: AppTimestamp;
 }
 
 export interface Recommendation {
@@ -133,7 +136,7 @@ export interface Recommendation {
 export interface RecommendationDocument {
   userId?: string;
   products: Recommendation[];
-  updatedAt: any;
+  updatedAt?: AppTimestamp;
 }
 
 export interface PremiumProduct {
@@ -149,7 +152,7 @@ export interface PremiumProduct {
 
 export interface SelectionExceptionDocument {
   products: PremiumProduct[];
-  updatedAt: any;
+  updatedAt?: AppTimestamp;
 }
 
 export interface Product {
@@ -230,8 +233,8 @@ export interface Product {
       description: string;
     }
   >;
-  createdAt?: any;
-  updatedAt?: any;
+  createdAt?: AppTimestamp;
+  updatedAt?: AppTimestamp;
 }
 
 export interface Address {
@@ -321,8 +324,8 @@ export interface Order {
   deliveryProvider?: 'Yalidine' | 'Maystro' | 'KaziTour' | 'Autre';
   shippingLabelUrl?: string;
 
-  createdAt: any;
-  updatedAt?: any;
+  createdAt?: AppTimestamp;
+  updatedAt?: AppTimestamp;
 }
 
 export type WithdrawalMethod = "VIREMENT_BANCAIRE" | "CCP_BARIDIMOB";
@@ -340,7 +343,7 @@ export interface WithdrawalRequest {
   // Uploaded by admin upon payment
   receiptUrl?: string;
 
-  createdAt: any;
+  createdAt?: AppTimestamp;
   processedAt?: any;
   paidAt?: any;
 }
@@ -356,7 +359,7 @@ export interface NewsletterCampaign {
     clicked: number;
     totalSent: number;
   };
-  createdAt: any;
+  createdAt?: AppTimestamp;
 }
 
 export type View =
@@ -393,8 +396,8 @@ export interface HomepageSection {
     | "collections";
   orderIndex: number;
   isActive: boolean;
-  startDate?: any;
-  endDate?: any;
+  startDate?: AppTimestamp;
+  endDate?: AppTimestamp;
   targetAudience?: "all" | "new" | "logged_in" | "vip";
   targetRegions?: string[];
   title?: string;
@@ -422,8 +425,8 @@ export interface HomepageSection {
     daysSinceAdded?: number;
     maxItems?: number;
   };
-  createdAt?: any;
-  updatedAt?: any;
+  createdAt?: AppTimestamp;
+  updatedAt?: AppTimestamp;
   adminId?: string;
 }
 
@@ -451,11 +454,11 @@ export interface Banner {
   textColor?: string;
   orderIndex: number;
   isActive: boolean;
-  startDate?: any;
-  endDate?: any;
+  startDate?: AppTimestamp;
+  endDate?: AppTimestamp;
   targetUserType?: "all" | "new" | "logged_in";
   targetRegions?: string[];
   clickCount: number;
   impressionCount: number;
-  createdAt?: any;
+  createdAt?: AppTimestamp;
 }

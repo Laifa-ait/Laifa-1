@@ -473,7 +473,7 @@ export const Finances: React.FC = () => {
                   <YAxis stroke="#a1a1aa" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `${val/1000}k`} dx={-10} />
                   <Tooltip 
                      contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)', padding: '12px' }}
-                     formatter={(value: number) => [`${formatPrice(value)}`, undefined]}
+                     formatter={(value: any) => formatPrice(value)}
                      labelStyle={{ fontWeight: 'bold', marginBottom: '8px', color: '#18181b', fontSize: '12px' }}
                   />
                </LineChart>
@@ -531,7 +531,7 @@ export const Finances: React.FC = () => {
                       <p className="text-[9px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1">
                         {t("Date Demande")}
                       </p>
-                      <p className="text-sm font-kinder text-zinc-950">{w.createdAt?.toDate().toLocaleDateString()}</p>
+                      <p className="text-sm font-kinder text-zinc-950">{(w.createdAt as any)?.toDate?.()?.toLocaleDateString() || ''}</p>
                     </div>
                     {w.status?.toLowerCase() === "pending" ? (
                       <button

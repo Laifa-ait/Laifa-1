@@ -56,6 +56,9 @@ export default defineConfig(({mode}) => {
     base: '/',
     build: {
       outDir: 'dist',
+      rollupOptions: {
+        external: ['firebase-admin', 'firebase-admin/firestore']
+      }
     },
     resolve: {
       alias: {

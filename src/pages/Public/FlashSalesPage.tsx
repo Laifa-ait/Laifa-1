@@ -182,7 +182,7 @@ export const FlashSalesPage: React.FC = () => {
   const sortedProducts = useMemo(() => {
     let sorted = [...products];
     if (sortOption === "recent") {
-      sorted.sort((a, b) => b.createdAt?.toMillis?.() - a.createdAt?.toMillis?.() || 0);
+      sorted.sort((a, b) => ((b.createdAt as any)?.toMillis?.() || 0) - ((a.createdAt as any)?.toMillis?.() || 0));
     } else if (sortOption === "price-asc") {
       sorted.sort((a, b) => (a.promoPrice || a.price) - (b.promoPrice || b.price));
     } else if (sortOption === "price-desc") {

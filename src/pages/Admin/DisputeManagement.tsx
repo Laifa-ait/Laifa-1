@@ -196,7 +196,7 @@ export const DisputeManagement: React.FC = () => {
                       <div className="pt-2 flex items-center gap-2">
                         <Package className="w-3.5 h-3.5 text-zinc-600" />
                         <span className="text-xs font-kinder text-emerald-600">
-                          {formatPrice(c.total)} {t("DZD")}
+                          {formatPrice(c.total || 0)} {t("DZD")}
                         </span>
                         <button 
                            onClick={() => setChatOpenFor(c)}
@@ -216,7 +216,7 @@ export const DisputeManagement: React.FC = () => {
                         className="w-full bg-white border border-zinc-200 px-4 py-3.5 rounded-2xl text-xs font-bold uppercase tracking-widest rtl:tracking-normal outline-none focus:ring-2 ring-emerald-500/20"
                       >
                         <option value="">{t("Décision...")}</option>
-                        <option value="approved">{t("Rembourser l'acheteur")} ({formatPrice(c.total)} DZD)</option>
+                        <option value="approved">{t("Rembourser l'acheteur")} ({formatPrice(c.total || 0)} DZD)</option>
                         <option value="rejected">{t("Clôturer en faveur du vendeur")}</option>
                       </select>
                     </div>

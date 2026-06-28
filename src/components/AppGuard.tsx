@@ -2,10 +2,11 @@ import React, { ReactNode } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Spinner } from "./ui/Spinner";
+import { UserRole } from "../types";
 
 interface AppGuardProps {
   requireAuth?: boolean;
-  allowedRoles?: ("admin" | "seller" | "buyer")[];
+  allowedRoles?: UserRole[];
   children?: ReactNode;
 }
 

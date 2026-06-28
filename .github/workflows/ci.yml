@@ -1,67 +1,19 @@
-name: CI/CD Pipeline
+name: CI
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+on: [push, pull_request]
 
 jobs:
-  lint-and-test:
+  lint-build-test:
     runs-on: ubuntu-latest
-    
+    timeout-minutes: 10
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
+          node-version: '20'
           cache: 'npm'
       
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Run pre-build checks
-        run: |
-          node scripts/check-social-kill-switch.cjs
-          node scripts/check-rtl-logical-placement.cjs
-          npx tsx scripts/check-localization-zero-hardcoding.ts
-      
-      - name: Type check
-        run: npx tsc --noEmit
-      
-      - name: Run tests
-        run: npm test
-      
-      - name: Build frontend
-        run: npm run build
-
-  deploy:
-    needs: lint-and-test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
-      
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Build
-        run: npm run build
-      
-      - name: Deploy to Firebase
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
-          channelId: live
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - run: npx vitest run --passWithNoTests

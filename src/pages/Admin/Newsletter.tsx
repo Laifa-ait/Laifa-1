@@ -297,10 +297,11 @@ export const Newsletter: React.FC = () => {
     setIsSending(true);
 
     try {
-      const authOptions = auth.currentUser ? { Authorization: `Bearer ${await auth.currentUser.getIdToken()}` } : {};
+      const headers: any = { "Content-Type": "application/json" };
+      if (auth.currentUser) headers["Authorization"] = `Bearer ${await auth.currentUser.getIdToken()}`;
       const res = await fetch("/api/admin/send-newsletter", {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...authOptions },
+        headers,
         body: JSON.stringify({ subject, blocks, settings: {} }),
       });
       const data = await res.json();

@@ -42,7 +42,7 @@ export const UsersAdmin: React.FC = () => {
     else setLoadingMore(true);
 
     try {
-      const baseConstraints = [];
+      const baseConstraints: any[] = [];
       if (roleFilter !== "all") {
         baseConstraints.push(where("role", "==", roleFilter));
       }

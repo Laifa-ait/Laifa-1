@@ -185,7 +185,7 @@ export const ShopProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     try {
-      const chunks = [];
+      const chunks: string[][] = [];
       for (let i = 0; i < ids.length; i += 10) {
         chunks.push(ids.slice(i, i + 10));
       }

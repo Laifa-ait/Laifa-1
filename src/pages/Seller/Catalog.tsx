@@ -508,7 +508,7 @@ export const Catalog: React.FC = () => {
                                   )}
                                   {p.promoPrice && !p.flashSaleActive && (
                                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 text-[9px] font-kinder uppercase tracking-wider rtl:tracking-normal border border-rose-100">
-                                      <span>{t("promo_label")} {formatPrice(p.promoPrice)}</span>
+                                      <span>{t("promo_label")} {formatPrice(p.promoPrice || 0)}</span>
                                     </span>
                                   )}
                                   {p.isSponsored && (
@@ -519,10 +519,10 @@ export const Catalog: React.FC = () => {
 
                                 <div className="flex items-center gap-2 mt-2">
                                    <p className="font-kinder text-[#ea580c] text-xl">
-                                      {p.flashSaleActive ? formatPrice(p.flashPrice) : (p.promoPrice ? formatPrice(p.promoPrice) : formatPrice(p.price))}
+                                      {p.flashSaleActive ? formatPrice(p.flashPrice || 0) : (p.promoPrice ? formatPrice(p.promoPrice || 0) : formatPrice(p.price || 0))}
                                    </p>
                                    {(p.promoPrice || p.flashSaleActive) && (
-                                     <p className="text-zinc-400 line-through text-xs font-bold">{formatPrice(p.price)}</p>
+                                     <p className="text-zinc-400 line-through text-xs font-bold">{formatPrice(p.price || 0)}</p>
                                    )}
                                 </div>
                               </div>

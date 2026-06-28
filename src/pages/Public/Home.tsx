@@ -145,9 +145,9 @@ export const Home: React.FC = () => {
   // Merge default categories with custom database configurations
   const activeCategoriesConfig = useMemo(() => {
     const baseMap = [
-      { key: "Supermarché", ...defaultCategoryMapping[0] },
-      { key: "Maison & Déco", ...defaultCategoryMapping[1] },
-      { key: "Mode", ...defaultCategoryMapping[2] },
+      { ...defaultCategoryMapping[0] },
+      { ...defaultCategoryMapping[1] },
+      { ...defaultCategoryMapping[2] },
       {
         key: "Beauté & Santé",
         title: t("cat_beauty_title"),

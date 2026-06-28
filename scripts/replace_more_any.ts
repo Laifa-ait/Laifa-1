@@ -1,0 +1,11 @@
+import fs from "fs";
+let data = fs.readFileSync("src/types.ts", "utf8");
+data = data.replace(/startTime:\s*any;/g, "startTime?: AppTimestamp;");
+data = data.replace(/endTime:\s*any;/g, "endTime?: AppTimestamp;");
+data = data.replace(/processedAt:\s*any;/g, "processedAt?: AppTimestamp;");
+data = data.replace(/paidAt:\s*any;/g, "paidAt?: AppTimestamp;");
+data = data.replace(/sponsoredSince:\s*any;/g, "sponsoredSince?: AppTimestamp;");
+data = data.replace(/startDate\??:\s*any;/g, "startDate?: AppTimestamp;");
+data = data.replace(/endDate\??:\s*any;/g, "endDate?: AppTimestamp;");
+fs.writeFileSync("src/types.ts", data);
+console.log("Replaced more timestamps with AppTimestamp in types.ts");

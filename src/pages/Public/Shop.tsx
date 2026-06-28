@@ -81,7 +81,7 @@ export const Shop: React.FC = () => {
   }, [urlCategory, setActiveCategory]);
 
   const buildQueryConditions = () => {
-    const conditions = [];
+    const conditions: any[] = [];
     conditions.push(where("status", "==", "active"));
     
     const catToFilter = urlCategory || activeCategory;
@@ -121,7 +121,7 @@ export const Shop: React.FC = () => {
     const catFilter = urlCategory || activeCategory;
     if (catFilter && catFilter !== "Tous") {
       try {
-        let customCats = [];
+        let customCats: any[] = [];
         const cachedCatsStr = sessionStorage.getItem("home_custom_categories");
         if (cachedCatsStr) {
           customCats = JSON.parse(cachedCatsStr);
@@ -252,8 +252,8 @@ export const Shop: React.FC = () => {
     // Client-side sorting
     if (sortOption === "recent") {
       result.sort((a, b) => {
-        const timeA = a.createdAt?.seconds || 0;
-        const timeB = b.createdAt?.seconds || 0;
+        const timeA = (a.createdAt as any)?.seconds || 0;
+        const timeB = (b.createdAt as any)?.seconds || 0;
         return timeB - timeA;
       });
     } else if (sortOption === "quality") {

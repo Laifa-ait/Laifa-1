@@ -9,7 +9,7 @@ interface BuyBoxProps {
   onToggleWishlist: () => void;
   wishlist: string[];
   onShare: () => void;
-  stickyRef?: React.RefObject<HTMLDivElement>;
+  stickyRef?: React.Ref<HTMLDivElement>;
   isSticky?: boolean;
 }
 

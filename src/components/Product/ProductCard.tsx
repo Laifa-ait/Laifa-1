@@ -118,12 +118,12 @@ export const ProductCard = React.memo(
 
               <div className="mt-auto flex flex-wrap items-baseline gap-x-2 gap-y-1">
                 <span className="font-sans font-bold text-white text-[18px]">
-                  {formatPrice(isProductFlashActive ? product.flashPrice : product.promoPrice || product.price)}
+                  {formatPrice(isProductFlashActive ? (product.flashPrice || 0) : (product.promoPrice || product.price || 0))}
                 </span>
-                {((product.promoPrice && product.promoPrice < product.price) ||
-                  (isProductFlashActive && product.flashPrice && product.flashPrice < product.price)) && (
+                {((product.promoPrice && product.promoPrice < (product.price || 0)) ||
+                  (isProductFlashActive && product.flashPrice && product.flashPrice < (product.price || 0))) && (
                   <span className="font-sans font-medium text-[13px] text-zinc-500 line-through">
-                    {formatPrice(product.price)}
+                    {formatPrice(product.price || 0)}
                   </span>
                 )}
               </div>
@@ -194,12 +194,12 @@ export const ProductCard = React.memo(
               <div className="mt-auto flex flex-col gap-1">
                 <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                   <span className="font-sans font-bold text-slate-900 text-[16px] sm:text-[17px] tracking-tight">
-                    {formatPrice(isProductFlashActive ? product.flashPrice : product.promoPrice || product.price)}
+                    {formatPrice(isProductFlashActive ? (product.flashPrice || 0) : (product.promoPrice || product.price || 0))}
                   </span>
-                  {((product.promoPrice && product.promoPrice < product.price) ||
-                    (isProductFlashActive && product.flashPrice && product.flashPrice < product.price)) && (
+                  {((product.promoPrice && product.promoPrice < (product.price || 0)) ||
+                    (isProductFlashActive && product.flashPrice && product.flashPrice < (product.price || 0))) && (
                     <span className="font-sans font-medium text-[12px] text-slate-400 line-through">
-                      {formatPrice(product.price)}
+                      {formatPrice(product.price || 0)}
                     </span>
                   )}
                 </div>

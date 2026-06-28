@@ -452,7 +452,7 @@ export const Auth: React.FC = () => {
 
                   <button 
                      type="submit" 
-                     disabled={loading || (!isLogin && registrationRules && !cgvAccepted)}
+                     disabled={loading || Boolean(!isLogin && registrationRules && !cgvAccepted)}
                      className="w-full mt-6 py-4 bg-[#3C2B22] text-white rounded-2xl font-kinder uppercase tracking-[0.2em] rtl:tracking-normal flex items-center justify-center gap-3 text-xs hover:bg-[#0a0b0c] hover:shadow-lg hover:shadow-[#3C2B22]/30 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
                   >
                      {loading ? (
@@ -483,7 +483,7 @@ export const Auth: React.FC = () => {
                 <button
                   onClick={handleGoogleLogin}
                   type="button"
-                  disabled={loading || (!isLogin && registrationRules && !cgvAccepted)}
+                  disabled={loading || Boolean(!isLogin && registrationRules && !cgvAccepted)}
                   className="w-full py-4 flex items-center justify-center gap-3 bg-white border border-[#FF5C00] rounded-2xl hover:bg-[#FDF9EC] hover:border-[#FF5C00]/30 active:scale-[0.98] transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed group"
                 >
                   <img loading="lazy" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt={t("Google") || "Google"} className="w-6 h-6 group-hover:scale-110 transition-transform" />

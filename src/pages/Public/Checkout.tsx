@@ -199,7 +199,7 @@ export const Checkout: React.FC = () => {
       }
       
       if (couponData.expiresAt || couponData.expiryDate) {
-        let expiry = null;
+        let expiry: Date | null = null;
         const rawExpiry = couponData.expiresAt || couponData.expiryDate;
         
         if (typeof rawExpiry?.toDate === 'function') {

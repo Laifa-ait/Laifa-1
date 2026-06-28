@@ -8,6 +8,7 @@ import { ALGERIA_WILAYAS, ALGERIA_SHIPPING_DATA } from "../constants";
 import { placeOrderSchema } from "../utils/validation";
 import { checkSellerVelocityLimit } from "../utils/velocity";
 import { orderBreaker } from "../utils/circuitBreaker";
+import { calculateOrderCommission } from "../utils/orderCalculations";
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
@@ -189,7 +190,7 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
         let targetPrice = productData.promoPrice || productData.price;
         let availableStock = productData.stock || 0;
 
-        let variantInfo = null;
+        let variantInfo: any = null;
         if (cartItem.selectedVariant && productData.variants && Array.isArray(productData.variants)) {
            const variant = productData.variants.find((v: any) => v.name === cartItem.selectedVariant);
            if (!variant) {
@@ -312,7 +313,7 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
         appliedCouponData = couponDoc.data();
         if (!appliedCouponData.isActive) throw new Error("Code promo inactif.");
         
-        let expiryDateObj = null;
+        let expiryDateObj: Date | null = null;
         if (appliedCouponData.expiresAt) {
           if (typeof appliedCouponData.expiresAt.toDate === 'function') {
             expiryDateObj = appliedCouponData.expiresAt.toDate();
@@ -1185,30 +1186,18 @@ router.post('/calculate-commissions', authenticateToken, async (req: Authenticat
     const sellerRates = {};
     let globalRate = 10;
     const commDoc = await db.collection('settings').doc('commission').get();
-    if (commDoc.exists) globalRate = commDoc.data().globalRate ?? 10;
+    if (commDoc.exists) globalRate = commDoc.data()?.globalRate ?? 10;
     
     // Only fetch if there are sellers
     if (sellerIds.size > 0) {
       const sellersSnap = await db.collection('users').where(admin.firestore.FieldPath.documentId(), 'in', Array.from(sellerIds)).get();
       sellersSnap.forEach(snap => {
-         sellerRates[snap.id] = snap.data().commissionRate ?? globalRate;
+         (sellerRates as any)[snap.id] = snap.data().commissionRate ?? globalRate;
       });
     }
 
     const calculatedOrders = validatedOrders.map(order => {
-       let orderCommission = 0;
-       
-       if (order.items && order.items.length > 0) {
-          order.items.forEach(item => {
-             const sRate = sellerRates[item.sellerId] ?? globalRate;
-             const lineTotal = (item.price || 0) * (item.quantity || 1);
-             orderCommission += lineTotal * (sRate / 100);
-          });
-       } else {
-          // fallback
-          const sRate = sellerRates[order.sellerId] ?? sellerRates[order.sellerIds?.[0]] ?? globalRate;
-          orderCommission = (order.subtotal || order.total || 0) * (sRate / 100);
-       }
+       const { orderCommission, netPayout } = calculateOrderCommission(order, sellerRates, globalRate);
        
        totalVolume += (order.total || 0);
        totalCommission += orderCommission;
@@ -1216,7 +1205,7 @@ router.post('/calculate-commissions', authenticateToken, async (req: Authenticat
        return {
           ...order,
           commissionCalc: orderCommission,
-          netPayout: (order.total || 0) - orderCommission
+          netPayout
        };
     });
     

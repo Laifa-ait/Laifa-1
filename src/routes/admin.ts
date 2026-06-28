@@ -582,7 +582,7 @@ router.get('/homepage/sections', async (req, res) => {
   try {
     const snap = await db.collection('homepage_sections').orderBy('orderIndex', 'asc').limit(50).get();
     res.json({ sections: snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) });
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
@@ -594,7 +594,7 @@ router.post('/homepage/sections', authenticateToken, authorizeAdmin, async (req,
     data.createdAt = admin.firestore.FieldValue.serverTimestamp();
     const docRef = await db.collection('homepage_sections').add(data);
     res.json({ success: true, id: docRef.id });
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
@@ -606,7 +606,7 @@ router.put('/homepage/sections/:id', authenticateToken, authorizeAdmin, async (r
     data.updatedAt = admin.firestore.FieldValue.serverTimestamp();
     await db.collection('homepage_sections').doc(req.params.id).update(data);
     res.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
@@ -616,7 +616,7 @@ router.delete('/homepage/sections/:id', authenticateToken, authorizeAdmin, async
   try {
     await db.collection('homepage_sections').doc(req.params.id).delete();
     res.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
@@ -626,7 +626,7 @@ router.get('/homepage/banners', async (req, res) => {
   try {
     const snap = await db.collection('banners').orderBy('orderIndex', 'asc').limit(50).get();
     res.json({ banners: snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) });
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
@@ -638,7 +638,7 @@ router.post('/homepage/banners', authenticateToken, authorizeAdmin, async (req, 
     data.createdAt = admin.firestore.FieldValue.serverTimestamp();
     const docRef = await db.collection('banners').add(data);
     res.json({ success: true, id: docRef.id });
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
@@ -649,7 +649,7 @@ router.put('/homepage/banners/:id', authenticateToken, authorizeAdmin, async (re
     const data = req.body;
     await db.collection('banners').doc(req.params.id).update(data);
     res.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
@@ -659,7 +659,7 @@ router.delete('/homepage/banners/:id', authenticateToken, authorizeAdmin, async 
   try {
     await db.collection('banners').doc(req.params.id).delete();
     res.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });

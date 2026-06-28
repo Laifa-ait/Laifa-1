@@ -320,7 +320,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       // 2. If a fetch for this product is already in progress, wait for it
-      if (activeProductFetches.current[productId]) {
+      if (activeProductFetches.current[productId] !== undefined) {
         try {
           const pData = await activeProductFetches.current[productId];
           if (pData) {

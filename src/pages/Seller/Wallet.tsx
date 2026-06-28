@@ -74,7 +74,7 @@ export const Wallet: React.FC = () => {
     try {
       const q = query(
         collection(db, "withdrawals"),
-        where("sellerId", "==", currentUser.uid),
+        where("sellerId", "==", currentUser?.uid),
         orderBy("createdAt", "desc"),
         startAfter(lastVisible),
         limit(20)

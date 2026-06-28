@@ -98,7 +98,7 @@ export const ProductDetails: React.FC = () => {
   }, [product, selectedVariantObj]);
 
   const displayedPrice = React.useMemo(() => {
-    let basePrice = currentPrice;
+    let basePrice = currentPrice || 0;
     if (selectedVariantObj) {
       if (selectedVariantObj.priceOverride !== undefined && selectedVariantObj.priceOverride !== null && selectedVariantObj.priceOverride !== '') {
          return Number(selectedVariantObj.priceOverride);
@@ -134,6 +134,7 @@ export const ProductDetails: React.FC = () => {
   }, [product]);
 
   const handleAddToCart = async () => {
+    if (!product) return;
     const hasColors = product.colors && product.colors.length > 0;
     const hasSizes = product.sizes && product.sizes.length > 0;
     

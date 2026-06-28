@@ -72,7 +72,7 @@ router.get("/api/public/tracking/:trackingId", trackingLimiter, async (req: Requ
     const ordersRef = db.collection("orders");
     let snapshot = await ordersRef.where("trackingId", "==", trackingId.toUpperCase()).limit(1).get();
 
-    let orderData = null;
+    let orderData: any = null;
     let orderId = "";
 
     if (!snapshot.empty) {
@@ -265,7 +265,7 @@ router.post(
 
         const orderSnap = await orderRef.get();
         if (!orderSnap.exists) continue;
-        const data = orderSnap.data();
+        const data: any = orderSnap.data();
 
         const isUserAdmin = req.user.role === 'admin';
         const isUserSeller = data?.sellerIds?.includes(sellerId) || data?.sellerId === sellerId;
@@ -525,7 +525,7 @@ router.post("/api/buyer/orders/dispute", authenticateToken, async (req: Authenti
         throw new Error("Commande introuvable.");
       }
 
-      const orderData = orderSnap.data();
+      const orderData: any = orderSnap.data();
 
       // Only the buyer can open a dispute
       if (orderData.userId !== buyerId && orderData.buyerId !== buyerId) {
@@ -1581,7 +1581,7 @@ router.post(
       const orderSnap = await orderRef.get();
       if (!orderSnap.exists) return res.status(404).json({ error: "Order not found" });
 
-      const orderData = orderSnap.data();
+      const orderData: any = orderSnap.data();
       const buyerId = orderData.userId || orderData.buyerId;
       const sellerId = orderData.sellerId || (orderData.sellerIds && orderData.sellerIds[0]);
 
@@ -1867,7 +1867,7 @@ router.post(
       await db.runTransaction(async (transaction: any) => {
         const orderDoc = await transaction.get(orderRef);
         if (!orderDoc.exists) throw new Error("Order not found");
-        const orderData = orderDoc.data();
+        const orderData: any = orderDoc.data();
 
         if (resolution === "refund_to_wallet" && refundAmount > 0) {
           const buyerRef = db.collection("users").doc(orderData.userId); // userId instead of buyerId to match our schema
@@ -2341,7 +2341,7 @@ router.get("/api/search", async (req, res, next) => {
         `[Search Engine] Fetching all products to build search index...`,
       );
       try {
-        let products = [];
+        let products: any[] = [];
         if (clientDb) {
           const snap = await clientGetDocs(
             query(clientCollection(clientDb, "products"), where("status", "==", "active"), limit(500))
@@ -2375,7 +2375,7 @@ router.get("/api/search", async (req, res, next) => {
     if (!allStores) {
        (process.env.NODE_ENV === 'development' ? console.log : function(){})(`[Search Engine] Fetching all sellers for store indexing...`);
        try {
-         let stores = [];
+         let stores: any[] = [];
          if (clientDb) {
            const usersSnap = await clientGetDocs(query(clientCollection(clientDb, "users"), where("role", "==", "seller"), limit(300)));
            stores = usersSnap.docs.map((d: any) => ({id: d.id, ...d.data()}));
@@ -2417,7 +2417,7 @@ router.get("/api/search", async (req, res, next) => {
     try {
       const synDoc = await db.collection("settings").doc("search_synonyms").get();
       if (synDoc.exists && Array.isArray(synDoc.data()?.groups)) {
-        dbSynonymGroups = synDoc.data().groups;
+        dbSynonymGroups = synDoc.data()?.groups;
       }
     } catch (err) {
       // Fallback silent

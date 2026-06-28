@@ -218,11 +218,12 @@ export const ProductInfo: React.FC<InfoProps> = ({
 
   // Extract custom attributes based on category
   const categoryDef = DYNAMIC_CATEGORIES[product.category || ""];
-  const detailedAttributes = [];
+  const detailedAttributes: any[] = [];
 
-  if (categoryDef && categoryDef.allowed_filters && product.attributes) {
+  if (categoryDef && categoryDef.allowed_filters && product?.attributes) {
+    const attrs = product.attributes;
     categoryDef.allowed_filters.forEach((filter) => {
-      const val = product.attributes[filter.id];
+      const val = attrs[filter.id];
       if (val) {
         detailedAttributes.push({
           label: filter.label,
@@ -395,7 +396,7 @@ export const ProductInfo: React.FC<InfoProps> = ({
       )}
 
       {/* VARIANTS (COLOR/SIZE) */}
-      {(product.colors?.length > 0 || product.sizes?.length > 0) && (
+      {((product.colors?.length || 0) > 0 || (product.sizes?.length || 0) > 0) && (
         <div className="space-y-6 py-4">
           {product.colors && product.colors.length > 0 && (
             <div className="space-y-3">
