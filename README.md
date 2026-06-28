@@ -1,5 +1,10 @@
 # OLMART — Marketplace E-Commerce Multi-Vendeurs
 
+![TypeScript Strict](https://img.shields.io/badge/TypeScript-Strict-blue.svg)
+![Code Style: Prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)
+![Tests: Vitest](https://img.shields.io/badge/tests-vitest-44a833.svg)
+![License: Unlicensed](https://img.shields.io/badge/license-UNLICENSED-red.svg)
+
 Plateforme e-commerce destinée au marché algérien, couvrant les 58 wilayas.
 
 ## Stack Technique

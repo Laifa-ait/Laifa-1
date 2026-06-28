@@ -1,5 +1,12 @@
 import { Request, Response } from 'express';
-export interface AuthenticatedRequest extends Request { user?: any; file?: any; files?: any; }
+import { UserProfile, CartItem, Product, Shop, Order, CarrierTrackingEvent, Address } from "../types";
+import { firestore } from "firebase-admin";
+
+export interface AuthenticatedRequest extends Request { 
+  user?: UserProfile | { uid: string; email?: string; role?: string; [key: string]: unknown }; 
+  file?: Express.Multer.File; 
+  files?: Express.Multer.File[] | { [fieldname: string]: Express.Multer.File[] }; 
+}
 
 import { Router } from "express";
 import { admin, db } from "../config/firebase-admin";
@@ -98,25 +105,25 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
       console.warn("Failed to fetch global settings, using fallback", err);
     }
 
-    const uniqueProductIds: string[] = Array.from(new Set(cart.map((item: any) => item.id as string)));
+    const uniqueProductIds: string[] = Array.from(new Set(cart.map((item: CartItem) => item.id as string)));
     if (uniqueProductIds.length === 0) throw new Error("Panier vide.");
 
     let sellerIdsArray: string[] = [];
-    const shopSnapshots = new Map<string, any>();
+    const shopSnapshots = new Map<string, Partial<Shop>>();
     const emailAlerts: {sellerId: string, message: string}[] = [];
 
-    const result = await orderBreaker.execute(() => db.runTransaction(async (t: any) => {
+    const result = await orderBreaker.execute(() => db.runTransaction(async (t: firestore.Transaction) => {
       emailAlerts.length = 0; // Clear on retry
       // --- ÉTAPE 1 : LECTURES TRANSACTIONNELLES PURES ---
-      let couponDoc: any = null;
+      let couponDoc: firestore.QueryDocumentSnapshot | null = null;
       
-      const productSnaps = new Map<string, any>();
-      const productRefs = new Map<string, any>();
+      const productSnaps = new Map<string, firestore.DocumentSnapshot>();
+      const productRefs = new Map<string, firestore.DocumentReference>();
 
       const refs = uniqueProductIds.map(pId => db.collection("products").doc(pId));
       const snaps = await t.getAll(...refs);
       
-      snaps.forEach((productSnap: any, idx: number) => {
+      snaps.forEach((productSnap: firestore.DocumentSnapshot, idx: number) => {
         const pId = uniqueProductIds[idx];
         if (!productSnap.exists) {
           throw new Error(`Produit ${pId} introuvable.`);
@@ -133,12 +140,12 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
         const sellerRefs = sellerIdsArray.map(sId => db.collection("users").doc(sId));
         const sellerSnaps = await t.getAll(...sellerRefs);
         
-        sellerSnaps.forEach((shopSnap: any, idx: number) => {
+        sellerSnaps.forEach((shopSnap: firestore.DocumentSnapshot, idx: number) => {
           const sellerId = sellerIdsArray[idx];
           if (shopSnap.exists) {
-            const sd = shopSnap.data();
-            if (sd && (sd.isActive === false || sd.is_active === false || sd.velocitySuspended)) {
-               throw new Error(`La boutique "${sd.shopName || sd.displayName || sellerId}" est fermée temporairement (capacité de commande maximale atteinte).`);
+            const sd = shopSnap.data() as Partial<Shop>;
+            if (sd && ((sd as any).isActive === false || (sd as any).is_active === false || (sd as any).velocitySuspended)) {
+               throw new Error(`La boutique "${sd.shopName || (sd as any).displayName || sellerId}" est fermée temporairement (capacité de commande maximale atteinte).`);
             }
             shopSnapshots.set(sellerId, sd);
           } else {
@@ -148,7 +155,7 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
       }
 
       // Reconstruct productDocs array cleanly for downstream seller splits
-      const productDocs: any[] = [];
+      const productDocs: { cartItem: CartItem; productSnap: firestore.DocumentSnapshot; productRef: firestore.DocumentReference }[] = [];
       for (const cartItem of cart) {
         if (!cartItem.id || !cartItem.quantity || typeof cartItem.quantity !== 'number' || !Number.isInteger(cartItem.quantity) || cartItem.quantity < 1) {
           throw new Error(`Article invalide fourni.`);
@@ -175,24 +182,24 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
 
       // --- ÉTAPE 2 : LOGIQUE MÉTIER ---
       let subtotal = 0;
-      const orderItems: any[] = [];
+      const orderItems: { id: string; name: string | undefined; price: number; image: string | undefined; quantity: number; sellerId: string | undefined; selectedVariant: string | null }[] = [];
       
       // Map to track running mutable state of products inside this transaction
-      const productInMemoryStates = new Map<string, any>();
+      const productInMemoryStates = new Map<string, Partial<Product>>();
       for (const [pId, snap] of productSnaps.entries()) {
         productInMemoryStates.set(pId, JSON.parse(JSON.stringify(snap.data())));
       }
 
       for (const { cartItem, productSnap } of productDocs) {
         const productId = productSnap.id;
-        const productData = productInMemoryStates.get(productId);
+        const productData = productInMemoryStates.get(productId)!;
 
-        let targetPrice = productData.promoPrice || productData.price;
+        let targetPrice = productData.promoPrice || productData.price || 0;
         let availableStock = productData.stock || 0;
 
-        let variantInfo: any = null;
+        let variantInfo: NonNullable<Product['variants']>[number] | null = null;
         if (cartItem.selectedVariant && productData.variants && Array.isArray(productData.variants)) {
-           const variant = productData.variants.find((v: any) => v.name === cartItem.selectedVariant);
+           const variant = productData.variants.find((v: NonNullable<Product['variants']>[number]) => v.name === cartItem.selectedVariant);
            if (!variant) {
              throw new Error(`Variante ${cartItem.selectedVariant} introuvable pour ${productData.name}.`);
            }
@@ -208,8 +215,8 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
         }
 
         // PRICE CONFLICT CHECK
-        if (typeof cartItem.priceSeen === 'number' && cartItem.priceSeen !== targetPrice) {
-            const conflictErr: any = new Error(`Le prix de l'article "${productData.name}" a été mis à jour par le vendeur (de ${cartItem.priceSeen} DA à ${targetPrice} DA).`);
+        if (typeof (cartItem as any).priceSeen === 'number' && (cartItem as any).priceSeen !== targetPrice) {
+            const conflictErr = new Error(`Le prix de l'article "${productData.name}" a été mis à jour par le vendeur (de ${(cartItem as any).priceSeen} DA à ${targetPrice} DA).`) as Error & { code?: string };
             conflictErr.code = 'PRICE_CONFLICT';
             throw conflictErr;
         }
@@ -233,38 +240,38 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
 
         // Mutate the variant stock in memory
         if (variantInfo) {
-           productData.variants = productData.variants.map((v: any) => {
-              if (v.name === variantInfo.name) {
+           productData.variants = productData.variants!.map((v: NonNullable<Product['variants']>[number]) => {
+              if (v.name === variantInfo!.name) {
                  return { ...v, stock: Number(v.stock) - cartItem.quantity };
               }
               return v;
            });
-           productData.hasOutOfStockVariants = productData.variants.some((v: any) => Math.max(0, Number(v.stock) || 0) <= 0);
-           productData.stock = productData.variants.reduce((acc: number, curr: any) => acc + Math.max(0, Number(curr.stock) || 0), 0);
+           (productData as any).hasOutOfStockVariants = productData.variants.some((v: NonNullable<Product['variants']>[number]) => Math.max(0, Number(v.stock) || 0) <= 0);
+           productData.stock = productData.variants.reduce((acc: number, curr: NonNullable<Product['variants']>[number]) => acc + Math.max(0, Number(curr.stock) || 0), 0);
         } else {
            productData.stock = (productData.stock || 0) - cartItem.quantity;
         }
       }
 
       // Generate unified consolidated stock updates after iterating all items
-      const stockUpdates: any[] = [];
+      const stockUpdates: { ref: firestore.DocumentReference; update: Record<string, unknown> }[] = [];
       for (const pId of uniqueProductIds) {
-        const finalData = productInMemoryStates.get(pId);
-        const ref = productRefs.get(pId);
-        const stockThreshold = Number(finalData.lowStockAlert) || 5;
+        const finalData = productInMemoryStates.get(pId)!;
+        const ref = productRefs.get(pId)!;
+        const stockThreshold = Number((finalData as any).lowStockAlert) || 5;
         
         let needsAlert = false;
         let alertMessage = "";
         
         if (finalData.variants) {
-           const lowVariants = finalData.variants.filter((v: any) => v.isActive !== false && Number(v.stock) <= stockThreshold);
+           const lowVariants = finalData.variants.filter((v: NonNullable<Product['variants']>[number]) => (v as any).isActive !== false && Number(v.stock) <= stockThreshold);
            if (lowVariants.length > 0) {
               needsAlert = true;
-              alertMessage = `Alerte: La(es) variante(s) ${lowVariants.map((v:any)=>v.name).join(', ')} du produit "${finalData.name}" a atteint le stock critique (<= ${stockThreshold}).`;
+              alertMessage = `Alerte: La(es) variante(s) ${lowVariants.map((v: NonNullable<Product['variants']>[number])=>v.name).join(', ')} du produit "${finalData.name}" a atteint le stock critique (<= ${stockThreshold}).`;
            }
            stockUpdates.push({ ref, update: { 
               variants: finalData.variants,
-              hasOutOfStockVariants: finalData.hasOutOfStockVariants,
+              hasOutOfStockVariants: (finalData as any).hasOutOfStockVariants,
               stock: finalData.stock
            }});
         } else {
@@ -307,7 +314,7 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
 
       // 2.2 Validation du Coupon
       let discountAmount = 0;
-      let appliedCouponData: any = null;
+      let appliedCouponData: firestore.DocumentData | null = null;
 
       if (couponDoc) {
         appliedCouponData = couponDoc.data();
@@ -360,7 +367,7 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
 
       // 2.3 Calcul des Frais de Livraison et division en sous-commandes
       const userWilaya = shippingAddress.wilaya;
-      const sellerGroups = new Map<string, any[]>();
+      const sellerGroups = new Map<string, { cartItem: CartItem; productSnap: firestore.DocumentSnapshot; productRef: firestore.DocumentReference }[]>();
       for (const item of productDocs) {
         const sId = item.productSnap.data().sellerId;
         if (!sellerGroups.has(sId)) {
@@ -370,7 +377,7 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
       }
 
       const parentOrderId = db.collection("orders").doc().id;
-      const subOrdersToCreate: any[] = [];
+      const subOrdersToCreate: { ref: firestore.DocumentReference; data: Record<string, unknown> }[] = [];
       // sellerIdsArray is already defined and loaded above
       let remainingDiscount = discountAmount;
       let groupIndex = 0;
@@ -389,12 +396,12 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
            const pData = productSnap.data();
            let targetP = pData.promoPrice || pData.price;
            if (cartItem.selectedVariant && pData.variants && Array.isArray(pData.variants)) {
-              const variant = pData.variants.find((v: any) => v.name === cartItem.selectedVariant);
+              const variant = pData.variants.find((v: NonNullable<Product['variants']>[number]) => v.name === cartItem.selectedVariant);
               if (variant) {
                  if (variant.priceOverride !== undefined && variant.priceOverride !== null && variant.priceOverride !== '') {
                     targetP = Number(variant.priceOverride);
                  } else if (variant.priceDiff) {
-                    targetP += parseInt(variant.priceDiff);
+                    targetP += parseInt(variant.priceDiff as string);
                  }
               }
            }
@@ -430,19 +437,19 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
         const shop = shopSnapshots.get(sellerId);
         
         let sellerSubtotal = 0;
-        const sellerOrderItems: any[] = [];
+        const sellerOrderItems: { id: string; name: string | undefined; price: number; image: string | undefined; quantity: number; sellerId: string | undefined; sellerName: string | undefined; selectedVariant: string | null }[] = [];
         
         for (const { cartItem, productSnap } of groupItems) {
-           const productData = productSnap.data();
+           const productData = productSnap.data() as Product;
            let targetPrice = productData.promoPrice || productData.price;
            
            if (cartItem.selectedVariant && productData.variants && Array.isArray(productData.variants)) {
-              const variant = productData.variants.find((v: any) => v.name === cartItem.selectedVariant);
+              const variant = productData.variants.find((v: NonNullable<Product['variants']>[number]) => v.name === cartItem.selectedVariant);
               if (variant) {
                  if (variant.priceOverride !== undefined && variant.priceOverride !== null && variant.priceOverride !== '') {
                     targetPrice = Number(variant.priceOverride);
                  } else if (variant.priceDiff) {
-                    targetPrice += parseInt(variant.priceDiff);
+                    targetPrice += parseInt(variant.priceDiff as string);
                  }
               }
            }
@@ -658,12 +665,12 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
        walletDeducted: result.walletDeducted, 
        codAmount: result.codAmount 
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Place order err:", error);
-    if (error.code === 'PRICE_CONFLICT') {
-       return res.status(409).json({ error: error.message });
+    if ((error as any).code === 'PRICE_CONFLICT') {
+       return res.status(409).json({ error: (error as Error).message });
     }
-    res.status(400).json({ error: error.message || "Erreur de la commande." });
+    res.status(400).json({ error: (error as Error).message || "Erreur de la commande." });
   }
 });
 
@@ -682,7 +689,7 @@ router.post("/validate-coupon", authenticateToken, async (req: AuthenticatedRequ
     }
     
     const couponDoc = q.docs[0];
-    const couponData = { id: couponDoc.id, ...couponDoc.data() } as any;
+    const couponData = { id: couponDoc.id, ...couponDoc.data() } as Record<string, unknown>;
     
     if (!couponData.isActive) {
       return res.status(400).json({ error: "Ce code promo n'est plus actif." });
@@ -707,7 +714,7 @@ router.post("/validate-coupon", authenticateToken, async (req: AuthenticatedRequ
     }
     
     res.json({ success: true, coupon: couponData });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Coupon validation error:", error);
     res.status(500).json({ error: "Erreur serveur lors de la validation." });
   }
@@ -789,10 +796,10 @@ router.post("/webhooks/yalidine", async (req: AuthenticatedRequest, res: Respons
         const realOrderDoc = await transaction.get(realOrderRef);
         
         const existingEvents = realOrderDoc.data()?.carrier_tracking_events || [];
-        const eventExists = existingEvents.some((e: any) => e.event_id === event_id);
+        const eventExists = existingEvents.some((e: CarrierTrackingEvent) => e.event_id === event_id);
         
         if (!eventExists) {
-          const updatePayload: any = {
+          const updatePayload: Record<string, unknown> = {
             status: orderStatus,
             carrier_tracking_events: admin.firestore.FieldValue.arrayUnion(newEvent),
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
@@ -806,7 +813,7 @@ router.post("/webhooks/yalidine", async (req: AuthenticatedRequest, res: Respons
              const buyerId = data.userId || data.buyerId;
              if (buyerId && (data.walletDeducted > 0 || data.cashbackApplied > 0)) {
                 const buyerRef = db.collection("users").doc(buyerId);
-                const updatesForBuyer: any = {};
+                const updatesForBuyer: Record<string, unknown> = {};
                 if (data.walletDeducted > 0) {
                    updatesForBuyer.walletBalance = admin.firestore.FieldValue.increment(data.walletDeducted);
                    const walletTxRef = db.collection("wallet_transactions").doc();
@@ -832,10 +839,10 @@ router.post("/webhooks/yalidine", async (req: AuthenticatedRequest, res: Respons
         }
       } else {
         const existingEvents = orderDoc.data()?.carrier_tracking_events || [];
-        const eventExists = existingEvents.some((e: any) => e.event_id === event_id);
+        const eventExists = existingEvents.some((e: CarrierTrackingEvent) => e.event_id === event_id);
         
         if (!eventExists) {
-          const updatePayload: any = {
+          const updatePayload: Record<string, unknown> = {
             status: orderStatus,
             carrier_tracking_events: admin.firestore.FieldValue.arrayUnion(newEvent),
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
@@ -848,7 +855,7 @@ router.post("/webhooks/yalidine", async (req: AuthenticatedRequest, res: Respons
              const buyerId = data.userId || data.buyerId;
              if (buyerId && (data.walletDeducted > 0 || data.cashbackApplied > 0)) {
                 const buyerRef = db.collection("users").doc(buyerId);
-                const updatesForBuyer: any = {};
+                const updatesForBuyer: Record<string, unknown> = {};
                 if (data.walletDeducted > 0) {
                    updatesForBuyer.walletBalance = admin.firestore.FieldValue.increment(data.walletDeducted);
                    const walletTxRef = db.collection("wallet_transactions").doc();
@@ -876,13 +883,13 @@ router.post("/webhooks/yalidine", async (req: AuthenticatedRequest, res: Respons
     });
 
     res.json({ success: true, message: "Webhook processed securely" });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Yalidine Webhook Error:", err);
-    res.status(err.message === "Order not found" ? 404 : 500).json({ error: err.message });
+    res.status((err as Error).message === "Order not found" ? 404 : 500).json({ error: (err as Error).message });
   }
 });
 
-router.post("/prepare-shipment", authenticateToken, authorizeSeller, async (req: any, res) => {
+router.post("/prepare-shipment", authenticateToken, authorizeSeller, async (req: AuthenticatedRequest, res: Response) => {
   const { orderId, orderIds } = req.body;
   const sellerId = req.user.uid;
   const idsToProcess = orderIds || (orderId ? [orderId] : []);
@@ -934,8 +941,8 @@ router.post("/prepare-shipment", authenticateToken, authorizeSeller, async (req:
     } else {
       res.json({ trackingNumbers, pdfUrl, status: "success" });
     }
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
+  } catch (error: unknown) {
+    res.status(500).json({ error: (error as Error).message });
   }
 });
 
@@ -991,7 +998,7 @@ router.post("/cron/sync-tracking", async (req: Request, res: Response) => {
         const dataArray = json.data || [];
 
         // Grouper par trackingId
-        const trackingEventsMap = new Map<string, any[]>();
+        const trackingEventsMap = new Map<string, Record<string, unknown>[]>();
         for (const item of dataArray) {
            const trc = item.tracking;
            if (!trackingEventsMap.has(trc)) trackingEventsMap.set(trc, []);
@@ -1021,7 +1028,7 @@ router.post("/cron/sync-tracking", async (req: Request, res: Response) => {
                 const rawStatus = evt.status;
                 const event_id = evt.id ? String(evt.id) : `${rawStatus}_${evt.date_heure}`;
                 
-                const exists = updatedEvents.some((e: any) => e.event_id === event_id);
+                const exists = updatedEvents.some((e: CarrierTrackingEvent) => e.event_id === event_id);
                 if (exists) continue;
 
                 let targetStatus = "TRACKING_STATUS_IN_TRANSIT";
@@ -1065,7 +1072,7 @@ router.post("/cron/sync-tracking", async (req: Request, res: Response) => {
              }
 
              if (hasNewEvents) {
-                const updatePayload: any = {
+                const updatePayload: Record<string, unknown> = {
                   status: latestOrderStatus,
                   carrier_tracking_events: updatedEvents,
                   updatedAt: admin.firestore.FieldValue.serverTimestamp()
@@ -1078,7 +1085,7 @@ router.post("/cron/sync-tracking", async (req: Request, res: Response) => {
                    const buyerId = orderData.userId || orderData.buyerId;
                    if (buyerId && (orderData.walletDeducted > 0 || orderData.cashbackApplied > 0)) {
                       const buyerRef = db.collection("users").doc(buyerId);
-                      const updatesForBuyer: any = {};
+                      const updatesForBuyer: Record<string, unknown> = {};
                       if (orderData.walletDeducted > 0) {
                          updatesForBuyer.walletBalance = admin.firestore.FieldValue.increment(orderData.walletDeducted);
                          const walletTxRef = db.collection("wallet_transactions").doc();
@@ -1111,7 +1118,7 @@ router.post("/cron/sync-tracking", async (req: Request, res: Response) => {
     }
 
     res.json({ success: true, syncedCount, message: "Tracking sync completed" });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Cron sync tracking error:", error);
     res.status(500).json({ error: "Internal server error during sync" });
   }
@@ -1131,7 +1138,7 @@ router.post('/calculate-commissions', authenticateToken, async (req: Authenticat
 
     // 2. Fetch authentic order data from Firestore DB to override incoming client data
     const incomingOrderIds = orders.map(o => o.id || o.orderId).filter(Boolean);
-    const dbOrdersMap = new Map<string, any>();
+    const dbOrdersMap = new Map<string, Record<string, unknown>>();
     
     if (incomingOrderIds.length > 0) {
       // Chunk size of 30 due to Firestore "in" operator limits
@@ -1148,17 +1155,17 @@ router.post('/calculate-commissions', authenticateToken, async (req: Authenticat
     }
 
     // 3. Absolute Integrity Sanitization: Overwrite parameters with values from DB, and filter out unauthorized data
-    const validatedOrders: any[] = [];
+    const validatedOrders: Record<string, unknown>[] = [];
     for (const o of orders) {
       const oid = o.id || o.orderId;
       if (oid && dbOrdersMap.has(oid)) {
-        const dbOrder = dbOrdersMap.get(oid);
+        const dbOrder = dbOrdersMap.get(oid)!;
         
         // If caller is a seller, they can ONLY calculate commission on their own products/orders
         if (userRole === 'seller') {
           const isMyOrder = dbOrder.sellerId === userId || 
-                            (dbOrder.sellerIds && dbOrder.sellerIds.includes(userId)) ||
-                            (dbOrder.items && dbOrder.items.some((item: any) => item.sellerId === userId));
+                            (dbOrder.sellerIds && (dbOrder.sellerIds as string[]).includes(userId)) ||
+                            (dbOrder.items && (dbOrder.items as Order['items']).some((item) => item.sellerId === userId));
           if (!isMyOrder) {
             continue; // Silently filter out other seller data to protect client VIP database
           }
@@ -1183,7 +1190,7 @@ router.post('/calculate-commissions', authenticateToken, async (req: Authenticat
        o.items?.forEach(i => { if (i.sellerId) sellerIds.add(i.sellerId); });
     });
     
-    const sellerRates = {};
+    const sellerRates: Record<string, number> = {};
     let globalRate = 10;
     const commDoc = await db.collection('settings').doc('commission').get();
     if (commDoc.exists) globalRate = commDoc.data()?.globalRate ?? 10;
@@ -1192,7 +1199,7 @@ router.post('/calculate-commissions', authenticateToken, async (req: Authenticat
     if (sellerIds.size > 0) {
       const sellersSnap = await db.collection('users').where(admin.firestore.FieldPath.documentId(), 'in', Array.from(sellerIds)).get();
       sellersSnap.forEach(snap => {
-         (sellerRates as any)[snap.id] = snap.data().commissionRate ?? globalRate;
+         sellerRates[snap.id] = snap.data().commissionRate ?? globalRate;
       });
     }
 
@@ -1215,7 +1222,7 @@ router.post('/calculate-commissions', authenticateToken, async (req: Authenticat
        totalCommission,
        sellersNetPayout: totalVolume - totalCommission
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Calculate commissions error:', error);
     res.status(500).json({ error: 'Failed to calculate commissions' });
   }

@@ -17,6 +17,10 @@ export default defineConfig(({mode}) => {
         NODE_ENV: JSON.stringify(mode),
       }
     },
+    test: {
+      globals: true,
+      environment: 'node',
+    },
     plugins: [
       react(), 
       tailwindcss(),

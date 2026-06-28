@@ -1,42 +1,50 @@
-import { describe, it, expect } from "vitest";
-import { Timestamp } from "firebase/firestore";
-import { normalizeTimestamp } from "../utils/date";
+import { describe, it, expect, vi } from 'vitest';
+import { normalizeTimestamp } from '../utils/date';
+import { Timestamp } from 'firebase/firestore';
 
-describe("normalizeTimestamp", () => {
-  it("should return Timestamp for Timestamp input", () => {
-    const ts = Timestamp.now();
-    expect(normalizeTimestamp(ts)).toBe(ts);
-  });
-
-  it("should return Timestamp for Date input", () => {
-    const date = new Date("2026-06-27T20:50:41Z");
+describe('normalizeTimestamp', () => {
+  it('should return a Timestamp when given a Date', () => {
+    const date = new Date('2024-01-01T12:00:00Z');
     const result = normalizeTimestamp(date);
-    expect(result.toMillis()).toBe(date.getTime());
+    expect(result).toBeInstanceOf(Timestamp);
+    expect(result.toDate().toISOString()).toBe('2024-01-01T12:00:00.000Z');
   });
 
-  it("should return Timestamp for ISO string input", () => {
-    const dateStr = "2026-06-27T20:50:41Z";
-    const result = normalizeTimestamp(dateStr);
-    expect(result.toMillis()).toBe(new Date(dateStr).getTime());
+  it('should return the same Timestamp if given a Timestamp', () => {
+    const ts = Timestamp.fromDate(new Date('2024-01-01T12:00:00Z'));
+    const result = normalizeTimestamp(ts);
+    expect(result).toBe(ts);
   });
 
-  it("should return Timestamp for number input (milliseconds)", () => {
-    const millis = 1718000000000;
-    const result = normalizeTimestamp(millis);
-    expect(result.toMillis()).toBe(millis);
+  it('should parse ISO strings into Timestamps', () => {
+    const str = '2024-01-01T12:00:00.000Z';
+    const result = normalizeTimestamp(str);
+    expect(result).toBeInstanceOf(Timestamp);
+    expect(result.toDate().toISOString()).toBe(str);
   });
 
-  it("should return Timestamp for object with seconds", () => {
-    const obj = { seconds: 1718000000, nanoseconds: 0 };
+  it('should parse milliseconds into Timestamps', () => {
+    const ms = 1704110400000; // 2024-01-01T12:00:00.000Z
+    const result = normalizeTimestamp(ms);
+    expect(result).toBeInstanceOf(Timestamp);
+    expect(result.toMillis()).toBe(ms);
+  });
+
+  it('should parse objects with seconds and nanoseconds', () => {
+    const obj = { seconds: 1704110400, nanoseconds: 0 };
     const result = normalizeTimestamp(obj);
-    expect(result.seconds).toBe(1718000000);
+    expect(result).toBeInstanceOf(Timestamp);
+    expect(result.seconds).toBe(1704110400);
   });
 
-  it("should return current Timestamp for null/undefined", () => {
-    const before = Date.now();
+  it('should return current time for falsy values', () => {
+    vi.useFakeTimers();
+    const now = new Date('2024-01-01T12:00:00Z');
+    vi.setSystemTime(now);
+    
     const result = normalizeTimestamp(null as any);
-    const after = Date.now();
-    expect(result.toMillis()).toBeGreaterThanOrEqual(before);
-    expect(result.toMillis()).toBeLessThanOrEqual(after + 10);
+    expect(result.toMillis()).toBe(now.getTime());
+    
+    vi.useRealTimers();
   });
 });
