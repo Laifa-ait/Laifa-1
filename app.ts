@@ -17,6 +17,7 @@ import helmet from "helmet";
 import compression from "compression";
 import { promises as fsPromises } from "fs";
 import { doc, getDoc } from "firebase/firestore";
+import validator from "validator";
 
 import { startProductPublisherWorker } from "./src/workers/productPublisher";
 
@@ -47,6 +48,19 @@ app.set('trust proxy', 1);
 
 import rateLimit from "express-rate-limit";
 
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  skipSuccessfulRequests: true,
+  message: "Trop de tentatives de connexion. Réessayez dans 15 minutes."
+});
+
+const checkoutLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000,
+  max: 3,
+  message: "Trop de tentatives de paiement. Réessayez dans une minute."
+});
+
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -60,19 +74,20 @@ const strictLimiter = rateLimit({
 });
 
 app.use("/api/chat", strictLimiter);
-app.use("/api/place-order", strictLimiter);
+app.use("/api/place-order", checkoutLimiter);
+app.use("/api/auth/login", authLimiter);
 app.use("/api", apiLimiter);
 
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://apis.google.com", "https://www.gstatic.com", "https://www.googletagmanager.com", "https://*.googletagmanager.com"],
+      scriptSrc: ["'self'", "https://apis.google.com", "https://www.gstatic.com", "https://www.googletagmanager.com", "https://*.googletagmanager.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
       imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
       connectSrc: ["'self'", "https:", "wss:", "ws:", "https://*.googleapis.com"],
-      frameSrc: ["'self'", "https://*.firebaseapp.com", "https://*.google.com", "https://apis.google.com"],
+      frameSrc: ["'self'", "https://*.google.com", "https://apis.google.com"],
       frameAncestors: ["'self'", "https://aistudio.google.com", "https://*.google.com", "https://ai.studio", "https://*.ai.studio"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: []
@@ -91,9 +106,13 @@ const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
     if (!origin) return callback(null, true);
     
-    const isAllowed = allowedOrigins.includes(origin) || 
-                      /^https:\/\/ais-.*\.europe-west2\.run\.app$/.test(origin) || 
-                      /^http:\/\/localhost:\d+$/.test(origin);
+    const allowedList = [
+      ...allowedOrigins,
+      ...(process.env.NODE_ENV === "development" ? ["http://localhost:3000"] : [])
+    ];
+    
+    const isAllowed = allowedList.includes(origin) || 
+                      /^https:\/\/ais-[a-z0-9-]+\.europe-west2\.run\.app$/.test(origin);
                       
     if (isAllowed) {
       callback(null, true);
@@ -109,6 +128,17 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ limit: "2mb", extended: true }));
+
+app.use((req, res, next) => {
+  if (req.body && typeof req.body === 'object') {
+    Object.keys(req.body).forEach(key => {
+      if (typeof req.body[key] === 'string') {
+        req.body[key] = validator.escape(req.body[key]);
+      }
+    });
+  }
+  next();
+});
 
 // Health Check Endpoint
 app.get("/api/health", async (req, res) => {

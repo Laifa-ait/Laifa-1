@@ -77,8 +77,9 @@ service cloud.firestore {
       allow write: if isSignedIn() && request.auth.token.role == 'admin';
     }
     match /settings/{id} { 
-      allow read, list: if true; 
-      allow write: if id != 'categories' && isAdmin(); 
+      allow read: if isAdmin() || (isSignedIn() && id in ['theme', 'language']);
+      allow list: if isAdmin();
+      allow write: if isAdmin() && id != 'categories';
     }
     match /public/{id} { allow read, list: if true; allow write: if isAdmin(); }
     match /metadata/{id} { allow read, list: if true; allow write: if isAdmin(); }
@@ -179,9 +180,12 @@ service cloud.firestore {
 
       function isValidProduct(data) {
         return data.sellerId == request.auth.uid
-            && data.name is string && data.name.size() <= 200
-            && data.price is number && data.price >= 0
-            && (data.status in ['pending', 'active', 'rejected', 'deleted', 'draft', 'pending_deletion']);
+            && data.name is string && data.name.size() >= 3 && data.name.size() <= 200
+            && data.description is string && data.description.size() <= 5000
+            && data.price is number && data.price >= 0 && data.price < 999999
+            && (data.images is list && data.images.size() <= 10)
+            && (data.status in ['pending', 'active', 'rejected', 'deleted', 'draft', 'pending_deletion'])
+            && (!('variants' in data) || (data.variants is list && data.variants.size() <= 100));
       }
 
       allow create: if isSignedIn() && (
@@ -363,7 +367,7 @@ service cloud.firestore {
     // -------------------------------------------------------------------------
     match /support_tickets/{id} {
       allow read, update, delete: if isAdmin();
-      allow create: if true; // Allow public submission
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid && isValidTicket(request.resource.data);
     }
     
     function isValidTicket(data) {
