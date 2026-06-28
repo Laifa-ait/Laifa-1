@@ -5,7 +5,7 @@ on: [push, pull_request]
 jobs:
   lint-build-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -13,7 +13,21 @@ jobs:
           node-version: '20'
           cache: 'npm'
       
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run build
-      - run: npx vitest run --passWithNoTests
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Type check
+        run: npm run lint
+        
+      - name: Build
+        run: npm run build
+        
+      - name: Tests
+        run: npm run test
+        
+      - name: Upload dist
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/

@@ -39,6 +39,10 @@ cp .env.example .env
 | `npm run lint` | Vérifier les types |
 | `npm run format` | Formater le code |
 
+## Dépendances Serveur
+
+**⚠️ ATTENTION : `firebase-admin` est présent dans les dependencies (et non devDependencies) car il est requis par le backend Express en production. Bien qu'il soit ignoré par Vite lors du build frontend, il alourdit l'installation de production. Ne jamais l'importer dans le code source React.**
+
 ## Architecture
 
 ```

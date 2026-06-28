@@ -14,7 +14,7 @@ export interface UserProfile {
   velocitySuspended?: boolean;
   bgSuspended_reason?: string;
   createdAt?: AppTimestamp;
-  [key: string]: unknown;
+  buyerType?: "standard" | "vip" | "architect";
 }
 
 export interface GuestUser {
@@ -33,7 +33,6 @@ export interface CartItem {
   quantity: number;
   selectedVariant?: string;
   variants?: Record<string, unknown>[]; // optional details
-  [key: string]: unknown;
 }
 
 export interface User {
@@ -68,7 +67,7 @@ export interface Shop {
 
   // Settings & Support
   supportPhone?: string;
-  address?: { wilaya?: string; [key: string]: unknown };
+  address?: { wilaya?: string; commune?: string; street?: string };
   avgPreparationTime?: string; // e.g. "24h", "48h", "3-5 j"
   returnPolicy?: string;
 
@@ -279,7 +278,7 @@ export interface ReturnRequest {
   details?: string;
   status: "pending" | "approved" | "rejected" | "received" | "completed";
   photos?: string[];
-  createdAt: string;
+  createdAt: AppTimestamp;
 }
 
 export interface Order {
@@ -314,7 +313,7 @@ export interface Order {
   disputeRequest?: {
     reason: string;
     details: string;
-    createdAt: string;
+    createdAt: AppTimestamp;
   };
 
   // Logistics API reference

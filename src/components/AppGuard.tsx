@@ -66,10 +66,10 @@ export const AppGuard: React.FC<AppGuardProps> = ({ requireAuth = false, allowed
     return <Navigate to="/verify-email" replace />;
   }
 
-  const activeRole = tokenRole || userProfile?.role;
+  const activeRole = (tokenRole || userProfile?.role) as UserRole | undefined;
 
   if (allowedRoles && allowedRoles.length > 0) {
-    if (!activeRole || !allowedRoles.includes(activeRole as any)) {
+    if (!activeRole || !allowedRoles.includes(activeRole)) {
       // Redirect to homepage or dashboard safely
       console.warn(`[Security Alert AppGuard] Unauthorized or missing role "${activeRole}" for user ${currentUser?.email}`);
       return <Navigate to="/" replace />;
