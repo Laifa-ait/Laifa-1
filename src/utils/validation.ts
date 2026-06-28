@@ -43,5 +43,6 @@ export const placeOrderSchema = z.object({
   couponCode: z.string().nullable().optional(),
   useCashbackPoints: z.boolean().optional().default(false),
   useWallet: z.boolean().optional().default(false),
+  walletAmount: z.number().min(0).optional(),
   idempotencyKey: z.string().optional()
 });

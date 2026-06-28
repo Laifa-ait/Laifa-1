@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 export interface AuthenticatedRequest extends Request { user?: any; file?: any; files?: any; }
 
 import { Router } from "express";
+import validator from "validator";
 import {
   admin,
   db,
@@ -91,18 +92,13 @@ router.get("/api/public/tracking/:trackingId", trackingLimiter, async (req: Requ
     
     // Only return safe public data
     const publicData = {
-      id: orderId,
       trackingId: orderData?.trackingId || orderId,
       status: orderData?.status,
-      total: orderData?.total,
-      carrier_tracking_events: orderData?.carrier_tracking_events || [],
-      shippingAddress: {
-        fullName: orderData?.shippingAddress?.fullName,
-        city: orderData?.shippingAddress?.city,
-        state: orderData?.shippingAddress?.state,
-        address: orderData?.shippingAddress?.address,
-      },
-      userName: orderData?.userName,
+      carrier_tracking_events: (orderData?.carrier_tracking_events || []).map((e: any) => ({
+        status_key: e.status_key,
+        timestamp: e.timestamp,
+        location: e.location,
+      })),
     };
 
     res.json(publicData);
@@ -789,8 +785,8 @@ router.post(
       const parsed = JSON.parse(jsonStr);
 
       res.json({
-        ar: parsed.ar || fr + " (AR)",
-        en: parsed.en || fr + " (EN)",
+        ar: validator.escape(parsed.ar || fr + " (AR)"),
+        en: validator.escape(parsed.en || fr + " (EN)"),
       });
     } catch (error: any) {
       console.warn(
@@ -882,8 +878,8 @@ router.post(
 
             batchKeys.forEach((key) => {
               if (parsed[key]) {
-                arContent[key] = parsed[key].ar || frContent[key] + " (AR)";
-                enContent[key] = parsed[key].en || frContent[key] + " (EN)";
+                arContent[key] = validator.escape(parsed[key].ar || frContent[key] + " (AR)");
+                enContent[key] = validator.escape(parsed[key].en || frContent[key] + " (EN)");
               }
             });
           }
@@ -1024,11 +1020,11 @@ router.post(
 
             batchKeys.forEach((key) => {
               if (parsed[key]) {
-                arContent[key] = parsed[key].ar || frContent[key] + " (AR)";
-                enContent[key] = parsed[key].en || frContent[key] + " (EN)";
+                arContent[key] = validator.escape(parsed[key].ar || frContent[key] + " (AR)");
+                enContent[key] = validator.escape(parsed[key].en || frContent[key] + " (EN)");
               } else {
-                arContent[key] = frContent[key] + " (AR)";
-                enContent[key] = frContent[key] + " (EN)";
+                arContent[key] = validator.escape(frContent[key] + " (AR)");
+                enContent[key] = validator.escape(frContent[key] + " (EN)");
                 mockedCount++;
               }
             });
@@ -1168,8 +1164,8 @@ router.post(
             const arVal = parsed[term]?.ar || term;
             const enVal = parsed[term]?.en || term;
             result[term] = {
-              ar: arVal,
-              en: enVal,
+              ar: validator.escape(arVal),
+              en: validator.escape(enVal),
               isNew: true,
             };
           });
@@ -1212,11 +1208,11 @@ router.post(
       Object.entries(translations).forEach(([term, trans]) => {
         const tAny = trans as any;
         if (!frContent[term]) {
-          frContent[term] = term;
+          frContent[term] = validator.escape(term);
           modified = true;
         }
-        arContent[term] = tAny.ar;
-        enContent[term] = tAny.en;
+        arContent[term] = validator.escape(tAny.ar || "");
+        enContent[term] = validator.escape(tAny.en || "");
       });
 
       if (modified) {
@@ -1233,10 +1229,20 @@ router.post(
   }
 );
 
+import rateLimit from "express-rate-limit";
+
+const imageAnalyzeLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000,
+  max: 5,
+  keyGenerator: (req: any) => req.user?.uid || req.ip,
+  message: { error: "Limite d'analyse d'images atteinte. Réessayez dans une minute." }
+});
+
 router.post(
   "/api/seller/analyze-image",
   authenticateToken,
   authorizeSeller,
+  imageAnalyzeLimiter,
   async (req: AuthenticatedRequest, res: Response) => {
     const { imageUrl } = req.body;
     if (!imageUrl) return res.status(400).json({ error: "imageUrl requis" });
@@ -1805,19 +1811,6 @@ router.post(
   async (req: AuthenticatedRequest, res: Response) => {
     const { code } = req.body;
     const userId = req.user.uid;
-
-    // Mode dév: autoriser le code de test fixe
-    if (process.env.NODE_ENV !== "production" && code === "123456") {
-      try {
-        const userRef = db.collection("users").doc(userId);
-        await userRef.update({
-          "verification.verified": true,
-        });
-        return res.json({ success: true });
-      } catch (error: any) {
-        return res.status(500).json({ error: error.message });
-      }
-    }
 
     try {
       const userRef = db.collection("users").doc(userId);

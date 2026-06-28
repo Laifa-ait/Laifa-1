@@ -58,9 +58,16 @@ export const authenticateToken = async (req: AuthenticatedRequest, res: Response
     const decodedToken = await admin.auth().verifyIdToken(idToken);
     let role = decodedToken.role || "buyer"; // Default to buyer for safety
 
-    // Explicit hardcoded super-admin fallback by email (secure-by-design & resilient)
-    if (decodedToken.email && decodedToken.email.toLowerCase() === process.env.ADMIN_EMAIL?.toLowerCase()) {
+    if (decodedToken.admin === true) {
       role = "admin";
+    } else if (decodedToken.email && decodedToken.email.toLowerCase() === process.env.ADMIN_EMAIL?.toLowerCase()) {
+      role = "admin";
+      // Sync the custom claim for next time
+      try {
+        await admin.auth().setCustomUserClaims(decodedToken.uid, { admin: true, role: 'admin' });
+      } catch (e) {
+        console.warn("Failed to set admin custom claim:", e);
+      }
       if (process.env.NODE_ENV === "development") {
         console.log(`[Admin Auth] Verified admin user ${decodedToken.email} (case-insensitive)`);
       }

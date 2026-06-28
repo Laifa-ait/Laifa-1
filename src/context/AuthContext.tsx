@@ -217,9 +217,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           });
         }
 
-        type UserDocData = UserProfile & { lastAuthMethod: string; status: string; };
-
-        const nextDocData: UserDocData = {
+        const nextDocData: Record<string, unknown> = {
           uid: user.uid,
           displayName: user.displayName || email.split("@")[0],
           email: user.email,
@@ -229,7 +227,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           createdAt: serverTimestamp(),
           lastAuthMethod: "email",
           ...(userRole === "seller" ? { isVerified: false, trustScore: 50, shippingTariffs: defaultTariffs } : {}),
-        } as UserDocData;
+        };
 
         await setDoc(userDocRef, nextDocData);
         localStorage.removeItem("olmart_pending_registration_role");

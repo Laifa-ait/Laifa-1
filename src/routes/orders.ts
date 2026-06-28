@@ -63,23 +63,6 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
   const { cart, shippingAddress, couponCode, useCashbackPoints, useWallet, deliveryMethod, idempotencyKey } = validationResult.data;
   const userId = req.user.uid;
 
-  if (idempotencyKey) {
-    const existingOrder = await db.collection("orders")
-      .where("idempotencyKey", "==", idempotencyKey)
-      .where("userId", "==", req.user.uid)
-      .limit(1)
-      .get();
-    
-    if (!existingOrder.empty) {
-      const existingDoc = existingOrder.docs[0];
-      return res.json({ 
-        orderId: existingDoc.id, 
-        status: "already_processed",
-        message: "Commande déjà traitée" 
-      });
-    }
-  }
-
   const sellerIdsSet = new Set<string>();
   try {
     let settingsDoc;
@@ -114,6 +97,25 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
 
     const result = await orderBreaker.execute(() => db.runTransaction(async (t: firestore.Transaction) => {
       emailAlerts.length = 0; // Clear on retry
+      
+      if (idempotencyKey) {
+        const idempotencyQuery = await t.get(
+          db.collection("orders")
+            .where("idempotencyKey", "==", idempotencyKey)
+            .where("userId", "==", req.user.uid)
+            .limit(1)
+        );
+        if (!idempotencyQuery.empty) {
+          const existingDoc = idempotencyQuery.docs[0];
+          return {
+            alreadyProcessed: true,
+            orderId: existingDoc.id,
+            status: "already_processed",
+            message: "Commande déjà traitée"
+          };
+        }
+      }
+
       // --- ÉTAPE 1 : LECTURES TRANSACTIONNELLES PURES ---
       let couponDoc: firestore.QueryDocumentSnapshot | null = null;
       
@@ -360,9 +362,11 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
 
       // Calculate applied loyalty points (cashback points)
       let cashbackApplied = 0;
+      const MAX_CASHBACK_PERCENT = 50; // 50% maximum du sous-total
       if (useCashbackPoints) {
          const userPoints = userData?.cashbackBalance || 0;
-         cashbackApplied = Math.min(userPoints, Math.max(0, subtotal - discountAmount));
+         const maxCashbackAllowed = Math.floor((subtotal * MAX_CASHBACK_PERCENT) / 100);
+         cashbackApplied = Math.min(userPoints, Math.max(0, subtotal - discountAmount), maxCashbackAllowed);
       }
 
       // 2.3 Calcul des Frais de Livraison et division en sous-commandes
@@ -656,6 +660,14 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
              console.error("Erreur lors de l'envoi de l'email de stock bas", e);
           }
        })).catch(console.error);
+    }
+
+    if (result.alreadyProcessed) {
+      return res.json({ 
+        orderId: result.orderId, 
+        status: result.status,
+        message: result.message 
+      });
     }
 
     res.json({ 

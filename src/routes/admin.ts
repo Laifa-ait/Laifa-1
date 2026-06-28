@@ -157,8 +157,21 @@ router.post("/seller/withdraw", authenticateToken, authorizeSeller, async (req: 
        if (!userSnap.exists) throw new Error("Vendeur introuvable");
        const userData = userSnap.data();
 
-       if (userData.walletBalance < amount) {
-          throw new Error("Solde insuffisant.");
+       // VERIFICATION CRITIQUE AJOUTEE : solde reel disponible
+       const availableBalance = (userData.walletBalance || 0) - (userData.lockedBalance || 0);
+       if (availableBalance < amount) {
+          throw new Error(`Solde disponible insuffisant. Solde: ${userData.walletBalance}, Gelé: ${userData.lockedBalance}, Disponible: ${availableBalance}`);
+       }
+
+       // VERIFICATION : pas de retrait en cours (idempotence)
+       const existingWithdrawalsRef = db.collection('withdrawals');
+       const pendingWithdrawalsQuery = existingWithdrawalsRef
+          .where('sellerId', '==', sellerId)
+          .where('status', '==', 'pending')
+          .limit(1);
+       const existingWithdrawal = await transaction.get(pendingWithdrawalsQuery);
+       if (!existingWithdrawal.empty) {
+          throw new Error("Vous avez déjà une demande de retrait en cours.");
        }
 
        // Deduct from walletBalance and add to lockedBalance
