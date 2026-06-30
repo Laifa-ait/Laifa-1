@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Store, Settings, ShieldCheck, Box, ShoppingBag, Wallet, LayoutDashboard, Menu, X, Home, MessageSquare, Package, Star, Megaphone } from 'lucide-react';
+import { Store, Settings, ShieldCheck, Box, ShoppingBag, Wallet, LayoutDashboard, Menu, X, Home, MessageSquare, Package, Star, Megaphone, Tag } from 'lucide-react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
@@ -14,6 +14,7 @@ export const SellerDashboardLayout: React.FC = () => {
   const navItems = [
     { to: '/dashboard/seller', icon: LayoutDashboard, label: t("seller_overview") || 'Vue d\'ensemble', end: true },
     { to: '/dashboard/seller/catalog', icon: Box, label: t("seller_catalog") || 'Mon Catalogue' },
+    { to: '/dashboard/seller/promotions', icon: Tag, label: t("seller.menu.promotions") || 'Promotions' },
     { to: '/dashboard/seller/orders', icon: ShoppingBag, label: t("seller_orders") || 'Commandes' },
     { to: '/dashboard/seller/returns', icon: Package, label: t("seller.menu.returns") || 'Gestion des Retours' },
     { to: '/dashboard/seller/sponsorships', icon: Megaphone, label: t("seller.menu.sponsorships") || 'Sponsoring' },

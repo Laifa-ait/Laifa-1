@@ -18,27 +18,31 @@ import compression from "compression";
 import { promises as fsPromises } from "fs";
 import { doc, getDoc } from "firebase/firestore";
 import validator from "validator";
-
-import { startProductPublisherWorker } from "./src/workers/productPublisher";
+import { startProductPublisherWorker } from "./workers/productPublisher";
+import { generateProductJsonLd } from "../src/utils/seo";
 
 // Cache in-memory HTML for production
 let cachedHtmlTemplate = "";
 
-// Simple in-memory product cache with TTL
-const productCache = new Map<string, { data: any, timestamp: number }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+// Simple in-memory product cache with TTL using node-cache
+import NodeCache from "node-cache";
+const productCache = new NodeCache({ stdTTL: 300, checkperiod: 60 }); // 5 minutes TTL
+
 
 // Imports extracted into modules
-import { admin, db, clientDb, verifyAndFixDb } from "./src/config/firebase-admin";
-import { ai } from "./src/config/gemini";
-import { authenticateToken, authorizeAdmin, authorizeSeller } from "./src/middlewares/auth";
+import { admin, db, clientDb, verifyAndFixDb } from "./services/firebase-admin";
+import { ai } from "./config/gemini";
+import { authenticateToken, authorizeAdmin, authorizeSeller } from "./middlewares/auth";
 
-import authRouter from "./src/routes/auth";
-import aiRouter from "./src/routes/ai";
-import ordersRouter from "./src/routes/orders";
-import adminRouter from "./src/routes/admin";
-import coreRouter from "./src/routes/core";
-import workspaceRouter from "./src/routes/workspace";
+import authRouter from "./routes/auth";
+import aiRouter from "./routes/ai";
+import ordersRouter from "./routes/orders";
+import adminRouter from "./routes/admin";
+import buyerRouter from "./routes/buyer";
+import sellerRouter from "./routes/seller";
+import disputesRouter from "./routes/disputes";
+import messagingRouter from "./routes/messaging";
+import workspaceRouter from "./routes/workspace";
 
 const app = express();
 const PORT = 3000;
@@ -46,30 +50,34 @@ const PORT = 3000;
 // Tell Express to trust reverse proxy headers securely by whitelisting trusted local and internal subnets
 app.set('trust proxy', 1);
 
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
   skipSuccessfulRequests: true,
+  keyGenerator: (req) => ipKeyGenerator(req.ip || "127.0.0.1"),
   message: "Trop de tentatives de connexion. Réessayez dans 15 minutes."
 });
 
 const checkoutLimiter = rateLimit({
   windowMs: 1 * 60 * 1000,
   max: 3,
+  keyGenerator: (req) => ipKeyGenerator(req.ip || "127.0.0.1"),
   message: "Trop de tentatives de paiement. Réessayez dans une minute."
 });
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
+  keyGenerator: (req) => ipKeyGenerator(req.ip || "127.0.0.1"),
   message: "Trop de requêtes, veuillez réessayer dans 15 minutes."
 });
 
 const strictLimiter = rateLimit({
   windowMs: 1 * 60 * 1000,
   max: 10,
+  keyGenerator: (req) => ipKeyGenerator(req.ip || "127.0.0.1"),
   message: "Trop de requêtes, veuillez réessayer dans une minute."
 });
 
@@ -112,7 +120,8 @@ const corsOptions = {
     ];
     
     const isAllowed = allowedList.includes(origin) || 
-                      /^https:\/\/ais-[a-z0-9-]+\.europe-west2\.run\.app$/.test(origin);
+                      /^https:\/\/ais-[a-z0-9-]+\.europe-west2\.run\.app$/.test(origin) ||
+                      origin.endsWith(".run.app");
                       
     if (isAllowed) {
       callback(null, true);
@@ -140,6 +149,48 @@ app.use((req, res, next) => {
   next();
 });
 
+// Serve locales from Firestore
+const sanitizeLocales = (data: any): Record<string, string> => {
+  if (!data || typeof data !== "object") return {};
+  const cleaned: Record<string, string> = {};
+  for (const [key, val] of Object.entries(data)) {
+    if (typeof val !== "string") continue;
+    const trimmedVal = val.trim();
+    const isPlaceholder = 
+      !trimmedVal ||
+      trimmedVal === key ||
+      trimmedVal === key.toUpperCase() ||
+      trimmedVal === key.toLowerCase() ||
+      trimmedVal === "EMPTY_WISHLIST_TITLE" ||
+      trimmedVal === "empty_wishlist_desc" ||
+      trimmedVal === "GO_TO_SHOP" ||
+      trimmedVal === "wishlist";
+    if (!isPlaceholder) {
+      cleaned[key] = trimmedVal;
+    }
+  }
+  return cleaned;
+};
+
+app.get("/locales/:lang.json", async (req, res) => {
+  try {
+    const lang = req.params.lang;
+    let baseDict: Record<string, string> = {};
+    const localPath = path.join(process.cwd(), "public/locales", `${lang}.json`);
+    if (require('fs').existsSync(localPath)) {
+      try {
+        baseDict = JSON.parse(require('fs').readFileSync(localPath, "utf8"));
+      } catch (e) {
+        console.error("Error parsing locale file:", e);
+      }
+    }
+    return res.json(baseDict);
+  } catch(e) {
+    console.error("Error in locales endpoint:", e);
+    return res.status(200).json({});
+  }
+});
+
 // Health Check Endpoint
 app.get("/api/health", async (req, res) => {
   const checks = {
@@ -163,24 +214,9 @@ app.get("/api/health", async (req, res) => {
   });
 });
 
-import swaggerUi from 'swagger-ui-express';
-import swaggerJsdoc from 'swagger-jsdoc';
+// swagger-ui-express removed
 
-const swaggerOptions = {
-  definition: {
-    openapi: '3.0.0',
-    info: {
-      title: 'Olma API',
-      version: '1.0.0',
-      description: 'API for Olma Marketplace',
-    },
-  },
-  apis: ['./src/routes/*.ts'], // read from routes
-};
-const swaggerSpec = swaggerJsdoc(swaggerOptions);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
-const debugLimiter = rateLimit({ windowMs: 5 * 60 * 1000, max: 20, message: "Trop de requêtes debug." });
+const debugLimiter = rateLimit({ windowMs: 5 * 60 * 1000, max: 20, keyGenerator: (req) => ipKeyGenerator(req.ip || "127.0.0.1"), message: "Trop de requêtes debug." });
 app.use("/api/debug", debugLimiter);
 
 // Mount extracted routers
@@ -189,7 +225,10 @@ app.use("/api", aiRouter);
 app.use("/api", ordersRouter);
 app.use("/api", adminRouter);
 app.use("/api/workspace", workspaceRouter);
-app.use("/", coreRouter); // All remaining endpoints
+app.use("/", buyerRouter);
+app.use("/", sellerRouter);
+app.use("/", disputesRouter);
+app.use("/", messagingRouter);
 
 import { Request, Response, NextFunction } from 'express';
 
@@ -211,8 +250,17 @@ async function setupVite() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
-    app.use('/locales', express.static(path.join(distPath, 'locales'), { maxAge: '1y' }));
-    app.use(express.static(distPath, { index: false }));
+    app.use('/locales', express.static(path.join(distPath, 'locales'), { maxAge: 0 }));
+    app.use(express.static(distPath, { 
+      index: false,
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.html')) {
+          res.setHeader('Cache-Control', 'no-cache');
+        } else if (filePath.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/)) {
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        }
+      }
+    }));
 
     // PERFORMANCE : Lecture du fichier index.html UNE SEULE FOIS au démarrage
     try {
@@ -231,15 +279,15 @@ async function setupVite() {
         let product: any = null;
 
         // Check cache first
-        const cached = productCache.get(productId);
-        if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
-          product = cached.data;
+        const cached: any = productCache.get(productId);
+        if (cached) {
+          product = cached;
         } else {
           // Fetch from Firestore
           const productSnap = await getDoc(doc(clientDb, 'products', productId));
           if (productSnap.exists()) {
-            product = productSnap.data();
-            productCache.set(productId, { data: product, timestamp: Date.now() });
+            product = { id: productId, ...productSnap.data() };
+            productCache.set(productId, product);
           }
         }
         
@@ -251,6 +299,10 @@ async function setupVite() {
           const images = product.images || [];
           const image = images.length > 0 ? images[0] : (product.image || '');
 
+          const baseUrl = process.env.VITE_APP_URL || `${req.protocol}://${req.get('host')}`;
+          const productWithId = { id: productId, ...product };
+          const jsonLdString = generateProductJsonLd(productWithId, baseUrl);
+
           html = html.replace(/<title>.*?<\/title>/i, `<title>${title} | Olma</title>`);
           const metaTags = `
     <meta property="og:title" content="${title}" />
@@ -260,6 +312,7 @@ async function setupVite() {
     <meta name="twitter:title" content="${title}" />
     <meta name="twitter:description" content="${description}" />
     <meta name="twitter:image" content="${image}" />
+    ${jsonLdString}
 </head>`;
           html = html.replace('</head>', metaTags);
 

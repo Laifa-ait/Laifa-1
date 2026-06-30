@@ -399,7 +399,8 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       }
 
       const metadata = {
-        contentType: type === 'image' ? 'image/webp' : file.type || 'video/mp4'
+        contentType: type === 'image' ? 'image/webp' : file.type || 'video/mp4',
+        cacheControl: "public, max-age=31536000"
       };
 
       const uploadPromise = new Promise((resolve, reject) => {

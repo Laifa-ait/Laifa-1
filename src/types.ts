@@ -15,6 +15,33 @@ export interface UserProfile {
   bgSuspended_reason?: string;
   createdAt?: AppTimestamp;
   buyerType?: "standard" | "vip" | "architect";
+  name?: string;
+  designStyle?: string;
+  portfolioUrl?: string;
+  brandStory?: string;
+  rcNumber?: string;
+  nifNumber?: string;
+  rib?: string;
+  legalStatus?: string;
+  documents?: any;
+  status?: string;
+  walletBalance?: number;
+  lockedBalance?: number;
+  commissionRate?: number;
+  vip?: boolean;
+  shopName?: string;
+  shopLogo?: string;
+  shopDescription?: string;
+  logoUrl?: string;
+  bannerUrl?: string;
+  wilaya?: string;
+  shippingTariffs?: any;
+  storeName?: string;
+  brandName?: string;
+  trustScore?: number;
+  rating?: number;
+  cashbackBalance?: number;
+  isVip?: boolean;
 }
 
 export interface GuestUser {
@@ -33,6 +60,10 @@ export interface CartItem {
   quantity: number;
   selectedVariant?: string;
   variants?: Record<string, unknown>[]; // optional details
+  addedAt?: number;
+  flashSaleActive?: boolean;
+  flashPrice?: number;
+  flashEndDate?: string;
 }
 
 export interface User {

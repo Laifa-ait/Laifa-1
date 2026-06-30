@@ -34,6 +34,11 @@ const SellerOverview = React.lazy(() =>
     default: module.Overview,
   }))
 );
+const Promotions = React.lazy(() =>
+  import("./pages/Seller/Promotions").then((module) => ({
+    default: module.Promotions,
+  }))
+);
 const Catalog = React.lazy(() =>
   import("./pages/Seller/Catalog").then((module) => ({
     default: module.Catalog,
@@ -305,6 +310,20 @@ import { Layout } from "./components/Layout/Layout";
 import { AppGuard } from "./components/AppGuard";
 import { ROLES } from "./constants/roles";
 
+const AdminLoader = () => (
+  <div className="flex flex-col items-center justify-center min-h-[50vh]">
+    <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4" />
+    <div className="text-indigo-600 font-medium text-sm uppercase tracking-wider">Interface Admin...</div>
+  </div>
+);
+
+const SellerLoader = () => (
+  <div className="flex flex-col items-center justify-center min-h-[50vh]">
+    <div className="w-8 h-8 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin mb-4" />
+    <div className="text-amber-600 font-medium text-sm uppercase tracking-wider">Espace Vendeur...</div>
+  </div>
+);
+
 const PageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const isDashboard = location.pathname.startsWith("/dashboard");
@@ -558,7 +577,9 @@ export const AppRouter: React.FC = () => {
                 path="/dashboard/seller"
                 element={
                   <AppGuard allowedRoles={[ROLES.SELLER, ROLES.ADMIN]}>
-                    <SellerDashboardLayout />
+                    <Suspense fallback={<SellerLoader />}>
+                      <SellerDashboardLayout />
+                    </Suspense>
                   </AppGuard>
                 }
               >
@@ -566,6 +587,7 @@ export const AppRouter: React.FC = () => {
                 <Route path="catalog" element={<Catalog />} />
                 <Route path="orders" element={<SellerOrders />} />
                 <Route path="returns" element={<ReturnManagement />} />
+                <Route path="promotions" element={<Promotions />} />
                 <Route path="wallet" element={<Wallet />} />
                 <Route path="verification" element={<Verification />} />
                 <Route path="settings" element={<ShopSettings />} />
@@ -579,7 +601,9 @@ export const AppRouter: React.FC = () => {
                 path="/dashboard/admin"
                 element={
                   <AppGuard allowedRoles={[ROLES.ADMIN]}>
-                    <AdminDashboardLayout />
+                    <Suspense fallback={<AdminLoader />}>
+                      <AdminDashboardLayout />
+                    </Suspense>
                   </AppGuard>
                 }
               >

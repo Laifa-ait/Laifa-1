@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Database, Search, Download, Settings, RefreshCw, FileCode, CheckCircle, Flame, MapPin, Sliders, Play, Info, Key, Server, BarChart2, BookOpen } from 'lucide-react';
-import { MOCK_PRODUCTS } from '../../utils/mockProducts';
 import { useTranslation } from "react-i18next";
 import { db } from '../../lib/firebase';
 import { collection, getDocs, doc, getDoc, setDoc } from 'firebase/firestore';
@@ -93,14 +92,14 @@ export const SearchIndexAdmin: React.FC = () => {
             setProducts(fetchedProds);
             setUsingDemoData(false);
           } else {
-            setProducts(MOCK_PRODUCTS);
+            setProducts([]);
             setUsingDemoData(true);
           }
         }
       } catch (err) {
         console.error("Error initializing search index settings:", err);
         if (!isCancelled) {
-          setProducts(MOCK_PRODUCTS);
+          setProducts([]);
           setUsingDemoData(true);
         }
       } finally {

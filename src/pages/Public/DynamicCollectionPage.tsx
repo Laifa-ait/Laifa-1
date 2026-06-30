@@ -31,7 +31,8 @@ import { motion, AnimatePresence, useScroll, useTransform } from "motion/react";
 import { db } from "../../lib/firebase";
 import { Product } from "../../types";
 import { ProductCard } from "../../components/Product/ProductCard";
-import { useUI } from "../../context/UIContext";
+import { VirtualizedProductGrid } from "../../components/Shop/VirtualizedProductGrid";
+import { useUIStore } from "../../store/useUIStore";
 import { AdvancedSearchbar } from "../../components/Search/AdvancedSearchbar";
 import { useShop } from "../../context/ShopContext";
 import { useTranslation } from "react-i18next";
@@ -81,7 +82,7 @@ export const DynamicCollectionPage: React.FC = () => {
   const [activeTheme, setActiveTheme] = useState<any>(null);
 
   const navigate = useNavigate();
-  const { setIsCartOpen } = useUI();
+  const setIsCartOpen = useUIStore((state) => state.setIsCartOpen);
   const { searchQuery } = useShop();
   const { t } = useTranslation();
 
@@ -623,15 +624,8 @@ export const DynamicCollectionPage: React.FC = () => {
                   ))}
                 </div>
               ) : filteredProducts.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
-                  {filteredProducts.slice(0, displayLimit).map((product, i) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      index={i}
-                      variant="premium_immersive"
-                    />
-                  ))}
+                <div className="flex flex-col gap-6">
+                  <VirtualizedProductGrid products={filteredProducts.slice(0, displayLimit)} variant="premium_immersive" />
                   
                   {displayLimit < filteredProducts.length && (
                     <div className="col-span-full flex justify-center py-10">

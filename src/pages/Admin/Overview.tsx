@@ -27,7 +27,6 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import OverviewChart from "../../components/Admin/OverviewChart";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
 import { db } from "../../lib/firebase";
 import { collection, query, getDocs, limit, orderBy, where, startAfter, Timestamp } from "firebase/firestore";
 import { formatPrice } from "../../utils/format";
@@ -37,6 +36,11 @@ import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { AdminManualGuide } from "../../components/Admin/AdminManualGuide";
 import { useDebounce } from "../../hooks/useDebounce";
+import { AdminKPICards } from "../../components/Admin/Metrics/AdminKPICards";
+import { BehaviorFunnel } from "../../components/Admin/Metrics/BehaviorFunnel";
+import { PopularInsights } from "../../components/Admin/Metrics/PopularInsights";
+import { RealTimeTrafficChart } from "../../components/Admin/Metrics/RealTimeTrafficChart";
+import { WilayaBreakdown } from "../../components/Admin/Metrics/WilayaBreakdown";
 
 interface AdminAlert {
   id: string;
@@ -242,12 +246,12 @@ export const Overview: React.FC = () => {
           // Top Products (by fetching top 5 from products sorted by salesCount)
           const topProductsQuery = query(collection(db, "products"), orderBy("salesCount", "desc"), limit(5));
           const topProductsSnap = await safeFetch(() => getDocs(topProductsQuery), { docs: [] } as any);
-          setTopProducts(topProductsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+          setTopProducts(topProductsSnap.docs.map((d: any) => ({ id: d.id, ...d.data() })));
 
           // Top Sellers (by fetching top 5 from users where role=seller sorted by totalRevenue)
           const topSellersQuery = query(collection(db, "users"), where("role", "==", "seller"), orderBy("totalRevenue", "desc"), limit(5));
           const topSellersSnap = await safeFetch(() => getDocs(topSellersQuery), { docs: [] } as any);
-          setTopSellers(topSellersSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+          setTopSellers(topSellersSnap.docs.map((d: any) => ({ id: d.id, ...d.data() })));
 
           // Wilaya stats (mocked aggregation for now since Firestore doesn't group by natively, but we can read from analytics/daily if exists)
           if (docSnap && docSnap.exists() && docSnap.data().wilayaStats) {
@@ -315,7 +319,7 @@ export const Overview: React.FC = () => {
       const q = query(collection(db, "admin_activities"), orderBy("createdAt", "desc"), limit(5));
       const snap = await safeFetch(() => getDocs(q), { docs: [] } as any);
       if (!cancelled && snap.docs.length > 0) {
-        setRecentEvents(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        setRecentEvents(snap.docs.map((d: any) => ({ id: d.id, ...d.data() })));
       } else if (!cancelled) {
          setRecentEvents([]);
       }
@@ -513,214 +517,19 @@ export const Overview: React.FC = () => {
       </div>
 
       {/* Analytics Kpis */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-        {[
-          {
-            label: "Total Commandes",
-            value: stats.totalOrders.toLocaleString(),
-            icon: ShoppingCart,
-            inc: stats.ordersChange > 0 ? `+${stats.ordersChange.toFixed(1)}%` : `${stats.ordersChange.toFixed(1)}%`,
-            color: "bg-emerald-50 text-emerald-600",
-          },
-          {
-            label: "Vendeurs / En Attente",
-            value: `${stats.activeVendors} / ${stats.pendingVendors}`,
-            icon: Users,
-            inc: stats.pendingVendors > 0 ? "Urgent" : "À jour",
-            color: stats.pendingVendors > 0 ? "bg-orange-50 text-orange-600" : "bg-blue-50 text-blue-600",
-          },
-          {
-            label: "Litiges & Retours",
-            value: disputeCount,
-            icon: AlertTriangle,
-            inc: "Urgences",
-            color: "bg-amber-50 text-amber-600",
-          },
-          {
-            label: "Revenu Net Olma",
-            value: formatPrice(stats.netRevenue),
-            icon: TrendingUp,
-            inc: stats.revenueChange > 0 ? `+${stats.revenueChange.toFixed(1)}%` : `${stats.revenueChange.toFixed(1)}%`,
-            color: "bg-zinc-950 text-white",
-          },
-        ].map((k, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className="bg-white p-10 rounded-[3rem] border border-zinc-100 shadow-sm relative overflow-hidden"
-          >
-            <div className={`w-14 h-14 rounded-2xl ${k.color} flex items-center justify-center mb-8`}>
-              <k.icon className="w-6 h-6" />
-            </div>
-            <p className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mb-1.5">
-              {k.label}
-            </p>
-            <h4 className="text-3xl font-kinder text-zinc-950 tracking-tighter rtl:tracking-normal mb-4">{k.value}</h4>
-            <div className={`flex items-center gap-2 font-kinder text-[10px] uppercase tracking-widest rtl:tracking-normal ${k.inc.includes('-') ? 'text-red-500' : 'text-emerald-500'}`}>
-              <ArrowUp className={`w-3 h-3 ${k.inc.includes('-') ? 'rotate-180' : ''}`} />
-              {k.inc}
-            </div>
-          </motion.div>
-        ))}
-      </div>
+      <AdminKPICards stats={stats} disputeCount={disputeCount} />
 
       {/* SECTION ANALYTICS DES COMPORTEMENTS D'ACHAT */}
       <div className="space-y-8 bg-zinc-50/50 p-6 sm:p-10 rounded-[3.5rem] border border-zinc-200/50 mt-12">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h3 className="text-xl sm:text-2xl font-kinder tracking-tight rtl:tracking-normal text-zinc-950 uppercase flex items-center gap-2.5">
-              <Sparkles className="w-6 h-6 text-orange-500 animate-pulse" />
-              {t("Comportement & Funnel Client (useUserHabits)")}
-            </h3>
-            <p className="text-zinc-500 text-[10px] font-kinder uppercase mt-1">
-              {t("Statistiques d'achat & intentions capturées en temps réel sur la plateforme.")}
-            </p>
-          </div>
-          <button
-            onClick={() => {
-              analyticsEngine.clear();
-              refreshAnalytics();
-            }}
-            className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-kinder text-[9px] uppercase tracking-widest rtl:tracking-normal rounded-xl transition-colors border-none cursor-pointer self-start sm:self-center"
-          >
-            {t("Réinitialiser Journal")}
-          </button>
-        </div>
+        <BehaviorFunnel
+          insights={insights}
+          onReset={() => {
+            analyticsEngine.clear();
+            refreshAnalytics();
+          }}
+        />
 
-        {/* Lightweight Analytics KPIs */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-          {[
-            {
-              label: "Consultations Produits",
-              value: insights.totalViews,
-              icon: Eye,
-              dsc: "pages produits vues",
-              color: "bg-white text-zinc-900 border-zinc-150",
-            },
-            {
-              label: "Ajouts au Panier",
-              value: insights.totalCarts,
-              icon: ShoppingCart,
-              dsc: `${insights.addToCartRate}% taux d'ajout`,
-              color: "bg-white text-orange-600 border-orange-100",
-            },
-            {
-              label: "Conversion Client",
-              value: `${insights.conversionRate}%`,
-              icon: TrendingUp,
-              dsc: "vues vers commandes",
-              color: "bg-white text-emerald-600 border-emerald-100",
-            },
-            {
-              label: "Ventes Analytiques",
-              value: formatPrice(insights.totalRevenue),
-              icon: DollarSign,
-              dsc: `${insights.totalPurchases} commandes`,
-              color: "bg-zinc-950 text-white border-zinc-900",
-            },
-          ].map((k, i) => (
-            <div key={i} className={`p-6 sm:p-8 rounded-[2rem] border ${k.color} shadow-sm relative overflow-hidden`}>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal opacity-80">
-                  {k.label}
-                </span>
-                <k.icon className="w-5 h-5 opacity-80" />
-              </div>
-              <h4 className="text-xl sm:text-2xl font-kinder tracking-tighter rtl:tracking-normal mb-1">{k.value}</h4>
-              <p className="text-[9px] font-bold uppercase opacity-60">{k.dsc}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Behavior Details Lists (Top Searches, Viewed Products, Category Heatmap) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-6">
-          {/* Top Viewed */}
-          <div className="bg-white p-8 rounded-[2.5rem] border border-zinc-150 shadow-sm flex flex-col justify-between">
-            <div>
-              <h4 className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-[#ea580c] mb-6 flex items-center gap-2">
-                <Eye className="w-4 h-4" /> {t("Articles Populaires")}
-              </h4>
-              {insights.productViews.length === 0 ? (
-                <p className="text-xs text-zinc-400 py-4 font-bold uppercase">{t("Aucune vue détectée")}</p>
-              ) : (
-                <div className="space-y-4">
-                  {insights.productViews.map((item, idx) => {
-                    return (
-                      <div key={idx} className="flex items-center justify-between text-xs font-bold text-zinc-700">
-                        <span className="truncate max-w-[150px]">{item.name}</span>
-                        <span className="text-[9px] bg-zinc-100 text-zinc-600 px-2 py-1 rounded-full">
-                          {item.count} {t("vues")}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Popular Search queries */}
-          <div className="bg-white p-8 rounded-[2.5rem] border border-zinc-150 shadow-sm flex flex-col justify-between">
-            <div>
-              <h4 className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-[#ea580c] mb-6 flex items-center gap-2">
-                <Search className="w-4 h-4" /> {t("Recherches Populaires")}
-              </h4>
-              {insights.searchQueries.length === 0 ? (
-                <p className="text-xs text-zinc-400 py-4 font-bold uppercase">{t("Aucun terme recherché")}</p>
-              ) : (
-                <div className="space-y-4">
-                  {insights.searchQueries.map((item, idx) => {
-                    return (
-                      <div key={idx} className="flex items-center justify-between text-xs font-bold text-zinc-700">
-                        <span>🎬 "{item.query}"</span>
-                        <span className="text-[9px] bg-amber-50 text-amber-600 px-2 py-1 rounded-full">
-                          {item.count} {t("fois")}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Category Heatmap Weight */}
-          <div className="bg-white p-8 rounded-[2.5rem] border border-zinc-150 shadow-sm flex flex-col justify-between">
-            <div>
-              <h4 className="text-[10px] font-kinder uppercase tracking-widest rtl:tracking-normal text-[#ea580c] mb-6 flex items-center gap-2">
-                <Sparkles className="w-4 h-4" /> {t("Densité d'Intérêt Catégorie")}
-              </h4>
-              {insights.categoryHits.length === 0 ? (
-                <p className="text-xs text-zinc-400 py-4 font-bold uppercase">{t("En attente de visites")}</p>
-              ) : (
-                <div className="space-y-4">
-                  {insights.categoryHits.map((item, idx) => {
-                    return (
-                      <div key={idx} className="space-y-1">
-                        <div className="flex items-center justify-between text-[11px] font-kinder text-zinc-700 uppercase">
-                          <span>{item.name}</span>
-                          <span>
-                            {item.value} {t("pts")}
-                          </span>
-                        </div>
-                        <div className="h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-orange-500 rounded-full"
-                            style={{
-                              width: `${Math.min(100, (item.value / Math.max(...insights.categoryHits.map((c) => c.value))) * 100)}%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        <PopularInsights insights={insights} />
 
         {/* Live Event Stream Logs */}
         <div className="bg-white p-6 sm:p-8 rounded-[2.5rem] border border-zinc-150 shadow-sm">
@@ -854,31 +663,7 @@ export const Overview: React.FC = () => {
         </div>
 
         {/* Wilaya Map Breakdown */}
-        <div className="bg-white p-8 rounded-[3.5rem] border border-zinc-100 shadow-sm">
-          <h4 className="text-sm font-kinder uppercase tracking-widest text-zinc-900 mb-6 flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-emerald-500" /> {t("Commandes par Wilaya")}
-          </h4>
-          <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
-            {wilayaStats.length === 0 ? (
-              <p className="text-xs text-zinc-400 font-bold uppercase">{t("Aucune donnée géographique")}</p>
-            ) : (
-              wilayaStats.sort((a,b) => b.count - a.count).map((w, i) => (
-                <div key={i} className="space-y-1">
-                  <div className="flex items-center justify-between text-[11px] font-kinder text-zinc-700 uppercase">
-                    <span>{w.wilaya}</span>
-                    <span>{w.count} {t("cmd")}</span>
-                  </div>
-                  <div className="h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-emerald-500 rounded-full" 
-                      style={{ width: `${Math.min(100, (w.count / Math.max(...wilayaStats.map(x => x.count))) * 100)}%` }}
-                    />
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+        <WilayaBreakdown wilayaStats={wilayaStats} />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-10">
@@ -937,52 +722,7 @@ export const Overview: React.FC = () => {
       </div>
 
       {/* Real-time Traffic Section */}
-      <div className="bg-white rounded-[3.5rem] p-12 border border-zinc-100 shadow-sm mt-12">
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-          <div>
-            <h4 className="text-xl font-kinder flex items-center gap-4 text-zinc-900">
-              <Activity className="w-7 h-7 text-indigo-500 animate-pulse" />
-              {t("Graphique de Trafic & Conversions en Temps Réel")}
-            </h4>
-            <p className="text-xs text-zinc-500 font-medium mt-1">
-              {t("Visualisez l'activité des utilisateurs (vues de produits et ajouts au panier) sur les dernières heures.")}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="flex h-3 w-3 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-            </span>
-            <span className="text-[10px] font-kinder uppercase tracking-widest text-zinc-500">{t("Mise à jour en direct")}</span>
-          </div>
-        </div>
-
-        <div className="h-[300px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={realTimeTraffic} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2}/>
-                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                </linearGradient>
-                <linearGradient id="colorCarts" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#ea580c" stopOpacity={0.2}/>
-                  <stop offset="95%" stopColor="#ea580c" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid stroke="#f4f4f5" strokeDasharray="5 5" vertical={false} />
-              <XAxis dataKey="time" stroke="#a1a1aa" fontSize={10} tickLine={false} axisLine={false} dy={10} />
-              <YAxis stroke="#a1a1aa" fontSize={10} tickLine={false} axisLine={false} dx={-10} />
-              <RechartsTooltip
-                contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)', padding: '12px' }}
-                labelStyle={{ fontWeight: 'bold', marginBottom: '8px', color: '#18181b', fontSize: '12px' }}
-              />
-              <Area type="monotone" dataKey="views" name={t("Vues Produits")} stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorViews)" />
-              <Area type="monotone" dataKey="carts" name={t("Ajouts au Panier")} stroke="#ea580c" strokeWidth={3} fillOpacity={1} fill="url(#colorCarts)" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+      <RealTimeTrafficChart realTimeTraffic={realTimeTraffic} />
 
       {/* Surveillance Globale des Expéditions */}
       <div className="bg-white rounded-[3.5rem] border border-zinc-100 shadow-sm overflow-hidden flex flex-col mt-12">

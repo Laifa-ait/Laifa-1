@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { BookOpen, ChevronUp, ChevronDown, Download, AlertCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { jsPDF } from "jspdf";
 
 const getGuideSections = (t: any) => [
   {
@@ -54,7 +53,9 @@ const getGuideSections = (t: any) => [
   },
 ];
 
-const exportManualToPDF = (t: any) => {
+const exportManualToPDF = async (t: any) => {
+  const { jsPDF } = await import("jspdf");
+  
   const doc = new jsPDF({
     orientation: "portrait",
     unit: "mm",
@@ -171,7 +172,7 @@ const exportManualToPDF = (t: any) => {
 
     const paragraphs = section.content.split("\n");
 
-    paragraphs.forEach((p) => {
+    paragraphs.forEach((p: string) => {
       if (!p.trim()) {
         currentY += 4;
         return;

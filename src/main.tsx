@@ -8,9 +8,8 @@ import App from "./App.tsx";
 import "./index.css";
 import "./i18n";
 import { AuthProvider } from "./context/AuthContext";
-import { CartProvider } from "./context/CartContext";
 import { ShopProvider } from "./context/ShopContext";
-import { UIProvider } from "./context/UIContext";
+import { StoreSyncProvider } from "./components/StoreSyncProvider";
 import { MegaMenuProvider } from "./context/MegaMenuContext";
 import { Toaster } from "react-hot-toast";
 
@@ -128,29 +127,27 @@ createRoot(document.getElementById("root")!).render(
           <BrowserRouter>
             <AuthProvider>
               <ShopProvider>
-                <CartProvider>
-                  <UIProvider>
-                    <MegaMenuProvider>
-                      <App />
-                      <Toaster
-                        position="top-center"
-                        toastOptions={{
-                          duration: 4000,
-                          style: {
-                            background: "#18181b",
-                            color: "#fff",
-                            fontSize: "12px",
-                            fontWeight: 700,
-                            borderRadius: "16px",
-                            letterSpacing: "0.025em",
-                            textTransform: "uppercase",
-                            border: "1px solid rgba(255,255,255,0.1)",
-                          },
-                        }}
-                      />
-                    </MegaMenuProvider>
-                  </UIProvider>
-                </CartProvider>
+                <StoreSyncProvider>
+                  <MegaMenuProvider>
+                    <App />
+                    <Toaster
+                      position="top-center"
+                      toastOptions={{
+                        duration: 4000,
+                        style: {
+                          background: "#18181b",
+                          color: "#fff",
+                          fontSize: "12px",
+                          fontWeight: 700,
+                          borderRadius: "16px",
+                          letterSpacing: "0.025em",
+                          textTransform: "uppercase",
+                          border: "1px solid rgba(255,255,255,0.1)",
+                        },
+                      }}
+                    />
+                  </MegaMenuProvider>
+                </StoreSyncProvider>
               </ShopProvider>
             </AuthProvider>
           </BrowserRouter>

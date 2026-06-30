@@ -133,7 +133,7 @@ export const FlashSales: React.FC = () => {
                     </span>
                   )}
                 </div>
-                <h2 className="font-sans font-bold text-3xl sm:text-4xl md:text-5xl text-slate-900 leading-[1.1] tracking-tight">
+                <h2 className="font-display font-medium text-3xl sm:text-4xl md:text-5xl text-slate-900 leading-[1.1] tracking-wide">
                   {t("home.flash.title", "VENTES FLASH")}
                 </h2>
               </div>
@@ -176,13 +176,13 @@ export const FlashSales: React.FC = () => {
           <div className="relative group/carousel -mx-2 sm:-mx-4 md:mx-0">
             <button
               onClick={() => scroll("left")}
-              className="absolute left-0 md:-left-4 top-[35%] -translate-y-1/2 z-20 w-10 h-10 bg-white/90 backdrop-blur-md border border-slate-200 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover/carousel:opacity-100 transition-all hover:scale-110 hidden md:flex active:scale-90 text-slate-600 hover:text-slate-900"
+              className="absolute left-0 md:-left-4 top-[35%] -translate-y-1/2 z-20 w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover/carousel:opacity-100 transition-all hover:scale-110 hidden md:flex active:scale-90 text-slate-600 hover:text-slate-900"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
             <button
               onClick={() => scroll("right")}
-              className="absolute right-0 md:-right-4 top-[35%] -translate-y-1/2 z-20 w-10 h-10 bg-white/90 backdrop-blur-md border border-slate-200 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover/carousel:opacity-100 transition-all hover:scale-110 hidden md:flex active:scale-90 text-slate-600 hover:text-slate-900"
+              className="absolute right-0 md:-right-4 top-[35%] -translate-y-1/2 z-20 w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover/carousel:opacity-100 transition-all hover:scale-110 hidden md:flex active:scale-90 text-slate-600 hover:text-slate-900"
             >
               <ChevronRight className="w-5 h-5" />
             </button>

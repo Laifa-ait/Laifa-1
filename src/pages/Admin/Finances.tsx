@@ -26,7 +26,6 @@ import { WithdrawalRequest } from "../../types";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
-import * as XLSX from "xlsx";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 export const Finances: React.FC = () => {
@@ -231,7 +230,7 @@ export const Finances: React.FC = () => {
     }
   };
 
-  const exportToCSV = () => {
+  const exportToCSV = async () => {
     if (withdrawals.length === 0) {
       toast.error(t("Aucune donnée à exporter."));
       return;
@@ -250,6 +249,7 @@ export const Finances: React.FC = () => {
 
     const worksheetData = [headers, ...rows];
 
+    const XLSX = await import('xlsx');
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet(worksheetData);
 

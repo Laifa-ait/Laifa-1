@@ -1,4 +1,4 @@
-import { admin, db } from "../config/firebase-admin";
+import { admin, db } from "../../server/services/firebase-admin";
 
 export async function checkSellerVelocityLimit(sellerId: string) {
   try {

@@ -3,13 +3,16 @@ import { Home, Heart, ShoppingBag, User as UserIcon, LayoutGrid } from "lucide-r
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useCart } from "../context/CartContext";
-import { useUI } from "../context/UIContext";
+import { useCartStore } from "../store/useCartStore";
+import { useWishlistStore } from "../store/useWishlistStore";
+import { useUIStore } from "../store/useUIStore";
 
 export const MobileBottomNav: React.FC = () => {
   const { currentUser, userProfile } = useAuth();
-  const { cart, wishlist } = useCart();
-  const { setIsCartOpen, setIsWishlistOpen } = useUI();
+  const cart = useCartStore((state) => state.cart);
+  const wishlist = useWishlistStore((state) => state.wishlist);
+  const setIsCartOpen = useUIStore((state) => state.setIsCartOpen);
+  const setIsWishlistOpen = useUIStore((state) => state.setIsWishlistOpen);
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();

@@ -8,7 +8,7 @@ interface UniversalFilterBarProps {
   onSelectFilter: (filter: string | null) => void;
 }
 
-export const UniversalFilterBar: React.FC<UniversalFilterBarProps> = ({ activeFilter, onSelectFilter }) => {
+export const UniversalFilterBar: React.FC<UniversalFilterBarProps> = React.memo(({ activeFilter, onSelectFilter }) => {
   const { t } = useTranslation();
 
   const filters = [
@@ -85,4 +85,4 @@ export const UniversalFilterBar: React.FC<UniversalFilterBarProps> = ({ activeFi
       </div>
     </div>
   );
-};
+});

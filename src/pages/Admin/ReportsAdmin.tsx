@@ -4,7 +4,6 @@ import toast from 'react-hot-toast';
 import { useTranslation } from "react-i18next";
 import { db } from '../../lib/firebase';
 import { collection, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
-import * as XLSX from 'xlsx';
 
 export const ReportsAdmin: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -20,6 +19,7 @@ export const ReportsAdmin: React.FC = () => {
     );
 
     try {
+      const XLSX = await import('xlsx');
       let headers: string[] = [];
       let rows: string[][] = [];
       let filename = `olmart_rapport_${type.toLowerCase().replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`;

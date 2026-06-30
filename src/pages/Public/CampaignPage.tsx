@@ -5,7 +5,7 @@ import { db } from "../../lib/firebase";
 import { ProductCard } from "../../components/Product/ProductCard";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Helmet } from "react-helmet-async";
+import { usePageMetadata } from "../../hooks/usePageMetadata";
 
 export const CampaignPage: React.FC = () => {
   const { bannerId } = useParams();
@@ -15,6 +15,28 @@ export const CampaignPage: React.FC = () => {
   const [banner, setBanner] = useState<any>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const getTranslatedValue = (bannerData: any, key: string) => {
+    // Check nested translation object
+    if (bannerData?.translations?.[i18n.language]?.[key]) {
+      return bannerData.translations[i18n.language][key];
+    }
+    // Check flat localized suffix keys (e.g., banner.title_ar, title_fr)
+    const flatKey = `${key}_${i18n.language}`;
+    if (bannerData?.[flatKey]) {
+      return bannerData[flatKey];
+    }
+    // Fallback
+    return bannerData?.[key] || '';
+  };
+
+  const pageTitle = banner ? getTranslatedValue(banner, 'title') : "";
+  const pageSubtitle = banner ? getTranslatedValue(banner, 'subtitle') : "";
+
+  const seoHelmet = usePageMetadata({
+    title: pageTitle || t("Sélection Spéciale"),
+    description: pageSubtitle || t("Découvrez notre sélection spéciale de produits"),
+  });
 
   useEffect(() => {
     const fetchCampaignData = async () => {
@@ -69,29 +91,9 @@ export const CampaignPage: React.FC = () => {
     );
   }
 
-  const getTranslatedValue = (bannerData: any, key: string) => {
-    // Check nested translation object
-    if (bannerData?.translations?.[i18n.language]?.[key]) {
-      return bannerData.translations[i18n.language][key];
-    }
-    // Check flat localized suffix keys (e.g., banner.title_ar, title_fr)
-    const flatKey = `${key}_${i18n.language}`;
-    if (bannerData?.[flatKey]) {
-      return bannerData[flatKey];
-    }
-    // Fallback
-    return bannerData?.[key] || '';
-  };
-
-  const pageTitle = banner ? getTranslatedValue(banner, 'title') : "";
-  const pageSubtitle = banner ? getTranslatedValue(banner, 'subtitle') : "";
-
   return (
     <div className="min-h-screen bg-[#FDF9EC] pb-24 font-sans selection:bg-[#FF5C00]/30">
-      <Helmet>
-        <title>{pageTitle || "Sélection Spéciale"} {t("| Olma")}</title>
-        <meta name="description" content={pageSubtitle || "Découvrez notre sélection spéciale de produits"} />
-      </Helmet>
+      {seoHelmet}
 
       {/* Campaign Header / Hero */}
       <div className="relative w-full h-[40vh] min-h-[300px] overflow-hidden bg-zinc-900 border-b border-[#FF5C00]">

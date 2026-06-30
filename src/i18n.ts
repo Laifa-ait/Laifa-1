@@ -9,15 +9,21 @@ i18n
   .use(initReactI18next)
   .init({
     fallbackLng: "fr",
+    load: "languageOnly",
+    keySeparator: false,
     backend: {
-      loadPath: "/locales/{{lng}}.json",
+      loadPath: "/locales/{{lng}}.json?v=1.1",
+      requestOptions: {
+        cache: 'no-store'
+      }
     },
     interpolation: {
       escapeValue: true,
     },
     react: {
-      useSuspense: false,
+      useSuspense: true, // Let React wait cleanly during asynchronous fetches
     },
   });
 
 export default i18n;
+

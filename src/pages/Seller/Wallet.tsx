@@ -294,7 +294,7 @@ export const Wallet: React.FC = () => {
                                        <div>
                                           <p className="font-kinder text-zinc-950 text-xl">{formatPrice(w.amount)}</p>
                                           <p className="text-[10px] font-kinder text-zinc-400 uppercase tracking-widest rtl:tracking-normal mt-1">
-                                            {w.method ? w.method.replace('_', ' ') : t("seller.wallet.transfer", 'Virement')} • {['PAID', 'COMPLETED'].includes(w.status?.toUpperCase() || '') ? t("seller.wallet.paid_on", 'Payé le ') : t("seller.wallet.requested_on", 'Demandé le ')}{w.createdAt?.toDate().toLocaleDateString('fr-FR')}
+                                            {w.method ? w.method.replace('_', ' ') : t("seller.wallet.transfer", 'Virement')} • {['PAID', 'COMPLETED'].includes(w.status?.toUpperCase() || '') ? t("seller.wallet.paid_on", 'Payé le ') : t("seller.wallet.requested_on", 'Demandé le ')}{w.createdAt ? (typeof w.createdAt === 'object' && 'toDate' in w.createdAt ? (w.createdAt as any).toDate().toLocaleDateString('fr-FR') : new Date(w.createdAt as any).toLocaleDateString('fr-FR')) : ''}
                                           </p>
                                        </div>
                                     </div>

@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { ShoppingBag, Package, ArrowRight, X, Trash2, Plus, Minus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { useCart } from "../../context/CartContext";
+import { useCartStore } from "../../store/useCartStore";
 import { SideDrawer } from "../SideDrawer";
 import { formatPrice } from "../../utils/format";
 import { getTranslatedField } from "../../utils/translations";
@@ -10,7 +10,7 @@ import { Language } from "../../types";
 import { getOptimizedImageUrl } from "../../utils/imageUtils";
 
 export const CartDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
-  const { cart, removeFromCart, updateQuantity, totalPrice, getCartItemPrice } = useCart();
+  const { cart, removeFromCart, updateQuantity, totalPrice, getCartItemPrice } = useCartStore();
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const lang = i18n.language as Language;
@@ -18,7 +18,7 @@ export const CartDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
   // Group items by seller
   const groupedCart = useMemo(() => {
     const groups: Record<string, { sellerName: string; items: any[]; total: number }> = {};
-    cart.forEach((item, index) => {
+    cart.forEach((item: any, index) => {
       const sellerId = item.sellerId || "unknown";
       const sellerName = item.sellerName || item.shopName || "Boutique Partenaire";
       if (!groups[sellerId]) {
@@ -115,14 +115,17 @@ export const CartDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
 
                 {/* Items */}
                 <div className="space-y-4">
-                  {group.items.map((item, i) => (
+                  {group.items.map((item: any, i: number) => (
                     <div key={i} className="flex gap-4 group/item">
                       <div className="w-20 h-24 sm:w-24 sm:h-28 rounded-2xl overflow-hidden bg-stone-50 shrink-0 border border-stone-100 relative">
                         <img
                           loading="lazy"
                           src={getOptimizedImageUrl(item.image, 200)}
-                          className="w-full h-full object-cover"
-                          alt={getTranslatedField(item, "name", lang)}
+                          className="w-full h-full object-cover bg-stone-100"
+                          alt={getTranslatedField(item, "name", lang) || "Produit"}
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23f5f5f4'/%3E%3C/svg%3E";
+                          }}
                         />
                       </div>
                       <div className="flex-1 flex flex-col justify-between py-1">
@@ -188,7 +191,7 @@ export const CartDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
             <span className="text-stone-400 font-bold uppercase tracking-widest rtl:tracking-normal text-[10px] rtl:text-[12px] sm:text-xs rtl:text-sm">
               {t("Sous-total")}
             </span>
-            <span className="text-xl sm:text-2xl font-kinder text-[#3C2B22]">{formatPrice(totalPrice)}</span>
+            <span className="text-xl sm:text-2xl font-kinder text-[#3C2B22]">{formatPrice(typeof totalPrice === 'function' ? totalPrice() : totalPrice)}</span>
           </div>
           <button
             onClick={() => {

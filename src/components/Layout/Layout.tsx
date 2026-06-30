@@ -7,9 +7,11 @@ import { MobileBottomNav } from "../MobileBottomNav";
 import { CartDrawer } from "../Cart/CartDrawer";
 import { WishlistDrawer } from "../Wishlist/WishlistDrawer";
 import { MobileMenu } from "./MobileMenu";
-import { useUI } from "../../context/UIContext";
+import { useUIStore } from "../../store/useUIStore";
 import { SearchOverlay } from "../Search/SearchOverlay";
 import { RecentlyViewedDrawer } from "../RecentlyViewed/RecentlyViewedDrawer";
+import { CompareBar } from "../Compare/CompareBar";
+import { CompareModal } from "../Compare/CompareModal";
 import { useAuth } from "../../context/AuthContext";
 import { AlertCircle, ArrowRight, ShieldCheck, WifiOff } from "lucide-react";
 import { VerificationModal } from "../Auth/VerificationModal";
@@ -23,8 +25,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { i18n } = useTranslation();
   const location = useLocation();
   const isOnline = useOnlineStatus();
-  const { isCartOpen, setIsCartOpen, isWishlistOpen, setIsWishlistOpen, isMobileMenuOpen, setIsMobileMenuOpen } =
-    useUI();
+  const isCartOpen = useUIStore((state) => state.isCartOpen);
+  const setIsCartOpen = useUIStore((state) => state.setIsCartOpen);
+  const isWishlistOpen = useUIStore((state) => state.isWishlistOpen);
+  const setIsWishlistOpen = useUIStore((state) => state.setIsWishlistOpen);
+  const isMobileMenuOpen = useUIStore((state) => state.isMobileMenuOpen);
+  const setIsMobileMenuOpen = useUIStore((state) => state.setIsMobileMenuOpen);
   const { currentUser, userProfile } = useAuth();
   const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
   const [verificationMethod, setVerificationMethod] = useState<"email" | "sms">("email");
@@ -98,6 +104,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       <SearchOverlay />
       <RecentlyViewedDrawer />
+      <CompareBar />
+      <CompareModal />
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
       <WishlistDrawer isOpen={isWishlistOpen} onClose={() => setIsWishlistOpen(false)} />
       <MobileMenu />

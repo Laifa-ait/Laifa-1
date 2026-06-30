@@ -210,17 +210,20 @@ export const MegaMenuProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     );
   };
 
+  const contextValue = React.useMemo(
+    () => ({
+      categoriesData,
+      isLoading,
+      setCategoriesData,
+      updateFeaturedProduct,
+      updateLinkFeaturedProduct,
+      saveMegaMenuToFirestore,
+    }),
+    [categoriesData, isLoading]
+  );
+
   return (
-    <MegaMenuContext.Provider
-      value={{
-        categoriesData,
-        isLoading,
-        setCategoriesData,
-        updateFeaturedProduct,
-        updateLinkFeaturedProduct,
-        saveMegaMenuToFirestore,
-      }}
-    >
+    <MegaMenuContext.Provider value={contextValue}>
       {children}
     </MegaMenuContext.Provider>
   );

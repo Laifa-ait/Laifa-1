@@ -4,13 +4,13 @@ import { firestore } from "firebase-admin";
 
 export interface AuthenticatedRequest extends Request { 
   user?: UserProfile | { uid: string; email?: string; role?: string; [key: string]: unknown }; 
-  file?: Express.Multer.File; 
-  files?: Express.Multer.File[] | { [fieldname: string]: Express.Multer.File[] }; 
+  file?: any; 
+  files?: any; 
 }
 
 import { Router } from "express";
-import { admin, db } from "../config/firebase-admin";
-import { authenticateToken, authorizeSeller } from "../middlewares/auth";
+import { admin, db } from "../../server/services/firebase-admin";
+import { authenticateToken, authorizeSeller } from "../../server/middlewares/auth";
 import { ALGERIA_WILAYAS, ALGERIA_SHIPPING_DATA } from "../constants";
 import { placeOrderSchema } from "../utils/validation";
 import { checkSellerVelocityLimit } from "../utils/velocity";
@@ -47,6 +47,7 @@ const sendLowStockEmail = async (sellerEmail: string, message: string) => {
 const router = Router();
 
 router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.user) return res.status(401).json({ error: "Non authentifié" });
   // Schema validation
   const validationResult = placeOrderSchema.safeParse(req.body);
   if (!validationResult.success) {
@@ -88,7 +89,7 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
       console.warn("Failed to fetch global settings, using fallback", err);
     }
 
-    const uniqueProductIds: string[] = Array.from(new Set(cart.map((item: CartItem) => item.id as string)));
+    const uniqueProductIds: string[] = Array.from(new Set(cart.map((item: any) => item.id as string)));
     if (uniqueProductIds.length === 0) throw new Error("Panier vide.");
 
     let sellerIdsArray: string[] = [];
@@ -102,7 +103,7 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
         const idempotencyQuery = await t.get(
           db.collection("orders")
             .where("idempotencyKey", "==", idempotencyKey)
-            .where("userId", "==", req.user.uid)
+            .where("userId", "==", userId)
             .limit(1)
         );
         if (!idempotencyQuery.empty) {
@@ -133,7 +134,7 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
         productSnaps.set(pId, productSnap);
         productRefs.set(pId, refs[idx]);
 
-        const sellerId = productSnap.data().sellerId;
+        const sellerId = productSnap.data()?.sellerId;
         if (sellerId) sellerIdsSet.add(sellerId);
       });
 
@@ -157,14 +158,14 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
       }
 
       // Reconstruct productDocs array cleanly for downstream seller splits
-      const productDocs: { cartItem: CartItem; productSnap: firestore.DocumentSnapshot; productRef: firestore.DocumentReference }[] = [];
+      const productDocs: { cartItem: any; productSnap: any; productRef: any }[] = [];
       for (const cartItem of cart) {
         if (!cartItem.id || !cartItem.quantity || typeof cartItem.quantity !== 'number' || !Number.isInteger(cartItem.quantity) || cartItem.quantity < 1) {
           throw new Error(`Article invalide fourni.`);
         }
         const snap = productSnaps.get(cartItem.id);
         const ref = productRefs.get(cartItem.id);
-        productDocs.push({ cartItem, productSnap: snap, productRef: ref });
+        productDocs.push({ cartItem, productSnap: snap as any, productRef: ref as any });
       }
 
       // 1.3 Lire les donnees de l'acheteur
@@ -256,7 +257,7 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
       }
 
       // Generate unified consolidated stock updates after iterating all items
-      const stockUpdates: { ref: firestore.DocumentReference; update: Record<string, unknown> }[] = [];
+      const stockUpdates: { ref: firestore.DocumentReference; update: any }[] = [];
       for (const pId of uniqueProductIds) {
         const finalData = productInMemoryStates.get(pId)!;
         const ref = productRefs.get(pId)!;
@@ -277,9 +278,9 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
               stock: finalData.stock
            }});
         } else {
-           if (finalData.stock <= stockThreshold) {
+           if ((finalData.stock ?? 0) <= stockThreshold) {
               needsAlert = true;
-              alertMessage = `Alerte: Le produit "${finalData.name}" a atteint le stock critique (${finalData.stock} restants, seuil: ${stockThreshold}).`;
+              alertMessage = `Alerte: Le produit "${finalData.name}" a atteint le stock critique (${finalData.stock ?? 0} restants, seuil: ${stockThreshold}).`;
            }
            stockUpdates.push({ ref, update: { 
               stock: finalData.stock
@@ -287,7 +288,7 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
         }
 
         if (needsAlert) {
-           emailAlerts.push({ sellerId: finalData.sellerId, message: alertMessage });
+           emailAlerts.push({ sellerId: finalData.sellerId || "", message: alertMessage });
            
            const alertRef = db.collection("internal_notifications").doc();
            t.set(alertRef, {
@@ -373,7 +374,7 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
       const userWilaya = shippingAddress.wilaya;
       const sellerGroups = new Map<string, { cartItem: CartItem; productSnap: firestore.DocumentSnapshot; productRef: firestore.DocumentReference }[]>();
       for (const item of productDocs) {
-        const sId = item.productSnap.data().sellerId;
+        const sId = item.productSnap?.data()?.sellerId || "";
         if (!sellerGroups.has(sId)) {
           sellerGroups.set(sId, []);
         }
@@ -381,7 +382,7 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
       }
 
       const parentOrderId = db.collection("orders").doc().id;
-      const subOrdersToCreate: { ref: firestore.DocumentReference; data: Record<string, unknown> }[] = [];
+      const subOrdersToCreate: { ref: firestore.DocumentReference; data: any }[] = [];
       // sellerIdsArray is already defined and loaded above
       let remainingDiscount = discountAmount;
       let groupIndex = 0;
@@ -397,7 +398,7 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
          const items = sellerGroups.get(sId) || [];
          let sSub = 0;
          for (const { cartItem, productSnap } of items) {
-           const pData = productSnap.data();
+           const pData = productSnap?.data() || {};
            let targetP = pData.promoPrice || pData.price;
            if (cartItem.selectedVariant && pData.variants && Array.isArray(pData.variants)) {
               const variant = pData.variants.find((v: NonNullable<Product['variants']>[number]) => v.name === cartItem.selectedVariant);
@@ -405,7 +406,7 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
                  if (variant.priceOverride !== undefined && variant.priceOverride !== null && variant.priceOverride !== '') {
                     targetP = Number(variant.priceOverride);
                  } else if (variant.priceDiff) {
-                    targetP += parseInt(variant.priceDiff as string);
+                    targetP += parseInt(String(variant.priceDiff));
                  }
               }
            }
@@ -453,7 +454,7 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
                  if (variant.priceOverride !== undefined && variant.priceOverride !== null && variant.priceOverride !== '') {
                     targetPrice = Number(variant.priceOverride);
                  } else if (variant.priceDiff) {
-                    targetPrice += parseInt(variant.priceDiff as string);
+                    targetPrice += parseInt(String(variant.priceDiff));
                  }
               }
            }
@@ -466,7 +467,7 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
              image: productData.image,
              quantity: cartItem.quantity,
              sellerId: sellerId,
-             sellerName: shop ? (shop.name || shop.shopName || "Boutique") : "Boutique",
+             sellerName: shop ? ((shop as any).name || shop.shopName || "Boutique") : "Boutique",
              selectedVariant: cartItem.selectedVariant || null
            });
         }
@@ -701,7 +702,7 @@ router.post("/validate-coupon", authenticateToken, async (req: AuthenticatedRequ
     }
     
     const couponDoc = q.docs[0];
-    const couponData = { id: couponDoc.id, ...couponDoc.data() } as Record<string, unknown>;
+    const couponData = { id: couponDoc.id, ...couponDoc.data() } as any;
     
     if (!couponData.isActive) {
       return res.status(400).json({ error: "Ce code promo n'est plus actif." });
@@ -811,7 +812,7 @@ router.post("/webhooks/yalidine", async (req: AuthenticatedRequest, res: Respons
         const eventExists = existingEvents.some((e: CarrierTrackingEvent) => e.event_id === event_id);
         
         if (!eventExists) {
-          const updatePayload: Record<string, unknown> = {
+          const updatePayload: any = {
             status: orderStatus,
             carrier_tracking_events: admin.firestore.FieldValue.arrayUnion(newEvent),
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
@@ -825,7 +826,7 @@ router.post("/webhooks/yalidine", async (req: AuthenticatedRequest, res: Respons
              const buyerId = data.userId || data.buyerId;
              if (buyerId && (data.walletDeducted > 0 || data.cashbackApplied > 0)) {
                 const buyerRef = db.collection("users").doc(buyerId);
-                const updatesForBuyer: Record<string, unknown> = {};
+                const updatesForBuyer: any = {};
                 if (data.walletDeducted > 0) {
                    updatesForBuyer.walletBalance = admin.firestore.FieldValue.increment(data.walletDeducted);
                    const walletTxRef = db.collection("wallet_transactions").doc();
@@ -854,7 +855,7 @@ router.post("/webhooks/yalidine", async (req: AuthenticatedRequest, res: Respons
         const eventExists = existingEvents.some((e: CarrierTrackingEvent) => e.event_id === event_id);
         
         if (!eventExists) {
-          const updatePayload: Record<string, unknown> = {
+          const updatePayload: any = {
             status: orderStatus,
             carrier_tracking_events: admin.firestore.FieldValue.arrayUnion(newEvent),
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
@@ -867,7 +868,7 @@ router.post("/webhooks/yalidine", async (req: AuthenticatedRequest, res: Respons
              const buyerId = data.userId || data.buyerId;
              if (buyerId && (data.walletDeducted > 0 || data.cashbackApplied > 0)) {
                 const buyerRef = db.collection("users").doc(buyerId);
-                const updatesForBuyer: Record<string, unknown> = {};
+                const updatesForBuyer: any = {};
                 if (data.walletDeducted > 0) {
                    updatesForBuyer.walletBalance = admin.firestore.FieldValue.increment(data.walletDeducted);
                    const walletTxRef = db.collection("wallet_transactions").doc();
@@ -902,6 +903,7 @@ router.post("/webhooks/yalidine", async (req: AuthenticatedRequest, res: Respons
 });
 
 router.post("/prepare-shipment", authenticateToken, authorizeSeller, async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.user) return res.status(401).json({ error: "Non authentifié" });
   const { orderId, orderIds } = req.body;
   const sellerId = req.user.uid;
   const idsToProcess = orderIds || (orderId ? [orderId] : []);
@@ -1010,7 +1012,7 @@ router.post("/cron/sync-tracking", async (req: Request, res: Response) => {
         const dataArray = json.data || [];
 
         // Grouper par trackingId
-        const trackingEventsMap = new Map<string, Record<string, unknown>[]>();
+        const trackingEventsMap = new Map<string, any[]>();
         for (const item of dataArray) {
            const trc = item.tracking;
            if (!trackingEventsMap.has(trc)) trackingEventsMap.set(trc, []);
@@ -1084,7 +1086,7 @@ router.post("/cron/sync-tracking", async (req: Request, res: Response) => {
              }
 
              if (hasNewEvents) {
-                const updatePayload: Record<string, unknown> = {
+                const updatePayload: any = {
                   status: latestOrderStatus,
                   carrier_tracking_events: updatedEvents,
                   updatedAt: admin.firestore.FieldValue.serverTimestamp()
@@ -1097,7 +1099,7 @@ router.post("/cron/sync-tracking", async (req: Request, res: Response) => {
                    const buyerId = orderData.userId || orderData.buyerId;
                    if (buyerId && (orderData.walletDeducted > 0 || orderData.cashbackApplied > 0)) {
                       const buyerRef = db.collection("users").doc(buyerId);
-                      const updatesForBuyer: Record<string, unknown> = {};
+                      const updatesForBuyer: any = {};
                       if (orderData.walletDeducted > 0) {
                          updatesForBuyer.walletBalance = admin.firestore.FieldValue.increment(orderData.walletDeducted);
                          const walletTxRef = db.collection("wallet_transactions").doc();
@@ -1144,13 +1146,16 @@ router.post('/calculate-commissions', authenticateToken, async (req: Authenticat
     // 1. Role-Based Access Validation Middleware / Integrity Check
     const userRole = req.user?.role;
     const userId = req.user?.uid;
+    if (!userId) {
+      return res.status(401).json({ error: 'Non authentifié' });
+    }
     if (userRole !== 'admin' && userRole !== 'seller') {
       return res.status(403).json({ error: 'Accès refusé. Autorisation insuffisante pour calculer les commissions.' });
     }
 
     // 2. Fetch authentic order data from Firestore DB to override incoming client data
     const incomingOrderIds = orders.map(o => o.id || o.orderId).filter(Boolean);
-    const dbOrdersMap = new Map<string, Record<string, unknown>>();
+    const dbOrdersMap = new Map<string, any>();
     
     if (incomingOrderIds.length > 0) {
       // Chunk size of 30 due to Firestore "in" operator limits
@@ -1167,7 +1172,7 @@ router.post('/calculate-commissions', authenticateToken, async (req: Authenticat
     }
 
     // 3. Absolute Integrity Sanitization: Overwrite parameters with values from DB, and filter out unauthorized data
-    const validatedOrders: Record<string, unknown>[] = [];
+    const validatedOrders: any[] = [];
     for (const o of orders) {
       const oid = o.id || o.orderId;
       if (oid && dbOrdersMap.has(oid)) {
@@ -1197,9 +1202,9 @@ router.post('/calculate-commissions', authenticateToken, async (req: Authenticat
     // Fetch all sellers in one go to minimize DB calls
     const sellerIds = new Set<string>();
     validatedOrders.forEach(o => {
-       if (o.sellerIds) o.sellerIds.forEach(id => sellerIds.add(id));
+       if (o.sellerIds) o.sellerIds.forEach((id: any) => sellerIds.add(id));
        else if (o.sellerId) sellerIds.add(o.sellerId);
-       o.items?.forEach(i => { if (i.sellerId) sellerIds.add(i.sellerId); });
+       o.items?.forEach((i: any) => { if (i.sellerId) sellerIds.add(i.sellerId); });
     });
     
     const sellerRates: Record<string, number> = {};

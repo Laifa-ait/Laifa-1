@@ -1,4 +1,4 @@
-import { admin, db, firebaseConfig } from "../config/firebase-admin";
+import { admin, db, firebaseConfig } from "../services/firebase-admin";
 import { Request, Response, NextFunction } from "express";
 
 export interface AuthenticatedRequest extends Request {
@@ -18,7 +18,7 @@ interface FirestoreDocument {
 
 const fetchRoleFromRest = async (uid: string, idToken: string): Promise<string | null> => {
   try {
-    const projectId = firebaseConfig?.projectId || process.env.FIREBASE_PROJECT_ID;
+    const projectId = firebaseConfig?.projectId || process.env.FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID;
     if (!projectId) {
       console.warn("Firebase projectId is missing in auth.ts REST call");
     }

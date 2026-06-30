@@ -47,6 +47,9 @@ import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { useShop } from "../../context/ShopContext";
 import { PRODUCT_HIERARCHY } from "../../constants";
+import { CurationQualityScore } from "../../components/Admin/Curation/CurationQualityScore";
+import { CurationDuplicatePanel } from "../../components/Admin/Curation/CurationDuplicatePanel";
+import { CurationMobilePreview } from "../../components/Admin/Curation/CurationMobilePreview";
 
 export const Curation: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -77,9 +80,6 @@ export const Curation: React.FC = () => {
 
   // Manual compliance override overrides
   const [complianceOverrides, setComplianceOverrides] = useState<Record<string, Record<string, boolean>>>({});
-
-  // Active image index inside mobile preview
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   // Load actual categories hierarchy
   const hierarchy = useMemo(() => {
@@ -143,7 +143,6 @@ export const Curation: React.FC = () => {
     setEditForm(null);
     setIsRejecting(false);
     setRejectionReason("");
-    setActiveImageIndex(0);
   }, [selectedProduct?.id]);
 
   // Initialize edit form
@@ -297,28 +296,6 @@ export const Curation: React.FC = () => {
         (p.sellerName || "").toLowerCase().includes(term)
     );
   }, [products, searchTerm]);
-
-  // Duplicates detection list
-  const duplicates = useMemo(() => {
-    if (!selectedProduct) return [];
-    const pName = (selectedProduct.name || "").toLowerCase().trim();
-    if (pName.length < 3) return [];
-
-    return relatedProducts.filter((p) => {
-      if (p.id === selectedProduct.id) return false;
-      const otherName = (p.name || "").toLowerCase().trim();
-
-      // Overlap calculation or direct match
-      if (otherName === pName) return true;
-      if (otherName.includes(pName) || pName.includes(otherName)) return true;
-
-      const words1 = pName.split(/\s+/).filter((w) => w.length > 3);
-      const words2 = otherName.split(/\s+/).filter((w) => w.length > 3);
-      const common = words1.filter((w) => words2.includes(w));
-
-      return common.length >= 2; // high similarity if 2 keywords match
-    });
-  }, [selectedProduct, relatedProducts]);
 
   // Handle manual compliance checkbox override
   const handleToggleCompliance = (key: string) => {
@@ -785,70 +762,10 @@ export const Curation: React.FC = () => {
               <div className="xl:col-span-7 space-y-8">
                 
                 {/* 1. QUALITY SCORE CARD */}
-                <div className="bg-white rounded-[2.5rem] p-6 md:p-8 border border-zinc-100 shadow-sm space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-amber-500 animate-pulse" />
-                      <h3 className="font-kinder text-xs text-zinc-900 uppercase tracking-widest">
-                        {t("Score de qualité automatique")}
-                      </h3>
-                    </div>
-                    <span
-                      className={`text-sm font-kinder px-4 py-1.5 rounded-full ${
-                        calculatedScore >= 75
-                          ? "bg-green-100 text-green-800"
-                          : calculatedScore >= 50
-                          ? "bg-amber-100 text-amber-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {calculatedScore}%
-                    </span>
-                  </div>
-
-                  {/* Real-time slider representation */}
-                  <div className="space-y-2">
-                    <div className="h-3 w-full bg-zinc-100 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          calculatedScore >= 75
-                            ? "bg-green-500"
-                            : calculatedScore >= 50
-                            ? "bg-amber-500"
-                            : "bg-red-500"
-                        }`}
-                        style={{ width: `${calculatedScore}%` }}
-                      />
-                    </div>
-                    <div className="flex justify-between text-[10px] text-zinc-400 font-bold">
-                      <span>0%</span>
-                      <span>50%</span>
-                      <span>100%</span>
-                    </div>
-                  </div>
-
-                  {/* Optimization recommendations */}
-                  <div className="bg-[#FAF8F5] p-4 rounded-2xl border border-zinc-100 space-y-2">
-                    <div className="flex items-center gap-2 text-[10px] font-kinder text-zinc-500 uppercase tracking-wider">
-                      <Info className="w-3.5 h-3.5 text-zinc-400" />
-                      {t("Suggestions d'optimisation")}
-                    </div>
-                    <ul className="text-xs font-medium text-zinc-600 space-y-1 pl-4 list-disc rtl:pr-4 rtl:list-disc">
-                      {((isEditMode && editForm ? editForm : selectedProduct).name || "").length < 15 && (
-                        <li>{t("Rallonger le titre pour un meilleur référencement (idéalement entre 15 et 85 caractères)")}</li>
-                      )}
-                      {((isEditMode && editForm ? editForm : selectedProduct).description || "").length < 150 && (
-                        <li>{t("Enrichir la description pour atteindre 150 caractères et expliquer la touche créative")}</li>
-                      )}
-                      {((isEditMode && editForm ? editForm : selectedProduct).images?.length || 0) < 3 && (
-                        <li>{t("Ajouter au moins 3 photos pour valoriser le rendu mobile (galerie carousel)")}</li>
-                      )}
-                      {!(isEditMode && editForm ? editForm : selectedProduct).subcategory && (
-                        <li className="text-amber-600">{t("Indiquer une sous-catégorie pour faciliter le filtrage client")}</li>
-                      )}
-                    </ul>
-                  </div>
-                </div>
+                <CurationQualityScore
+                  product={isEditMode && editForm ? editForm : selectedProduct}
+                  score={calculatedScore}
+                />
 
                 {/* 2. INLINE EDITOR FORM (Visible when isEditMode is active) */}
                 {isEditMode && editForm ? (
@@ -1107,273 +1024,22 @@ export const Curation: React.FC = () => {
                 )}
 
                 {/* 3. DUPLICATE CHECK COMPARISON PANEL */}
-                <div className="bg-white rounded-[2.5rem] p-6 md:p-8 border border-zinc-100 shadow-sm space-y-4">
-                  <div className="flex items-center gap-2 justify-between border-b border-zinc-100 pb-3">
-                    <div className="flex items-center gap-2">
-                      <Layers className="w-5 h-5 text-zinc-700" />
-                      <h3 className="font-kinder text-xs text-zinc-900 uppercase tracking-widest">
-                        {t("Comparaison de doublons")}
-                      </h3>
-                    </div>
-                    <span className="text-[10px] text-zinc-400 font-bold">
-                      {relatedProducts.length} {t("produits dans la catégorie")}
-                    </span>
-                  </div>
-
-                  {duplicates.length === 0 ? (
-                    <div className="bg-green-50/50 border border-green-100 rounded-2xl p-4 flex items-start gap-3">
-                      <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
-                      <div>
-                        <h4 className="text-xs font-bold text-green-900">
-                          {t("Aucune similarité suspecte détectée")}
-                        </h4>
-                        <p className="text-[10px] text-green-700 font-medium mt-0.5">
-                          {t("Aucun autre produit actif dans cette catégorie ne possède un nom similaire. Moins de risque de pollution du catalogue.")}
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <div className="bg-red-50/50 border border-red-100 rounded-2xl p-4 flex items-start gap-3">
-                        <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-                        <div>
-                          <h4 className="text-xs font-bold text-red-900">
-                            {t("Doublons potentiels détectés !")}
-                          </h4>
-                          <p className="text-[10px] text-red-700 font-medium mt-0.5">
-                            {t("Attention, des produits très similaires existent déjà. Évitez les fiches en doublon d'un même vendeur.")}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="divide-y divide-zinc-100 max-h-48 overflow-y-auto pr-1">
-                        {duplicates.map((dup) => (
-                          <div key={dup.id} className="py-3 flex items-center justify-between gap-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-zinc-50 border border-zinc-100 overflow-hidden shrink-0">
-                                <img src={dup.image} alt={dup.name} className="w-full h-full object-cover" />
-                              </div>
-                              <div className="min-w-0">
-                                <h5 className="text-xs font-bold text-zinc-800 truncate">
-                                  {dup.name}
-                                </h5>
-                                <p className="text-[9px] text-zinc-400 font-bold">
-                                  {t("Boutique :")} {dup.sellerName || t("Inconnu")}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-xs font-bold text-zinc-900">
-                                {dup.price} DA
-                              </span>
-                              <p className="text-[9px] text-[#FF5C00] font-bold">
-                                {dup.id === selectedProduct.id ? t("Même fiche") : t("Actif")}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <CurationDuplicatePanel
+                  selectedProduct={selectedProduct}
+                  relatedProducts={relatedProducts}
+                />
               </div>
 
               {/* PANES B: VISUAL MOBILE PREVIEW FRAME (5/12 col) */}
               <div className="xl:col-span-5 flex justify-center">
-                <div className="space-y-4 w-full max-w-[340px]">
-                  
-                  {/* Visual Label */}
-                  <div className="flex items-center gap-2 justify-center text-[10px] font-kinder text-zinc-400 uppercase tracking-widest">
-                    <Smartphone className="w-4 h-4" />
-                    {t("Preview du rendu sur mobile")}
-                  </div>
-
-                  {/* NATIVE PHONE CONTAINER */}
-                  <div className="w-full aspect-[9/18.5] bg-zinc-950 rounded-[44px] p-3 shadow-2xl relative border-4 border-zinc-800 ring-1 ring-white/10 overflow-hidden flex flex-col">
-                    
-                    {/* Top Notch */}
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-5 bg-zinc-950 rounded-b-2xl z-50 flex items-center justify-center">
-                      <div className="w-12 h-1 bg-zinc-800 rounded-full" />
-                    </div>
-
-                    {/* App Internal Frame */}
-                    <div className="w-full h-full bg-[#FCFAF7] rounded-[36px] overflow-hidden flex flex-col relative text-zinc-900 text-xs">
-                      
-                      {/* Sub-header status bar space */}
-                      <div className="h-6 bg-transparent shrink-0 flex items-center justify-between px-6 text-[9px] font-bold text-zinc-400 select-none">
-                        <span>12:45</span>
-                        <div className="flex items-center gap-1.5">
-                          <span>5G</span>
-                          <div className="w-4 h-2 bg-zinc-400 rounded-sm" />
-                        </div>
-                      </div>
-
-                      {/* Store Header App Bar */}
-                      <div className="h-10 bg-white/70 border-b border-zinc-100 flex items-center justify-between px-4 sticky top-0 z-40">
-                        <span className="font-kinder text-[10px] text-zinc-800 uppercase tracking-wide">
-                          Olmart Marketplace
-                        </span>
-                        <div className="flex items-center gap-3">
-                          <Heart className="w-4 h-4 text-zinc-400" />
-                          <ShoppingBag className="w-4 h-4 text-zinc-400" />
-                        </div>
-                      </div>
-
-                      {/* Scrollable Viewport */}
-                      <div className="flex-1 overflow-y-auto pb-14">
-                        
-                        {/* Image Slide Carousel */}
-                        <div className="aspect-square bg-zinc-100 relative overflow-hidden">
-                          {(() => {
-                            const target = isEditMode && editForm ? editForm : selectedProduct;
-                            const images = target.images && target.images.length > 0 ? target.images : [target.image];
-                            const currentImg = images[activeImageIndex] || target.image;
-
-                            return currentImg ? (
-                              <>
-                                <img
-                                  src={currentImg}
-                                  alt="Mobile preview"
-                                  className="w-full h-full object-cover"
-                                />
-                                {images.length > 1 && (
-                                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 bg-black/30 px-2 py-1 rounded-full">
-                                    {images.map((_, i) => (
-                                      <button
-                                        key={i}
-                                        onClick={() => setActiveImageIndex(i)}
-                                        className={`w-1.5 h-1.5 rounded-full border-none cursor-pointer ${
-                                          i === activeImageIndex ? "bg-[#FF5C00]" : "bg-white/60"
-                                        }`}
-                                      />
-                                    ))}
-                                  </div>
-                                )}
-                              </>
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-zinc-300">
-                                <ImageIcon className="w-12 h-12" />
-                              </div>
-                            );
-                          })()}
-                        </div>
-
-                        {/* Product Info Section */}
-                        <div className="p-4 space-y-3">
-                          
-                          {/* Price Tag with Promo Support */}
-                          <div className="flex items-baseline gap-2">
-                            {(() => {
-                              const target = isEditMode && editForm ? editForm : selectedProduct;
-                              const price = Number(target.price || 0);
-                              const promoPrice = target.promoPrice ? Number(target.promoPrice) : null;
-
-                              if (promoPrice && promoPrice < price) {
-                                return (
-                                  <>
-                                    <span className="text-base font-kinder text-[#FF5C00]">
-                                      {promoPrice} DA
-                                    </span>
-                                    <span className="text-[10px] text-zinc-400 line-through font-bold">
-                                      {price} DA
-                                    </span>
-                                  </>
-                                );
-                              }
-                              return (
-                                <span className="text-base font-kinder text-zinc-900">
-                                  {price} DA
-                                </span>
-                              );
-                            })()}
-                          </div>
-
-                          {/* Title */}
-                          <h3 className="text-xs font-kinder text-zinc-900 uppercase leading-snug">
-                            {(isEditMode && editForm ? editForm : selectedProduct).name}
-                          </h3>
-
-                          {/* Badges row */}
-                          <div className="flex flex-wrap gap-1">
-                            <span className="bg-green-50 text-green-700 text-[8px] font-bold px-1.5 py-0.5 rounded-md">
-                              {t("Authentique")}
-                            </span>
-                            <span className="bg-amber-50 text-amber-700 text-[8px] font-bold px-1.5 py-0.5 rounded-md">
-                              {t("Garantie Qualité")}
-                            </span>
-                            {(isEditMode && editForm ? editForm : selectedProduct).freeShipping && (
-                              <span className="bg-orange-50 text-[#FF5C00] text-[8px] font-bold px-1.5 py-0.5 rounded-md">
-                                {t("Livraison Gratuite")}
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Seller shop header widget */}
-                          <div className="bg-white p-2.5 rounded-xl border border-zinc-100 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-full bg-zinc-100 flex items-center justify-center text-[10px] font-bold text-zinc-500 border border-zinc-200">
-                                {((isEditMode && editForm ? editForm : selectedProduct).sellerName || "P")[0]}
-                              </div>
-                              <div>
-                                <h5 className="text-[9px] font-kinder text-zinc-800 uppercase tracking-tight">
-                                  {(isEditMode && editForm ? editForm : selectedProduct).sellerName || t("Vendeur Créateur")}
-                                </h5>
-                                <p className="text-[8px] text-zinc-400 font-bold">
-                                  {t("Artisan Certifié Olmart")}
-                                </p>
-                              </div>
-                            </div>
-                            <span className="text-[8px] font-kinder bg-[#FAF8F5] text-zinc-600 border border-zinc-200/60 px-2 py-0.5 rounded-md">
-                              {t("Visiter")}
-                            </span>
-                          </div>
-
-                          {/* Shipping details (COD support & 58 Wilayas) */}
-                          <div className="bg-amber-50/40 border border-amber-100 p-2.5 rounded-xl space-y-1.5">
-                            <h4 className="text-[8px] font-kinder text-amber-900 uppercase tracking-wider flex items-center gap-1">
-                              <Truck className="w-3 h-3 text-[#FF5C00]" />
-                              {t("Logistique & Expédition Algérie")}
-                            </h4>
-                            <p className="text-[8px] text-zinc-500 font-medium">
-                              {t("Paiement à la livraison (Cash on Delivery) supporté dans")} <strong>58 wilayas</strong>.
-                            </p>
-                          </div>
-
-                          {/* Description detailed layout */}
-                          <div className="space-y-1">
-                            <h4 className="text-[8px] font-kinder text-zinc-400 uppercase tracking-wider">
-                              {t("Description de l'article")}
-                            </h4>
-                            <p className="text-[9px] text-zinc-600 font-medium leading-relaxed">
-                              {(isEditMode && editForm ? editForm : selectedProduct).description}
-                            </p>
-                          </div>
-
-                        </div>
-                      </div>
-
-                      {/* Sticky App Bottom Action Bar */}
-                      <div className="absolute bottom-0 left-0 right-0 h-12 bg-white border-t border-zinc-100 flex items-center justify-between px-3 z-40">
-                        <button className="w-8 h-8 rounded-full border border-zinc-200 flex items-center justify-center text-zinc-500 bg-transparent cursor-pointer">
-                          <MessageCircle className="w-4 h-4" />
-                        </button>
-                        <button className="flex-1 ms-2 py-2 bg-[#FF5C00] text-white text-[9px] font-kinder uppercase tracking-widest rounded-xl border-none cursor-pointer text-center">
-                          {t("Ajouter au panier")}
-                        </button>
-                      </div>
-
-                    </div>
-                  </div>
-
-                </div>
+                <CurationMobilePreview
+                  product={isEditMode && editForm ? editForm : selectedProduct}
+                />
               </div>
-
             </div>
-
           </div>
         )}
       </div>
-
     </div>
   );
 };

@@ -14,9 +14,10 @@ import {
 import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useCart } from "../context/CartContext";
+import { useCartStore } from "../store/useCartStore";
+import { useWishlistStore } from "../store/useWishlistStore";
 import { useShop } from "../context/ShopContext";
-import { useUI } from "../context/UIContext";
+import { useUIStore } from "../store/useUIStore";
 import { Language } from "../types";
 import { MegaMenu } from "./MegaMenu";
 import { AdvancedSearchbar as Searchbar } from "./Search/AdvancedSearchbar";
@@ -55,9 +56,13 @@ export const OlmaLogo: React.FC<OlmaLogoProps> = ({ className }) => (
 
 export const Navbar: React.FC = () => {
   const { currentUser, userProfile, logout } = useAuth();
-  const { cart, wishlist } = useCart();
+  const cart = useCartStore((state) => state.cart);
+  const wishlist = useWishlistStore((state) => state.wishlist);
   const { searchQuery, setSearchQuery, setActiveCategory, setIsSaleFilterActive, setActiveTag } = useShop();
-  const { setIsCartOpen, setIsWishlistOpen, setIsMobileMenuOpen, setIsSearchOpen } = useUI();
+  const setIsCartOpen = useUIStore((state) => state.setIsCartOpen);
+  const setIsWishlistOpen = useUIStore((state) => state.setIsWishlistOpen);
+  const setIsMobileMenuOpen = useUIStore((state) => state.setIsMobileMenuOpen);
+  const setIsSearchOpen = useUIStore((state) => state.setIsSearchOpen);
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();

@@ -13,7 +13,6 @@ import { Product } from '../../types';
 import { useInfiniteScroll } from '../../hooks/useInfiniteScroll';
 import { useDebounce } from '../../hooks/useDebounce';
 import useSWR from 'swr';
-import { handleDevQuotaLogger } from '../../utils/mockProducts';
 import { getCategoryTranslation } from '../../utils/translations';
 import { withExponentialBackoff } from '../../utils/retry';
 
@@ -21,17 +20,18 @@ import { withExponentialBackoff } from '../../utils/retry';
 import { analyticsEngine } from '../../utils/analyticsEngine';
 import { useFacetedFilters } from '../../hooks/useFacetedFilters';
 import { DynamicFilterPanel } from '../../components/Shop/DynamicFilterPanel';
-import { Helmet } from 'react-helmet-async';
+import { usePageMetadata } from '../../hooks/usePageMetadata';
+import { VirtualizedProductGrid } from '../../components/Shop/VirtualizedProductGrid';
 import { AiChatDrawer } from '../../components/Chat/AiChatDrawer';
 import { UniversalFilterBar } from '../../components/Shop/UniversalFilterBar';
-import { useUI } from '../../context/UIContext';
+import { useUIStore } from '../../store/useUIStore';
 
 export const Shop: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isAiChatOpen, setIsAiChatOpen] = useState(false);
-  const { setIsSearchOpen } = useUI();
+  const setIsSearchOpen = useUIStore((state) => state.setIsSearchOpen);
   const { 
     activeCategory, 
     setActiveCategory,
@@ -337,16 +337,15 @@ export const Shop: React.FC = () => {
     return baseKeywords;
   }, [urlCategory, activeCategory, urlSubcategory]);
 
+  const seoHelmet = usePageMetadata({
+    title: pageTitle,
+    description: pageDescription,
+    keywords: pageKeywords,
+  });
+
   return (
     <div className="bg-[#FAFAFA] min-h-screen pb-32 font-sans">
-      <Helmet>
-        <title>{pageTitle}</title>
-        <meta name="description" content={pageDescription} />
-        {pageKeywords && <meta name="keywords" content={pageKeywords} />}
-        <meta property="og:url" content={window.location.href} />
-        <meta property="og:title" content={pageTitle} />
-        <meta property="og:description" content={pageDescription} />
-      </Helmet>
+      {seoHelmet}
       {/* Header / Search: White-Lit Premium Architecture */}
       <div className="bg-white border-b border-slate-100 pt-20 sm:pt-24 lg:pt-32 pb-8 sm:pb-10 px-4 sm:px-6 relative shadow-sm">
          <div className="absolute top-0 inset-x-0 h-1 bg-slate-900 z-10" />
@@ -592,13 +591,7 @@ export const Shop: React.FC = () => {
                </div>
             ) : finalFilteredProducts.length > 0 ? (
                <div className="flex flex-col gap-10">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-6 md:gap-8">
-                     {finalFilteredProducts.map((product, i) => (
-                       <div key={product.id}>
-                         <ProductCard product={product} index={i} />
-                       </div>
-                     ))}
-                  </div>
+                  <VirtualizedProductGrid products={finalFilteredProducts} />
                   
                   {/* Infinite Scroll / Load More */}
                   {lastVisible && !searchQuery && (

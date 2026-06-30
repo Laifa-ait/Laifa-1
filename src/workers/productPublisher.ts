@@ -1,4 +1,4 @@
-import { admin } from "../config/firebase-admin";
+import { admin } from "../../server/services/firebase-admin";
 
 const CHECK_INTERVAL = 60 * 1000; // 1 minute
 

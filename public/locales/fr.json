@@ -3125,7 +3125,6 @@
   "Équivalence Chine": "Équivalence Chine",
   "Taille EUR/Turquie": "Taille EUR/Turquie",
   "Garantie & Support": "Garantie & Support",
-  "Commande #": "Commande #",
   "Validation en cours": "Validation en cours",
   "Retour Accepté": "Retour Accepté",
   "Reçu par le vendeur": "Reçu par le vendeur",
@@ -3136,12 +3135,10 @@
   "Aucun retour en cours": "Aucun retour en cours",
   "Vous n'avez effectué aucune demande de retour. Si vous rencontrez un problème avec une commande (taille, défaut...), vous pouvez initier un retour depuis le détail de la commande.": "Vous n'avez effectué aucune demande de retour. Si vous rencontrez un problème avec une commande (taille, défaut...), vous pouvez initier un retour depuis le détail de la commande.",
   "Voir mes commandes": "Voir mes commandes",
-  "Motif :": "Motif :",
   "Total :": "Total :",
   "Détails Commande": "Détails Commande",
   "Politique de retour simplifiée": "Politique de retour simplifiée",
   "Notre modèle de Paiement à la Livraison permet de vérifier le colis à réception. Si un article ne correspond pas (taille, modèle), signalez-le immédiatement. Les retours validés sont remboursés sur votre Olma Wallet pour un usage futur.": "Notre modèle de Paiement à la Livraison permet de vérifier le colis à réception. Si un article ne correspond pas (taille, modèle), signalez-le immédiatement. Les retours validés sont remboursés sur votre Olma Wallet pour un usage futur.",
-  "Inconnu": "Inconnu",
   "workspace.title": "Intégrations Google Workspace",
   "workspace.subtitle": "Générez des rapports premium sur-mesure (Admin/Vendeur), sécurisez les fichiers KYC et organisez des réunions.",
   "workspace.export_admin_title": "Export Manifeste Admin",
@@ -3177,5 +3174,8 @@
   "workspace.modal.alert_open_link": "Ouvrir dans Google Workspace",
   "workspace.modal.no_orders_found": "Aucune commande réelle trouvée pour ce vendeur.",
   "workspace.modal.email_required": "Veuillez saisir une adresse email valide.",
-  "workspace.modal.seller_id_required": "Veuillez sélectionner une boutique ou entrer un ID vendeur."
+  "workspace.modal.seller_id_required": "Veuillez sélectionner une boutique ou entrer un ID vendeur.",
+  "Voir la Collection": "Voir la Collection",
+  "Prochain arrivage imminent": "Prochain arrivage imminent",
+  "Sonia A.": "Sonia A."
 }

@@ -5,10 +5,11 @@ import { ArrowLeft, Share2, ShieldCheck, Star, ShoppingBag, Info, Flame } from "
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { db } from "../../lib/firebase";
-import { useCart } from "../../context/CartContext";
+import { useCartStore } from "../../store/useCartStore";
+import { useWishlistStore } from "../../store/useWishlistStore";
 import { useShop } from "../../context/ShopContext";
 import { Product } from "../../types";
-import { Helmet } from "react-helmet-async";
+import { usePageMetadata } from "../../hooks/usePageMetadata";
 import { ProductGallery } from "../../components/Product/Details/ProductGallery";
 import { ProductInfo } from "../../components/Product/Details/ProductInfo";
 import { ProductBuyBox } from "../../components/Product/Details/ProductBuyBox";
@@ -26,7 +27,9 @@ export const ProductDetails: React.FC = () => {
 
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { addToCart, wishlist, toggleWishlist } = useCart();
+  const addToCart = useCartStore((state) => state.addToCart);
+  const wishlist = useWishlistStore((state) => state.wishlist);
+  const toggleWishlist = useWishlistStore((state) => state.toggleWishlist);
   const { fetchCrossSellProducts } = useShop();
 
   const [recommendedProducts, setRecommendedProducts] = React.useState<Product[]>([]);
@@ -109,6 +112,13 @@ export const ProductDetails: React.FC = () => {
     return basePrice;
   }, [currentPrice, selectedVariantObj]);
 
+  const seoHelmet = usePageMetadata({
+    title: product?.name || 'Produit',
+    description: product?.description?.substring(0, 160) || 'Découvrez ce produit sur OLMART',
+    ogImage: images?.[0] || product?.images?.[0] || '',
+    ogType: "product",
+  });
+
   const isColorOutOfStock = React.useCallback((c: string) => {
     if (!product || !product.variants || !Array.isArray(product.variants) || product.variants.length === 0) {
       return false;
@@ -184,16 +194,7 @@ export const ProductDetails: React.FC = () => {
 
   return (
     <div className="bg-white min-h-screen pb-32 selection:bg-black selection:text-white">
-      <Helmet>
-        <title>{product?.name ? `${product.name} | OLMART` : 'Produit | OLMART'}</title>
-        <meta name="description" content={product?.description?.substring(0, 160)} />
-        <meta property="og:title" content={product?.name} />
-        <meta property="og:description" content={product?.description?.substring(0, 200)} />
-        <meta property="og:image" content={images?.[0] || product?.images?.[0]} />
-        <meta property="og:type" content="product" />
-        <meta property="product:price:amount" content={String(displayedPrice)} />
-        <meta property="product:price:currency" content="DZD" />
-      </Helmet>
+      {seoHelmet}
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 lg:pt-32 pb-16">
         <nav className="mb-6 lg:mb-10">
@@ -254,26 +255,7 @@ export const ProductDetails: React.FC = () => {
           </div>
         </div>
 
-        {/* RECOMMENDED PRODUCTS PLACEHOLDER */}
-        <div className="pt-16 pb-8 border-t border-black/10 mt-8">
-          <h2 className="text-lg font-sans font-medium uppercase tracking-widest text-black mb-8 text-center">
-            {t("product.you_may_also_like") || "Vous aimerez aussi"}
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 opacity-60">
-            {/* These are placeholders that will be coded later as requested */}
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="group cursor-pointer">
-                <div className="aspect-[3/4] bg-slate-100 mb-3 overflow-hidden relative">
-                  <div className="w-full h-full bg-slate-200 animate-pulse"></div>
-                </div>
-                <div className="space-y-1">
-                  <div className="h-3 bg-slate-200 w-3/4 animate-pulse"></div>
-                  <div className="h-3 bg-slate-200 w-1/2 animate-pulse"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+
 
         <ProductLightbox 
           isOpen={isLightboxOpen} 

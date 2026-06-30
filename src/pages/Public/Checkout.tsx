@@ -4,7 +4,7 @@ import { CheckCircle, Package, ShieldCheck, Ticket } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
-import { useCart } from '../../context/CartContext';
+import { useCartStore } from '../../store/useCartStore';
 import { useAuth } from '../../context/AuthContext';
 import { formatPrice } from '../../utils/format';
 import { PremiumLayout } from '../../components/Layout/PremiumLayout';
@@ -74,7 +74,7 @@ export const Checkout: React.FC = () => {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const filterSellerId = searchParams.get('sellerId');
-  const { cart, clearCart, getCartItemPrice, revalidateCart } = useCart();
+  const { cart, clearCart, getCartItemPrice, revalidateCart } = useCartStore();
   const { currentUser, userProfile } = useAuth();
   
   const [formData, setFormData] = useState({

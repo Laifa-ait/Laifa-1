@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { db } from "../lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { useAuth } from "../context/AuthContext";
-import { useUI } from "../context/UIContext";
+import { useUIStore } from "../store/useUIStore";
 import { useShop } from "../context/ShopContext";
 import { useNavigate } from "react-router-dom";
 
@@ -11,7 +11,9 @@ export const useMobileMenu = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { currentUser, logout, userProfile } = useAuth();
-  const { isMobileMenuOpen, setIsMobileMenuOpen, setIsWishlistOpen } = useUI();
+  const isMobileMenuOpen = useUIStore((state) => state.isMobileMenuOpen);
+  const setIsMobileMenuOpen = useUIStore((state) => state.setIsMobileMenuOpen);
+  const setIsWishlistOpen = useUIStore((state) => state.setIsWishlistOpen);
   const { setActiveCategory } = useShop();
 
   const [isAboutOpen, setIsAboutOpen] = useState(false);

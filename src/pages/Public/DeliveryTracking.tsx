@@ -71,8 +71,10 @@ export const DeliveryTracking: React.FC = () => {
 
     const events = realOrder.carrier_tracking_events || [];
     const sortedEvents = [...events].sort((a: CarrierTrackingEvent, b: CarrierTrackingEvent) => {
-       const dateA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
-       const dateB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
+       const tA = a.timestamp as any;
+       const tB = b.timestamp as any;
+       const dateA = tA?.toDate ? tA.toDate() : new Date(tA);
+       const dateB = tB?.toDate ? tB.toDate() : new Date(tB);
        return dateB.getTime() - dateA.getTime();
     });
 
@@ -81,7 +83,8 @@ export const DeliveryTracking: React.FC = () => {
     const isPreparing = realOrder.status === "processing";
 
     const steps: StatusStep[] = sortedEvents.map((evt: CarrierTrackingEvent, i: number) => {
-      const dateObj = evt.timestamp?.toDate ? evt.timestamp.toDate() : new Date(evt.timestamp);
+      const tEvt = evt.timestamp as any;
+      const dateObj = tEvt?.toDate ? tEvt.toDate() : new Date(tEvt);
       const isLatest = i === 0;
       
       let status: "completed" | "active" | "next" = "completed";

@@ -24,7 +24,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useShop } from "../../context/ShopContext";
-import { useCart } from "../../context/CartContext";
+import { useCartStore } from "../../store/useCartStore";
+import { useWishlistStore } from "../../store/useWishlistStore";
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
 import { BentoHero } from "../../components/Home/BentoHero";
@@ -38,13 +39,9 @@ import { formatPrice } from "../../utils/format";
 import { db } from "../../lib/firebase";
 import { collection, query, orderBy, limit, getDocs, where } from "firebase/firestore";
 import { Product } from "../../types";
-import { Helmet } from "react-helmet-async";
+import { usePageMetadata } from "../../hooks/usePageMetadata";
 import { getTranslatedField } from "../../utils/translations";
 import { MobileSwipeIndicator } from "../../components/ui/MobileSwipeIndicator";
-import {
-  cacheEngine,
-  handleDevQuotaLogger,
-} from "../../utils/mockProducts";
 import { useUserHabits } from "../../hooks/useUserHabits";
 import { useHomeData } from "../../hooks/useHomeData";
 import { FlashSales } from "../../components/Home/FlashSales";
@@ -87,7 +84,9 @@ export const Home: React.FC = () => {
     }
   };
   const { setActiveCategory, activeWilaya } = useShop();
-  const { toggleWishlist, wishlist, addToCart } = useCart();
+  const addToCart = useCartStore((state) => state.addToCart);
+  const wishlist = useWishlistStore((state) => state.wishlist);
+  const toggleWishlist = useWishlistStore((state) => state.toggleWishlist);
   const { currentUser, userProfile } = useAuth();
 
   const {
@@ -435,16 +434,24 @@ export const Home: React.FC = () => {
     }
   }, [targetedPopupBanner]);
 
+  const seoHelmet = usePageMetadata({
+    title: t("seo_home_title"),
+    description: t("seo_home_description"),
+    keywords: t("seo_home_keywords"),
+    ogImage: targetedHeroBanners[0]?.desktop_image || targetedHeroBanners[0]?.imageUrl || "https://images.unsplash.com/photo-1555529771-835f59fc5efe?auto=format&fit=crop&q=80&w=800",
+  });
+
   return (
     <div className="bg-[#FAFAFA] font-sans">
+      {seoHelmet}
       <MonthlyUpdateBanner />
       {/* 💥 Dynamic Promotion Popup Banner (Loaded once per session per ID) */}
       {showPopupBanner && targetedPopupBanner && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-500">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 animate-in fade-in duration-500">
           <div className="relative max-w-sm sm:max-w-md w-full rounded-3xl overflow-hidden shadow-xl bg-white border border-zinc-200 animate-in zoom-in-95 duration-500 group">
             <button 
               onClick={() => setShowPopupBanner(false)}
-              className="absolute top-4 right-4 z-10 p-2 bg-white/90 hover:bg-slate-100 backdrop-blur-md rounded-full text-slate-700 transition-colors cursor-pointer shadow-sm"
+              className="absolute top-4 right-4 z-10 p-2 bg-white/90 hover:bg-slate-100 rounded-full text-slate-700 transition-colors cursor-pointer shadow-sm"
             >
               <X className="w-4 h-4" />
             </button>
@@ -471,13 +478,6 @@ export const Home: React.FC = () => {
         </div>
       )}
 
-      <Helmet>
-        <title>{t("seo_home_title")}</title>
-        <meta name="description" content={t("seo_home_description")} />
-        <meta name="keywords" content={t("seo_home_keywords")} />
-        <meta property="og:image" content={targetedHeroBanners[0]?.desktop_image || targetedHeroBanners[0]?.imageUrl || "https://images.unsplash.com/photo-1555529771-835f59fc5efe?auto=format&fit=crop&q=80&w=800"} />
-        <meta property="og:url" content={window.location.href} />
-      </Helmet>
       <h1 className="sr-only">{t("home.sr_title")}</h1>
       
       {/* Neo-Heritage Bento Hero - Kinder Style */}
@@ -572,7 +572,7 @@ export const Home: React.FC = () => {
                   <Sparkles className="w-3.5 h-3.5" />
                   {t("exploration_premium")}
                 </div>
-                <h2 className="font-sans text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-900 mb-3 flex flex-col items-start leading-[1.1]">
+                <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-medium tracking-wide text-slate-900 mb-3 flex flex-col items-start leading-[1.1]">
                   {t("product.premium_selection")}
                 </h2>
                 <p className="font-sans text-sm md:text-base text-slate-500 max-w-xl leading-relaxed mt-3">
@@ -630,15 +630,11 @@ export const Home: React.FC = () => {
         <div className="w-full max-w-[90rem] mx-auto px-4 sm:px-6 md:px-8 relative z-10">
           <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-5 sm:p-8 relative">
           
-          <div className="absolute top-0 right-0 w-48 h-48 bg-zinc-900/5 rounded-full blur-3xl pointer-events-none"></div>
-          
           {/* Playful Header Section */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 pb-2 sm:pb-4 relative z-10 gap-4">
             <div className="flex flex-col items-start">
-              <h3 className="text-2xl sm:text-3xl md:text-4xl font-sans font-bold text-slate-900 tracking-tight flex items-center gap-2 sm:gap-3">
-                {lang === "ar" ? "خصيصاً لك" : <>
-                  <span className="uppercase tracking-tight text-slate-900">{t("home.pour_vous.prefix")} {t("home.pour_vous.suffix")}</span>
-                </>}
+              <h3 className="text-2xl sm:text-3xl md:text-4xl font-display font-medium text-slate-900 tracking-wide flex items-center gap-2 sm:gap-3">
+                <span className="uppercase tracking-tight text-slate-900">{t("home.pour_vous.prefix")} {t("home.pour_vous.suffix")}</span>
               </h3>
               <div className="w-12 sm:w-16 h-1 sm:h-1.5 bg-zinc-900 rounded-full mt-2 sm:mt-3"></div>
             </div>
