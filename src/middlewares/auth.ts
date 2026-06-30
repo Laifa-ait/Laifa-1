@@ -1,4 +1,4 @@
-import { admin, db, firebaseConfig } from "../services/firebase-admin";
+import { admin, db, firebaseConfig } from "../config/firebase-admin";
 import { Request, Response, NextFunction } from "express";
 
 export interface AuthenticatedRequest extends Request {
@@ -18,7 +18,7 @@ interface FirestoreDocument {
 
 const fetchRoleFromRest = async (uid: string, idToken: string): Promise<string | null> => {
   try {
-    const projectId = firebaseConfig?.projectId || process.env.FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID;
+    const projectId = firebaseConfig?.projectId || process.env.FIREBASE_PROJECT_ID;
     if (!projectId) {
       console.warn("Firebase projectId is missing in auth.ts REST call");
     }
@@ -58,16 +58,9 @@ export const authenticateToken = async (req: AuthenticatedRequest, res: Response
     const decodedToken = await admin.auth().verifyIdToken(idToken);
     let role = decodedToken.role || "buyer"; // Default to buyer for safety
 
-    if (decodedToken.admin === true) {
+    // Explicit hardcoded super-admin fallback by email (secure-by-design & resilient)
+    if (decodedToken.email && decodedToken.email.toLowerCase() === process.env.ADMIN_EMAIL?.toLowerCase()) {
       role = "admin";
-    } else if (decodedToken.email && decodedToken.email.toLowerCase() === process.env.ADMIN_EMAIL?.toLowerCase()) {
-      role = "admin";
-      // Sync the custom claim for next time
-      try {
-        await admin.auth().setCustomUserClaims(decodedToken.uid, { admin: true, role: 'admin' });
-      } catch (e) {
-        console.warn("Failed to set admin custom claim:", e);
-      }
       if (process.env.NODE_ENV === "development") {
         console.log(`[Admin Auth] Verified admin user ${decodedToken.email} (case-insensitive)`);
       }

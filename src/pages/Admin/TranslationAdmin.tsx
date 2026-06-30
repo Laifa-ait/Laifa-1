@@ -176,15 +176,6 @@ export const TranslationAdmin: React.FC = () => {
             setDictFr(prev => ({ ...prev, [key]: finalFr }));
             setDictAr(prev => ({ ...prev, [key]: finalAr }));
             setDictEn(prev => ({ ...prev, [key]: finalEn }));
-
-            // Update in-memory i18n resources immediately
-            try {
-                i18n.addResource('fr', 'translation', key, finalFr);
-                i18n.addResource('ar', 'translation', key, finalAr);
-                i18n.addResource('en', 'translation', key, finalEn);
-            } catch (err) {
-                console.warn("Could not add resource in-memory:", err);
-            }
             
             setEditingKey(null);
             
@@ -233,15 +224,6 @@ export const TranslationAdmin: React.FC = () => {
             setDictFr(prev => ({ ...prev, [key]: fr }));
             setDictAr(prev => ({ ...prev, [key]: ar }));
             setDictEn(prev => ({ ...prev, [key]: en }));
-
-            // Update in-memory i18n resources immediately
-            try {
-                i18n.addResource('fr', 'translation', key, fr);
-                i18n.addResource('ar', 'translation', key, ar);
-                i18n.addResource('en', 'translation', key, en);
-            } catch (err) {
-                console.warn("Could not add resource in-memory:", err);
-            }
             
             setNewKeyData({ key: '', fr: '', ar: '', en: '' });
             setShowNewKeyModal(false);
@@ -351,13 +333,13 @@ export const TranslationAdmin: React.FC = () => {
             try {
                 const { PRODUCT_HIERARCHY } = await import('../../constants');
                 if (Array.isArray(PRODUCT_HIERARCHY)) {
-                    PRODUCT_HIERARCHY.forEach((cat: any) => {
+                    PRODUCT_HIERARCHY.forEach(cat => {
                         if (cat.name) clientKeys.add(cat.name.trim());
                         if (Array.isArray(cat.subcategories)) {
-                            cat.subcategories.forEach((sub: any) => {
+                            cat.subcategories.forEach(sub => {
                                 if (sub.name) clientKeys.add(sub.name.trim());
                                 if (Array.isArray(sub.subSubCategories)) {
-                                    sub.subSubCategories.forEach((subSub: any) => {
+                                    sub.subSubCategories.forEach(subSub => {
                                         if (typeof subSub === 'string') {
                                             clientKeys.add(subSub.trim());
                                         } else if (subSub && (subSub as any).name) {

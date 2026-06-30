@@ -69,11 +69,7 @@ export const useFirebaseHomepage = () => {
     try {
       toast.loading("Upload en cours...", { id: "upload" });
       const storageRef = ref(storage, `homepage_media/${Date.now()}_${file.name.replace(/\s+/g, "_")}`);
-      const metadata = {
-        contentType: file.type,
-        cacheControl: "public, max-age=31536000",
-      };
-      const snapshot = await uploadBytes(storageRef, file, metadata);
+      const snapshot = await uploadBytes(storageRef, file);
       const url = await getDownloadURL(snapshot.ref);
       toast.success("Importé !", { id: "upload" });
       return url;

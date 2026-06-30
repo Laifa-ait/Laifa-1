@@ -181,12 +181,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
         }
       }
-    } catch (err: unknown) {
-      const error = err instanceof Error ? err : new Error(String(err));
-      const firebaseErr = error as any;
-      if (firebaseErr?.code === "auth/popup-blocked") {
+    } catch (err: any) {
+      if (err.code === "auth/popup-blocked") {
         toast.error("Veuillez autoriser les popups pour vous connecter avec Google");
-      } else if (firebaseErr?.code === "auth/network-request-failed") {
+      } else if (err.code === "auth/network-request-failed") {
         toast.error("Erreur réseau. Vérifiez votre connexion.");
       } else {
         toast.error("Erreur de connexion Google");
@@ -217,7 +215,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           });
         }
 
-        const nextDocData: Record<string, unknown> = {
+        const nextDocData: any = {
           uid: user.uid,
           displayName: user.displayName || email.split("@")[0],
           email: user.email,
@@ -250,12 +248,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const VALID_ROLES = ["buyer", "seller"] as const;
-
   const signUpWithEmail = async (email: string, pass: string, name: string, role: string) => {
     const result = await createUserWithEmailAndPassword(auth, email, pass);
-    const isValidRole = VALID_ROLES.includes(role as any);
-    const userRole = checkIsAdminEmail(email) ? "admin" : (isValidRole ? role : "buyer");
+    const userRole = checkIsAdminEmail(email) ? "admin" : role || "buyer";
 
     // Update profile in Auth
     await updateProfile(result.user, { displayName: name });

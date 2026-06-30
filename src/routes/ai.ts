@@ -6,9 +6,9 @@ import {
   authenticateToken,
   authorizeSeller,
   authorizeAdmin,
-} from "../../server/middlewares/auth";
+} from "../middlewares/auth";
 import { ai } from "../config/gemini";
-import { admin } from "../../server/services/firebase-admin";
+import { admin } from "../config/firebase-admin";
 import path from "path";
 import fs from "fs";
 import { translate } from "@vitalets/google-translate-api";

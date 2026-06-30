@@ -1,14 +1,13 @@
-import React, { useCallback } from "react";
+import React from "react";
 import { motion } from "motion/react";
-import { Heart, Zap, Flame, Scale } from "lucide-react";
+import { Heart, Zap, Flame } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { useWishlistStore } from "../../store/useWishlistStore";
-import { useCompareStore } from "../../store/useCompareStore";
+import { useCart } from "../../context/CartContext";
 import { Product } from "../../types";
 import { formatPrice } from "../../utils/format";
 import { getTranslatedField } from "../../utils/translations";
-import { getOptimizedImageUrl, getImageSrcSet } from "../../utils/imageUtils";
+import { getOptimizedImageUrl } from "../../utils/imageUtils";
 
 interface ProductCardProps {
   product: Product;
@@ -31,10 +30,7 @@ export const ProductCard = React.memo(
     isFlashSale: isFlashSaleProp,
   }: ProductCardProps) => {
     const { t, i18n } = useTranslation();
-    const wishlist = useWishlistStore((state) => state.wishlist);
-    const toggleWishlist = useWishlistStore((state) => state.toggleWishlist);
-    const addToCompare = useCompareStore((state) => state.addToCompare);
-    const compareList = useCompareStore((state) => state.compareList);
+    const { wishlist, toggleWishlist } = useCart();
     const navigate = useNavigate();
     const lang = i18n.language as any;
     const isProductFlashActive = !!(
@@ -44,13 +40,13 @@ export const ProductCard = React.memo(
     );
     const isFlashSale = (variant === "flash_sale" || isFlashSaleProp === true) && isProductFlashActive;
 
-    const defaultClick = useCallback((prod: Product) => {
+    const defaultClick = (prod: Product) => {
       if (onClick) {
         onClick(prod);
       } else {
         navigate(`/product/${prod.id}`);
       }
-    }, [onClick, navigate]);
+    };
 
     const getSpelledCorrectly = (str: string) => {
       return str.replace(/CHASSURE/gi, "Chaussure").replace(/Chassure/gi, "Chaussure");
@@ -71,10 +67,7 @@ export const ProductCard = React.memo(
             <div className="relative aspect-[4/5] sm:aspect-[3/4] w-full bg-zinc-50 overflow-hidden group">
               <img
                 loading="lazy"
-                decoding="async"
                 src={getOptimizedImageUrl(product.image, 600)}
-                srcSet={getImageSrcSet(product.image)}
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                 alt={getSpelledCorrectly(getTranslatedField(product, "name", lang))}
                 className="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
                 referrerPolicy="no-referrer"
@@ -100,29 +93,19 @@ export const ProductCard = React.memo(
                 )}
               </div>
 
-              {/* Wishlist and Compare Buttons */}
-              <div className="absolute top-3 right-3 z-20 flex flex-col gap-2">
+              {/* Wishlist Button */}
+              <div className="absolute top-3 right-3 z-20">
                 <button
                   aria-label={wishlist.includes(product.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleWishlist(product.id);
                   }}
-                  className="w-7 h-7 rounded-full bg-white/90 backdrop-blur text-slate-400 flex items-center justify-center shadow-sm hover:text-rose-500 hover:bg-white hover:scale-110 active:scale-95 transition-all"
+                  className="w-9 h-9 rounded-full bg-white/90 backdrop-blur text-slate-400 flex items-center justify-center shadow-sm hover:text-rose-500 hover:bg-white hover:scale-110 active:scale-95 transition-all"
                 >
                   <Heart
-                    className={`w-3.5 h-3.5 ${wishlist.includes(product.id) ? "fill-rose-500 text-rose-500" : "stroke-[2]"}`}
+                    className={`w-4 h-4 ${wishlist.includes(product.id) ? "fill-rose-500 text-rose-500" : "stroke-[2]"}`}
                   />
-                </button>
-                <button
-                  aria-label="Comparer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    addToCompare(product);
-                  }}
-                  className={`w-7 h-7 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm hover:text-amber-500 hover:bg-white hover:scale-110 active:scale-95 transition-all ${compareList.some(p => p.id === product.id) ? 'text-amber-500' : 'text-slate-400'}`}
-                >
-                  <Scale className="w-3.5 h-3.5 stroke-[2]" />
                 </button>
               </div>
             </div>
@@ -152,10 +135,7 @@ export const ProductCard = React.memo(
             <div className="relative aspect-[4/5] w-full bg-slate-50 overflow-hidden group">
               <img
                 loading="lazy"
-                decoding="async"
                 src={getOptimizedImageUrl(product.image, 400)}
-                srcSet={getImageSrcSet(product.image)}
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                 alt={getSpelledCorrectly(getTranslatedField(product, "name", lang))}
                 className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-1000 ease-[0.16,1,0.3,1] group-hover:scale-105"
                 referrerPolicy="no-referrer"
@@ -188,29 +168,19 @@ export const ProductCard = React.memo(
                 )}
               </div>
 
-              {/* Wishlist and Compare Buttons */}
-              <div className="absolute top-3 right-3 z-20 flex flex-col gap-2">
+              {/* Wishlist Button */}
+              <div className="absolute top-3 right-3 z-20">
                 <button
                   aria-label={wishlist.includes(product.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleWishlist(product.id);
                   }}
-                  className="w-7 h-7 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-white hover:scale-110 active:scale-95 transition-all shadow-sm pointer-events-auto border border-slate-200"
+                  className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-white hover:scale-110 active:scale-95 transition-all shadow-sm pointer-events-auto border border-slate-200"
                 >
                   <Heart
-                    className={`w-3.5 h-3.5 ${wishlist.includes(product.id) ? "fill-rose-500 text-rose-500" : "stroke-[2]"}`}
+                    className={`w-4 h-4 ${wishlist.includes(product.id) ? "fill-rose-500 text-rose-500" : "stroke-[2]"}`}
                   />
-                </button>
-                <button
-                  aria-label="Comparer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    addToCompare(product);
-                  }}
-                  className={`w-7 h-7 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center hover:text-amber-500 hover:bg-white hover:scale-110 active:scale-95 transition-all shadow-sm pointer-events-auto border border-slate-200 ${compareList.some(p => p.id === product.id) ? 'text-amber-500' : 'text-slate-400'}`}
-                >
-                  <Scale className="w-3.5 h-3.5 stroke-[2]" />
                 </button>
               </div>
             </div>

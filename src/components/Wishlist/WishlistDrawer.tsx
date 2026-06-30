@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Heart, Package } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { useWishlistStore } from "../../store/useWishlistStore";
+import { useCart } from "../../context/CartContext";
 import { useShop } from "../../context/ShopContext";
 import { SideDrawer } from "../SideDrawer";
 import { formatPrice } from "../../utils/format";
@@ -10,7 +10,7 @@ import { getTranslatedField } from "../../utils/translations";
 import { Language, Product } from "../../types";
 
 export const WishlistDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
-  const wishlist = useWishlistStore((state) => state.wishlist);
+  const { wishlist } = useCart();
   const { fetchProductsByIds } = useShop();
   const [wishlistProducts, setWishlistProducts] = useState<Product[]>([]);
   const { t, i18n } = useTranslation();

@@ -60,7 +60,7 @@ export const MobileMenu: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={closeMenu}
-              className="fixed inset-0 bg-black/40 z-[100]"
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100]"
             />
             <motion.div
               initial={{ x: isRtl ? "-100%" : "100%" }}
@@ -340,7 +340,7 @@ export const MobileMenu: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsAboutOpen(false)}
-              className="absolute inset-0 bg-slate-900/40"
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
             />
             <motion.div
               initial={{ opacity: 0, y: 20, scale: 0.95 }}

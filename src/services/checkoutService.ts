@@ -12,12 +12,6 @@ export const processCheckout = async (payload: any) => {
       throw new Error(`Montant minimum de commande : ${MIN_ORDER_AMOUNT} DA`);
     }
 
-    if (payload.useWallet && payload.walletAmount > 0) {
-      if (payload.walletAmount > payload.total) {
-        throw new Error("Le montant du wallet ne peut pas dépasser le total.");
-      }
-    }
-
     // Refresh token to ensure we have the latest claims and valid session
     let token = await user.getIdToken();
     

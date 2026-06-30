@@ -2,12 +2,8 @@ import { useState, useEffect } from "react";
 import { db } from "../lib/firebase";
 import { collection, query, orderBy, limit, getDocs, where } from "firebase/firestore";
 import { HomepageSection, Product } from "../types";
+import { cacheEngine } from "../utils/mockProducts";
 import { withExponentialBackoff } from "../utils/retry";
-
-const cacheEngine = {
-  get: (key: string) => null,
-  set: (key: string, val: any) => {},
-};
 
 export const useHomeData = () => {
   const [dbBanners, setDbBanners] = useState<any[]>([]);

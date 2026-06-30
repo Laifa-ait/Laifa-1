@@ -6,7 +6,6 @@ import { ProductCard } from '../../components/Product/ProductCard';
 import { Product } from '../../types';
 import { useTranslation } from 'react-i18next';
 import { UniversalFilterBar } from '../../components/Shop/UniversalFilterBar';
-import { VirtualizedProductGrid } from '../../components/Shop/VirtualizedProductGrid';
 
 export const ProductFilterPage: React.FC = () => {
   const { tagSlug } = useParams<{ tagSlug: string }>();
@@ -17,10 +16,6 @@ export const ProductFilterPage: React.FC = () => {
   const [tagName, setTagName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(null);
-
-  const handleSelectFilter = React.useCallback((filter: string | null) => {
-    setActiveQuickFilter(filter);
-  }, []);
 
   const finalFilteredProducts = useMemo(() => {
     let list = [...products];
@@ -101,7 +96,7 @@ export const ProductFilterPage: React.FC = () => {
         </div>
       </div>
 
-      <UniversalFilterBar activeFilter={activeQuickFilter} onSelectFilter={handleSelectFilter} />
+      <UniversalFilterBar activeFilter={activeQuickFilter} onSelectFilter={setActiveQuickFilter} />
 
       {/* Main product listings grid results */}
       <div className="max-w-[1850px] mx-auto px-6 py-12">
@@ -123,7 +118,16 @@ export const ProductFilterPage: React.FC = () => {
               {t("Explorer la boutique")}</button>
           </div>
         ) : (
-          <VirtualizedProductGrid products={finalFilteredProducts} />
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+            {finalFilteredProducts.map((p, index) => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                index={index}
+                onClick={(prod) => navigate(`/product/${prod.id}`)}
+              />
+            ))}
+          </div>
         )}
       </div>
 

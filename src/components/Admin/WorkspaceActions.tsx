@@ -280,7 +280,7 @@ export const WorkspaceActions: React.FC = () => {
 
         const orderItemsBySeller: Record<string, { totalBrut: number; itemsList: string[] }> = {};
 
-        (order.items || []).forEach((item: any) => {
+        (order.items || []).forEach((item) => {
           const sid = item.sellerId || "VND-UNKNOWN";
           if (!orderItemsBySeller[sid]) {
             orderItemsBySeller[sid] = { totalBrut: 0, itemsList: [] };

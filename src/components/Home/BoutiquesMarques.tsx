@@ -105,7 +105,7 @@ export const BoutiquesMarques: React.FC<BoutiquesMarquesProps> = ({ sellers, isL
           <span className="text-[10px] sm:text-[11px] font-sans font-semibold text-slate-500 uppercase tracking-[0.25em] mb-3 select-none">
             {t("home.shops.community_badge")}
           </span>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-medium text-slate-900 tracking-wide leading-[1.1]">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-sans font-bold text-slate-900 tracking-tight leading-[1.1]">
             {t("home.shops.title")}
           </h2>
         </div>
@@ -115,7 +115,7 @@ export const BoutiquesMarques: React.FC<BoutiquesMarquesProps> = ({ sellers, isL
           {/* Left Navigation Arrow */}
           <button
             onClick={() => scroll("left")}
-            className="hidden lg:flex absolute left-4 sm:left-6 lg:left-10 top-[40%] -translate-y-1/2 z-30 w-12 h-12 items-center justify-center rounded-full bg-white/90 border border-slate-200/90 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all duration-300 shadow-[0_4px_15px_rgba(0,0,0,0.05)] active:scale-95 cursor-pointer opacity-0 group-hover/carousel:opacity-100"
+            className="hidden lg:flex absolute left-4 sm:left-6 lg:left-10 top-[40%] -translate-y-1/2 z-30 w-12 h-12 items-center justify-center rounded-full bg-white/90 backdrop-blur-md border border-slate-200/90 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all duration-300 shadow-[0_4px_15px_rgba(0,0,0,0.05)] active:scale-95 cursor-pointer opacity-0 group-hover/carousel:opacity-100"
             aria-label={t("Voir la boutique précédente")}
           >
             <ChevronLeft className="w-5 h-5 stroke-[2]" />
@@ -222,7 +222,7 @@ export const BoutiquesMarques: React.FC<BoutiquesMarquesProps> = ({ sellers, isL
           {/* Right Navigation Arrow */}
           <button
             onClick={() => scroll("right")}
-            className="hidden lg:flex absolute right-4 sm:right-6 lg:right-10 top-[40%] -translate-y-1/2 z-30 w-12 h-12 items-center justify-center rounded-full bg-white/90 border border-slate-200/90 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all duration-300 shadow-[0_4px_15px_rgba(0,0,0,0.05)] active:scale-95 cursor-pointer opacity-0 group-hover/carousel:opacity-100"
+            className="hidden lg:flex absolute right-4 sm:right-6 lg:right-10 top-[40%] -translate-y-1/2 z-30 w-12 h-12 items-center justify-center rounded-full bg-white/90 backdrop-blur-md border border-slate-200/90 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all duration-300 shadow-[0_4px_15px_rgba(0,0,0,0.05)] active:scale-95 cursor-pointer opacity-0 group-hover/carousel:opacity-100"
             aria-label={t("Voir la boutique suivante")}
           >
             <ChevronRight className="w-5 h-5 stroke-[2]" />

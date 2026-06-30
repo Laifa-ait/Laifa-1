@@ -11,6 +11,7 @@
     ],
     "skipLibCheck": true,
     "strict": true,
+    "noImplicitAny": false,
     "moduleResolution": "bundler",
     "isolatedModules": true,
     "moduleDetection": "force",
@@ -26,7 +27,7 @@
   },
   "include": [
     "src/**/*",
-    "server/**/*",
+    "app.ts",
     "server.ts",
     "vite.config.ts"
   ],

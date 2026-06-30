@@ -1,1 +1,0 @@
-Lang: fr, Keys: 3163, Path: /app/applet/public/locales/fr.json

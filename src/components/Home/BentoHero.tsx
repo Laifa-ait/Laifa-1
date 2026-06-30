@@ -115,7 +115,7 @@ export const BentoHero: React.FC<{ banners: any[] }> = ({ banners }) => {
       <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent z-0" />
 
       {/* Decorative Blur */}
-      <div className="absolute -top-32 -left-32 w-96 h-96 bg-white/10 rounded-full pointer-events-none z-0"></div>
+      <div className="absolute -top-32 -left-32 w-96 h-96 bg-white/10 blur-[100px] rounded-full pointer-events-none z-0"></div>
 
       {/* Content wrapper */}
       <div className="absolute inset-0 p-6 sm:p-10 md:p-16 flex flex-col justify-end items-start z-10">
@@ -124,7 +124,7 @@ export const BentoHero: React.FC<{ banners: any[] }> = ({ banners }) => {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="flex items-center gap-2 mb-4 bg-white/20 shadow-sm px-3.5 py-1.5 rounded-full border border-white/20"
+          className="flex items-center gap-2 mb-4 bg-white/10 backdrop-blur-md shadow-sm px-3.5 py-1.5 rounded-full border border-white/20"
         >
           <Sparkles className="w-3.5 h-3.5 text-white" />
           <span className="font-sans font-medium text-[10px] sm:text-xs uppercase tracking-[0.2em] text-white">
@@ -137,7 +137,7 @@ export const BentoHero: React.FC<{ banners: any[] }> = ({ banners }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-          className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-display text-white font-medium tracking-wide mb-4 max-w-4xl leading-[1.1] drop-shadow-sm text-start"
+          className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-sans text-white font-bold tracking-tight mb-4 max-w-4xl leading-[1.1] drop-shadow-sm text-start"
         >
           {title || "VOTRE UNIVERS SHOPPING"}
         </motion.h2>
@@ -174,7 +174,7 @@ export const BentoHero: React.FC<{ banners: any[] }> = ({ banners }) => {
         <>
           <button
             onClick={isRTL ? handleNext : handlePrev}
-            className={`absolute top-1/2 -translate-y-1/2 z-20 w-12 h-12 flex items-center justify-center rounded-full bg-black/40 hover:bg-black/60 border border-white/20 text-white shadow-lg transition-all opacity-0 group-hover:opacity-100 duration-300 cursor-pointer ${
+            className={`absolute top-1/2 -translate-y-1/2 z-20 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white shadow-lg transition-all opacity-0 group-hover:opacity-100 duration-300 cursor-pointer ${
               isRTL ? "right-6" : "left-6"
             }`}
           >
@@ -182,7 +182,7 @@ export const BentoHero: React.FC<{ banners: any[] }> = ({ banners }) => {
           </button>
           <button
             onClick={isRTL ? handlePrev : handleNext}
-            className={`absolute top-1/2 -translate-y-1/2 z-20 w-12 h-12 flex items-center justify-center rounded-full bg-black/40 hover:bg-black/60 border border-white/20 text-white shadow-lg transition-all opacity-0 group-hover:opacity-100 duration-300 cursor-pointer ${
+            className={`absolute top-1/2 -translate-y-1/2 z-20 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white shadow-lg transition-all opacity-0 group-hover:opacity-100 duration-300 cursor-pointer ${
               isRTL ? "left-6" : "right-6"
             }`}
           >
@@ -193,7 +193,7 @@ export const BentoHero: React.FC<{ banners: any[] }> = ({ banners }) => {
 
       {/* Slide Indicators */}
       {activeBanners.length > 1 && (
-        <div className="absolute bottom-6 start-1/2 -translate-x-1/2 flex items-center gap-2 z-20 bg-black/40 px-4 py-2 rounded-full border border-white/10">
+        <div className="absolute bottom-6 start-1/2 -translate-x-1/2 flex items-center gap-2 z-20 bg-black/15 backdrop-blur-sm px-4 py-2 rounded-full border border-white/10">
           {activeBanners.map((_, idx) => (
             <button
               key={idx}

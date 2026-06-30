@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { HomepageSection, Product } from "../../types";
 import { formatPrice } from "../../utils/format";
-import { useWishlistStore } from "../../store/useWishlistStore";
+import { useCart } from "../../context/CartContext";
 import { db } from "../../lib/firebase";
 import { ProductCard } from "../Product/ProductCard";
 import {
@@ -35,6 +35,7 @@ import {
   documentId,
   startAfter,
 } from "firebase/firestore";
+import { cacheEngine, handleDevQuotaLogger } from "../../utils/mockProducts";
 import { MobileSwipeIndicator } from "../ui/MobileSwipeIndicator";
 
 export const DynamicSection: React.FC<{ section: HomepageSection; isFramed?: boolean }> = ({
@@ -43,8 +44,7 @@ export const DynamicSection: React.FC<{ section: HomepageSection; isFramed?: boo
 }) => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
-  const wishlist = useWishlistStore((state) => state.wishlist);
-  const toggleWishlist = useWishlistStore((state) => state.toggleWishlist);
+  const { toggleWishlist, wishlist } = useCart();
   const { userProfile } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -359,7 +359,7 @@ export const DynamicSection: React.FC<{ section: HomepageSection; isFramed?: boo
         <div className="flex items-center justify-between mb-4 sm:mb-6 gap-4 group/header relative border-b border-slate-200/10 pb-3">
           <div className="flex flex-col">
             <h2
-              className={`text-2xl sm:text-3xl font-display font-medium tracking-wide rtl:tracking-normal leading-tight ${titleColor}`}
+              className={`text-xl sm:text-2xl font-black tracking-tight rtl:tracking-normal leading-tight ${titleColor}`}
             >
               {getSectionTitle()}
             </h2>
@@ -382,7 +382,7 @@ export const DynamicSection: React.FC<{ section: HomepageSection; isFramed?: boo
             {userProfile?.role === "admin" && (
               <button
                 onClick={() => navigate(`/admin/homepage`)}
-                className="bg-black/60 text-white font-bold text-[10px] rtl:text-[12px] px-2.5 py-1.5 rounded-full opacity-0 group-hover/header:opacity-100 transition-opacity cursor-pointer"
+                className="bg-black/60 text-white font-bold text-[10px] rtl:text-[12px] px-2.5 py-1.5 rounded-full opacity-0 group-hover/header:opacity-100 transition-opacity backdrop-blur-sm cursor-pointer"
               >
                 {t("common.edit")}
               </button>
@@ -429,7 +429,7 @@ export const DynamicSection: React.FC<{ section: HomepageSection; isFramed?: boo
   const getCardStyle = () => {
     switch (section.style) {
       case "glass":
-        return "bg-black/10 border border-black/20 shadow-sm rounded-none hover:bg-black/20";
+        return "bg-white/40 backdrop-blur-md border border-white/60 shadow-sm rounded-none hover:bg-white/60";
       case "minimal":
         return "bg-transparent border border-zinc-200 rounded-none hover:border-zinc-300";
       case "immersive":
@@ -476,8 +476,8 @@ export const DynamicSection: React.FC<{ section: HomepageSection; isFramed?: boo
   if (section.type === "flash_sale") {
     return (
       <div className="w-full bg-gradient-to-br from-[#0C0303] via-[#2F0606] to-[#0D0101] py-8 sm:py-12 mb-8 rounded-none border-2 border-red-500/20 shadow-[0_25px_60px_rgba(220,38,38,0.25)] relative overflow-hidden ring-4 ring-red-500/5">
-        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-red-600/10 rounded-full pointer-events-none" />
-        <div className="absolute -bottom-20 -left-10 w-[450px] h-[450px] bg-orange-650/10 rounded-full pointer-events-none" />
+        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-red-600/10 rounded-full blur-[130px] pointer-events-none" />
+        <div className="absolute -bottom-20 -left-10 w-[450px] h-[450px] bg-orange-650/10 rounded-full blur-[150px] pointer-events-none" />
 
         <div className="w-full max-w-[90rem] mx-auto px-4 sm:px-6 md:px-8 relative z-10">
           {/* Header */}
@@ -491,7 +491,7 @@ export const DynamicSection: React.FC<{ section: HomepageSection; isFramed?: boo
                   </span>
                 </div>
                 <div className="flex flex-col">
-                  <h2 className="font-display text-3xl md:text-4xl font-medium tracking-wide text-white">
+                  <h2 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-white">
                     {t("Ventes Flash")}
                   </h2>
                 </div>

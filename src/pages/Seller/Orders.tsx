@@ -11,6 +11,7 @@ import { OrderChatBox } from '../../components/OrderChatBox';
 import { useTranslation } from "react-i18next";
 import { exportPremiumToSheets } from '../../services/googleWorkspace';
 import { getOptimizedImageUrl } from '../../utils/imageUtils';
+import { utils, writeFile } from 'xlsx';
 
 interface CalculatedOrder {
   id: string;
@@ -320,7 +321,7 @@ export const Orders: React.FC = () => {
      }
   };
 
-  const exportToCSV = async () => {
+  const exportToCSV = () => {
     if (orders.length === 0) return;
     const headers = ['N° Commande', 'Date', 'Client', 'Telephone', 'Wilaya', 'Commune', 'Adresse', 'Total Client (DA)', 'Statut'];
     const rows = orders.map(o => {
@@ -341,7 +342,6 @@ export const Orders: React.FC = () => {
     const worksheetData = [headers, ...rows];
     
     // Create a new workbook and adding the worksheet
-    const { utils, writeFile } = await import('xlsx');
     const wb = utils.book_new();
     const ws = utils.aoa_to_sheet(worksheetData);
 

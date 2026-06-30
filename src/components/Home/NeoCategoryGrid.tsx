@@ -47,11 +47,11 @@ export const NeoCategoryGrid: React.FC<{
 
             <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8 flex flex-col justify-end items-start z-10">
               {card.key === favoriteCategory && (
-                <span className="mb-3 bg-black/40 px-3 py-1 rounded-full font-sans text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-white border border-white/30 shadow-sm">
+                <span className="mb-3 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full font-sans text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-white border border-white/30 shadow-sm">
                   {t("home.category.recommended_star")} 
                 </span>
               )}
-              <h3 className="text-3xl md:text-4xl font-display font-medium text-white tracking-wide mb-2 drop-shadow-md group-hover:text-slate-50 transition-colors leading-tight">
+              <h3 className="text-3xl md:text-4xl font-sans font-bold text-white tracking-tight mb-2 drop-shadow-md group-hover:text-slate-50 transition-colors leading-tight">
                 {card.title}
               </h3>
               <span className="font-sans font-medium text-slate-200 text-[13px] tracking-wide mt-1 drop-shadow-sm">

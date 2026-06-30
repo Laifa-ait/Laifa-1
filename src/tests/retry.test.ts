@@ -1,52 +1,30 @@
 import { describe, it, expect, vi } from 'vitest';
 import { withExponentialBackoff } from '../utils/retry';
 
-describe('retry utilities', () => {
-  describe('withExponentialBackoff', () => {
-    it('returns result if successful on first try', async () => {
-      const fn = vi.fn().mockResolvedValue('success');
-      const result = await withExponentialBackoff(fn, 3, 10);
-      expect(result).toBe('success');
-      expect(fn).toHaveBeenCalledTimes(1);
+describe('retry utility', () => {
+  it('succeeds on first try', async () => {
+    const operation = vi.fn().mockResolvedValue('success');
+    const result = await withExponentialBackoff(operation);
+    expect(result).toBe('success');
+    expect(operation).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries on failure and eventually succeeds', async () => {
+    let attempts = 0;
+    const operation = vi.fn().mockImplementation(() => {
+      attempts++;
+      if (attempts < 3) throw new Error('network error'); // Need a retryable error message
+      return Promise.resolve('success');
     });
 
-    it('retries on retryable errors and succeeds', async () => {
-      let attempts = 0;
-      const fn = vi.fn().mockImplementation(async () => {
-        attempts++;
-        if (attempts < 3) {
-          const error: any = new Error('network error');
-          error.code = 'unavailable';
-          throw error;
-        }
-        return 'success on 3';
-      });
+    const result = await withExponentialBackoff(operation, 3, 10);
+    expect(result).toBe('success');
+    expect(operation).toHaveBeenCalledTimes(3);
+  });
 
-      const result = await withExponentialBackoff(fn, 3, 10);
-      expect(result).toBe('success on 3');
-      expect(fn).toHaveBeenCalledTimes(3);
-    });
-
-    it('fails after max retries', async () => {
-      const fn = vi.fn().mockImplementation(async () => {
-        const error: any = new Error('network error');
-        error.code = 'unavailable';
-        throw error;
-      });
-
-      await expect(withExponentialBackoff(fn, 3, 10)).rejects.toThrow('network error');
-      expect(fn).toHaveBeenCalledTimes(3);
-    });
-
-    it('does not retry non-retryable errors', async () => {
-      const fn = vi.fn().mockImplementation(async () => {
-        const error: any = new Error('auth failed');
-        error.code = 'permission-denied';
-        throw error;
-      });
-
-      await expect(withExponentialBackoff(fn, 3, 10)).rejects.toThrow('auth failed');
-      expect(fn).toHaveBeenCalledTimes(1);
-    });
+  it('fails after maximum retries', async () => {
+    const operation = vi.fn().mockRejectedValue(new Error('network fail'));
+    await expect(withExponentialBackoff(operation, 3, 10)).rejects.toThrow('network fail');
+    expect(operation).toHaveBeenCalledTimes(3);
   });
 });

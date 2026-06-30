@@ -31,8 +31,6 @@ import {
   Timestamp,
   connectFirestoreEmulator,
   Firestore,
-  persistentLocalCache,
-  persistentMultipleTabManager,
 } from "firebase/firestore";
 import { getStorage, connectStorageEmulator, FirebaseStorage } from "firebase/storage";
 
@@ -60,12 +58,7 @@ let auth: Auth;
 let storage: FirebaseStorage;
 
 try {
-  const dbOptions = {
-    experimentalForceLongPolling: true,
-    localCache: persistentLocalCache({
-      tabManager: persistentMultipleTabManager(),
-    }),
-  };
+  const dbOptions = { experimentalForceLongPolling: true };
   
   app = getApps().length === 0 ? initializeApp(clientConfig) : getApp();
   db = initializeFirestore(app, dbOptions, clientConfig.firestoreDatabaseId);

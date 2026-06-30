@@ -31,7 +31,7 @@ import { motion, AnimatePresence, useScroll, useTransform } from "motion/react";
 import { db } from "../../lib/firebase";
 import { Product } from "../../types";
 import { ProductCard } from "../../components/Product/ProductCard";
-import { useUIStore } from "../../store/useUIStore";
+import { useUI } from "../../context/UIContext";
 import { AdvancedSearchbar } from "../../components/Search/AdvancedSearchbar";
 import { useShop } from "../../context/ShopContext";
 import { useTranslation } from "react-i18next";
@@ -80,7 +80,7 @@ export const PremiumCollection: React.FC = () => {
   const [sectionBannerImg, setSectionBannerImg] = useState<string>("https://images.unsplash.com/photo-1600607686527-6fb886090705?q=80&w=2000&auto=format&fit=crop");
 
   const navigate = useNavigate();
-  const setIsCartOpen = useUIStore((state) => state.setIsCartOpen);
+  const { setIsCartOpen } = useUI();
   const { searchQuery } = useShop();
   const { t } = useTranslation();
 

@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShoppingBag, Trash2, ArrowRight, Minus, Plus, ShoppingCart, Info, ShieldCheck, Flame, Truck, Store, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useCartStore } from '../../store/useCartStore';
+import { useCart } from '../../context/CartContext';
 import { formatPrice } from '../../utils/format';
 import { PremiumLayout } from '../../components/Layout/PremiumLayout';
 import { useTranslation } from 'react-i18next';
@@ -73,7 +73,7 @@ const SizeGuideModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
 
 export const Cart: React.FC = () => {
   const navigate = useNavigate();
-  const { cart, removeFromCart, updateQuantity, revalidateCart, getCartItemPrice, totalPrice } = useCartStore();
+  const { cart, removeFromCart, updateQuantity, revalidateCart, getCartItemPrice, totalPrice } = useCart();
   const [isRevalidating, setIsRevalidating] = React.useState(false);
   const [cartWilaya, setCartWilaya] = React.useState<string>(localStorage.getItem("olma_default_wilaya") || "Alger");
   const [shops, setShops] = React.useState<Record<string, Shop>>({});
@@ -112,7 +112,7 @@ export const Cart: React.FC = () => {
     if (cart.length > 0) fetchShops();
   }, [cart]);
 
-  const total = typeof totalPrice === 'function' ? totalPrice() : totalPrice;
+  const total = totalPrice;
 
   const groupedItems = React.useMemo<Record<string, typeof cart>>(() => {
     const groups: Record<string, typeof cart> = {};

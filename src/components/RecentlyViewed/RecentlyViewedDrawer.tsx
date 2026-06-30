@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { SideDrawer } from "../SideDrawer";
-import { useUIStore } from "../../store/useUIStore";
+import { useUI } from "../../context/UIContext";
 import { Eye, ArrowRight } from "lucide-react";
 import { useShop } from "../../context/ShopContext";
 import { useNavigate } from "react-router-dom";
@@ -9,8 +9,7 @@ import { useTranslation } from "react-i18next";
 
 export const RecentlyViewedDrawer: React.FC = () => {
   const { t } = useTranslation();
-  const isRecentlyViewedOpen = useUIStore((state) => state.isRecentlyViewedOpen);
-  const setIsRecentlyViewedOpen = useUIStore((state) => state.setIsRecentlyViewedOpen);
+  const { isRecentlyViewedOpen, setIsRecentlyViewedOpen } = useUI();
   const [recentProducts, setRecentProducts] = useState<Product[]>([]);
   const { fetchProductsByIds, fetchFeaturedProducts } = useShop();
   const navigate = useNavigate();

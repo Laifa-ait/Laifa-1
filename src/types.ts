@@ -15,7 +15,25 @@ export interface UserProfile {
   bgSuspended_reason?: string;
   createdAt?: AppTimestamp;
   buyerType?: "standard" | "vip" | "architect";
+  isVip?: boolean;
+  vip?: boolean;
+  cashbackBalance?: number;
+  
+  // Mixed-in Seller & Shop fields
+  status?: string;
+  shopName?: string;
+  shopLogo?: string;
+  logoUrl?: string;  
+  bannerUrl?: string;
+  shopDescription?: string;
   name?: string;
+  trustScore?: number;
+  rating?: number;
+  commissionRate?: number;
+  wilaya?: string;
+  shippingTariffs?: Record<string, number>;
+  storeName?: string;
+  brandName?: string;
   designStyle?: string;
   portfolioUrl?: string;
   brandStory?: string;
@@ -23,25 +41,17 @@ export interface UserProfile {
   nifNumber?: string;
   rib?: string;
   legalStatus?: string;
-  documents?: any;
-  status?: string;
   walletBalance?: number;
   lockedBalance?: number;
-  commissionRate?: number;
-  vip?: boolean;
-  shopName?: string;
-  shopLogo?: string;
-  shopDescription?: string;
-  logoUrl?: string;
-  bannerUrl?: string;
-  wilaya?: string;
-  shippingTariffs?: any;
-  storeName?: string;
-  brandName?: string;
-  trustScore?: number;
-  rating?: number;
-  cashbackBalance?: number;
-  isVip?: boolean;
+  documents?: {
+    rcDocument?: string;
+    idDocument?: string;
+    ribDocument?: string;
+    portfolioDocument?: string;
+    fileRC?: string;
+    fileId?: string;
+    fileRib?: string;
+  };
 }
 
 export interface GuestUser {
@@ -60,7 +70,9 @@ export interface CartItem {
   quantity: number;
   selectedVariant?: string;
   variants?: Record<string, unknown>[]; // optional details
-  addedAt?: number;
+  sellerName?: string;
+  shopName?: string;
+  addedAt?: AppTimestamp;
   flashSaleActive?: boolean;
   flashPrice?: number;
   flashEndDate?: string;

@@ -52,34 +52,6 @@ export default defineConfig(({mode}) => {
                   statuses: [0, 200]
                 }
               }
-            },
-            {
-              urlPattern: /^https:\/\/images\.unsplash\.com\/.*/i,
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'unsplash-image-cache',
-                expiration: {
-                  maxEntries: 50,
-                  maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
-                },
-                cacheableResponse: {
-                  statuses: [0, 200]
-                }
-              }
-            },
-            {
-              urlPattern: /^https:\/\/firebasestorage\.googleapis\.com\/.*/i,
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'firebase-image-cache',
-                expiration: {
-                  maxEntries: 200,
-                  maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
-                },
-                cacheableResponse: {
-                  statuses: [0, 200]
-                }
-              }
             }
           ]
         }
@@ -88,77 +60,8 @@ export default defineConfig(({mode}) => {
     base: '/',
     build: {
       outDir: 'dist',
-      chunkSizeWarningLimit: 800,
       rollupOptions: {
-        external: ['firebase-admin', 'firebase-admin/firestore'],
-        output: {
-          manualChunks(id) {
-            if (id.includes('node_modules')) {
-              // Core React
-              if (id.includes('/node_modules/react/') || id.includes('/node_modules/react-dom/') || id.includes('/node_modules/react-router/') || id.includes('/node_modules/react-router-dom/') || id.includes('/node_modules/@remix-run/')) {
-                return 'vendor-react';
-              }
-              // Firebase
-              if (id.includes('/node_modules/firebase/') || id.includes('/node_modules/@firebase/')) {
-                return 'vendor-firebase';
-              }
-              // Data Visualization
-              if (id.includes('/node_modules/recharts/') || id.includes('/node_modules/d3-')) {
-                return 'vendor-charts';
-              }
-              // Export / Utils (xlsx, html2canvas, jspdf)
-              if (id.includes('/node_modules/xlsx/')) {
-                return 'vendor-xlsx';
-              }
-              if (id.includes('/node_modules/html2canvas/')) {
-                return 'vendor-html2canvas';
-              }
-              if (id.includes('/node_modules/jspdf/')) {
-                return 'vendor-jspdf';
-              }
-              // Animation
-              if (id.includes('/node_modules/framer-motion/') || id.includes('/node_modules/motion/')) {
-                return 'vendor-motion';
-              }
-              // i18n
-              if (id.includes('/node_modules/i18next/') || id.includes('/node_modules/react-i18next/')) {
-                return 'vendor-i18n';
-              }
-              // Icons
-              if (id.includes('/node_modules/lucide-react/')) {
-                return 'vendor-icons';
-              }
-              // State Management
-              if (id.includes('/node_modules/zustand/')) {
-                return 'vendor-zustand';
-              }
-              // Algolia / Search
-              if (id.includes('/node_modules/algoliasearch/') || id.includes('/node_modules/fuse.js/')) {
-                return 'vendor-search';
-              }
-              // Sentry
-              if (id.includes('/node_modules/@sentry/')) {
-                return 'vendor-sentry';
-              }
-              // Date-fns
-              if (id.includes('/node_modules/date-fns/')) {
-                return 'vendor-date-fns';
-              }
-              // Tanstack
-              if (id.includes('/node_modules/@tanstack/')) {
-                return 'vendor-tanstack';
-              }
-              // File handling
-              if (id.includes('/node_modules/browser-image-compression/') || id.includes('/node_modules/papaparse/')) {
-                return 'vendor-files';
-              }
-              // Rich Text Editor
-              if (id.includes('/node_modules/react-quill/') || id.includes('/node_modules/quill/')) {
-                return 'vendor-quill';
-              }
-            }
-          }
-        }
+        external: ['firebase-admin', 'firebase-admin/firestore']
       }
     },
     resolve: {

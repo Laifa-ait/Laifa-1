@@ -46,7 +46,7 @@ export const ProductGallery: React.FC<GalleryProps> = ({
     <div className="space-y-4 -mx-4 sm:mx-0">
       <div
         onContextMenu={(e) => e.preventDefault()}
-        className="relative aspect-square sm:aspect-[3/4] md:aspect-[4/5] max-h-[50vh] sm:max-h-none sm:rounded-none overflow-hidden bg-slate-50 group cursor-pointer"
+        className="relative aspect-[3/4] md:aspect-[4/5] sm:rounded-none overflow-hidden bg-slate-50 group cursor-pointer"
       >
         {showVideo && productVideoUrl ? (
           <div className="absolute inset-0 z-20 bg-black flex items-center justify-center">

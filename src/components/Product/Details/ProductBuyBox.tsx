@@ -1,7 +1,6 @@
 import React from "react";
-import { ShoppingBag, Heart, Share2, ShieldCheck, Scale } from "lucide-react";
+import { ShoppingBag, Heart, Share2, ShieldCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useCompareStore } from "../../../store/useCompareStore";
 
 interface BuyBoxProps {
   product: any;
@@ -25,9 +24,6 @@ export const ProductBuyBox: React.FC<BuyBoxProps> = ({
   isSticky,
 }) => {
   const { t } = useTranslation();
-  const addToCompare = useCompareStore((state) => state.addToCompare);
-  const compareList = useCompareStore((state) => state.compareList);
-  const isCompared = compareList.some((p) => p.id === product.id);
 
   return (
     <div
@@ -59,18 +55,6 @@ export const ProductBuyBox: React.FC<BuyBoxProps> = ({
           aria-label={t("Add to wishlist") || "Add to wishlist"}
         >
           <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${wishlist.includes(product.id) ? "fill-current" : ""}`} />
-        </button>
-
-        <button
-          onClick={() => addToCompare(product)}
-          className={`w-14 sm:w-16 h-14 sm:h-auto border transition-all flex items-center justify-center shrink-0 ${
-            isCompared
-              ? "border-amber-500 text-amber-500"
-              : "border-black/20 bg-white text-black hover:border-black"
-          }`}
-          aria-label={t("Comparer") || "Comparer"}
-        >
-          <Scale className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
         <button

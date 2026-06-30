@@ -281,39 +281,30 @@ export const ShopProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const value = React.useMemo(() => ({
-    fetchFeaturedProducts,
-    fetchProductsByCategory,
-    fetchProductsByIds,
-    fetchRecommendedProducts,
-    fetchCrossSellProducts,
-    activeCategory,
-    setActiveCategory,
-    searchQuery,
-    setSearchQuery,
-    isSaleFilterActive,
-    setIsSaleFilterActive,
-    activeTag,
-    setActiveTag,
-    sortOption,
-    setSortOption,
-    activeWilaya,
-    setActiveWilaya,
-    categoryHierarchy,
-    refreshHierarchy,
-  }), [
-    activeCategory,
-    searchQuery,
-    isSaleFilterActive,
-    activeTag,
-    sortOption,
-    activeWilaya,
-    categoryHierarchy,
-    fetchCrossSellProducts
-  ]);
-
   return (
-    <ShopContext.Provider value={value}>
+    <ShopContext.Provider
+      value={{
+        fetchFeaturedProducts,
+        fetchProductsByCategory,
+        fetchProductsByIds,
+        fetchRecommendedProducts,
+        fetchCrossSellProducts,
+        activeCategory,
+        setActiveCategory,
+        searchQuery,
+        setSearchQuery,
+        isSaleFilterActive,
+        setIsSaleFilterActive,
+        activeTag,
+        setActiveTag,
+        sortOption,
+        setSortOption,
+        activeWilaya,
+        setActiveWilaya,
+        categoryHierarchy,
+        refreshHierarchy,
+      }}
+    >
       {children}
     </ShopContext.Provider>
   );

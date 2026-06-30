@@ -48,6 +48,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { MOCK_PRODUCTS } from "../../utils/mockProducts";
 import { DEFAULT_CATEGORIES } from "../../data/categories";
 import { formatPrice } from "../../utils/format";
 import { ALGERIA_WILAYAS, PRODUCT_HIERARCHY } from "../../constants";

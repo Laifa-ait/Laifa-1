@@ -36,7 +36,7 @@ try {
   "------------------ FIREBASE INITIALIZATION ------------------"
 );
 // Prioritize Environment Project ID as it is guaranteed to match the Ambient Credentials (ADC)
-const envProjectId = process.env.FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID;
+const envProjectId = process.env.FIREBASE_PROJECT_ID;
 const configProjectId = firebaseConfig.projectId;
 const targetProjectId = envProjectId || configProjectId;
 
@@ -97,12 +97,7 @@ export let db: admin.firestore.Firestore;
 const setupFirestore = () => {
   try {
     const adminApp = admin.app();
-    let configDatabaseId = firebaseConfig.firestoreDatabaseId;
-    if (!configDatabaseId || configDatabaseId === "(default)") {
-      if (process.env.VITE_FIREBASE_DATABASE_ID && process.env.VITE_FIREBASE_DATABASE_ID !== "(default)") {
-        configDatabaseId = process.env.VITE_FIREBASE_DATABASE_ID;
-      }
-    }
+    const configDatabaseId = firebaseConfig.firestoreDatabaseId;
 
     (process.env.NODE_ENV === "development" ? console.log : function () {})(
       "Firestore: Initializing for project",

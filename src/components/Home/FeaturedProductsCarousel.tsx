@@ -6,6 +6,7 @@ import { motion } from "motion/react";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Product } from "../../types";
+import { MOCK_PRODUCTS } from "../../utils/mockProducts";
 import { getTranslatedField } from "../../utils/translations";
 import { formatPrice } from "../../utils/format";
 import { getOptimizedImageUrl } from "../../utils/imageUtils";
@@ -127,7 +128,7 @@ export const FeaturedProductsCarousel: React.FC = () => {
               </span>
             </div>
 
-            <h3 className="text-3xl sm:text-4xl md:text-5xl font-display font-medium text-slate-900 leading-[1.1] mb-3 tracking-wide">
+            <h3 className="text-3xl sm:text-4xl md:text-5xl font-sans font-bold text-slate-900 leading-[1.1] mb-3 tracking-tight">
               {t("home.featured.title_prefix")}
             </h3>
           </div>
@@ -209,11 +210,11 @@ export const FeaturedProductsCarousel: React.FC = () => {
 
                   <div className="absolute top-4 left-4 z-20 flex flex-col gap-2 items-start">
                     {idx === 0 && (
-                      <span className="bg-white/90 text-slate-800 text-[9px] sm:text-[10px] font-sans font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-sm select-none border border-slate-200/50">
+                      <span className="bg-white/90 backdrop-blur-md text-slate-800 text-[9px] sm:text-[10px] font-sans font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-sm select-none border border-slate-200/50">
                         {t("PIÈCE UNIQUE ARTISANALE")}
                       </span>
                     )}
-                    <span className="bg-slate-900/80 text-white border border-white/20 text-[9px] sm:text-[10px] font-sans font-medium uppercase tracking-wider px-2.5 py-1 rounded-full shadow-sm select-none">
+                    <span className="bg-slate-900/80 backdrop-blur-md text-white border border-white/20 text-[9px] sm:text-[10px] font-sans font-medium uppercase tracking-wider px-2.5 py-1 rounded-full shadow-sm select-none">
                       {product.category || "PREMIUM"}
                     </span>
                   </div>
