@@ -220,8 +220,8 @@ export const DynamicCollectionPage: React.FC = () => {
 
         // --- FETCH PRODUCTS FOR THE DYNAMIC SHOP ---
         let curatedProducts: Product[] = [];
-        let sectionTag = matchingSection?.tag || null;
-        let sectionCategory = matchingSection?.category || null;
+        const sectionTag = matchingSection?.tag || null;
+        const sectionCategory = matchingSection?.category || null;
 
         // Custom manual curated lists
         if (matchingSection?.manualProducts && matchingSection.manualProducts.length > 0) {

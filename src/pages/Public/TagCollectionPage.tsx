@@ -53,7 +53,7 @@ export const TagCollectionPage: React.FC = () => {
       }
 
       const snapshot = await getDocs(q);
-      let productsData = snapshot.docs.map(doc => ({
+      const productsData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as Product[];

@@ -239,7 +239,8 @@ export const OrderDetails: React.FC = () => {
       });
 
       if (!res.ok) {
-         throw new Error("Failed to submit review");
+         const errData = await res.json().catch(() => ({}));
+         throw new Error(errData.error || "Failed to submit review");
       }
       
       setOrder((prev: any) => ({
@@ -254,9 +255,9 @@ export const OrderDetails: React.FC = () => {
         }
       }));
       toast.success("Merci ! Votre avis a été publié.");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error submitting review:", err);
-      toast.error("Impossible de publier l'avis.");
+      toast.error(err.message || "Impossible de publier l'avis.");
     }
   };
 

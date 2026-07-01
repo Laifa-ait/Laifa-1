@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { Product, Shop } from "../types";
 
@@ -15,6 +15,7 @@ export const useProductLogic = () => {
   const [showVideo, setShowVideo] = useState(false);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [showStickyBuyBar, setShowStickyBuyBar] = useState(false);
+  const [reviews, setReviews] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -49,6 +50,25 @@ export const useProductLogic = () => {
             localStorage.setItem("olma_recently_viewed", JSON.stringify(recents));
           } catch (storageErr) {
             console.error("Could not update recently viewed:", storageErr);
+          }
+
+          // Fetch reviews
+          try {
+            const reviewsQuery = query(
+              collection(db, "reviews"),
+              where("productId", "==", id),
+              limit(100)
+            );
+            const reviewsSnap = await getDocs(reviewsQuery);
+            const loadedReviews = reviewsSnap.docs.map(d => ({ id: d.id, ...d.data() as any }));
+            loadedReviews.sort((a, b) => {
+               const ta = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt?.seconds || 0) * 1000;
+               const tb = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt?.seconds || 0) * 1000;
+               return tb - ta;
+            });
+            setReviews(loadedReviews);
+          } catch (reviewErr) {
+            console.error("Could not fetch reviews:", reviewErr);
           }
         }
       } catch (err) {
@@ -94,5 +114,6 @@ export const useProductLogic = () => {
     setShowStickyBuyBar,
     images,
     currentPrice,
+    reviews,
   };
 };

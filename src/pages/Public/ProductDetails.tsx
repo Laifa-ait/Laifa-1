@@ -49,7 +49,8 @@ export const ProductDetails: React.FC = () => {
     showStickyBuyBar,
     setShowStickyBuyBar,
     images,
-    currentPrice
+    currentPrice,
+    reviews
   } = useProductLogic();
 
   const buyBoxRef = React.useRef<HTMLDivElement>(null);
@@ -98,7 +99,7 @@ export const ProductDetails: React.FC = () => {
   }, [product, selectedVariantObj]);
 
   const displayedPrice = React.useMemo(() => {
-    let basePrice = currentPrice || 0;
+    const basePrice = currentPrice || 0;
     if (selectedVariantObj) {
       if (selectedVariantObj.priceOverride !== undefined && selectedVariantObj.priceOverride !== null && selectedVariantObj.priceOverride !== '') {
          return Number(selectedVariantObj.priceOverride);
@@ -250,30 +251,10 @@ export const ProductDetails: React.FC = () => {
           <div className="lg:col-span-6 space-y-10">
             <ProductInfo product={product} shop={shop} currentPrice={displayedPrice} selectedColor={selectedColor} selectedSize={selectedSize} onSelectColor={setSelectedColor} onSelectSize={setSelectedSize} isColorOutOfStock={isColorOutOfStock} isSizeOutOfStock={isSizeOutOfStock} />
             <ProductBuyBox product={product} isCurrentSelectionOutOfStock={isCurrentSelectionOutOfStock} onAddToCart={handleAddToCart} onToggleWishlist={() => toggleWishlist(product.id)} wishlist={wishlist} onShare={handleShare} stickyRef={buyBoxRef} isSticky={showStickyBuyBar} />
-            <ProductReviews comments={[]} userCanReview={false} submittingReview={false} newReviewText="" setNewReviewText={() => {}} newReviewStars={5} setNewReviewStars={() => {}} onSubmit={async (e) => e.preventDefault()} />
+            <ProductReviews comments={reviews.map(r => ({ id: r.id, name: r.userName, stars: r.rating, text: r.comment, createdAt: r.createdAt }))} stats={product.stats} userCanReview={false} submittingReview={false} newReviewText="" setNewReviewText={() => {}} newReviewStars={5} setNewReviewStars={() => {}} onSubmit={async (e) => e.preventDefault()} />
           </div>
         </div>
 
-        {/* RECOMMENDED PRODUCTS PLACEHOLDER */}
-        <div className="pt-16 pb-8 border-t border-black/10 mt-8">
-          <h2 className="text-lg font-sans font-medium uppercase tracking-widest text-black mb-8 text-center">
-            {t("product.you_may_also_like") || "Vous aimerez aussi"}
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 opacity-60">
-            {/* These are placeholders that will be coded later as requested */}
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="group cursor-pointer">
-                <div className="aspect-[3/4] bg-slate-100 mb-3 overflow-hidden relative">
-                  <div className="w-full h-full bg-slate-200 animate-pulse"></div>
-                </div>
-                <div className="space-y-1">
-                  <div className="h-3 bg-slate-200 w-3/4 animate-pulse"></div>
-                  <div className="h-3 bg-slate-200 w-1/2 animate-pulse"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
 
         <ProductLightbox 
           isOpen={isLightboxOpen} 
@@ -283,20 +264,33 @@ export const ProductDetails: React.FC = () => {
         />
 
         {/* Cohesive Recommended Products Module */}
-        {!loadingRecom && recommendedProducts.length > 0 && (
-          <div className="mt-16 sm:mt-24">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4 px-2">
-              <div>
-                <div className="flex items-center gap-2 text-zinc-900 font-bold text-[11px] uppercase tracking-widest rtl:tracking-normal mb-2 bg-zinc-900/5 self-start px-3 py-1 rounded-full border border-zinc-900/20 w-fit">
-                  <Flame className="w-4 h-4 animate-pulse" /> {t("product.premium_selection") || "Sélection Premium"}
-                </div>
-                <h3 className="font-sans font-bold tracking-tight text-3xl sm:text-4xl text-slate-800 uppercase tracking-wide drop-shadow-sm">
-                  {t("product.you_might_also_like") || "Vous aimerez aussi"}
-                </h3>
+        <div className="mt-16 sm:mt-24 pt-16 border-t border-black/10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4 px-2">
+            <div>
+              <div className="flex items-center gap-2 text-zinc-900 font-bold text-[11px] uppercase tracking-widest rtl:tracking-normal mb-2 bg-zinc-900/5 self-start px-3 py-1 rounded-full border border-zinc-900/20 w-fit">
+                <Flame className="w-4 h-4 text-orange-500" /> {t("product.premium_selection") || "Sélection Premium"}
               </div>
-              <p className="text-sm font-bold text-slate-800/60">{t("product.recommendations_subtitle") || "Recommandations exclusives adaptées à vos goûts"}</p>
+              <h2 className="font-sans font-bold tracking-tight text-2xl sm:text-3xl text-slate-900 uppercase tracking-wide">
+                {t("product.you_may_also_like") || "Vous aimerez aussi"}
+              </h2>
             </div>
+          </div>
 
+          {loadingRecom ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 opacity-60">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="group cursor-pointer">
+                  <div className="aspect-[3/4] bg-slate-100 mb-3 overflow-hidden relative">
+                    <div className="w-full h-full bg-slate-200 animate-pulse"></div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-slate-200 w-3/4 animate-pulse rounded"></div>
+                    <div className="h-4 bg-slate-200 w-1/2 animate-pulse rounded"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : recommendedProducts.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
               {recommendedProducts.map((p, idx) => (
                 <div key={p.id} className="opacity-0 animate-fade-in" style={{ animationDelay: `${idx * 100}ms`, animationFillMode: "forwards" }}>
@@ -304,8 +298,10 @@ export const ProductDetails: React.FC = () => {
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <p className="text-gray-500 italic px-2">{t("product.no_recommendations") || "Aucune recommandation pour le moment."}</p>
+          )}
+        </div>
       </div>
     </div>
   );

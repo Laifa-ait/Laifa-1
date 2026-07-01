@@ -44,7 +44,7 @@ export const processCheckout = async (payload: any) => {
     return { orderId: data.orderId, total: data.grandTotal, walletDeducted: data.walletAmountUsed, codAmount: data.grandTotal }; 
   } catch (error: any) {
     console.error("Erreur backend checkout:", error);
-    throw new Error(error.message || "Erreur critique lors du traitement de la commande.");
+    throw new Error(error.message || "Erreur critique lors du traitement de la commande.", { cause: error });
   }
 };
 

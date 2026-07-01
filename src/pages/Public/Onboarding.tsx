@@ -135,7 +135,9 @@ export const Onboarding: React.FC = () => {
             interests: formData.interests
           })
         }).catch(e => console.warn("Optional server sync failed", e));
-      } catch (e) {}
+      } catch (e) {
+        console.warn("Failed to complete onboarding step sync", e);
+      }
       
       toast.success(t("profile_completed", "Profil complété avec succès !"));
       navigate('/');

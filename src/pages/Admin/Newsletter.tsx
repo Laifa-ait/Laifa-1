@@ -124,7 +124,7 @@ export const Newsletter: React.FC = () => {
   };
 
   const addBlock = (type: string) => {
-    let newBlock: any = { id: Math.random().toString(), type, width: "100" };
+    const newBlock: any = { id: Math.random().toString(), type, width: "100" };
     if (type === "title") {
       newBlock.content = "Titre de la Newsletter";
     } else if (type === "text") {

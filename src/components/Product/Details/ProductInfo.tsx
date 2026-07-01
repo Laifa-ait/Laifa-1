@@ -275,6 +275,37 @@ export const ProductInfo: React.FC<InfoProps> = ({
             )
           )}
         </div>
+
+        {product.energyClass && (
+          <div className="flex items-center pt-2">
+            <div className="flex items-center border border-gray-300 rounded overflow-hidden">
+               <div 
+                  className="text-white font-bold text-xs px-2 py-0.5 border-r border-gray-300"
+                  style={{
+                    backgroundColor: (() => {
+                      switch(product.energyClass) {
+                        case "A": return "#00A650";
+                        case "B": return "#50B848";
+                        case "C": return "#C4D400";
+                        case "D": return "#FFF200";
+                        case "E": return "#F7B500";
+                        case "F": return "#EB690B";
+                        case "G": return "#E2001A";
+                        default: return "#00A650";
+                      }
+                    })()
+                  }}
+               >
+                  Classe {product.energyClass}
+               </div>
+               <div className="bg-gray-100 text-[10px] flex flex-col leading-none px-1.5 py-0.5 font-bold">
+                 <span>A</span>
+                 <span>↑</span>
+                 <span>G</span>
+               </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {isProductFlashActive && (

@@ -24,7 +24,7 @@ export const hasExternalChannel = (text: string): boolean => {
   if (!text) return false;
   
   // 1. Check for normalized strings (remove common separators first to catch obfuscated)
-  const normalized = text.toLowerCase().replace(/[\s\-_.\(\)]/g, "");
+  const normalized = text.toLowerCase().replace(/[\s\-_._()]/g, "");
   
   // Algerian phone format checks (05, 06, 07 followed by 8 digits, or with country code)
   const phoneRegexes = [
@@ -59,7 +59,7 @@ export const hasExternalChannel = (text: string): boolean => {
   }
   
   // 3. URLs
-  const urlRegex = /(https?:\/\/[^\s$.?#].[^\s]*|www\.[a-z0-9\-]+\.[a-z]{2,})/gi;
+  const urlRegex = /(https?:\/\/[^\s$.?#].[^\s]*|www\.[a-z0-9-]+\.[a-z]{2,})/gi;
   if (urlRegex.test(text)) {
     return true;
   }

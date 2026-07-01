@@ -1,0 +1,50 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper to check if user is logged in
+    function isLoggedIn() {
+      return request.auth != null;
+    }
+
+    // Helper to check if user is an admin (verified against firestore document)
+    function isAdmin() {
+      return isLoggedIn() && 
+        firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Products images - publicly readable, writable only by the product's seller or admin
+    match /products/{productId}/images/{fileName} {
+      allow read: if true;
+      allow write: if isLoggedIn() && (
+        isAdmin() || (
+          firestore.exists(/databases/(default)/documents/products/$(productId)) &&
+          request.auth.uid == firestore.get(/databases/(default)/documents/products/$(productId)).data.sellerId
+        )
+      );
+    }
+
+    // Users documents (KYC - extreme confidentiality required) - readable only by owner or admin
+    match /users/{uid}/kyc/{fileName} {
+      allow read: if isLoggedIn() && (request.auth.uid == uid || isAdmin());
+      allow write: if isLoggedIn() && request.auth.uid == uid;
+    }
+
+    // Users public profiles / avatars - publicly readable, writable only by owner
+    match /users/{uid}/avatar/{fileName} {
+      allow read: if true;
+      allow write: if isLoggedIn() && request.auth.uid == uid;
+    }
+
+    // Shop assets (banners, logos) - publicly readable, writable only by the shop's owner or admin
+    match /shops/{shopId}/{fileName} {
+      allow read: if true;
+      allow write: if isLoggedIn() && (
+        isAdmin() || (
+          firestore.exists(/databases/(default)/documents/shops/$(shopId)) &&
+          request.auth.uid == firestore.get(/databases/(default)/documents/shops/$(shopId)).data.sellerId
+        )
+      );
+    }
+  }
+}

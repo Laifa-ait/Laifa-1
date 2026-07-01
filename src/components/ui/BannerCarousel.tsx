@@ -75,6 +75,28 @@ export const BannerCarousel: React.FC<BannerCarouselProps> = ({
 
   const activeBanners = banners.filter((b) => b.is_active !== false && b.isActive !== false);
 
+  // Multilingual dynamic translation lookup
+  const getTranslatedValue = useCallback(
+    (banner: DbBanner, key: "title" | "subtitle" | "button_text") => {
+      if (!banner) return "";
+      // 1. Check nested translation object
+      if (banner.translations?.[lang]?.[key]) {
+        return banner.translations[lang][key];
+      }
+      // 2. Check flat localized suffix keys (e.g., banner.title_ar, title_fr)
+      const flatKey = `${key}_${lang}`;
+      if ((banner as any)[flatKey]) {
+        return (banner as any)[flatKey];
+      }
+      // 3. Perfect fallback chains
+      if (key === "title") return banner.title || banner.name || "";
+      if (key === "subtitle") return banner.subtitle || "";
+      if (key === "button_text") return banner.button_text || banner.ctaText || "";
+      return "";
+    },
+    [lang]
+  );
+
   // Auto-play timer with full reset on index change (insures full interval duration when manually navigated)
   useEffect(() => {
     if (autoPlay && activeBanners.length > 1 && !isHovered) {
@@ -132,26 +154,6 @@ export const BannerCarousel: React.FC<BannerCarouselProps> = ({
   const mobileImageUrl = currentBanner.mobile_image || currentBanner.mobileImageUrl;
 
   // Multilingual dynamic translation lookup
-  const getTranslatedValue = useCallback(
-    (banner: DbBanner, key: "title" | "subtitle" | "button_text") => {
-      // 1. Check nested translation object
-      if (banner.translations?.[lang]?.[key]) {
-        return banner.translations[lang][key];
-      }
-      // 2. Check flat localized suffix keys (e.g., banner.title_ar, title_fr)
-      const flatKey = `${key}_${lang}`;
-      if ((banner as any)[flatKey]) {
-        return (banner as any)[flatKey];
-      }
-      // 3. Perfect fallback chains
-      if (key === "title") return banner.title || banner.name || "";
-      if (key === "subtitle") return banner.subtitle || "";
-      if (key === "button_text") return banner.button_text || banner.ctaText || "";
-      return "";
-    },
-    [lang]
-  );
-
   const title = getTranslatedValue(currentBanner, "title");
   const subtitle = getTranslatedValue(currentBanner, "subtitle");
   const buttonText = getTranslatedValue(currentBanner, "button_text");

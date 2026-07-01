@@ -84,7 +84,7 @@ export const ProductModeration: React.FC = () => {
     setLoading(true);
     try {
       const { limit, startAfter } = await import("firebase/firestore");
-      let q = selectedCategory !== "Tous"
+      const q = selectedCategory !== "Tous"
         ? query(
             collection(db, "products"),
             where("status", "==", activeTab),
@@ -117,7 +117,7 @@ export const ProductModeration: React.FC = () => {
     if (!lastVisible) return;
     try {
       const { limit, startAfter } = await import("firebase/firestore");
-      let q = selectedCategory !== "Tous"
+      const q = selectedCategory !== "Tous"
         ? query(
             collection(db, "products"),
             where("status", "==", activeTab),

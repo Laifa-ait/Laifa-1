@@ -178,7 +178,7 @@ export const Overview: React.FC = () => {
       try {
         const { getDoc, doc, collection, query, where, getCountFromServer, getAggregateFromServer, sum, orderBy, limit, getDocs } = await import("firebase/firestore");
         
-        let startDate = new Date();
+        const startDate = new Date();
         if (dateFilter === 'today') {
           startDate.setHours(0,0,0,0);
         } else if (dateFilter === 'week') {
@@ -187,8 +187,8 @@ export const Overview: React.FC = () => {
           startDate.setMonth(startDate.getMonth() - 1);
         }
 
-        let previousStartDate = new Date(startDate);
-        let previousEndDate = new Date(startDate);
+        const previousStartDate = new Date(startDate);
+        const previousEndDate = new Date(startDate);
         if (dateFilter === 'today') {
           previousStartDate.setDate(previousStartDate.getDate() - 1);
           previousEndDate.setHours(0,0,0,0);

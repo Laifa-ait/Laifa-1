@@ -509,7 +509,9 @@ export const HomepageBuilder: React.FC = () => {
       // Clear public homepage cache
       try {
         await deleteDoc(doc(db, "public", "homepage_cache"));
-      } catch (_) {}
+      } catch (err) {
+        console.warn("Failed to delete homepage cache:", err);
+      }
 
       toast.success("Restauration réussie avec succès !", { id: "restore" });
       fetchData();

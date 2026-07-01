@@ -54,9 +54,9 @@ export const ShippingCalculatorPage: React.FC = () => {
     const cleanName = selectedWilaya.replace(/^\d+\s+/, "").trim();
     
     // Default values
-    let priceDomicile = 700;
-    let priceStopDesk = 400;
-    let delay = "3 à 5 jours";
+    let priceDomicile: number;
+    let priceStopDesk: number;
+    let delay: string;
 
     // 1. Try to read from direct DB config if matching
     const dbFee = shippingConfig.wilayaFees?.[selectedWilaya] ?? shippingConfig.wilayaFees?.[cleanName];

@@ -297,7 +297,7 @@ export const Checkout: React.FC = () => {
     let total = 0;
     
     const cleanWilaya = formData.wilaya.replace(/^\d+\s+/, "").trim();
-    let weightMultiplier = 1;
+    const weightMultiplier = 1;
 
     sellerIds.forEach(sid => {
        const shop = shops[sid];
@@ -332,7 +332,7 @@ export const Checkout: React.FC = () => {
           rawMethodPrice = ALGERIA_SHIPPING_DATA[cleanWilaya].price;
        }
        
-       let methodPrice = deliveryMethod === 'domicile' ? rawMethodPrice : (Math.max(400, rawMethodPrice - 200));
+       const methodPrice = deliveryMethod === 'domicile' ? rawMethodPrice : (Math.max(400, rawMethodPrice - 200));
        total += Math.round(methodPrice * weightMultiplier / 10) * 10;
     });
     return total;

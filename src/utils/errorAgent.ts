@@ -16,15 +16,15 @@ const sanitizeErrorInfo = (info: Omit<ErrorInfo, 'timestamp' | 'url' | 'userAgen
     if (!text) return "";
     // Scrub workspace root structures, node_modules, complex paths, and sensitive files
     return text
-      .replace(/(?:\/[^\/\s]+)*\/src\/[^\s\)]+/g, '[internal_code]')
-      .replace(/(?:http|https):\/\/[^\s\)]+/gi, '[origin_source]')
-      .replace(/at\s+([a-zA-Z0-9_$]+)\s+\([^\)]+\)/g, 'at $1([internal])')
+      .replace(/(?:\/[^/\s]+)*\/src\/[^\s)]+/g, '[internal_code]')
+      .replace(/(?:http|https):\/\/[^\s)]+/gi, '[origin_source]')
+      .replace(/at\s+([a-zA-Z0-9_$]+)\s+\([^)]+\)/g, 'at $1([internal])')
       .trim();
   };
 
   return {
     ...info,
-    message: info.message ? info.message.replace(/(?:\/[^\/\s]+)*\/src\/[^\s]+/g, '[path]') : '',
+    message: info.message ? info.message.replace(/(?:\/[^/\s]+)*\/src\/[^\s]+/g, '[path]') : '',
     stack: scrubText(info.stack),
     componentStack: scrubText(info.componentStack),
   };

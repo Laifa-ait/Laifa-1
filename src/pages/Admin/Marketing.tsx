@@ -228,12 +228,10 @@ export const Marketing: React.FC = () => {
   };
 
   const handleDeleteCoupon = async (id: string, code: string) => {
-    if (true) {
-      try {
-        await deleteCoupon(id, code);
-      } catch (error) {
-        console.error(error);
-      }
+    try {
+      await deleteCoupon(id, code);
+    } catch (error) {
+      console.error(error);
     }
   };
 

@@ -29,7 +29,9 @@ export const useHomeData = () => {
             try {
               const parsed = JSON.parse(cached);
               if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-            } catch (e) {}
+            } catch (e) {
+              console.warn("Failed to parse cached categories:", e);
+            }
           }
           const snap = await withExponentialBackoff(() =>
             getDocs(query(collection(db, "homepage_categories_v2"), limit(100)))

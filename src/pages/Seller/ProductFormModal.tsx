@@ -1173,6 +1173,22 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                            </select>
                            <p className="text-[10px] text-slate-400 font-bold uppercase leading-relaxed font-sans">{t("Permet un filtrage saisonnier intelligent pour les acheteurs.")}</p>
                         </div>
+                        
+                        {/* Energy Class */}
+                        <div className="space-y-1.5">
+                           <label className="block text-xs font-semibold text-slate-700 font-sans">{t("Classe Énergétique (Électroménager)")}</label>
+                           <select 
+                              className="w-full px-4 py-2.5 bg-white border border-[#E5DED4] rounded-xl outline-none focus:border-[#C75C1A] transition-all font-semibold text-slate-900 text-sm"
+                              value={formData.energyClass || ''} 
+                              onChange={(e) => setFormData({...formData, energyClass: e.target.value as any})}
+                           >
+                              <option value="">{t("Non applicable / Sélectionner...")}</option>
+                              {["A", "B", "C", "D", "E", "F", "G"].map(ec => (
+                                 <option key={ec} value={ec}>Classe {ec}</option>
+                              ))}
+                           </select>
+                           <p className="text-[10px] text-slate-400 font-bold uppercase leading-relaxed font-sans">{t("S'affiche sur la fiche produit (obligatoire pour l'électroménager).")}</p>
+                        </div>
                      </div>
 
                      {/* Materials multi-selection pill-tags */}

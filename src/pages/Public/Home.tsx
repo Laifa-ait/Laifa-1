@@ -72,7 +72,7 @@ export const Home: React.FC = () => {
       // Wait, in RTL, standard container scroll starts at 0 (max right) and max left is negative.
       // So if direction is "right", trying to scroll right from 0 will do nothing.
       // Let's just make sure it does what the physical arrow intends.
-      let leftScroll = direction === "right" ? scrollAmount : -scrollAmount;
+      const leftScroll = direction === "right" ? scrollAmount : -scrollAmount;
       if (document.documentElement.dir === "rtl" || i18n.language === 'ar') {
         // Many browsers implement RTL scroll. 
         // If they click left arrow (ChevronLeft), they want to go physically left, so negative scroll is still correct.

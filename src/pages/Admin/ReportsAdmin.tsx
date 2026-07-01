@@ -21,8 +21,8 @@ export const ReportsAdmin: React.FC = () => {
 
     try {
       let headers: string[] = [];
-      let rows: string[][] = [];
-      let filename = `olmart_rapport_${type.toLowerCase().replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      const rows: string[][] = [];
+      const filename = `olmart_rapport_${type.toLowerCase().replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`;
 
       if (type === "Rapport Financier") {
         // Fetch Completed and current orders + Withdrawals (Limited for the report generation to avoid out-of-memory and high billing)

@@ -224,8 +224,8 @@ export const PremiumCollection: React.FC = () => {
         }
 
         let curatedProducts: Product[] = [];
-        let sectionTag = matchingSection?.tag || null;
-        let sectionCategory = matchingSection?.category || null;
+        const sectionTag = matchingSection?.tag || null;
+        const sectionCategory = matchingSection?.category || null;
 
         // Fetch manual curated products first
         if (matchingSection?.manualProducts && matchingSection.manualProducts.length > 0) {

@@ -130,7 +130,7 @@ export const OrdersAdmin: React.FC = () => {
     setLoading(true);
     try {
       const { startAfter, where } = await import("firebase/firestore");
-      let baseQueryConstraints: any[] = [];
+      const baseQueryConstraints: any[] = [];
 
       if (startDate) {
         const start = new Date(startDate);

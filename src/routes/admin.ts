@@ -771,7 +771,7 @@ function checkProductExternalContact(p: any): { found: boolean; reason?: string 
   const emailRegex = /\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b/;
   
   // Algerian/General phone pattern (matches sequences of 8+ digits, formatted phone numbers)
-  const phoneRegex = /(?:\+213|00213|[0][567])\s*\d[\s\d\-]{7,}\d|\b\d{2}[-.\s]?\d{2}[-.\s]?\d{2}[-.\s]?\d{2}[-.\s]?\d{2}\b/;
+  const phoneRegex = /(?:\+213|00213|[0][567])\s*\d[\s\d-]{7,}\d|\b\d{2}[-.\s]?\d{2}[-.\s]?\d{2}[-.\s]?\d{2}[-.\s]?\d{2}\b/;
 
   // Social media URLs / domain names and short links
   const urlRegex = /https?:\/\/\S+|www\.\S+|\b(?:facebook|fb|instagram|insta|tiktok|twitter|linkedin|ouedkniss|viber|whatsapp|telegram|tg|snapchat)\.(?:com|dz|net|fr|org|me|info)\b|\bwa\.me\/\S+|\bt\.me\/\S+/;

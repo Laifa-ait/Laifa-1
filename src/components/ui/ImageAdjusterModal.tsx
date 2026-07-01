@@ -149,8 +149,8 @@ export const ImageAdjusterModal: React.FC<ImageAdjusterModalProps> = ({ src, typ
       const imgRatio = img.naturalWidth / img.naturalHeight;
       const viewRatio = viewWidth / viewHeight;
 
-      let startWidth = viewWidth;
-      let startHeight = viewHeight;
+      let startWidth: number;
+      let startHeight: number;
 
       if (imgRatio > viewRatio) {
         startHeight = viewHeight;
@@ -243,8 +243,8 @@ export const ImageAdjusterModal: React.FC<ImageAdjusterModalProps> = ({ src, typ
                 const imgRatio = naturalWidth / naturalHeight;
                 const viewRatio = viewWidth / viewHeight;
 
-                let startWidth = viewWidth;
-                let startHeight = viewHeight;
+                let startWidth: number;
+                let startHeight: number;
 
                 if (imgRatio > viewRatio) {
                   startHeight = viewHeight;

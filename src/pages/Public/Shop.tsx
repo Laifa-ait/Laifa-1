@@ -4,6 +4,7 @@ import { Search, Filter, SlidersHorizontal, SearchX, Grid, List, ChevronDown, Ma
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useShop } from '../../context/ShopContext';
 import { ProductCard } from '../../components/Product/ProductCard';
+import { ProductListCard } from '../../components/Product/ProductListCard';
 import { ALGERIA_WILAYAS, CATEGORY_ICONS } from '../../constants';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
@@ -52,6 +53,7 @@ export const Shop: React.FC = () => {
   const LOAD_MORE_LIMIT = 6;
 
   const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const categories = [
     "Tous",
@@ -555,8 +557,18 @@ export const Shop: React.FC = () => {
                   </div>
 
                   <div className="flex gap-2">
-                     <button className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center shadow-md"><Grid className="w-4 h-4" /></button>
-                     <button className="w-10 h-10 rounded-full bg-white text-slate-400 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 flex items-center justify-center shadow-sm transition-all"><List className="w-4 h-4" /></button>
+                     <button 
+                        onClick={() => setViewMode("grid")}
+                        className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm transition-all ${viewMode === "grid" ? "bg-slate-900 text-white shadow-md" : "bg-white text-slate-400 hover:text-slate-900 hover:bg-slate-50 border border-slate-200"}`}
+                     >
+                        <Grid className="w-4 h-4" />
+                     </button>
+                     <button 
+                        onClick={() => setViewMode("list")}
+                        className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm transition-all ${viewMode === "list" ? "bg-slate-900 text-white shadow-md" : "bg-white text-slate-400 hover:text-slate-900 hover:bg-slate-50 border border-slate-200"}`}
+                     >
+                        <List className="w-4 h-4" />
+                     </button>
                   </div>
                </div>
             </div>
@@ -592,13 +604,21 @@ export const Shop: React.FC = () => {
                </div>
             ) : finalFilteredProducts.length > 0 ? (
                <div className="flex flex-col gap-10">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-6 md:gap-8">
-                     {finalFilteredProducts.map((product, i) => (
-                       <div key={product.id}>
-                         <ProductCard product={product} index={i} />
-                       </div>
-                     ))}
-                  </div>
+                  {viewMode === "grid" ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-6 md:gap-8">
+                       {finalFilteredProducts.map((product, i) => (
+                         <div key={product.id}>
+                           <ProductCard product={product} index={i} />
+                         </div>
+                       ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-0 border-t border-slate-100 pt-4">
+                       {finalFilteredProducts.map((product, i) => (
+                         <ProductListCard key={product.id} product={product} index={i} />
+                       ))}
+                    </div>
+                  )}
                   
                   {/* Infinite Scroll / Load More */}
                   {lastVisible && !searchQuery && (

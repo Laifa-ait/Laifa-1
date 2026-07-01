@@ -180,7 +180,7 @@ export const FlashSalesPage: React.FC = () => {
   }, [limitState]);
 
   const sortedProducts = useMemo(() => {
-    let sorted = [...products];
+    const sorted = [...products];
     if (sortOption === "recent") {
       sorted.sort((a, b) => ((b.createdAt as any)?.toMillis?.() || 0) - ((a.createdAt as any)?.toMillis?.() || 0));
     } else if (sortOption === "price-asc") {

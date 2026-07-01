@@ -129,8 +129,21 @@ export const ShopProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       cacheEngine.set(cacheKey, res);
       return res;
     } catch (err) {
-      console.error("Quota Exceeded or Error", err);
-      return [];
+      console.warn("fetchFeaturedProducts with orderBy failed (Missing Index?). Falling back to basic query.", err);
+      try {
+        const qFallback = query(
+          collection(db, "products"),
+          where("status", "==", "active"),
+          limit(nbLimit)
+        );
+        const snap = await getDocs(qFallback);
+        const res = snap.docs.map((doc) => ({ id: doc.id, ...(doc.data() as any) })) as Product[];
+        cacheEngine.set(cacheKey, res);
+        return res;
+      } catch (fallbackErr) {
+        console.error("fetchFeaturedProducts Fallback also failed", fallbackErr);
+        return [];
+      }
     }
   };
 
@@ -166,8 +179,22 @@ export const ShopProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       cacheEngine.set(cacheKey, res);
       return res;
     } catch (err) {
-      console.error("Quota Exceeded or Error", err);
-      return [];
+      console.warn("fetchProductsByCategory with orderBy failed. Falling back to basic queries.", err);
+      try {
+        let qFallback;
+        if (category === "Tous") {
+          qFallback = query(collection(db, "products"), where("status", "==", "active"), limit(nbLimit));
+        } else {
+          qFallback = query(collection(db, "products"), where("category", "==", category), where("status", "==", "active"), limit(nbLimit));
+        }
+        const snap = await getDocs(qFallback);
+        const res = snap.docs.map((doc) => ({ id: doc.id, ...(doc.data() as any) })) as Product[];
+        cacheEngine.set(cacheKey, res);
+        return res;
+      } catch (fallbackErr) {
+        console.error("fetchProductsByCategory fallback failed:", fallbackErr);
+        return [];
+      }
     }
   };
 
@@ -268,8 +295,10 @@ export const ShopProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (recommendedIds.length > 0) {
         const slicedIds = recommendedIds.slice(0, nbLimit);
         const resolved = await fetchProductsByIds(slicedIds);
-        cacheEngine.set(cacheKey, resolved);
-        return resolved;
+        if (resolved.length > 0) {
+          cacheEngine.set(cacheKey, resolved);
+          return resolved;
+        }
       }
 
       const fallback = await fetchFeaturedProducts(nbLimit);

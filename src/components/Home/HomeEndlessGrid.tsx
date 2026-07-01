@@ -4,8 +4,7 @@ import { db } from "../../lib/firebase";
 import { Product } from "../../types";
 import { ProductCard } from "../Product/ProductCard";
 import { useTranslation } from "react-i18next";
-import { Sparkles, Grid } from "lucide-react";
-import { useInfiniteScroll } from "../../hooks/useInfiniteScroll";
+import { Sparkles } from "lucide-react";
 
 export const HomeEndlessGrid: React.FC = () => {
   const { t } = useTranslation();
@@ -14,12 +13,14 @@ export const HomeEndlessGrid: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const FETCH_LIMIT = 18;
+  
+  const INITIAL_FETCH_LIMIT = 20;
+  const LOAD_MORE_LIMIT = 8;
 
   useEffect(() => {
     const fetchInitial = async () => {
       try {
-        const q = query(collection(db, "products"), orderBy("createdAt", "desc"), limit(FETCH_LIMIT));
+        const q = query(collection(db, "products"), orderBy("createdAt", "desc"), limit(INITIAL_FETCH_LIMIT));
         const snap = await getDocs(q);
         const docs = snap.docs.map(d => ({ id: d.id, ...d.data() } as unknown as Product));
         
@@ -29,7 +30,7 @@ export const HomeEndlessGrid: React.FC = () => {
         if (snap.docs.length > 0) {
           setLastVisible(snap.docs[snap.docs.length - 1]);
         }
-        setHasMore(snap.docs.length === FETCH_LIMIT);
+        setHasMore(snap.docs.length === INITIAL_FETCH_LIMIT);
       } catch (err) {
         console.error("Error fetching endless grid:", err);
       } finally {
@@ -47,7 +48,7 @@ export const HomeEndlessGrid: React.FC = () => {
         collection(db, "products"), 
         orderBy("createdAt", "desc"), 
         startAfter(lastVisible), 
-        limit(FETCH_LIMIT)
+        limit(LOAD_MORE_LIMIT)
       );
       const snap = await getDocs(q);
       const newDocs = snap.docs.map(d => ({ id: d.id, ...d.data() } as unknown as Product));
@@ -62,20 +63,13 @@ export const HomeEndlessGrid: React.FC = () => {
       if (snap.docs.length > 0) {
         setLastVisible(snap.docs[snap.docs.length - 1]);
       }
-      setHasMore(snap.docs.length === FETCH_LIMIT);
+      setHasMore(snap.docs.length === LOAD_MORE_LIMIT);
     } catch (err) {
       console.error(err);
     } finally {
       setLoadingMore(false);
     }
   };
-
-  const { loaderRef } = useInfiniteScroll({
-    onLoadMore: loadMoreProducts,
-    hasMore: hasMore,
-    isLoading: loadingMore,
-    threshold: 300,
-  });
 
   if (loading) {
     return (
@@ -115,14 +109,22 @@ export const HomeEndlessGrid: React.FC = () => {
       </div>
 
       {hasMore && (
-        <div ref={loaderRef} className="flex justify-center pt-12 min-h-[100px] items-center">
-          {loadingMore && (
-            <div className="flex gap-2">
-              <div className="w-2.5 h-2.5 bg-zinc-900 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-              <div className="w-2.5 h-2.5 bg-zinc-900 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-              <div className="w-2.5 h-2.5 bg-zinc-900 rounded-full animate-bounce"></div>
-            </div>
-          )}
+        <div className="flex justify-center mt-12">
+          <button
+            onClick={loadMoreProducts}
+            disabled={loadingMore}
+            className="group relative inline-flex items-center justify-center gap-2 px-8 py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-medium tracking-wide uppercase rounded-full transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {loadingMore ? (
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-white rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                <div className="w-2 h-2 bg-white rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div>
+              </div>
+            ) : (
+              <span>{t("home.endless_grid.load_more") || "Afficher plus"}</span>
+            )}
+          </button>
         </div>
       )}
     </div>

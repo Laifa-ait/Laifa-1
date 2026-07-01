@@ -74,7 +74,9 @@ export const MegaMenuProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (saved) {
         try {
           existingData = JSON.parse(saved);
-        } catch (e) {}
+        } catch (e) {
+          console.warn("Failed to parse saved megamenu:", e);
+        }
       }
 
       const catIdMap: Record<string, string> = {

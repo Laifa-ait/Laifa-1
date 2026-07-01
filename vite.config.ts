@@ -17,10 +17,7 @@ export default defineConfig(({mode}) => {
         NODE_ENV: JSON.stringify(mode),
       }
     },
-    test: {
-      globals: true,
-      environment: 'node',
-    },
+
     plugins: [
       react(), 
       tailwindcss(),
@@ -33,7 +30,19 @@ export default defineConfig(({mode}) => {
           start_url: '/',
           display: 'standalone',
           background_color: '#ffffff',
-          icons: []
+          icons: [
+            {
+              src: '/logo.svg',
+              sizes: 'any',
+              type: 'image/svg+xml',
+              purpose: 'any maskable'
+            },
+            {
+              src: '/logo.svg',
+              sizes: '512x512',
+              type: 'image/svg+xml'
+            }
+          ]
         },
         workbox: {
           maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,

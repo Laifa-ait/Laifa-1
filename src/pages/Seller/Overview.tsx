@@ -83,7 +83,7 @@ export const Overview: React.FC = () => {
       // Fetch Global Stats from financial_summary (to avoid client-side aggregation issues)
       const { doc, getDoc } = await import("firebase/firestore");
       let totalSales = 0;
-      let orderCount = 0;
+      let orderCount: number;
       let pendingReturns = 0;
       try {
         const summaryDoc = await getDoc(doc(db, `financial_summary/${currentUser.uid}`));

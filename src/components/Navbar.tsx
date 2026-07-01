@@ -178,13 +178,6 @@ export const Navbar: React.FC = () => {
           </div>
 
           <div className="flex items-center justify-end gap-3 sm:gap-5 relative lg:w-1/4 shrink-0">
-            <button
-              onClick={() => setIsSearchOpen(true)}
-              className="flex items-center justify-center text-slate-600 hover:bg-slate-100 hover:text-zinc-900 transition-colors cursor-pointer bg-transparent border-none w-9 h-9 sm:w-10 sm:h-10 rounded-full lg:hidden"
-            >
-              <Search className="w-5 h-5 sm:w-6 sm:h-6 stroke-[1.5]" />
-            </button>
-
             <div className="hidden lg:block">
               <NotificationCenter />
             </div>

@@ -203,7 +203,7 @@ export const NotificationCenter: React.FC = () => {
           const descText = data.message ? data.message[lang] || data.message.fr || data.message : "";
 
           // Determine destination link depending on notification payload
-          let computedLink = "/dashboard/buyer";
+          let computedLink: string;
           if (userProfile?.role === "seller") {
             computedLink = "/dashboard/seller";
             if (data.type === "new_order" || data.type === "order") {
@@ -252,7 +252,7 @@ export const NotificationCenter: React.FC = () => {
           const timeMs = data.createdAt?.seconds ? data.createdAt.seconds * 1000 : Date.now();
           const timeStr = new Date(timeMs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-          let discountDisplay = "";
+          let discountDisplay: string;
           if (data.discountType === "percentage") {
             discountDisplay = `${data.discountValue}%`;
           } else {

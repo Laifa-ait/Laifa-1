@@ -326,7 +326,7 @@ export const BannerAdmin: React.FC = () => {
         (process.env.NODE_ENV === "development" ? console.log : function () {})("Firebase Storage success:", finalUrl);
       } catch (storageErr: any) {
         console.error("Firebase Storage failed:", storageErr);
-        throw new Error("Échec du téléchargement vers Firebase Storage: " + (storageErr.message || ""));
+        throw new Error("Échec du téléchargement vers Firebase Storage: " + (storageErr.message || ""), { cause: storageErr });
       }
 
       if (type === "desktop") {

@@ -1,5 +1,9 @@
-import { Request, Response } from 'express';
-export interface AuthenticatedRequest extends Request { user?: any; file?: any; files?: any; }
+import { Request, Response } from "express";
+export interface AuthenticatedRequest extends Request {
+  user?: any;
+  file?: any;
+  files?: any;
+}
 
 import { Router } from "express";
 import { admin, db } from "../config/firebase-admin";
@@ -12,29 +16,29 @@ import { calculateOrderCommission } from "../utils/orderCalculations";
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.ethereal.email',
+  host: process.env.SMTP_HOST || "smtp.ethereal.email",
   port: Number(process.env.SMTP_PORT) || 587,
   auth: {
     user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS
-  }
+    pass: process.env.SMTP_PASS,
+  },
 });
 
 const sendLowStockEmail = async (sellerEmail: string, message: string) => {
-   try {
-     if (!process.env.SMTP_USER) {
-        console.log("Mock Email Sent (SMTP not configured). To:", sellerEmail, "Message:", message);
-        return;
-     }
-     await transporter.sendMail({
-       from: '"Olmart" <noreply@olmart.dz>',
-       to: sellerEmail,
-       subject: "⚠️ Alerte Stock Critique - Olmart",
-       text: message
-     });
-   } catch (err) {
-     console.error("Failed to send stock alert email", err);
-   }
+  try {
+    if (!process.env.SMTP_USER) {
+      console.log("Mock Email Sent (SMTP not configured). To:", sellerEmail, "Message:", message);
+      return;
+    }
+    await transporter.sendMail({
+      from: '"Olmart" <noreply@olmart.dz>',
+      to: sellerEmail,
+      subject: "⚠️ Alerte Stock Critique - Olmart",
+      text: message,
+    });
+  } catch (err) {
+    console.error("Failed to send stock alert email", err);
+  }
 };
 
 const router = Router();
@@ -43,32 +47,34 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
   // Schema validation
   const validationResult = placeOrderSchema.safeParse(req.body);
   if (!validationResult.success) {
-    const formattedErrors = validationResult.error.issues.map(err => ({
-      path: err.path.join('.'),
-      message: err.message
+    const formattedErrors = validationResult.error.issues.map((err) => ({
+      path: err.path.join("."),
+      message: err.message,
     }));
-    return res.status(400).json({ 
-      error: "Données de la commande invalides ou corrompues.", 
-      details: formattedErrors 
+    return res.status(400).json({
+      error: "Données de la commande invalides ou corrompues.",
+      details: formattedErrors,
     });
   }
-  
-  const { cart, shippingAddress, couponCode, useCashbackPoints, useWallet, deliveryMethod, idempotencyKey } = validationResult.data;
+
+  const { cart, shippingAddress, couponCode, useCashbackPoints, useWallet, deliveryMethod, idempotencyKey } =
+    validationResult.data;
   const userId = req.user.uid;
 
   if (idempotencyKey) {
-    const existingOrder = await db.collection("orders")
+    const existingOrder = await db
+      .collection("orders")
       .where("idempotencyKey", "==", idempotencyKey)
       .where("userId", "==", req.user.uid)
       .limit(1)
       .get();
-    
+
     if (!existingOrder.empty) {
       const existingDoc = existingOrder.docs[0];
-      return res.json({ 
-        orderId: existingDoc.id, 
+      return res.json({
+        orderId: existingDoc.id,
         status: "already_processed",
-        message: "Commande déjà traitée" 
+        message: "Commande déjà traitée",
       });
     }
   }
@@ -89,12 +95,12 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
         matrixFees = d.matrixFees || {};
         globalBaseFee = d.globalBaseFee || 600;
       }
-      
+
       commDoc = await db.collection("settings").doc("commission").get();
       if (commDoc && commDoc.exists) {
-         globalCommissionRate = commDoc.data()?.globalRate ?? 10;
+        globalCommissionRate = commDoc.data()?.globalRate ?? 10;
       }
-    } catch(err) {
+    } catch (err) {
       console.warn("Failed to fetch global settings, using fallback", err);
     }
 
@@ -103,628 +109,678 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
 
     let sellerIdsArray: string[] = [];
     const shopSnapshots = new Map<string, any>();
-    const emailAlerts: {sellerId: string, message: string}[] = [];
+    const emailAlerts: { sellerId: string; message: string }[] = [];
 
-    const result = await orderBreaker.execute(() => db.runTransaction(async (t: any) => {
-      emailAlerts.length = 0; // Clear on retry
-      // --- ÉTAPE 1 : LECTURES TRANSACTIONNELLES PURES ---
-      let couponDoc: any = null;
-      
-      const productSnaps = new Map<string, any>();
-      const productRefs = new Map<string, any>();
+    const result = await orderBreaker.execute(
+      () =>
+        db.runTransaction(async (t: any) => {
+          emailAlerts.length = 0; // Clear on retry
+          // --- ÉTAPE 1 : LECTURES TRANSACTIONNELLES PURES ---
+          let couponDoc: any = null;
 
-      const refs = uniqueProductIds.map(pId => db.collection("products").doc(pId));
-      const snaps = await t.getAll(...refs);
-      
-      snaps.forEach((productSnap: any, idx: number) => {
-        const pId = uniqueProductIds[idx];
-        if (!productSnap.exists) {
-          throw new Error(`Produit ${pId} introuvable.`);
-        }
-        productSnaps.set(pId, productSnap);
-        productRefs.set(pId, refs[idx]);
+          const productSnaps = new Map<string, any>();
+          const productRefs = new Map<string, any>();
 
-        const sellerId = productSnap.data().sellerId;
-        if (sellerId) sellerIdsSet.add(sellerId);
-      });
+          const refs = uniqueProductIds.map((pId) => db.collection("products").doc(pId));
+          const snaps = await t.getAll(...refs);
 
-      sellerIdsArray = Array.from(sellerIdsSet);
-      if (sellerIdsArray.length > 0) {
-        const sellerRefs = sellerIdsArray.map(sId => db.collection("users").doc(sId));
-        const sellerSnaps = await t.getAll(...sellerRefs);
-        
-        sellerSnaps.forEach((shopSnap: any, idx: number) => {
-          const sellerId = sellerIdsArray[idx];
-          if (shopSnap.exists) {
-            const sd = shopSnap.data();
-            if (sd && (sd.isActive === false || sd.is_active === false || sd.velocitySuspended)) {
-               throw new Error(`La boutique "${sd.shopName || sd.displayName || sellerId}" est fermée temporairement (capacité de commande maximale atteinte).`);
+          snaps.forEach((productSnap: any, idx: number) => {
+            const pId = uniqueProductIds[idx];
+            if (!productSnap.exists) {
+              throw new Error(`Produit ${pId} introuvable.`);
             }
-            shopSnapshots.set(sellerId, sd);
-          } else {
-            shopSnapshots.set(sellerId, {});
-          }
-        });
-      }
+            productSnaps.set(pId, productSnap);
+            productRefs.set(pId, refs[idx]);
 
-      // Reconstruct productDocs array cleanly for downstream seller splits
-      const productDocs: any[] = [];
-      for (const cartItem of cart) {
-        if (!cartItem.id || !cartItem.quantity || typeof cartItem.quantity !== 'number' || !Number.isInteger(cartItem.quantity) || cartItem.quantity < 1) {
-          throw new Error(`Article invalide fourni.`);
-        }
-        const snap = productSnaps.get(cartItem.id);
-        const ref = productRefs.get(cartItem.id);
-        productDocs.push({ cartItem, productSnap: snap, productRef: ref });
-      }
+            const sellerId = productSnap.data().sellerId;
+            if (sellerId) sellerIdsSet.add(sellerId);
+          });
 
-      // 1.3 Lire les donnees de l'acheteur
-      const userRef = db.collection("users").doc(userId);
-      const userSnap = await t.get(userRef);
-      const userData = userSnap.exists ? userSnap.data() : {};
+          sellerIdsArray = Array.from(sellerIdsSet);
+          if (sellerIdsArray.length > 0) {
+            const sellerRefs = sellerIdsArray.map((sId) => db.collection("users").doc(sId));
+            const sellerSnaps = await t.getAll(...sellerRefs);
 
-      // 1.4 Lire le coupon si fourni
-      if (couponCode) {
-        const couponQuery = await t.get(db.collection("coupons").where("code", "==", couponCode.toUpperCase()));
-        if (!couponQuery.empty) {
-          couponDoc = couponQuery.docs[0];
-        } else {
-          throw new Error("Code promo invalide.");
-        }
-      }
-
-      // 1.5 Lire l'historique des commandes de l'acheteur pour valider les ventes flash
-      const previousOrdersQuery = await t.get(db.collection("orders").where("userId", "==", userId));
-      const previousOrders = previousOrdersQuery.docs.map((d: any) => d.data());
-
-      // Helper DRY pour le calcul des prix et la validation des ventes flash
-      const getProductPriceAndVerifyFlash = (productData: any, cartItem: any, productId: string) => {
-        let price = Number(productData.price);
-        
-        // Check if flash sale is active and valid
-        const now = new Date();
-        let isFlashActive = false;
-        if (productData.flashSaleActive) {
-           let flashEnd: Date | null = null;
-           if (productData.flashEndDate) {
-              if (typeof productData.flashEndDate.toDate === 'function') {
-                 flashEnd = productData.flashEndDate.toDate();
-              } else if (productData.flashEndDate._seconds) {
-                 flashEnd = new Date(productData.flashEndDate._seconds * 1000);
-              } else if (productData.flashEndDate.seconds) {
-                 flashEnd = new Date(productData.flashEndDate.seconds * 1000);
+            sellerSnaps.forEach((shopSnap: any, idx: number) => {
+              const sellerId = sellerIdsArray[idx];
+              if (shopSnap.exists) {
+                const sd = shopSnap.data();
+                if (sd && (sd.isActive === false || sd.is_active === false || sd.velocitySuspended)) {
+                  throw new Error(
+                    `La boutique "${sd.shopName || sd.displayName || sellerId}" est fermée temporairement (capacité de commande maximale atteinte).`
+                  );
+                }
+                shopSnapshots.set(sellerId, sd);
               } else {
-                 flashEnd = new Date(productData.flashEndDate);
+                shopSnapshots.set(sellerId, {});
               }
-           }
-           if (!flashEnd || flashEnd > now) {
-              isFlashActive = true;
-           }
-        }
+            });
+          }
 
-        if (isFlashActive && productData.flashPrice != null) {
-           // Enforce flash limit per customer
-           const flashLimit = Number(productData.flashLimitPerCustomer || 0);
-           if (flashLimit > 0) {
-              let totalPurchased = 0;
-              previousOrders.forEach((oData: any) => {
-                 if (oData.status !== "canceled" && oData.status !== "cancelled") {
+          // Reconstruct productDocs array cleanly for downstream seller splits
+          const productDocs: any[] = [];
+          for (const cartItem of cart) {
+            if (
+              !cartItem.id ||
+              !cartItem.quantity ||
+              typeof cartItem.quantity !== "number" ||
+              !Number.isInteger(cartItem.quantity) ||
+              cartItem.quantity < 1
+            ) {
+              throw new Error(`Article invalide fourni.`);
+            }
+            const snap = productSnaps.get(cartItem.id);
+            const ref = productRefs.get(cartItem.id);
+            productDocs.push({ cartItem, productSnap: snap, productRef: ref });
+          }
+
+          // 1.3 Lire les donnees de l'acheteur
+          const userRef = db.collection("users").doc(userId);
+          const userSnap = await t.get(userRef);
+          const userData = userSnap.exists ? userSnap.data() : {};
+
+          // 1.4 Lire le coupon si fourni
+          if (couponCode) {
+            const couponQuery = await t.get(db.collection("coupons").where("code", "==", couponCode.toUpperCase()));
+            if (!couponQuery.empty) {
+              couponDoc = couponQuery.docs[0];
+            } else {
+              throw new Error("Code promo invalide.");
+            }
+          }
+
+          // 1.5 Lire l'historique des commandes de l'acheteur pour valider les ventes flash
+          const previousOrdersQuery = await t.get(db.collection("orders").where("userId", "==", userId));
+          const previousOrders = previousOrdersQuery.docs.map((d: any) => d.data());
+
+          // Helper DRY pour le calcul des prix et la validation des ventes flash
+          const getProductPriceAndVerifyFlash = (productData: any, cartItem: any, productId: string) => {
+            let price = Number(productData.price);
+
+            // Check if flash sale is active and valid
+            const now = new Date();
+            let isFlashActive = false;
+            if (productData.flashSaleActive) {
+              let flashEnd: Date | null = null;
+              if (productData.flashEndDate) {
+                if (typeof productData.flashEndDate.toDate === "function") {
+                  flashEnd = productData.flashEndDate.toDate();
+                } else if (productData.flashEndDate._seconds) {
+                  flashEnd = new Date(productData.flashEndDate._seconds * 1000);
+                } else if (productData.flashEndDate.seconds) {
+                  flashEnd = new Date(productData.flashEndDate.seconds * 1000);
+                } else {
+                  flashEnd = new Date(productData.flashEndDate);
+                }
+              }
+              if (!flashEnd || flashEnd > now) {
+                isFlashActive = true;
+              }
+            }
+
+            if (isFlashActive && productData.flashPrice != null) {
+              // Enforce flash limit per customer
+              const flashLimit = Number(productData.flashLimitPerCustomer || 0);
+              if (flashLimit > 0) {
+                let totalPurchased = 0;
+                previousOrders.forEach((oData: any) => {
+                  if (oData.status !== "canceled" && oData.status !== "cancelled") {
                     const items = oData.items || [];
                     items.forEach((it: any) => {
-                       if (it.id === productId || it.productId === productId) {
-                          totalPurchased += Number(it.quantity || 0);
-                       }
+                      if (it.id === productId || it.productId === productId) {
+                        totalPurchased += Number(it.quantity || 0);
+                      }
                     });
-                 }
+                  }
+                });
+
+                if (totalPurchased + cartItem.quantity > flashLimit) {
+                  throw new Error(
+                    `La limite d'achat pour la vente flash de "${productData.name}" est de ${flashLimit} articles. Vous en avez déjà acheté ${totalPurchased}.`
+                  );
+                }
+              }
+              price = Number(productData.flashPrice);
+            } else if (productData.promoPrice != null) {
+              price = Number(productData.promoPrice);
+            }
+
+            if (cartItem.selectedVariant && productData.variants && Array.isArray(productData.variants)) {
+              const variant = productData.variants.find((v: any) => v.name === cartItem.selectedVariant);
+              if (variant) {
+                if (
+                  variant.priceOverride !== undefined &&
+                  variant.priceOverride !== null &&
+                  variant.priceOverride !== ""
+                ) {
+                  price = Number(variant.priceOverride);
+                } else if (variant.priceDiff) {
+                  price += Number(variant.priceDiff);
+                }
+              }
+            }
+
+            return price;
+          };
+
+          // --- ÉTAPE 2 : LOGIQUE MÉTIER ---
+          let subtotal = 0;
+          const orderItems: any[] = [];
+
+          // Map to track running mutable state of products inside this transaction
+          const productInMemoryStates = new Map<string, any>();
+          for (const [pId, snap] of productSnaps.entries()) {
+            productInMemoryStates.set(pId, JSON.parse(JSON.stringify(snap.data())));
+          }
+
+          for (const { cartItem, productSnap } of productDocs) {
+            const productId = productSnap.id;
+            const productData = productInMemoryStates.get(productId);
+
+            let targetPrice = getProductPriceAndVerifyFlash(productData, cartItem, productId);
+            let availableStock = productData.stock || 0;
+
+            let variantInfo: any = null;
+            if (cartItem.selectedVariant && productData.variants && Array.isArray(productData.variants)) {
+              const variant = productData.variants.find((v: any) => v.name === cartItem.selectedVariant);
+              if (!variant) {
+                throw new Error(`Variante ${cartItem.selectedVariant} introuvable pour ${productData.name}.`);
+              }
+              availableStock = Number(variant.stock) || 0;
+              if (variant) {
+                if (
+                  variant.priceOverride !== undefined &&
+                  variant.priceOverride !== null &&
+                  variant.priceOverride !== ""
+                ) {
+                  targetPrice = Number(variant.priceOverride);
+                } else if (variant.priceDiff) {
+                  targetPrice += Number(variant.priceDiff);
+                }
+              }
+              variantInfo = variant;
+            }
+
+            // PRICE CONFLICT CHECK
+            if (typeof cartItem.priceSeen === "number" && cartItem.priceSeen !== targetPrice) {
+              const conflictErr: any = new Error(
+                `Le prix de l'article "${productData.name}" a été mis à jour par le vendeur (de ${cartItem.priceSeen} DA à ${targetPrice} DA).`
+              );
+              conflictErr.code = "PRICE_CONFLICT";
+              throw conflictErr;
+            }
+
+            if (availableStock < cartItem.quantity) {
+              throw new Error(`Stock insuffisant pour ${productData.name} (Reste: ${availableStock}).`);
+            }
+
+            subtotal += targetPrice * cartItem.quantity;
+            const sellerId = productData.sellerId;
+
+            orderItems.push({
+              id: productId,
+              name: productData.name,
+              price: targetPrice,
+              image: productData.image,
+              quantity: cartItem.quantity,
+              sellerId: sellerId,
+              selectedVariant: cartItem.selectedVariant || null,
+            });
+
+            // Mutate the variant stock in memory
+            if (variantInfo) {
+              productData.variants = productData.variants.map((v: any) => {
+                if (v.name === variantInfo.name) {
+                  return { ...v, stock: Number(v.stock) - cartItem.quantity };
+                }
+                return v;
+              });
+              productData.hasOutOfStockVariants = productData.variants.some(
+                (v: any) => Math.max(0, Number(v.stock) || 0) <= 0
+              );
+              productData.stock = productData.variants.reduce(
+                (acc: number, curr: any) => acc + Math.max(0, Number(curr.stock) || 0),
+                0
+              );
+            } else {
+              productData.stock = (productData.stock || 0) - cartItem.quantity;
+            }
+          }
+
+          // Generate unified consolidated stock updates after iterating all items
+          const stockUpdates: any[] = [];
+          for (const pId of uniqueProductIds) {
+            const finalData = productInMemoryStates.get(pId);
+            const ref = productRefs.get(pId);
+            const stockThreshold = Number(finalData.lowStockAlert) || 5;
+
+            let needsAlert = false;
+            let alertMessage = "";
+
+            if (finalData.variants) {
+              const lowVariants = finalData.variants.filter(
+                (v: any) => v.isActive !== false && Number(v.stock) <= stockThreshold
+              );
+              if (lowVariants.length > 0) {
+                needsAlert = true;
+                alertMessage = `Alerte: La(es) variante(s) ${lowVariants.map((v: any) => v.name).join(", ")} du produit "${finalData.name}" a atteint le stock critique (<= ${stockThreshold}).`;
+              }
+              stockUpdates.push({
+                ref,
+                update: {
+                  variants: finalData.variants,
+                  hasOutOfStockVariants: finalData.hasOutOfStockVariants,
+                  stock: finalData.stock,
+                },
+              });
+            } else {
+              if (finalData.stock <= stockThreshold) {
+                needsAlert = true;
+                alertMessage = `Alerte: Le produit "${finalData.name}" a atteint le stock critique (${finalData.stock} restants, seuil: ${stockThreshold}).`;
+              }
+              stockUpdates.push({
+                ref,
+                update: {
+                  stock: finalData.stock,
+                },
+              });
+            }
+
+            if (needsAlert) {
+              emailAlerts.push({ sellerId: finalData.sellerId, message: alertMessage });
+
+              const alertRef = db.collection("internal_notifications").doc();
+              t.set(alertRef, {
+                type: "LOW_STOCK_ALERT",
+                title: "⚠️ Stock Critique",
+                message: alertMessage,
+                sellerId: finalData.sellerId,
+                productId: pId,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                read: false,
+                priority: "high",
               });
 
-              if (totalPurchased + cartItem.quantity > flashLimit) {
-                 throw new Error(`La limite d'achat pour la vente flash de "${productData.name}" est de ${flashLimit} articles. Vous en avez déjà acheté ${totalPurchased}.`);
-              }
-           }
-           price = Number(productData.flashPrice);
-        } else if (productData.promoPrice != null) {
-           price = Number(productData.promoPrice);
-        }
-
-        if (cartItem.selectedVariant && productData.variants && Array.isArray(productData.variants)) {
-           const variant = productData.variants.find((v: any) => v.name === cartItem.selectedVariant);
-           if (variant) {
-              if (variant.priceOverride !== undefined && variant.priceOverride !== null && variant.priceOverride !== '') {
-                 price = Number(variant.priceOverride);
-              } else if (variant.priceDiff) {
-                 price += Number(variant.priceDiff);
-              }
-           }
-        }
-
-        return price;
-      };
-
-      // --- ÉTAPE 2 : LOGIQUE MÉTIER ---
-      let subtotal = 0;
-      const orderItems: any[] = [];
-      
-      // Map to track running mutable state of products inside this transaction
-      const productInMemoryStates = new Map<string, any>();
-      for (const [pId, snap] of productSnaps.entries()) {
-        productInMemoryStates.set(pId, JSON.parse(JSON.stringify(snap.data())));
-      }
-
-      for (const { cartItem, productSnap } of productDocs) {
-        const productId = productSnap.id;
-        const productData = productInMemoryStates.get(productId);
-
-        let targetPrice = getProductPriceAndVerifyFlash(productData, cartItem, productId);
-        let availableStock = productData.stock || 0;
-
-        let variantInfo: any = null;
-        if (cartItem.selectedVariant && productData.variants && Array.isArray(productData.variants)) {
-           const variant = productData.variants.find((v: any) => v.name === cartItem.selectedVariant);
-           if (!variant) {
-             throw new Error(`Variante ${cartItem.selectedVariant} introuvable pour ${productData.name}.`);
-           }
-           availableStock = Number(variant.stock) || 0;
-           if (variant) {
-              if (variant.priceOverride !== undefined && variant.priceOverride !== null && variant.priceOverride !== '') {
-                 targetPrice = Number(variant.priceOverride);
-              } else if (variant.priceDiff) {
-                 targetPrice += Number(variant.priceDiff);
-              }
-           }
-           variantInfo = variant;
-        }
-
-        // PRICE CONFLICT CHECK
-        if (typeof cartItem.priceSeen === 'number' && cartItem.priceSeen !== targetPrice) {
-            const conflictErr: any = new Error(`Le prix de l'article "${productData.name}" a été mis à jour par le vendeur (de ${cartItem.priceSeen} DA à ${targetPrice} DA).`);
-            conflictErr.code = 'PRICE_CONFLICT';
-            throw conflictErr;
-        }
-
-        if (availableStock < cartItem.quantity) {
-          throw new Error(`Stock insuffisant pour ${productData.name} (Reste: ${availableStock}).`);
-        }
-
-        subtotal += targetPrice * cartItem.quantity;
-        const sellerId = productData.sellerId;
-
-        orderItems.push({
-          id: productId,
-          name: productData.name,
-          price: targetPrice,
-          image: productData.image,
-          quantity: cartItem.quantity,
-          sellerId: sellerId,
-          selectedVariant: cartItem.selectedVariant || null
-        });
-
-        // Mutate the variant stock in memory
-        if (variantInfo) {
-           productData.variants = productData.variants.map((v: any) => {
-              if (v.name === variantInfo.name) {
-                 return { ...v, stock: Number(v.stock) - cartItem.quantity };
-              }
-              return v;
-           });
-           productData.hasOutOfStockVariants = productData.variants.some((v: any) => Math.max(0, Number(v.stock) || 0) <= 0);
-           productData.stock = productData.variants.reduce((acc: number, curr: any) => acc + Math.max(0, Number(curr.stock) || 0), 0);
-        } else {
-           productData.stock = (productData.stock || 0) - cartItem.quantity;
-        }
-      }
-
-      // Generate unified consolidated stock updates after iterating all items
-      const stockUpdates: any[] = [];
-      for (const pId of uniqueProductIds) {
-        const finalData = productInMemoryStates.get(pId);
-        const ref = productRefs.get(pId);
-        const stockThreshold = Number(finalData.lowStockAlert) || 5;
-        
-        let needsAlert = false;
-        let alertMessage = "";
-        
-        if (finalData.variants) {
-           const lowVariants = finalData.variants.filter((v: any) => v.isActive !== false && Number(v.stock) <= stockThreshold);
-           if (lowVariants.length > 0) {
-              needsAlert = true;
-              alertMessage = `Alerte: La(es) variante(s) ${lowVariants.map((v:any)=>v.name).join(', ')} du produit "${finalData.name}" a atteint le stock critique (<= ${stockThreshold}).`;
-           }
-           stockUpdates.push({ ref, update: { 
-              variants: finalData.variants,
-              hasOutOfStockVariants: finalData.hasOutOfStockVariants,
-              stock: finalData.stock
-           }});
-        } else {
-           if (finalData.stock <= stockThreshold) {
-              needsAlert = true;
-              alertMessage = `Alerte: Le produit "${finalData.name}" a atteint le stock critique (${finalData.stock} restants, seuil: ${stockThreshold}).`;
-           }
-           stockUpdates.push({ ref, update: { 
-              stock: finalData.stock
-           }});
-        }
-
-        if (needsAlert) {
-           emailAlerts.push({ sellerId: finalData.sellerId, message: alertMessage });
-           
-           const alertRef = db.collection("internal_notifications").doc();
-           t.set(alertRef, {
-              type: "LOW_STOCK_ALERT",
-              title: "⚠️ Stock Critique",
-              message: alertMessage,
-              sellerId: finalData.sellerId,
-              productId: pId,
-              createdAt: admin.firestore.FieldValue.serverTimestamp(),
-              read: false,
-              priority: "high"
-           });
-           
-           // Mock trigger for push/email
-           const pushRef = db.collection("push_queue").doc();
-           t.set(pushRef, {
-              userId: finalData.sellerId,
-              title: "⚠️ Stock Critique",
-              body: alertMessage,
-              type: "inventory",
-              status: "pending",
-              createdAt: admin.firestore.FieldValue.serverTimestamp()
-           });
-        }
-      }
-
-      // 2.2 Validation du Coupon
-      let discountAmount = 0;
-      let appliedCouponData: any = null;
-
-      if (couponDoc) {
-        appliedCouponData = couponDoc.data();
-        if (!appliedCouponData.isActive) throw new Error("Code promo inactif.");
-        
-        let expiryDateObj: Date | null = null;
-        if (appliedCouponData.expiresAt) {
-          if (typeof appliedCouponData.expiresAt.toDate === 'function') {
-            expiryDateObj = appliedCouponData.expiresAt.toDate();
-          } else if (appliedCouponData.expiresAt._seconds) {
-            expiryDateObj = new Date(appliedCouponData.expiresAt._seconds * 1000);
-          } else if (appliedCouponData.expiresAt.seconds) {
-            expiryDateObj = new Date(appliedCouponData.expiresAt.seconds * 1000);
-          } else {
-            expiryDateObj = new Date(appliedCouponData.expiresAt);
+              // Mock trigger for push/email
+              const pushRef = db.collection("push_queue").doc();
+              t.set(pushRef, {
+                userId: finalData.sellerId,
+                title: "⚠️ Stock Critique",
+                body: alertMessage,
+                type: "inventory",
+                status: "pending",
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              });
+            }
           }
-        } else if (appliedCouponData.expiryDate) {
-           expiryDateObj = new Date(appliedCouponData.expiryDate);
-        }
 
-        if (expiryDateObj && expiryDateObj <= new Date()) throw new Error("Code promo expiré.");
+          // 2.2 Validation du Coupon
+          let discountAmount = 0;
+          let appliedCouponData: any = null;
 
-        if (subtotal < (appliedCouponData.minOrderValue || 0)) throw new Error(`Minimum d'achat: ${appliedCouponData.minOrderValue}`);
-        if (appliedCouponData.usageLimit && (appliedCouponData.usageCount || 0) >= appliedCouponData.usageLimit) {
-           throw new Error("Limite d'utilisation du code pointe.");
-        }
-        
-        // Security constraint against coupon drainage
-        const usedByArray = appliedCouponData.usedBy || [];
-        if (usedByArray.includes(userId)) {
-           throw new Error("Vous avez déjà utilisé ce code promo.");
-        }
+          if (couponDoc) {
+            appliedCouponData = couponDoc.data();
+            if (!appliedCouponData.isActive) throw new Error("Code promo inactif.");
 
-        if (appliedCouponData.discountType === 'percent') {
-          discountAmount = (subtotal * appliedCouponData.discountValue) / 100;
-          if (appliedCouponData.maxDiscount && discountAmount > appliedCouponData.maxDiscount) {
-             discountAmount = appliedCouponData.maxDiscount;
+            let expiryDateObj: Date | null = null;
+            if (appliedCouponData.expiresAt) {
+              if (typeof appliedCouponData.expiresAt.toDate === "function") {
+                expiryDateObj = appliedCouponData.expiresAt.toDate();
+              } else if (appliedCouponData.expiresAt._seconds) {
+                expiryDateObj = new Date(appliedCouponData.expiresAt._seconds * 1000);
+              } else if (appliedCouponData.expiresAt.seconds) {
+                expiryDateObj = new Date(appliedCouponData.expiresAt.seconds * 1000);
+              } else {
+                expiryDateObj = new Date(appliedCouponData.expiresAt);
+              }
+            } else if (appliedCouponData.expiryDate) {
+              expiryDateObj = new Date(appliedCouponData.expiryDate);
+            }
+
+            if (expiryDateObj && expiryDateObj <= new Date()) throw new Error("Code promo expiré.");
+
+            if (subtotal < (appliedCouponData.minOrderValue || 0))
+              throw new Error(`Minimum d'achat: ${appliedCouponData.minOrderValue}`);
+            if (appliedCouponData.usageLimit && (appliedCouponData.usageCount || 0) >= appliedCouponData.usageLimit) {
+              throw new Error("Limite d'utilisation du code pointe.");
+            }
+
+            // Security constraint against coupon drainage
+            const usedByArray = appliedCouponData.usedBy || [];
+            if (usedByArray.includes(userId)) {
+              throw new Error("Vous avez déjà utilisé ce code promo.");
+            }
+
+            if (appliedCouponData.discountType === "percent") {
+              discountAmount = (subtotal * appliedCouponData.discountValue) / 100;
+              if (appliedCouponData.maxDiscount && discountAmount > appliedCouponData.maxDiscount) {
+                discountAmount = appliedCouponData.maxDiscount;
+              }
+            } else {
+              discountAmount = Math.min(appliedCouponData.discountValue, subtotal);
+            }
           }
-        } else {
-          discountAmount = Math.min(appliedCouponData.discountValue, subtotal);
-        }
-      }
 
-      // Calculate applied loyalty points (cashback points)
-      let cashbackApplied = 0;
-      if (useCashbackPoints) {
-         const userPoints = userData?.cashbackBalance || 0;
-         cashbackApplied = Math.min(userPoints, Math.max(0, subtotal - discountAmount));
-      }
+          // Calculate applied loyalty points (cashback points)
+          let cashbackApplied = 0;
+          if (useCashbackPoints) {
+            const userPoints = userData?.cashbackBalance || 0;
+            cashbackApplied = Math.min(userPoints, Math.max(0, subtotal - discountAmount));
+          }
 
-      // 2.3 Calcul des Frais de Livraison et division en sous-commandes
-      const userWilaya = shippingAddress.wilaya;
-      const sellerGroups = new Map<string, any[]>();
-      for (const item of productDocs) {
-        const sId = item.productSnap.data().sellerId;
-        if (!sellerGroups.has(sId)) {
-          sellerGroups.set(sId, []);
-        }
-        sellerGroups.get(sId)!.push(item);
-      }
+          // 2.3 Calcul des Frais de Livraison et division en sous-commandes
+          const userWilaya = shippingAddress.wilaya;
+          const sellerGroups = new Map<string, any[]>();
+          for (const item of productDocs) {
+            const sId = item.productSnap.data().sellerId;
+            if (!sellerGroups.has(sId)) {
+              sellerGroups.set(sId, []);
+            }
+            sellerGroups.get(sId)!.push(item);
+          }
 
-      const parentOrderId = db.collection("orders").doc().id;
-      const subOrdersToCreate: any[] = [];
-      // sellerIdsArray is already defined and loaded above
-      let remainingDiscount = discountAmount;
-      let groupIndex = 0;
-      let totalShipping = 0;
+          const parentOrderId = db.collection("orders").doc().id;
+          const subOrdersToCreate: any[] = [];
+          // sellerIdsArray is already defined and loaded above
+          let groupIndex = 0;
+          let totalShipping = 0;
 
-      // Pre-calculate pro-rata discount breakdown dictionary across all sellers
-      const discountBreakdownMap: Record<string, number> = {};
-      const cashbackBreakdownMap: Record<string, number> = {};
-      let remainingBreakdownDiscount = discountAmount;
-      let remainingBreakdownCashback = cashbackApplied;
-      let breakdownIdx = 0;
-      for (const sId of sellerIdsArray) {
-         const items = sellerGroups.get(sId) || [];
-         let sSub = 0;
-         for (const { cartItem, productSnap } of items) {
-           const pData = productSnap.data();
-           let targetP = pData.promoPrice || pData.price;
-           if (cartItem.selectedVariant && pData.variants && Array.isArray(pData.variants)) {
-              const variant = pData.variants.find((v: any) => v.name === cartItem.selectedVariant);
-              if (variant) {
-                 if (variant.priceOverride !== undefined && variant.priceOverride !== null && variant.priceOverride !== '') {
+          // Pre-calculate pro-rata discount breakdown dictionary across all sellers
+          const discountBreakdownMap: Record<string, number> = {};
+          const cashbackBreakdownMap: Record<string, number> = {};
+          let remainingBreakdownDiscount = discountAmount;
+          let remainingBreakdownCashback = cashbackApplied;
+          let breakdownIdx = 0;
+          for (const sId of sellerIdsArray) {
+            const items = sellerGroups.get(sId) || [];
+            let sSub = 0;
+            for (const { cartItem, productSnap } of items) {
+              const pData = productSnap.data();
+              let targetP = pData.promoPrice || pData.price;
+              if (cartItem.selectedVariant && pData.variants && Array.isArray(pData.variants)) {
+                const variant = pData.variants.find((v: any) => v.name === cartItem.selectedVariant);
+                if (variant) {
+                  if (
+                    variant.priceOverride !== undefined &&
+                    variant.priceOverride !== null &&
+                    variant.priceOverride !== ""
+                  ) {
                     targetP = Number(variant.priceOverride);
-                 } else if (variant.priceDiff) {
+                  } else if (variant.priceDiff) {
                     targetP += parseInt(variant.priceDiff);
-                 }
+                  }
+                }
               }
-           }
-           sSub += targetP * cartItem.quantity;
-         }
-         let sDisc = 0;
-         if (discountAmount > 0 && subtotal > 0) {
-            if (breakdownIdx === sellerIdsArray.length - 1) {
-               sDisc = remainingBreakdownDiscount;
+              sSub += targetP * cartItem.quantity;
+            }
+            let sDisc = 0;
+            if (discountAmount > 0 && subtotal > 0) {
+              if (breakdownIdx === sellerIdsArray.length - 1) {
+                sDisc = remainingBreakdownDiscount;
+              } else {
+                sDisc = Math.round(discountAmount * (sSub / subtotal));
+                remainingBreakdownDiscount -= sDisc;
+              }
+            }
+            discountBreakdownMap[sId] = sDisc;
+
+            let sCash = 0;
+            if (cashbackApplied > 0 && subtotal > 0) {
+              if (breakdownIdx === sellerIdsArray.length - 1) {
+                sCash = remainingBreakdownCashback;
+              } else {
+                sCash = Math.round(cashbackApplied * (sSub / subtotal));
+                remainingBreakdownCashback -= sCash;
+              }
+            }
+            cashbackBreakdownMap[sId] = sCash;
+
+            breakdownIdx++;
+          }
+
+          for (const sellerId of sellerIdsArray) {
+            const groupItems = sellerGroups.get(sellerId) || [];
+            const shop = shopSnapshots.get(sellerId);
+
+            let sellerSubtotal = 0;
+            const sellerOrderItems: any[] = [];
+
+            for (const { cartItem, productSnap } of groupItems) {
+              const productData = productSnap.data();
+              const targetPrice = getProductPriceAndVerifyFlash(productData, cartItem, productSnap.id);
+
+              sellerSubtotal += targetPrice * cartItem.quantity;
+              sellerOrderItems.push({
+                id: productSnap.id,
+                name: productData.name,
+                price: targetPrice,
+                image: productData.image,
+                quantity: cartItem.quantity,
+                sellerId: sellerId,
+                sellerName: shop ? shop.name || shop.shopName || "Boutique" : "Boutique",
+                selectedVariant: cartItem.selectedVariant || null,
+              });
+            }
+
+            let sellerShippingCost: number;
+            if (shop && shop.shippingTariffs && shop.shippingTariffs[userWilaya] != null) {
+              sellerShippingCost = Number(shop.shippingTariffs[userWilaya]);
             } else {
-               sDisc = Math.round(discountAmount * (sSub / subtotal));
-               remainingBreakdownDiscount -= sDisc;
+              const sellerWilaya = shop?.address?.wilaya || "DEFAULT_ORIGIN";
+              const cleanWilaya = userWilaya.replace(/^\d+\s*-\s*/, "").trim();
+
+              let wFee: number | undefined = undefined;
+              // First check matrix for specific seller origin
+              if (matrixFees[sellerWilaya] && matrixFees[sellerWilaya][userWilaya] !== undefined) {
+                wFee = matrixFees[sellerWilaya][userWilaya];
+              } else if (matrixFees[sellerWilaya] && matrixFees[sellerWilaya][cleanWilaya] !== undefined) {
+                wFee = matrixFees[sellerWilaya][cleanWilaya];
+              } else if (matrixFees["DEFAULT_ORIGIN"] && matrixFees["DEFAULT_ORIGIN"][userWilaya] !== undefined) {
+                wFee = matrixFees["DEFAULT_ORIGIN"][userWilaya];
+              } else if (matrixFees["DEFAULT_ORIGIN"] && matrixFees["DEFAULT_ORIGIN"][cleanWilaya] !== undefined) {
+                wFee = matrixFees["DEFAULT_ORIGIN"][cleanWilaya];
+              } else if (dynWilayaFees[userWilaya] !== undefined) {
+                wFee = dynWilayaFees[userWilaya];
+              } else if (dynWilayaFees[cleanWilaya] !== undefined) {
+                wFee = dynWilayaFees[cleanWilaya];
+              }
+
+              let rawMethodPrice = wFee !== undefined ? wFee : globalBaseFee;
+              if (wFee === undefined && ALGERIA_SHIPPING_DATA[cleanWilaya]) {
+                rawMethodPrice = ALGERIA_SHIPPING_DATA[cleanWilaya].price;
+              }
+              const methodPrice =
+                req.body.deliveryMethod === "domicile" ? rawMethodPrice : Math.max(400, rawMethodPrice - 200);
+              sellerShippingCost = Math.round(methodPrice / 10) * 10;
             }
-         }
-         discountBreakdownMap[sId] = sDisc;
+            totalShipping += sellerShippingCost;
 
-         let sCash = 0;
-         if (cashbackApplied > 0 && subtotal > 0) {
-            if (breakdownIdx === sellerIdsArray.length - 1) {
-               sCash = remainingBreakdownCashback;
-            } else {
-               sCash = Math.round(cashbackApplied * (sSub / subtotal));
-               remainingBreakdownCashback -= sCash;
+            const sellerDiscount = discountBreakdownMap[sellerId] || 0;
+            const sellerCashbackApp = cashbackBreakdownMap[sellerId] || 0;
+            const sellerGrandTotal =
+              Math.max(0, sellerSubtotal - sellerDiscount - sellerCashbackApp) + sellerShippingCost;
+
+            // 100% Server-side Commission calculation
+            const commissionRate = shop?.commissionRate ?? globalCommissionRate;
+            const commissionAmount = (sellerSubtotal * commissionRate) / 100;
+            const sellerEarned = sellerGrandTotal - commissionAmount;
+
+            const subOrderRef = db.collection("orders").doc();
+            const subOrderDeliveryPin = Math.floor(100000 + Math.random() * 900000).toString();
+            const subOrderData = {
+              parentOrderId,
+              userId,
+              items: sellerOrderItems,
+              subtotal: sellerSubtotal,
+              shippingTotal: sellerShippingCost,
+              discountAmount: sellerDiscount,
+              cashbackApplied: sellerCashbackApp,
+              couponCode: appliedCouponData ? appliedCouponData.code : null,
+              total: sellerGrandTotal,
+              commissionRateApplied: commissionRate,
+              commissionAmount: commissionAmount,
+              sellerEarned: sellerEarned,
+              status: "pending",
+              paymentStatus: "unpaid",
+              shippingAddress,
+              billingAddress: req.body.billingAddress || shippingAddress,
+              sellerIds: [sellerId],
+              shippingBreakdown: { [sellerId]: sellerShippingCost },
+              discountBreakdown: discountBreakdownMap,
+              deliveryPin: subOrderDeliveryPin,
+              idempotencyKey: idempotencyKey || null,
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            };
+
+            subOrdersToCreate.push({ ref: subOrderRef, data: subOrderData });
+            groupIndex++;
+          }
+
+          const grandTotalBeforeWallet = Math.max(0, subtotal - discountAmount - cashbackApplied) + totalShipping;
+
+          let walletDeducted = 0;
+          if (useWallet) {
+            const walletBalanceAvailable = userData?.walletBalance || 0;
+            walletDeducted = Math.min(walletBalanceAvailable, grandTotalBeforeWallet);
+          }
+          const codAmount = grandTotalBeforeWallet - walletDeducted;
+
+          // Split walletDeducted pro-rata among sub-orders
+          let remainingWalletToDeduct = walletDeducted;
+          let sIdx = 0;
+          for (const item of subOrdersToCreate) {
+            let sellerWalletDeducted = 0;
+            if (walletDeducted > 0 && grandTotalBeforeWallet > 0) {
+              if (sIdx === subOrdersToCreate.length - 1) {
+                sellerWalletDeducted = remainingWalletToDeduct;
+              } else {
+                sellerWalletDeducted = Math.round(walletDeducted * (item.data.total / grandTotalBeforeWallet));
+                remainingWalletToDeduct -= sellerWalletDeducted;
+              }
             }
-         }
-         cashbackBreakdownMap[sId] = sCash;
+            item.data.walletDeducted = sellerWalletDeducted;
+            item.data.codAmount = item.data.total - sellerWalletDeducted;
+            item.data.paymentMethod =
+              sellerWalletDeducted === item.data.total
+                ? "wallet"
+                : sellerWalletDeducted > 0
+                  ? "split_wallet_cod"
+                  : "cod";
+            item.data.paymentStatus = item.data.codAmount === 0 ? "paid" : "unpaid";
+            sIdx++;
+          }
 
-         breakdownIdx++;
-      }
+          // --- ÉTAPE 3 : ÉCRITURES PURES ---
 
-      for (const sellerId of sellerIdsArray) {
-        const groupItems = sellerGroups.get(sellerId) || [];
-        const shop = shopSnapshots.get(sellerId);
-        
-        let sellerSubtotal = 0;
-        const sellerOrderItems: any[] = [];
-        
-        for (const { cartItem, productSnap } of groupItems) {
-           const productData = productSnap.data();
-           let targetPrice = getProductPriceAndVerifyFlash(productData, cartItem, productSnap.id);
-           
+          // 3.1 Mise à jour des stocks
+          for (const req of stockUpdates) {
+            t.update(req.ref, req.update);
+          }
 
-           sellerSubtotal += targetPrice * cartItem.quantity;
-           sellerOrderItems.push({
-             id: productSnap.id,
-             name: productData.name,
-             price: targetPrice,
-             image: productData.image,
-             quantity: cartItem.quantity,
-             sellerId: sellerId,
-             sellerName: shop ? (shop.name || shop.shopName || "Boutique") : "Boutique",
-             selectedVariant: cartItem.selectedVariant || null
-           });
-        }
+          // 3.2 Utilisation du coupon
+          if (couponDoc) {
+            t.update(couponDoc.ref, {
+              usageCount: admin.firestore.FieldValue.increment(1),
+              usedBy: admin.firestore.FieldValue.arrayUnion(userId),
+            });
+          }
 
-        let sellerShippingCost = 0; 
-        if (shop && shop.shippingTariffs && shop.shippingTariffs[userWilaya] != null) {
-           sellerShippingCost = Number(shop.shippingTariffs[userWilaya]);
-        } else {
-            const sellerWilaya = shop?.address?.wilaya || "DEFAULT_ORIGIN";
-            const cleanWilaya = userWilaya.replace(/^\d+\s*-\s*/, '').trim();
-            
-            let wFee: number | undefined = undefined;
-            // First check matrix for specific seller origin
-            if (matrixFees[sellerWilaya] && matrixFees[sellerWilaya][userWilaya] !== undefined) {
-               wFee = matrixFees[sellerWilaya][userWilaya];
-            } else if (matrixFees[sellerWilaya] && matrixFees[sellerWilaya][cleanWilaya] !== undefined) {
-               wFee = matrixFees[sellerWilaya][cleanWilaya];
-            } else if (matrixFees["DEFAULT_ORIGIN"] && matrixFees["DEFAULT_ORIGIN"][userWilaya] !== undefined) {
-               wFee = matrixFees["DEFAULT_ORIGIN"][userWilaya];
-            } else if (matrixFees["DEFAULT_ORIGIN"] && matrixFees["DEFAULT_ORIGIN"][cleanWilaya] !== undefined) {
-               wFee = matrixFees["DEFAULT_ORIGIN"][cleanWilaya];
-            } else if (dynWilayaFees[userWilaya] !== undefined) {
-               wFee = dynWilayaFees[userWilaya];
-            } else if (dynWilayaFees[cleanWilaya] !== undefined) {
-               wFee = dynWilayaFees[cleanWilaya];
+          // 3.3 Utilisation du cashback de l'acheteur
+          if (cashbackApplied > 0) {
+            t.update(userRef, {
+              cashbackBalance: admin.firestore.FieldValue.increment(-cashbackApplied),
+            });
+          }
+
+          // 3.4 Utilisation du solde du Wallet (Avec protection stricte anti-race condition)
+          if (walletDeducted > 0) {
+            if ((userData.walletBalance || 0) < walletDeducted) {
+              throw new Error("Solde du portefeuille insuffisant pour finaliser cette commande.");
             }
-            
-            let rawMethodPrice = wFee !== undefined ? wFee : globalBaseFee;
-            if (wFee === undefined && ALGERIA_SHIPPING_DATA[cleanWilaya]) {
-               rawMethodPrice = ALGERIA_SHIPPING_DATA[cleanWilaya].price;
-            }
-           const methodPrice = req.body.deliveryMethod === 'domicile' ? rawMethodPrice : (Math.max(400, rawMethodPrice - 200));
-           sellerShippingCost = Math.round(methodPrice / 10) * 10;
-        }
-        totalShipping += sellerShippingCost;
+            t.update(userRef, {
+              walletBalance: admin.firestore.FieldValue.increment(-walletDeducted),
+            });
 
-        const sellerDiscount = discountBreakdownMap[sellerId] || 0;
-        const sellerCashbackApp = cashbackBreakdownMap[sellerId] || 0;
-        const sellerGrandTotal = Math.max(0, sellerSubtotal - sellerDiscount - sellerCashbackApp) + sellerShippingCost;
-        
-        // 100% Server-side Commission calculation
-        const commissionRate = shop?.commissionRate ?? globalCommissionRate;
-        const commissionAmount = (sellerSubtotal * commissionRate) / 100;
-        const sellerEarned = sellerGrandTotal - commissionAmount;
+            const walletTxRef = db.collection("wallet_transactions").doc();
+            t.set(walletTxRef, {
+              userId,
+              orderId: parentOrderId,
+              amount: -walletDeducted,
+              type: "purchase",
+              description: `Achat partiel/total par Wallet pour la commande #${parentOrderId}`,
+              createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              status: "completed",
+            });
+          }
 
-        const subOrderRef = db.collection("orders").doc();
-        const subOrderDeliveryPin = Math.floor(100000 + Math.random() * 900000).toString();
-        const subOrderData = {
-          parentOrderId,
-          userId,
-          items: sellerOrderItems,
-          subtotal: sellerSubtotal,
-          shippingTotal: sellerShippingCost,
-          discountAmount: sellerDiscount,
-          cashbackApplied: sellerCashbackApp,
-          couponCode: appliedCouponData ? appliedCouponData.code : null,
-          total: sellerGrandTotal,
-          commissionRateApplied: commissionRate,
-          commissionAmount: commissionAmount,
-          sellerEarned: sellerEarned,
-          status: 'pending',
-          paymentStatus: 'unpaid',
-          shippingAddress,
-          billingAddress: req.body.billingAddress || shippingAddress,
-          sellerIds: [sellerId],
-          shippingBreakdown: { [sellerId]: sellerShippingCost },
-          discountBreakdown: discountBreakdownMap,
-          deliveryPin: subOrderDeliveryPin,
-          idempotencyKey: idempotencyKey || null,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          updatedAt: admin.firestore.FieldValue.serverTimestamp()
-        };
+          // 3.5 Création des sous-commandes
+          for (const subOrder of subOrdersToCreate) {
+            t.set(subOrder.ref, subOrder.data);
+          }
 
-        subOrdersToCreate.push({ ref: subOrderRef, data: subOrderData });
-        groupIndex++;
-      }
+          // 3.6 Création de la commande globale (OrderMaster)
+          const masterOrderRef = db.collection("order_masters").doc(parentOrderId);
+          const masterOrderData = {
+            id: parentOrderId,
+            userId,
+            subtotal,
+            shippingTotal: totalShipping,
+            discountAmount,
+            cashbackApplied,
+            walletDeducted,
+            codAmount,
+            paymentMethod:
+              walletDeducted === grandTotalBeforeWallet ? "wallet" : walletDeducted > 0 ? "split_wallet_cod" : "cod",
+            total: grandTotalBeforeWallet,
+            status: "pending",
+            shippingAddress,
+            billingAddress: req.body.billingAddress || shippingAddress,
+            subOrderIds: subOrdersToCreate.map((so) => so.ref.id),
+            couponCode: appliedCouponData ? appliedCouponData.code : null,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          };
+          t.set(masterOrderRef, masterOrderData);
 
-      const grandTotalBeforeWallet = Math.max(0, subtotal - discountAmount - cashbackApplied) + totalShipping;
-      
-      let walletDeducted = 0;
-      if (useWallet) {
-         const walletBalanceAvailable = userData?.walletBalance || 0;
-         walletDeducted = Math.min(walletBalanceAvailable, grandTotalBeforeWallet);
-      }
-      const codAmount = grandTotalBeforeWallet - walletDeducted;
-
-      // Split walletDeducted pro-rata among sub-orders
-      let remainingWalletToDeduct = walletDeducted;
-      let sIdx = 0;
-      for (const item of subOrdersToCreate) {
-        let sellerWalletDeducted = 0;
-        if (walletDeducted > 0 && grandTotalBeforeWallet > 0) {
-           if (sIdx === subOrdersToCreate.length - 1) {
-              sellerWalletDeducted = remainingWalletToDeduct;
-           } else {
-              sellerWalletDeducted = Math.round(walletDeducted * (item.data.total / grandTotalBeforeWallet));
-              remainingWalletToDeduct -= sellerWalletDeducted;
-           }
-        }
-        item.data.walletDeducted = sellerWalletDeducted;
-        item.data.codAmount = item.data.total - sellerWalletDeducted;
-        item.data.paymentMethod = sellerWalletDeducted === item.data.total ? 'wallet' : (sellerWalletDeducted > 0 ? 'split_wallet_cod' : 'cod');
-        item.data.paymentStatus = item.data.codAmount === 0 ? 'paid' : 'unpaid';
-        sIdx++;
-      }
-
-      // --- ÉTAPE 3 : ÉCRITURES PURES ---
-      
-      // 3.1 Mise à jour des stocks
-      for (const req of stockUpdates) {
-        t.update(req.ref, req.update);
-      }
-
-      // 3.2 Utilisation du coupon
-      if (couponDoc) {
-        t.update(couponDoc.ref, { 
-          usageCount: admin.firestore.FieldValue.increment(1),
-          usedBy: admin.firestore.FieldValue.arrayUnion(userId)
-        });
-      }
-
-      // 3.3 Utilisation du cashback de l'acheteur
-      if (cashbackApplied > 0) {
-         t.update(userRef, {
-            cashbackBalance: admin.firestore.FieldValue.increment(-cashbackApplied)
-         });
-      }
-
-      // 3.4 Utilisation du solde du Wallet (Avec protection stricte anti-race condition)
-      if (walletDeducted > 0) {
-         if ((userData.walletBalance || 0) < walletDeducted) {
-            throw new Error("Solde du portefeuille insuffisant pour finaliser cette commande.");
-         }
-         t.update(userRef, {
-            walletBalance: admin.firestore.FieldValue.increment(-walletDeducted)
-         });
-
-         const walletTxRef = db.collection("wallet_transactions").doc();
-         t.set(walletTxRef, {
-           userId,
-           orderId: parentOrderId,
-           amount: -walletDeducted,
-           type: 'purchase',
-           description: `Achat partiel/total par Wallet pour la commande #${parentOrderId}`,
-           createdAt: admin.firestore.FieldValue.serverTimestamp(),
-           status: 'completed'
-         });
-      }
-
-      // 3.5 Création des sous-commandes
-      for (const subOrder of subOrdersToCreate) {
-        t.set(subOrder.ref, subOrder.data);
-      }
-
-      // 3.6 Création de la commande globale (OrderMaster)
-      const masterOrderRef = db.collection("order_masters").doc(parentOrderId);
-      const masterOrderData = {
-        id: parentOrderId,
-        userId,
-        subtotal,
-        shippingTotal: totalShipping,
-        discountAmount,
-        cashbackApplied,
-        walletDeducted,
-        codAmount,
-        paymentMethod: walletDeducted === grandTotalBeforeWallet ? 'wallet' : (walletDeducted > 0 ? 'split_wallet_cod' : 'cod'),
-        total: grandTotalBeforeWallet,
-        status: 'pending',
-        shippingAddress,
-        billingAddress: req.body.billingAddress || shippingAddress,
-        subOrderIds: subOrdersToCreate.map(so => so.ref.id),
-        couponCode: appliedCouponData ? appliedCouponData.code : null,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      };
-      t.set(masterOrderRef, masterOrderData);
-
-      return { orderId: subOrdersToCreate[0].ref.id, total: grandTotalBeforeWallet, walletDeducted, codAmount };
-    }), userId);
+          return { orderId: subOrdersToCreate[0].ref.id, total: grandTotalBeforeWallet, walletDeducted, codAmount };
+        }),
+      userId
+    );
 
     // Enforce instant velocity limits right after placing the order
     for (const sellerId of sellerIdsSet) {
-       await checkSellerVelocityLimit(sellerId);
+      await checkSellerVelocityLimit(sellerId);
     }
 
     // Process out-of-band email alerts asynchronously
     if (emailAlerts.length > 0) {
-       Promise.all(emailAlerts.map(async alert => {
+      Promise.all(
+        emailAlerts.map(async (alert) => {
           try {
-             const userSnap = await db.collection("users").doc(alert.sellerId).get();
-             const email = userSnap.data()?.email;
-             if (email) {
-                await sendLowStockEmail(email, alert.message);
-             }
+            const userSnap = await db.collection("users").doc(alert.sellerId).get();
+            const email = userSnap.data()?.email;
+            if (email) {
+              await sendLowStockEmail(email, alert.message);
+            }
           } catch (e) {
-             console.error("Erreur lors de l'envoi de l'email de stock bas", e);
+            console.error("Erreur lors de l'envoi de l'email de stock bas", e);
           }
-       })).catch(console.error);
+        })
+      ).catch(console.error);
     }
 
-    res.json({ 
-       success: true, 
-       orderId: result.orderId, 
-       grandTotal: result.total, 
-       walletDeducted: result.walletDeducted, 
-       codAmount: result.codAmount 
+    res.json({
+      success: true,
+      orderId: result.orderId,
+      grandTotal: result.total,
+      walletDeducted: result.walletDeducted,
+      codAmount: result.codAmount,
     });
   } catch (error: any) {
     console.error("Place order err:", error);
-    if (error.code === 'PRICE_CONFLICT') {
-       return res.status(409).json({ error: error.message });
+    if (error.code === "PRICE_CONFLICT") {
+      return res.status(409).json({ error: error.message });
     }
     res.status(400).json({ error: error.message || "Erreur de la commande." });
   }
@@ -732,43 +788,49 @@ router.post("/place-order", authenticateToken, async (req: AuthenticatedRequest,
 
 router.post("/validate-coupon", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   const { code, subtotal } = req.body;
-  
+
   if (!code) {
     return res.status(400).json({ error: "Code requis" });
   }
 
   try {
     const q = await db.collection("coupons").where("code", "==", code.toUpperCase()).limit(1).get();
-    
+
     if (q.empty) {
       return res.status(400).json({ error: "Code promo invalide ou expiré." });
     }
-    
+
     const couponDoc = q.docs[0];
     const couponData = { id: couponDoc.id, ...couponDoc.data() } as any;
-    
+
     if (!couponData.isActive) {
       return res.status(400).json({ error: "Ce code promo n'est plus actif." });
     }
-    
+
     const now = new Date();
     const expiryDateRaw = couponData.expiresAt || couponData.expiryDate;
-    const expiresAt = expiryDateRaw?.toDate ? expiryDateRaw.toDate() : (expiryDateRaw ? new Date(expiryDateRaw) : undefined);
-    
+    const expiresAt = expiryDateRaw?.toDate
+      ? expiryDateRaw.toDate()
+      : expiryDateRaw
+        ? new Date(expiryDateRaw)
+        : undefined;
+
     if (expiresAt && expiresAt < now) {
       return res.status(400).json({ error: "Ce code promo a expiré." });
     }
-    
+
     if (subtotal < (couponData.minOrderValue || 0)) {
-      return res.status(400).json({ error: `Un minimum de commande de ${couponData.minOrderValue || 0} DA est requis.` });
+      return res
+        .status(400)
+        .json({ error: `Un minimum de commande de ${couponData.minOrderValue || 0} DA est requis.` });
     }
-    
+
     const currentUses = Number(couponData.usedCount || couponData.usageCount || 0);
     const maxUsesLimit = Number(couponData.maxUses || couponData.usageLimit || 0);
     if (maxUsesLimit > 0 && currentUses >= maxUsesLimit) {
       return res.status(400).json({ error: "Ce code promo a atteint sa limite d'utilisation." });
     }
-    
+
     res.json({ success: true, coupon: couponData });
   } catch (error: any) {
     console.error("Coupon validation error:", error);
@@ -780,10 +842,10 @@ router.post("/webhooks/yalidine", async (req: AuthenticatedRequest, res: Respons
   try {
     // 1. Sécurisation et Validation de l'Endpoint Webhook
     const apiKey = process.env.DELIVERY_API_KEY || process.env.YALIDINE_WEBHOOK_SECRET;
-    const reqKey = req.headers['x-api-key'] || req.query.token || req.headers['authorization'];
-    
+    const reqKey = req.headers["x-api-key"] || req.query.token || req.headers["authorization"];
+
     if (apiKey && reqKey !== apiKey && reqKey !== `Bearer ${apiKey}`) {
-       return res.status(401).json({ error: "Accès non autorisé au Webhook. Signature invalide." });
+      return res.status(401).json({ error: "Accès non autorisé au Webhook. Signature invalide." });
     }
 
     const payload = req.body;
@@ -803,7 +865,7 @@ router.post("/webhooks/yalidine", async (req: AuthenticatedRequest, res: Respons
     let targetStatus = "TRACKING_STATUS_IN_TRANSIT";
     let statusSeverity = "normal";
     let orderStatus = "in_transit";
-    
+
     const s = rawStatus.toLowerCase();
     if (s.includes("livré") || s.includes("delivered")) {
       targetStatus = "TRACKING_STATUS_DELIVERED";
@@ -834,12 +896,12 @@ router.post("/webhooks/yalidine", async (req: AuthenticatedRequest, res: Respons
       severity: statusSeverity,
       timestamp: admin.firestore.Timestamp.fromDate(timestamp),
       location: payload.location || "",
-      reason: payload.reason || ""
+      reason: payload.reason || "",
     };
 
     // 3. Garantie d'Idempotence avec Transaction
     const orderRef = db.collection("orders").doc(order_id);
-    
+
     await db.runTransaction(async (transaction) => {
       const orderDoc = await transaction.get(orderRef);
       if (!orderDoc.exists) {
@@ -850,45 +912,50 @@ router.post("/webhooks/yalidine", async (req: AuthenticatedRequest, res: Respons
         }
         const realOrderRef = querySnapshot.docs[0].ref;
         const realOrderDoc = await transaction.get(realOrderRef);
-        
+
         const existingEvents = realOrderDoc.data()?.carrier_tracking_events || [];
         const eventExists = existingEvents.some((e: any) => e.event_id === event_id);
-        
+
         if (!eventExists) {
           const updatePayload: any = {
             status: orderStatus,
             carrier_tracking_events: admin.firestore.FieldValue.arrayUnion(newEvent),
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
           };
 
           const data = realOrderDoc.data() || {};
           const cStatus = data.status;
 
           // Si c'est un échec de livraison (retourné avant d'être livré)
-          if (orderStatus === "returned" && cStatus !== "returned" && cStatus !== "returning" && cStatus !== "refunded") {
-             const buyerId = data.userId || data.buyerId;
-             if (buyerId && (data.walletDeducted > 0 || data.cashbackApplied > 0)) {
-                const buyerRef = db.collection("users").doc(buyerId);
-                const updatesForBuyer: any = {};
-                if (data.walletDeducted > 0) {
-                   updatesForBuyer.walletBalance = admin.firestore.FieldValue.increment(data.walletDeducted);
-                   const walletTxRef = db.collection("wallet_transactions").doc();
-                   transaction.set(walletTxRef, {
-                     userId: buyerId,
-                     orderId: realOrderRef.id,
-                     amount: data.walletDeducted,
-                     type: 'refund',
-                     description: `Remboursement suite à échec de livraison #${realOrderRef.id.substring(0, 8)}`,
-                     createdAt: new Date().toISOString(),
-                     status: 'completed'
-                   });
-                }
-                if (data.cashbackApplied > 0) {
-                   updatesForBuyer.cashbackBalance = admin.firestore.FieldValue.increment(data.cashbackApplied);
-                }
-                transaction.update(buyerRef, updatesForBuyer);
-                updatePayload.paymentStatus = data.walletDeducted > 0 ? "refunded" : (data.paymentStatus || "unpaid");
-             }
+          if (
+            orderStatus === "returned" &&
+            cStatus !== "returned" &&
+            cStatus !== "returning" &&
+            cStatus !== "refunded"
+          ) {
+            const buyerId = data.userId || data.buyerId;
+            if (buyerId && (data.walletDeducted > 0 || data.cashbackApplied > 0)) {
+              const buyerRef = db.collection("users").doc(buyerId);
+              const updatesForBuyer: any = {};
+              if (data.walletDeducted > 0) {
+                updatesForBuyer.walletBalance = admin.firestore.FieldValue.increment(data.walletDeducted);
+                const walletTxRef = db.collection("wallet_transactions").doc();
+                transaction.set(walletTxRef, {
+                  userId: buyerId,
+                  orderId: realOrderRef.id,
+                  amount: data.walletDeducted,
+                  type: "refund",
+                  description: `Remboursement suite à échec de livraison #${realOrderRef.id.substring(0, 8)}`,
+                  createdAt: new Date().toISOString(),
+                  status: "completed",
+                });
+              }
+              if (data.cashbackApplied > 0) {
+                updatesForBuyer.cashbackBalance = admin.firestore.FieldValue.increment(data.cashbackApplied);
+              }
+              transaction.update(buyerRef, updatesForBuyer);
+              updatePayload.paymentStatus = data.walletDeducted > 0 ? "refunded" : data.paymentStatus || "unpaid";
+            }
           }
 
           transaction.update(realOrderRef, updatePayload);
@@ -896,41 +963,46 @@ router.post("/webhooks/yalidine", async (req: AuthenticatedRequest, res: Respons
       } else {
         const existingEvents = orderDoc.data()?.carrier_tracking_events || [];
         const eventExists = existingEvents.some((e: any) => e.event_id === event_id);
-        
+
         if (!eventExists) {
           const updatePayload: any = {
             status: orderStatus,
             carrier_tracking_events: admin.firestore.FieldValue.arrayUnion(newEvent),
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
           };
 
           const data = orderDoc.data() || {};
           const cStatus = data.status;
 
-          if (orderStatus === "returned" && cStatus !== "returned" && cStatus !== "returning" && cStatus !== "refunded") {
-             const buyerId = data.userId || data.buyerId;
-             if (buyerId && (data.walletDeducted > 0 || data.cashbackApplied > 0)) {
-                const buyerRef = db.collection("users").doc(buyerId);
-                const updatesForBuyer: any = {};
-                if (data.walletDeducted > 0) {
-                   updatesForBuyer.walletBalance = admin.firestore.FieldValue.increment(data.walletDeducted);
-                   const walletTxRef = db.collection("wallet_transactions").doc();
-                   transaction.set(walletTxRef, {
-                     userId: buyerId,
-                     orderId: orderRef.id,
-                     amount: data.walletDeducted,
-                     type: 'refund',
-                     description: `Remboursement suite à échec de livraison #${orderRef.id.substring(0, 8)}`,
-                     createdAt: new Date().toISOString(),
-                     status: 'completed'
-                   });
-                }
-                if (data.cashbackApplied > 0) {
-                   updatesForBuyer.cashbackBalance = admin.firestore.FieldValue.increment(data.cashbackApplied);
-                }
-                transaction.update(buyerRef, updatesForBuyer);
-                updatePayload.paymentStatus = data.walletDeducted > 0 ? "refunded" : (data.paymentStatus || "unpaid");
-             }
+          if (
+            orderStatus === "returned" &&
+            cStatus !== "returned" &&
+            cStatus !== "returning" &&
+            cStatus !== "refunded"
+          ) {
+            const buyerId = data.userId || data.buyerId;
+            if (buyerId && (data.walletDeducted > 0 || data.cashbackApplied > 0)) {
+              const buyerRef = db.collection("users").doc(buyerId);
+              const updatesForBuyer: any = {};
+              if (data.walletDeducted > 0) {
+                updatesForBuyer.walletBalance = admin.firestore.FieldValue.increment(data.walletDeducted);
+                const walletTxRef = db.collection("wallet_transactions").doc();
+                transaction.set(walletTxRef, {
+                  userId: buyerId,
+                  orderId: orderRef.id,
+                  amount: data.walletDeducted,
+                  type: "refund",
+                  description: `Remboursement suite à échec de livraison #${orderRef.id.substring(0, 8)}`,
+                  createdAt: new Date().toISOString(),
+                  status: "completed",
+                });
+              }
+              if (data.cashbackApplied > 0) {
+                updatesForBuyer.cashbackBalance = admin.firestore.FieldValue.increment(data.cashbackApplied);
+              }
+              transaction.update(buyerRef, updatesForBuyer);
+              updatePayload.paymentStatus = data.walletDeducted > 0 ? "refunded" : data.paymentStatus || "unpaid";
+            }
           }
 
           transaction.update(orderRef, updatePayload);
@@ -959,7 +1031,7 @@ router.post("/prepare-shipment", authenticateToken, authorizeSeller, async (req:
     for (const id of idsToProcess) {
       const orderDoc = await db.collection("orders").doc(id).get();
       const orderData = orderDoc.data();
-      const isUserAdmin = req.user.role === 'admin';
+      const isUserAdmin = req.user.role === "admin";
       const isUserSeller = orderData?.sellerIds?.includes(sellerId) || orderData?.sellerId === sellerId;
       if (!orderDoc.exists || (!isUserAdmin && !isUserSeller)) {
         continue;
@@ -974,15 +1046,15 @@ router.post("/prepare-shipment", authenticateToken, authorizeSeller, async (req:
         trackingId: mockResponse.tracking_id,
         labelUrl: mockResponse.pdf_label_url,
         status: "shipped", // Update status to shipped directly so it's ready for delivery
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
-      
+
       // Log event
       await db.collection("orders").doc(id).collection("order_logs").add({
-         status: "shipped",
-         type: "label_generated",
-         date: admin.firestore.FieldValue.serverTimestamp(),
-         trackingId: mockResponse.tracking_id
+        status: "shipped",
+        type: "label_generated",
+        date: admin.firestore.FieldValue.serverTimestamp(),
+        trackingId: mockResponse.tracking_id,
       });
 
       trackingNumbers[id] = mockResponse.tracking_id;
@@ -992,7 +1064,7 @@ router.post("/prepare-shipment", authenticateToken, authorizeSeller, async (req:
       res.json({
         tracking_id: trackingNumbers[orderId],
         pdf_label_url: `https://api.livreur.com/v1/labels/${orderId}.pdf`,
-        status: "success"
+        status: "success",
       });
     } else {
       res.json({ trackingNumbers, pdfUrl, status: "success" });
@@ -1002,11 +1074,10 @@ router.post("/prepare-shipment", authenticateToken, authorizeSeller, async (req:
   }
 });
 
-
 router.post("/cron/sync-tracking", async (req: Request, res: Response) => {
   try {
     // Vérifier un secret Cron
-    const cronSecret = req.headers['x-cron-secret'] || req.query.secret;
+    const cronSecret = req.headers["x-cron-secret"] || req.query.secret;
     if (process.env.CRON_SECRET && cronSecret !== process.env.CRON_SECRET) {
       return res.status(401).json({ error: "Unauthorized cron access" });
     }
@@ -1015,22 +1086,20 @@ router.post("/cron/sync-tracking", async (req: Request, res: Response) => {
     const apiToken = process.env.YALIDINE_API_TOKEN;
 
     if (!apiId || !apiToken) {
-       console.log("Yalidine API credentials missing. Skipping sync.");
-       return res.json({ success: true, syncedCount: 0, message: "Credentials missing" });
+      console.log("Yalidine API credentials missing. Skipping sync.");
+      return res.json({ success: true, syncedCount: 0, message: "Credentials missing" });
     }
 
-    const snapshot = await db.collection("orders")
-      .where("status", "in", ["processing", "shipped", "in_transit"])
-      .get();
+    const snapshot = await db.collection("orders").where("status", "in", ["processing", "shipped", "in_transit"]).get();
 
     let syncedCount = 0;
-    
+
     // Pour ne pas dépasser le rate limit, on requête Yalidine par batchs si nécessaire.
     // L'API Yalidine /v1/histories/ supporte de multiples tracking_numbers séparés par virgule.
-    const trackingIds = snapshot.docs.map(d => d.data().trackingId).filter(Boolean);
-    
+    const trackingIds = snapshot.docs.map((d) => d.data().trackingId).filter(Boolean);
+
     if (trackingIds.length === 0) {
-       return res.json({ success: true, syncedCount: 0, message: "No active orders to sync" });
+      return res.json({ success: true, syncedCount: 0, message: "No active orders to sync" });
     }
 
     // On découpe en paquets de 50 pour l'URL
@@ -1038,16 +1107,16 @@ router.post("/cron/sync-tracking", async (req: Request, res: Response) => {
     for (let i = 0; i < trackingIds.length; i += chunkSize) {
       const chunk = trackingIds.slice(i, i + chunkSize);
       try {
-        const response = await fetch(`https://api.yalidine.com/v1/histories/?tracking=${chunk.join(',')}`, {
-          headers: { 
-             "X-API-ID": apiId, 
-             "X-API-TOKEN": apiToken 
-          }
+        const response = await fetch(`https://api.yalidine.com/v1/histories/?tracking=${chunk.join(",")}`, {
+          headers: {
+            "X-API-ID": apiId,
+            "X-API-TOKEN": apiToken,
+          },
         });
 
         if (!response.ok) {
-           console.error("Yalidine sync failed for chunk", chunk, await response.text());
-           continue;
+          console.error("Yalidine sync failed for chunk", chunk, await response.text());
+          continue;
         }
 
         const json = await response.json();
@@ -1056,117 +1125,123 @@ router.post("/cron/sync-tracking", async (req: Request, res: Response) => {
         // Grouper par trackingId
         const trackingEventsMap = new Map<string, any[]>();
         for (const item of dataArray) {
-           const trc = item.tracking;
-           if (!trackingEventsMap.has(trc)) trackingEventsMap.set(trc, []);
-           trackingEventsMap.get(trc)!.push(item);
+          const trc = item.tracking;
+          if (!trackingEventsMap.has(trc)) trackingEventsMap.set(trc, []);
+          trackingEventsMap.get(trc)!.push(item);
         }
 
         for (const [trackingNumber, events] of trackingEventsMap.entries()) {
-           // Trouver la commande
-           const orderQuery = await db.collection("orders").where("trackingId", "==", trackingNumber).limit(1).get();
-           if (orderQuery.empty) continue;
-           
-           const orderRef = orderQuery.docs[0].ref;
-           
-           await db.runTransaction(async (transaction) => {
-             const doc = await transaction.get(orderRef);
-             const orderData = doc.data() || {};
-             const existingEvents = orderData.carrier_tracking_events || [];
-             
-             let hasNewEvents = false;
-             const updatedEvents = [...existingEvents];
-             let latestOrderStatus = orderData.status;
+          // Trouver la commande
+          const orderQuery = await db.collection("orders").where("trackingId", "==", trackingNumber).limit(1).get();
+          if (orderQuery.empty) continue;
 
-             // Trier les événements Yalidine par date
-             events.sort((a, b) => new Date(a.date_heure).getTime() - new Date(b.date_heure).getTime());
+          const orderRef = orderQuery.docs[0].ref;
 
-             for (const evt of events) {
-                const rawStatus = evt.status;
-                const event_id = evt.id ? String(evt.id) : `${rawStatus}_${evt.date_heure}`;
-                
-                const exists = updatedEvents.some((e: any) => e.event_id === event_id);
-                if (exists) continue;
+          await db.runTransaction(async (transaction) => {
+            const doc = await transaction.get(orderRef);
+            const orderData = doc.data() || {};
+            const existingEvents = orderData.carrier_tracking_events || [];
 
-                let targetStatus = "TRACKING_STATUS_IN_TRANSIT";
-                let statusSeverity = "normal";
-                let computedOrderStatus = "in_transit";
-                
-                const s = rawStatus.toLowerCase();
-                if (s.includes("livré") || s.includes("delivered") || s.includes("livre")) {
-                  targetStatus = "TRACKING_STATUS_DELIVERED";
-                  statusSeverity = "success";
-                  computedOrderStatus = "delivered";
-                } else if (s.includes("retour") || s.includes("returned")) {
-                  targetStatus = "TRACKING_STATUS_RETURNED";
-                  statusSeverity = "error";
-                  computedOrderStatus = "returned";
-                } else if (s.includes("expédié") || s.includes("shipped")) {
-                  targetStatus = "TRACKING_STATUS_SHIPPED";
-                  statusSeverity = "normal";
-                  computedOrderStatus = "shipped";
-                } else if (s.includes("annulé") || s.includes("canceled")) {
-                  targetStatus = "TRACKING_STATUS_CANCELED";
-                  statusSeverity = "error";
-                  computedOrderStatus = "cancelled";
-                } else if (s.includes("anomalie") || s.includes("échec")) {
-                  targetStatus = "TRACKING_STATUS_ALERT";
-                  statusSeverity = "warning";
+            let hasNewEvents = false;
+            const updatedEvents = [...existingEvents];
+            let latestOrderStatus = orderData.status;
+
+            // Trier les événements Yalidine par date
+            events.sort((a, b) => new Date(a.date_heure).getTime() - new Date(b.date_heure).getTime());
+
+            for (const evt of events) {
+              const rawStatus = evt.status;
+              const event_id = evt.id ? String(evt.id) : `${rawStatus}_${evt.date_heure}`;
+
+              const exists = updatedEvents.some((e: any) => e.event_id === event_id);
+              if (exists) continue;
+
+              let targetStatus = "TRACKING_STATUS_IN_TRANSIT";
+              let statusSeverity = "normal";
+              let computedOrderStatus = "in_transit";
+
+              const s = rawStatus.toLowerCase();
+              if (s.includes("livré") || s.includes("delivered") || s.includes("livre")) {
+                targetStatus = "TRACKING_STATUS_DELIVERED";
+                statusSeverity = "success";
+                computedOrderStatus = "delivered";
+              } else if (s.includes("retour") || s.includes("returned")) {
+                targetStatus = "TRACKING_STATUS_RETURNED";
+                statusSeverity = "error";
+                computedOrderStatus = "returned";
+              } else if (s.includes("expédié") || s.includes("shipped")) {
+                targetStatus = "TRACKING_STATUS_SHIPPED";
+                statusSeverity = "normal";
+                computedOrderStatus = "shipped";
+              } else if (s.includes("annulé") || s.includes("canceled")) {
+                targetStatus = "TRACKING_STATUS_CANCELED";
+                statusSeverity = "error";
+                computedOrderStatus = "cancelled";
+              } else if (s.includes("anomalie") || s.includes("échec")) {
+                targetStatus = "TRACKING_STATUS_ALERT";
+                statusSeverity = "warning";
+              }
+
+              updatedEvents.push({
+                event_id,
+                status_key: targetStatus,
+                raw_status: rawStatus,
+                severity: statusSeverity,
+                timestamp: admin.firestore.Timestamp.fromDate(new Date(evt.date_heure)),
+                location: evt.wilaya || evt.commune || "",
+                reason: evt.motif || "",
+              });
+
+              latestOrderStatus = computedOrderStatus;
+              hasNewEvents = true;
+            }
+
+            if (hasNewEvents) {
+              const updatePayload: any = {
+                status: latestOrderStatus,
+                carrier_tracking_events: updatedEvents,
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              };
+
+              const cStatus = orderData.status;
+
+              // Refund logic
+              if (
+                latestOrderStatus === "returned" &&
+                cStatus !== "returned" &&
+                cStatus !== "returning" &&
+                cStatus !== "refunded"
+              ) {
+                const buyerId = orderData.userId || orderData.buyerId;
+                if (buyerId && (orderData.walletDeducted > 0 || orderData.cashbackApplied > 0)) {
+                  const buyerRef = db.collection("users").doc(buyerId);
+                  const updatesForBuyer: any = {};
+                  if (orderData.walletDeducted > 0) {
+                    updatesForBuyer.walletBalance = admin.firestore.FieldValue.increment(orderData.walletDeducted);
+                    const walletTxRef = db.collection("wallet_transactions").doc();
+                    transaction.set(walletTxRef, {
+                      userId: buyerId,
+                      orderId: orderRef.id,
+                      amount: orderData.walletDeducted,
+                      type: "refund",
+                      description: `Remboursement suite à échec de livraison #${orderRef.id.substring(0, 8)}`,
+                      createdAt: new Date().toISOString(),
+                      status: "completed",
+                    });
+                  }
+                  if (orderData.cashbackApplied > 0) {
+                    updatesForBuyer.cashbackBalance = admin.firestore.FieldValue.increment(orderData.cashbackApplied);
+                  }
+                  transaction.update(buyerRef, updatesForBuyer);
+                  updatePayload.paymentStatus =
+                    orderData.walletDeducted > 0 ? "refunded" : orderData.paymentStatus || "unpaid";
                 }
+              }
 
-                updatedEvents.push({
-                  event_id,
-                  status_key: targetStatus,
-                  raw_status: rawStatus,
-                  severity: statusSeverity,
-                  timestamp: admin.firestore.Timestamp.fromDate(new Date(evt.date_heure)),
-                  location: evt.wilaya || evt.commune || "",
-                  reason: evt.motif || ""
-                });
-                
-                latestOrderStatus = computedOrderStatus;
-                hasNewEvents = true;
-             }
-
-             if (hasNewEvents) {
-                const updatePayload: any = {
-                  status: latestOrderStatus,
-                  carrier_tracking_events: updatedEvents,
-                  updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                };
-
-                const cStatus = orderData.status;
-
-                // Refund logic
-                if (latestOrderStatus === "returned" && cStatus !== "returned" && cStatus !== "returning" && cStatus !== "refunded") {
-                   const buyerId = orderData.userId || orderData.buyerId;
-                   if (buyerId && (orderData.walletDeducted > 0 || orderData.cashbackApplied > 0)) {
-                      const buyerRef = db.collection("users").doc(buyerId);
-                      const updatesForBuyer: any = {};
-                      if (orderData.walletDeducted > 0) {
-                         updatesForBuyer.walletBalance = admin.firestore.FieldValue.increment(orderData.walletDeducted);
-                         const walletTxRef = db.collection("wallet_transactions").doc();
-                         transaction.set(walletTxRef, {
-                           userId: buyerId,
-                           orderId: orderRef.id,
-                           amount: orderData.walletDeducted,
-                           type: 'refund',
-                           description: `Remboursement suite à échec de livraison #${orderRef.id.substring(0, 8)}`,
-                           createdAt: new Date().toISOString(),
-                           status: 'completed'
-                         });
-                      }
-                      if (orderData.cashbackApplied > 0) {
-                         updatesForBuyer.cashbackBalance = admin.firestore.FieldValue.increment(orderData.cashbackApplied);
-                      }
-                      transaction.update(buyerRef, updatesForBuyer);
-                      updatePayload.paymentStatus = orderData.walletDeducted > 0 ? "refunded" : (orderData.paymentStatus || "unpaid");
-                   }
-                }
-
-                transaction.update(orderRef, updatePayload);
-                syncedCount++;
-             }
-           });
+              transaction.update(orderRef, updatePayload);
+              syncedCount++;
+            }
+          });
         }
       } catch (err) {
         console.error(`Error syncing tracking chunk:`, err);
@@ -1180,22 +1255,22 @@ router.post("/cron/sync-tracking", async (req: Request, res: Response) => {
   }
 });
 
-router.post('/calculate-commissions', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+router.post("/calculate-commissions", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { orders } = req.body;
-    if (!orders || !Array.isArray(orders)) return res.status(400).json({ error: 'Valid orders array required' });
-    
+    if (!orders || !Array.isArray(orders)) return res.status(400).json({ error: "Valid orders array required" });
+
     // 1. Role-Based Access Validation Middleware / Integrity Check
     const userRole = req.user?.role;
     const userId = req.user?.uid;
-    if (userRole !== 'admin' && userRole !== 'seller') {
-      return res.status(403).json({ error: 'Accès refusé. Autorisation insuffisante pour calculer les commissions.' });
+    if (userRole !== "admin" && userRole !== "seller") {
+      return res.status(403).json({ error: "Accès refusé. Autorisation insuffisante pour calculer les commissions." });
     }
 
     // 2. Fetch authentic order data from Firestore DB to override incoming client data
-    const incomingOrderIds = orders.map(o => o.id || o.orderId).filter(Boolean);
+    const incomingOrderIds = orders.map((o) => o.id || o.orderId).filter(Boolean);
     const dbOrdersMap = new Map<string, any>();
-    
+
     if (incomingOrderIds.length > 0) {
       // Chunk size of 30 due to Firestore "in" operator limits
       const chunks: string[][] = [];
@@ -1203,8 +1278,8 @@ router.post('/calculate-commissions', authenticateToken, async (req: Authenticat
         chunks.push(incomingOrderIds.slice(i, i + 30));
       }
       for (const chunk of chunks) {
-        const snap = await db.collection('orders').where(admin.firestore.FieldPath.documentId(), 'in', chunk).get();
-        snap.docs.forEach(doc => {
+        const snap = await db.collection("orders").where(admin.firestore.FieldPath.documentId(), "in", chunk).get();
+        snap.docs.forEach((doc) => {
           dbOrdersMap.set(doc.id, { id: doc.id, ...doc.data() });
         });
       }
@@ -1216,12 +1291,13 @@ router.post('/calculate-commissions', authenticateToken, async (req: Authenticat
       const oid = o.id || o.orderId;
       if (oid && dbOrdersMap.has(oid)) {
         const dbOrder = dbOrdersMap.get(oid);
-        
+
         // If caller is a seller, they can ONLY calculate commission on their own products/orders
-        if (userRole === 'seller') {
-          const isMyOrder = dbOrder.sellerId === userId || 
-                            (dbOrder.sellerIds && dbOrder.sellerIds.includes(userId)) ||
-                            (dbOrder.items && dbOrder.items.some((item: any) => item.sellerId === userId));
+        if (userRole === "seller") {
+          const isMyOrder =
+            dbOrder.sellerId === userId ||
+            (dbOrder.sellerIds && dbOrder.sellerIds.includes(userId)) ||
+            (dbOrder.items && dbOrder.items.some((item: any) => item.sellerId === userId));
           if (!isMyOrder) {
             continue; // Silently filter out other seller data to protect client VIP database
           }
@@ -1229,7 +1305,7 @@ router.post('/calculate-commissions', authenticateToken, async (req: Authenticat
         validatedOrders.push(dbOrder);
       } else {
         // Fallback for mock/simulation if and only if caller is Admin (debugging/diagnostics)
-        if (userRole === 'admin') {
+        if (userRole === "admin") {
           validatedOrders.push(o);
         }
       }
@@ -1237,50 +1313,55 @@ router.post('/calculate-commissions', authenticateToken, async (req: Authenticat
 
     let totalVolume = 0;
     let totalCommission = 0;
-    
+
     // Fetch all sellers in one go to minimize DB calls
     const sellerIds = new Set<string>();
-    validatedOrders.forEach(o => {
-       if (o.sellerIds) o.sellerIds.forEach(id => sellerIds.add(id));
-       else if (o.sellerId) sellerIds.add(o.sellerId);
-       o.items?.forEach(i => { if (i.sellerId) sellerIds.add(i.sellerId); });
+    validatedOrders.forEach((o) => {
+      if (o.sellerIds) o.sellerIds.forEach((id) => sellerIds.add(id));
+      else if (o.sellerId) sellerIds.add(o.sellerId);
+      o.items?.forEach((i) => {
+        if (i.sellerId) sellerIds.add(i.sellerId);
+      });
     });
-    
+
     const sellerRates = {};
     let globalRate = 10;
-    const commDoc = await db.collection('settings').doc('commission').get();
+    const commDoc = await db.collection("settings").doc("commission").get();
     if (commDoc.exists) globalRate = commDoc.data()?.globalRate ?? 10;
-    
+
     // Only fetch if there are sellers
     if (sellerIds.size > 0) {
-      const sellersSnap = await db.collection('users').where(admin.firestore.FieldPath.documentId(), 'in', Array.from(sellerIds)).get();
-      sellersSnap.forEach(snap => {
-         (sellerRates as any)[snap.id] = snap.data().commissionRate ?? globalRate;
+      const sellersSnap = await db
+        .collection("users")
+        .where(admin.firestore.FieldPath.documentId(), "in", Array.from(sellerIds))
+        .get();
+      sellersSnap.forEach((snap) => {
+        (sellerRates as any)[snap.id] = snap.data().commissionRate ?? globalRate;
       });
     }
 
-    const calculatedOrders = validatedOrders.map(order => {
-       const { orderCommission, netPayout } = calculateOrderCommission(order, sellerRates, globalRate);
-       
-       totalVolume += (order.total || 0);
-       totalCommission += orderCommission;
-       
-       return {
-          ...order,
-          commissionCalc: orderCommission,
-          netPayout
-       };
+    const calculatedOrders = validatedOrders.map((order) => {
+      const { orderCommission, netPayout } = calculateOrderCommission(order, sellerRates, globalRate);
+
+      totalVolume += order.total || 0;
+      totalCommission += orderCommission;
+
+      return {
+        ...order,
+        commissionCalc: orderCommission,
+        netPayout,
+      };
     });
-    
+
     return res.json({
-       calculatedOrders,
-       totalVolume,
-       totalCommission,
-       sellersNetPayout: totalVolume - totalCommission
+      calculatedOrders,
+      totalVolume,
+      totalCommission,
+      sellersNetPayout: totalVolume - totalCommission,
     });
   } catch (error: any) {
-    console.error('Calculate commissions error:', error);
-    res.status(500).json({ error: 'Failed to calculate commissions' });
+    console.error("Calculate commissions error:", error);
+    res.status(500).json({ error: "Failed to calculate commissions" });
   }
 });
 

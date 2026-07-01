@@ -64,7 +64,7 @@ router.post("/sheets/export-premium", requireGoogleToken, async (req: Authentica
       let masked = val.replace(/([a-zA-Z0-9._%+-]{1,3})([a-zA-Z0-9._%+-]*)@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g, "$1***@$3");
       
       // Mask Algerian and general phone numbers
-      masked = masked.replace(/(?:\+213|00213|[0][567])\s*(\d)\s*[\s\d\-]{4,}(\d{2})/g, (match, first, last) => {
+      masked = masked.replace(/(?:\+213|00213|[0][567])\s*(\d)\s*[\s\d-]{4,}(\d{2})/g, (match, first, last) => {
         if (match.startsWith('+213')) return '+213 ' + first + '***' + last;
         if (match.startsWith('00213')) return '00213 ' + first + '***' + last;
         return match.substring(0, 2) + '***' + last;

@@ -39,7 +39,7 @@ export const ProductFilterPage: React.FC = () => {
         const res = await fetch(`/api/products-by-tag?tag=${tagSlug.toLowerCase()}`);
         const data = await res.json();
         if (res.ok) {
-          let loadedProducts = data.products || [];
+          const loadedProducts = data.products || [];
           setProducts(loadedProducts);
           if (data.tag) {
             setTagName(data.tag.name);

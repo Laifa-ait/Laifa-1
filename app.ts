@@ -1,4 +1,13 @@
 import "dotenv/config";
+import * as Sentry from "@sentry/node";
+
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || "development",
+    tracesSampleRate: 0.1,
+  });
+}
 
 // Setup process.env compat parameters for bundled client config references
 if (process.env.NODE_ENV !== "production") {
@@ -162,6 +171,11 @@ app.use("/api/workspace", workspaceRouter);
 app.use("/", coreRouter); // All remaining endpoints
 
 import { Request, Response, NextFunction } from 'express';
+
+// Setup Sentry Express error handler if DSN is provided
+if (process.env.SENTRY_DSN) {
+  Sentry.setupExpressErrorHandler(app);
+}
 
 // Add Global Error Handler right after API routes
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

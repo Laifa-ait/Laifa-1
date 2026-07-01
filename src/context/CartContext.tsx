@@ -24,12 +24,7 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  let auth: any;
-  try {
-    auth = useAuth();
-  } catch (e) {
-    auth = { currentUser: null };
-  }
+  const auth = useAuth();
   const prevUserRef = useRef<any>(null);
   const getWishlistKey = () => (auth.currentUser ? `olma_wishlist_${auth.currentUser.uid}` : "olma_wishlist_guest");
   const getCartKey = () => (auth.currentUser ? `olma_cart_${auth.currentUser.uid}` : "olma_cart_guest");
@@ -88,8 +83,8 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     setIsInitialized(false);
     const handleAuthChange = async () => {
-      let finalCart: CartItem[] = [];
-      let finalWishlist: string[] = [];
+      let finalCart: CartItem[];
+      let finalWishlist: string[];
 
       const safeParse = (data: string | null, fallback: any) => {
         try {

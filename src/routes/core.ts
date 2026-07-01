@@ -70,7 +70,7 @@ router.get("/api/public/tracking/:trackingId", trackingLimiter, async (req: Requ
     }
 
     const ordersRef = db.collection("orders");
-    let snapshot = await ordersRef.where("trackingId", "==", trackingId.toUpperCase()).limit(1).get();
+    const snapshot = await ordersRef.where("trackingId", "==", trackingId.toUpperCase()).limit(1).get();
 
     let orderData: any = null;
     let orderId = "";
@@ -1747,6 +1747,19 @@ router.post("/api/reviews", authenticateToken, async (req: AuthenticatedRequest,
   }
 
   try {
+    console.log("[api/reviews] Submitted review request:", { productId, orderId, rating, comment, userId });
+    
+    // Check if order exists outside transaction first
+    const directOrderSnap = await db.collection("orders").doc(orderId).get();
+    console.log("[api/reviews] Direct check orderSnap exists:", directOrderSnap.exists);
+    if (!directOrderSnap.exists) {
+      // Let's print some diagnostic info
+      const allOrdersSnap = await db.collection("orders").limit(3).get();
+      const existingIds = allOrdersSnap.docs.map(doc => doc.id);
+      console.log("[api/reviews] Diagnostic - first 3 order IDs in DB:", existingIds);
+      throw new Error(`Commande introuvable in Admin SDK. (ID: ${orderId}, Exists in DB: ${existingIds.join(", ")})`);
+    }
+
     await db.runTransaction(async (t: any) => {
       const orderRef = db.collection("orders").doc(orderId);
       const orderSnap = await t.get(orderRef);
@@ -1760,7 +1773,7 @@ router.post("/api/reviews", authenticateToken, async (req: AuthenticatedRequest,
         throw new Error("Accès refusé. Cette commande ne vous appartient pas.");
       }
       
-      if (orderData.status !== "delivered") {
+      if ((orderData.status || "").toLowerCase() !== "delivered") {
         throw new Error("Vous ne pouvez évaluer un produit qu'après sa livraison finale.");
       }
       
@@ -2527,7 +2540,7 @@ router.get("/api/search", async (req, res, next) => {
       includeScore: true
     };
     const fuse = new Fuse(productsToIndex, fuseOptions);
-    let searchResults = fuse.search(queryStr);
+    const searchResults = fuse.search(queryStr);
 
     // Smart Multilingual & Phonetic Fallback logic (R28, R29)
     const normalizeText = (text?: string): string => {
@@ -2650,7 +2663,7 @@ router.get("/api/search", async (req, res, next) => {
     }
 
     // Sort combining Fuse scores, Seller Trust and product popularity metrics (R30)
-    let processedResults = searchResults.map((r) => {
+    const processedResults = searchResults.map((r) => {
        const p = r.item as any;
        const textScore = 1 - (r.score ?? 0.5); // Higher text matches first
        
@@ -3065,7 +3078,7 @@ Retourne UNIQUEMENT un objet JSON valide avec la clé suivante :
     if (match) extractedJson = match[1];
     
     let parsed = {};
-    try { parsed = JSON.parse(extractedJson); } catch(e) {}
+    try { parsed = JSON.parse(extractedJson); } catch(e) { console.warn("Failed to parse OCR response JSON", e); }
 
     res.json({ result: parsed });
   } catch (err: any) {

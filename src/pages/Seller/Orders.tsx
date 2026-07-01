@@ -225,7 +225,6 @@ export const Orders: React.FC = () => {
        
        // Process sequentially or in a single API call. We will loop for now, 
        // but ideally backend would accept array.
-       let successCount = 0;
        
        const res = await fetch('/api/prepare-shipment', {
          method: 'POST',

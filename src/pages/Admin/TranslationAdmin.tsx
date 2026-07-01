@@ -704,7 +704,7 @@ export const TranslationAdmin: React.FC = () => {
                     "catégorie": "فئة", "accueil": "الرئيسية", "profil": "الملف الشخصي", "paramètres": "الإعدادات",
                     "téléphone": "هاتف", "adresse": "عنوان", "wilaya": "ولاية"
                 };
-                let lower = userText.toLowerCase().trim();
+                const lower = userText.toLowerCase().trim();
                 let translation = dict[lower] || "";
                 
                 if (!translation) {
